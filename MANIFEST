@@ -7,8 +7,10 @@ lib/Video/DVDRip/GUI/Project/StorageTab.pm
 lib/Video/DVDRip/GUI/Project/TitleTab.pm
 lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm
 lib/Video/DVDRip/GUI/Project/TranscodeTab.pm
+lib/Video/DVDRip/GUI/Project/LoggingTab.pm
 lib/Video/DVDRip/GUI/Project.pm
 lib/Video/DVDRip/GUI/ImageClip.pm
+lib/Video/DVDRip/GUI/Logger.pm
 lib/Video/DVDRip/GUI/Main.pm
 lib/Video/DVDRip/GUI/Window.pm
 lib/Video/DVDRip/GUI/Component.pm

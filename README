@@ -152,9 +152,13 @@ SEE ALSO
     perl(1).
 
 CHANGES
-    $Id: Changes,v 1.12 2001/12/15 20:14:11 joern Exp $
+    $Id: Changes,v 1.13 2001/12/16 09:04:43 joern Exp $
 
     Revision history for Perl extension Video::DVDRip
+
+    0.26 Sun Dec 16 2001, joern
+	Bugfix:
+	- tar.gz distribution was incomplete. Updated MANIFEST.
 
     0.25 Sat Dec 15 2001, joern
 	Features:

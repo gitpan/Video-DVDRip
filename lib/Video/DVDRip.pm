@@ -1,8 +1,8 @@
-# $Id: DVDRip.pm,v 1.16 2001/12/15 20:14:08 joern Exp $
+# $Id: DVDRip.pm,v 1.17 2001/12/16 09:04:43 joern Exp $
 
 package Video::DVDRip;
 
-$VERSION = "0.25";
+$VERSION = "0.26";
 
 __END__
 
