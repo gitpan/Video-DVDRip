@@ -30,6 +30,7 @@ lib/Video/DVDRip/Cluster/PSU.pm
 lib/Video/DVDRip/GUI/Project.pm
 lib/Video/DVDRip/GUI/ImageClip.pm
 lib/Video/DVDRip/GUI/Main.pm
+lib/Video/DVDRip/GUI/MinSizeGroup.pm
 lib/Video/DVDRip/GUI/Window.pm
 lib/Video/DVDRip/GUI/Component.pm
 lib/Video/DVDRip/GUI/Config.pm

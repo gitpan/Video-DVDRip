@@ -1,10 +1,37 @@
-$Id: TODO,v 1.60 2002/03/31 08:10:53 joern Exp $
+$Id: TODO,v 1.66 2002/04/27 15:40:56 joern Exp $
 
 KNOWN BUGS
 - cluster mode
   - cluster control daemon leaks memory
-
+- canceling a transcode process (in standard mode) kills all
+  transcode processes, in case of several dvd::rip instances
+  are started. Reported by Torsten Howard <torsten AT inetw.net>
+- error message after preview frame grabbing with transcode 0.5.3,
+  reported by Torsten Howard <torsten AT inetw.net>
+- negative cropping isn't visualized in the preview image
+  (all calculations and the transcoding itself work, so
+   it's not that big problem ;)
+- Jure Pecar <pegasus AT telemach.net> reported a bug with
+  endless operation in while ripping multiple titles. I currently
+  can't reproduce it, but I'll keep an eye on it ;)
+  
 TODO
+- option for forking the transcode process into the background,
+  suggested by Akos Maroy <darkeye AT tyrell.hu>
+- support generating multilanguage AVIs
+- support smartdeinter filter, suggested by Christian Lambert
+- support rendering subtitles
+- support for transcode's -r option for fast frame bisection
+  (and very fast deinterlacing)
+- check for negative nice value if not run as root
+- merge chapter avi's in two modes: all into one file,
+  or adjacent chapters in separate files. Suggested by
+  Certron DiSoni <certron_80 AT yahoo.com>
+- make video player customizable, requested by Guillaume Rousse
+  <rousse AT ccr.jussieu.fr>
+- enable video bitrate calculation for chapter mode
+- global preference for warning width divisible by 16 or 32 violations,
+  suggested by Christian Lambert
 - cluster mode:
   - schedule start/end time of a node, suggested by Rainer Lay
   - stop node after current job, suggested by Rainer Lay
@@ -15,19 +42,14 @@ TODO
 - enable dvd::rip to work on already existent VOB copies
   in filesystem
 - don't rip chapters already ripped in chapter selection mode
-- support generating multilanguage AVIs
-- rip multiple titles to harddisk in batch mode, suggested by
-  Hrvoje Husic <husic AT zyn.de>
 - check space on filesystem before ripping and transcoding
-- selection box for supported video codecs, suggested by
-  Certron DiSoni <certron_80 AT yahoo.com>
 - extensive checking of user input. most input is currently
   passed through without examination
-- on the fly ripping & transcoding (very low priority)
+- on the fly ripping & transcoding (very low priority, most likely
+  never implemented)
+- audio resampling, suggested by Certron DiSoni <certron_80 AT yahoo.com>
 - create personal clip&zoom preferences
-- mplayer support
-- VCD and SVCD support (transcode 0.6.x)
 - double check ripped data for correct audio streams
   (needed in seldom cases for ugly DVDs which lie about
-   the audio streams with tcprobe)
+   the audio streams with tcprobe from DVD)
 

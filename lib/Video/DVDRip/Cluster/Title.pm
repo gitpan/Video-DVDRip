@@ -1,4 +1,4 @@
-# $Id: Title.pm,v 1.22 2002/03/24 22:52:55 joern Exp $
+# $Id: Title.pm,v 1.23 2002/04/10 21:19:12 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -209,6 +209,8 @@ sub get_transcode_audio_command {
 		"transcode -i ".$self->vob_dir.
 		" -x null,vob -g 0x0 -y raw -u 50".
 		" -a ".$self->audio_channel.
+		" -b ".$self->tc_audio_bitrate.",0,".
+		       $self->tc_mp3_quality.
 		" -s ".$self->tc_volume_rescale.
 		" -o ".$audio_avi_file.
 		" && echo DVDRIP_SUCCESS";

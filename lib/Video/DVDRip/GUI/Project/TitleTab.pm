@@ -1,4 +1,4 @@
-# $Id: TitleTab.pm,v 1.30 2002/03/29 16:52:53 joern Exp $
+# $Id: TitleTab.pm,v 1.32 2002/04/10 21:41:41 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -46,6 +46,8 @@ sub create_title_tab {
 	$button->show;
 	$button->signal_connect ("clicked", sub { $self->read_dvd_toc } );
 
+	$self->rip_title_widgets->{read_dvd_toc_button} = $button;
+
 	my $label = Gtk::Label->new ("Press button, if list is empty or disc has changed.");
 	$label->show;
 
@@ -77,9 +79,10 @@ sub create_title_tab {
 		"Title", "Technical Information"
 	);
 	$clist->show,
-	$clist->set_usize (450, 300);
-	$clist->set_selection_mode( 'browse' ); 
-	$clist->signal_connect ("select_row", sub { $self->cb_select_title (@_) } );
+	$clist->set_usize (450, 372);
+	$clist->set_selection_mode( 'extended' ); 
+	$clist->signal_connect ("select_row",   sub { $self->cb_select_title (@_) } );
+	$clist->signal_connect ("unselect_row", sub { $self->cb_select_title (@_) } );
 
 	$sw->add( $clist );
 
@@ -190,14 +193,18 @@ sub create_title_tab {
 		sub { $self->view_title }
 	);
 
+	$self->rip_title_widgets->{view_title_button} = $button;
+
 	$button = Gtk::Button->new_with_label (
-		"RIP Selected Title/Chapter(s)"
+		"RIP Selected Title(s)/Chapter(s)"
 	);
 	$button->show;
 	$button->signal_connect ("clicked",
 		sub { $self->rip_title }
 	);
 	$hbox->pack_start ($button, 1, 1, 0);
+
+	$self->rip_title_widgets->{rip_button} = $button;
 
 	# 6. Fill Content List, if we have content
 	$self->fill_content_list;
@@ -242,19 +249,18 @@ sub cb_select_title {
 	my $self = shift; $self->trace_in;
 	my ($clist, $row, $column, $event) = @_;
 
+	my @sel = $clist->selection;
+	if ( @sel > 1 ) {
+		$self->rip_title_widgets->{view_title_button}->set_sensitive(0);
+		return;
+	}
+	$self->rip_title_widgets->{view_title_button}->set_sensitive(1);
+	$row = $sel[0];
+
 	my $nr = $self->clist_row2title_nr->{$row};
 	$self->project->set_selected_title_nr ($nr);
 	$self->set_selected_title($self->project->content->titles->{$nr});
 
-#	warn "remove me!!!";
-#	my $title = $self->selected_title;
-#	if ( $title ) {
-#		$title->analyze_probe_output (
-#			output => $title->probe_result->probe_output,
-#		);
-#		$title->probe_audio;
-#	}
-	
 	$self->fill_with_values;
 	
 	1;
@@ -598,12 +604,40 @@ sub create_selected_title {
 	return $frame;
 }
 
+sub rip_title_selection_sensitive {
+	my $self = shift;
+	my ($value) = @_;
+
+	my $widgets = $self->rip_title_widgets;
+	
+	$widgets->{content_clist}              -> set_sensitive($value);
+	$widgets->{audio_popup}                -> set_sensitive($value);
+	$widgets->{view_angle_popup}           -> set_sensitive($value);
+	$widgets->{tc_use_chapter_mode_all}    -> set_sensitive($value);
+	$widgets->{tc_use_chapter_mode_no}     -> set_sensitive($value);
+	$widgets->{tc_use_chapter_mode_select} -> set_sensitive($value);
+	$widgets->{chapter_select_clist}       -> set_sensitive($value);
+	$widgets->{rip_button}                 -> set_sensitive($value);
+	$widgets->{read_dvd_toc_button}        -> set_sensitive($value);
+
+	1;
+}
+
 sub rip_title {
 	my $self = shift; $self->trace_in;
+	my %par = @_;
+	my ($sel_idx) = @par{'sel_idx'};
 
-	my $title = $self->selected_title;
-	return if not $title;
+	$sel_idx ||= 0;
+
 	return if $self->comp('progress')->is_active;
+	return if not $self->selected_title;
+
+	$self->rip_title_selection_sensitive(0);
+
+	my @sel = $self->rip_title_widgets->{content_clist}->selection;
+	my $nr = $sel[$sel_idx] + 1;
+	my $title = $self->project->content->titles->{$nr};
 
 	eval { $self->project->check_dvd_in_drive };
 	if ( $@ ) {
@@ -612,9 +646,9 @@ sub rip_title {
 		);
 		return;
 	}
-	$self->project->check_dvd_in_drive;
 
-	return $self->rip_title_chapters if $title->tc_use_chapter_mode;
+	return $self->rip_title_chapters ( title => $title, sel_idx => $sel_idx )
+		if $title->tc_use_chapter_mode;
 
 	my $with_scanning = $title->audio_channel != -1;
 
@@ -651,7 +685,14 @@ sub rip_title {
 		$title->suggest_transcode_options;
 		$self->fill_with_values;
 		$title->calc_program_stream_units if $TC::VERSION >= 600;
-		return 'finished';
+
+		if ( $sel_idx == @sel - 1 ) {
+			$self->rip_title_selection_sensitive(1);
+			return "finished";
+		}
+		return sub {
+			$self->rip_title ( sel_idx => $sel_idx + 1);
+		};
 	};
 
 	my $cancel_callback = sub {
@@ -660,6 +701,7 @@ sub rip_title {
 		system ("killall splitpipe");
 		close ($progress->fh);
 		$title->remove_vob_files;
+		$self->rip_title_selection_sensitive(1);
 		return 1;
 	};
 
@@ -681,8 +723,9 @@ sub rip_title {
 
 sub rip_title_chapters {
 	my $self = shift; $self->trace_in;
-	
-	my $title = $self->selected_title;
+	my %par = @_;
+	my ($title, $sel_idx) = @par{'title','sel_idx'};
+
 	return if not $title;
 	return if $self->comp('progress')->is_active;
 
@@ -691,6 +734,8 @@ sub rip_title_chapters {
 	croak "Title is not in chapter mode" if not $chapter_mode;
 
 	my $nr = $title->nr;
+
+	my @sel = $self->rip_title_widgets->{content_clist}->selection;
 
 	my @chapters  = @{$title->get_chapters};
 	my $max_value = $chapter_mode eq 'select' ?
@@ -743,7 +788,13 @@ sub rip_title_chapters {
 		if ( not defined $chapter ) {
 			$title->suggest_transcode_options;
 			$self->fill_with_values;
-			return 'finished';
+			if ( $sel_idx == @sel - 1 ) {
+				$self->rip_title_selection_sensitive(1);
+				return "finished";
+			}
+			return sub {
+				$self->rip_title ( sel_idx => $sel_idx + 1);
+			};
 
 		} else {
 			$progress->set_label (
@@ -763,6 +814,7 @@ sub rip_title_chapters {
 		close ($progress->fh);
 		$title->remove_vob_files;
 		$title->set_actual_chapter(undef);
+		$self->rip_title_selection_sensitive(1);
 		return 1;
 	};
 

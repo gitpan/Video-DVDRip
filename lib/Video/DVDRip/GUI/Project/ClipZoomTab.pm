@@ -1,4 +1,4 @@
-# $Id: ClipZoomTab.pm,v 1.20 2002/03/29 16:17:09 joern Exp $
+# $Id: ClipZoomTab.pm,v 1.22 2002/04/10 21:19:43 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -389,6 +389,24 @@ sub create_adjust_tab {
 	$self->adjust_widgets->{tc_fast_resize_yes} = $radio_yes;
 	$self->adjust_widgets->{tc_fast_resize_no}  = $radio_no;
 
+	# fast bisection
+
+if ( 0 ) {
+	$label = Gtk::Label->new ("Fast Frame Bisection");
+	$label->show;
+	$hbox->pack_start($label, 0, 1, 0);
+
+	$radio_yes = Gtk::RadioButton->new ("Yes");
+	$radio_yes->show;
+	$hbox->pack_start($radio_yes, 0, 1, 0);
+	$radio_no = Gtk::RadioButton->new ("No", $radio_yes);
+	$radio_no->show;
+	$hbox->pack_start($radio_no, 0, 1, 0);
+
+	$self->adjust_widgets->{tc_fast_bisection_yes} = $radio_yes;
+	$self->adjust_widgets->{tc_fast_bisection_no}  = $radio_no;
+}
+
 	# Clipping #2
 	++$row;
 	$hbox = Gtk::HBox->new;
@@ -493,11 +511,50 @@ sub create_adjust_tab {
 		}
 	);
 
+if ( 0 ) {
+	$self->adjust_widgets->{tc_fast_bisection_yes}->signal_connect (
+		"clicked", sub {
+			return 1 if not $self->selected_title;
+			return 1 if $self->in_adjust_init;
+			my $title = $self->selected_title;
+			$title->set_tc_fast_bisection(1);
+			$self->set_in_adjust_init(1);
+			my $method;
+			foreach my $attr (qw ( 
+			       tc_clip1_top  tc_clip1_bottom
+			       tc_clip1_left tc_clip1_right
+       			       tc_clip2_top  tc_clip2_bottom
+			       tc_clip2_left tc_clip2_right )) {
+				$method = "set_$attr";
+				$title->$method(0);
+			}
+			$title->set_tc_zoom_width  ( $title->width / 2 );
+			$title->set_tc_zoom_height ( $title->height / 2 );
+			$self->set_in_adjust_init(0);
+			$self->init_adjust_values (
+				no_preview_update => 1
+			);
+		}
+	);
+	$self->adjust_widgets->{tc_fast_bisection_no}->signal_connect (
+		"clicked", sub {
+			return 1 if not $self->selected_title;
+			return 1 if $self->in_adjust_init;
+			$self->selected_title->set_tc_fast_bisection(0);
+			$self->init_adjust_values (
+				no_preview_update => 1
+			);
+		}
+	);
+}
+
 	return $vbox;
 }
 
 sub init_adjust_values {
 	my $self = shift; $self->trace_in;
+	my %par = @_;
+	my ($no_preview_update) = @par{'no_preview_update'};
 
 	my $title = $self->selected_title;
 	return 1 if not $title;
@@ -505,7 +562,10 @@ sub init_adjust_values {
 
 	$self->set_in_adjust_init(1);
 
-	$self->show_preview_images;
+	$self->show_preview_images if not $no_preview_update;
+
+	my $fast_resize    = $title->tc_fast_resize;
+	my $fast_bisection = $title->tc_fast_bisection;
 
 	my $widgets = $self->adjust_widgets;
 	foreach my $attr (qw ( preview_frame_nr
@@ -515,6 +575,11 @@ sub init_adjust_values {
        			       tc_clip2_top  tc_clip2_bottom
 			       tc_clip2_left tc_clip2_right )) {
 		$widgets->{$attr}->set_text ($self->selected_title->$attr());
+if ( 0 ) {
+		if ( $attr =~ /^tc/ ) {
+			$widgets->{$attr}->set_sensitive(!$fast_bisection);
+		}
+}
 	}
 
 	my $preset_name = $title->preset;
@@ -526,11 +591,16 @@ sub init_adjust_values {
 	$i = 0 if $i >= @{$self->config_object->presets};
 	$widgets->{preset_popup}->set_history ($i);
 
-	my $fast_resize = $title->tc_fast_resize;
-
 	$widgets->{tc_fast_resize_yes}->set_active($fast_resize);
 	$widgets->{tc_fast_resize_no}->set_active(!$fast_resize);
 
+if ( 0 ) {
+	$widgets->{tc_fast_resize_yes}->set_sensitive(!$fast_bisection);
+	$widgets->{tc_fast_resize_no}->set_sensitive(!$fast_bisection);
+
+	$widgets->{tc_fast_bisection_yes}->set_active($fast_bisection);
+	$widgets->{tc_fast_bisection_no}->set_active(!$fast_bisection);
+}
 	$self->update_fast_resize_info;
 
 	$self->set_in_adjust_init(0);
@@ -880,8 +950,8 @@ sub move_clip2_to_clip1 {
 	my $width        = $title->width;
 	my $height       = $title->height;
 	
-	my $zoom_width   = $title->tc_zoom_width;
-	my $zoom_height  = $title->tc_zoom_height;
+	my $zoom_width   = $title->tc_zoom_width  || $title->width;
+	my $zoom_height  = $title->tc_zoom_height || $title->height;
 	
 	my $x_factor = $zoom_width/$width;
 	my $y_factor = $zoom_height/$height;

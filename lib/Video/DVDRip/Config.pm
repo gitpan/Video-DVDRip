@@ -1,4 +1,4 @@
-# $Id: Config.pm,v 1.11 2002/03/28 21:02:10 joern Exp $
+# $Id: Config.pm,v 1.14 2002/04/27 14:11:17 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -103,6 +103,7 @@ sub new {
 			tc_clip2_left	=> 0,
 			tc_clip2_right	=> 0,
 			tc_fast_resize  => 0,
+			tc_fast_bisection => 0,
 		),
 		Video::DVDRip::Preset->new (
 			name => "auto_big",
@@ -168,6 +169,7 @@ sub new {
 			tc_clip2_left	=> 0,
 			tc_clip2_right	=> 0,
 			tc_fast_resize  => 0,
+			tc_fast_bisection => 0,
 		),
 		Video::DVDRip::Preset->new (
 			name => "169anamorph_letter",
@@ -183,6 +185,7 @@ sub new {
 			tc_clip2_left	=> 64,
 			tc_clip2_right	=> 64,
 			tc_fast_resize  => 0,
+			tc_fast_bisection => 0,
 		),
 	);
 	
@@ -202,6 +205,7 @@ sub new {
 				tc_clip2_left	=> 0,
 				tc_clip2_right	=> 0,
 				tc_fast_resize  => 1,
+				tc_fast_bisection => 0,
 			),
 			Video::DVDRip::Preset->new (
 				name => "169anamorph_letter_fast",
@@ -217,6 +221,7 @@ sub new {
 				tc_clip2_left	=> 0,
 				tc_clip2_right	=> 0,
 				tc_fast_resize  => 1,
+				tc_fast_bisection => 0,
 			),
 		);
 	} else {
@@ -235,6 +240,7 @@ sub new {
 				tc_clip2_left	=> 0,
 				tc_clip2_right	=> 0,
 				tc_fast_resize  => 1,
+				tc_fast_bisection => 0,
 			),
 			Video::DVDRip::Preset->new (
 				name => "169anamorph_letter_fast",
@@ -250,6 +256,7 @@ sub new {
 				tc_clip2_left	=> 0,
 				tc_clip2_right	=> 0,
 				tc_fast_resize  => 1,
+				tc_fast_bisection => 0,
 			),
 		);
 	}
@@ -269,6 +276,7 @@ sub new {
 			tc_clip2_left	=> 0,
 			tc_clip2_right	=> 0,
 			tc_fast_resize  => 0,
+			tc_fast_bisection => 0,
 		),
 		Video::DVDRip::Preset->new (
 			name => "43letter_clip",
@@ -284,6 +292,7 @@ sub new {
 			tc_clip2_left	=> 0,
 			tc_clip2_right	=> 0,
 			tc_fast_resize  => 0,
+			tc_fast_bisection => 0,
 		),
 	);
 
@@ -296,13 +305,14 @@ sub new {
 				tc_clip1_bottom	=> 0,
 				tc_clip1_left	=> 0,
 				tc_clip1_right	=> 0,
-				tc_zoom_width	=> 720,
-				tc_zoom_height	=> 536,
+				tc_zoom_width	=> 704,
+				tc_zoom_height	=> 528,
 				tc_clip2_top	=> 4,
 				tc_clip2_bottom	=> 4,
 				tc_clip2_left	=> 0,
 				tc_clip2_right	=> 0,
 				tc_fast_resize  => 1,
+				tc_fast_bisection => 0,
 			),
 			Video::DVDRip::Preset->new (
 				name => "43letter_clip_fast",
@@ -318,6 +328,7 @@ sub new {
 				tc_clip2_left	=> 0,
 				tc_clip2_right	=> 0,
 				tc_fast_resize  => 1,
+				tc_fast_bisection => 0,
 			),
 		);
 	} else {
@@ -336,6 +347,7 @@ sub new {
 				tc_clip2_left	=> 0,
 				tc_clip2_right	=> 0,
 				tc_fast_resize  => 1,
+				tc_fast_bisection => 0,
 			),
 			Video::DVDRip::Preset->new (
 				name => "43letter_clip_fast",
@@ -351,7 +363,125 @@ sub new {
 				tc_clip2_left	=> 0,
 				tc_clip2_right	=> 0,
 				tc_fast_resize  => 1,
+				tc_fast_bisection => 0,
 			),
+		);
+	}
+	
+	if ( $TC::VERSION >= 600 ) {
+		push @presets, (
+			Video::DVDRip::Preset->new (
+				name => "vcd_pal_43",
+				title => "VCD 4:3, PAL",
+				tc_clip1_top	=> 0,
+				tc_clip1_bottom	=> 0,
+				tc_clip1_left	=> 32,
+				tc_clip1_right	=> 32,
+				tc_zoom_width	=> 352,
+				tc_zoom_height	=> 288,
+				tc_clip2_top	=> 0,
+				tc_clip2_bottom	=> 0,
+				tc_clip2_left	=> 0,
+				tc_clip2_right	=> 0,
+				tc_fast_resize  => 1,
+				tc_fast_bisection => 0,
+			),
+			Video::DVDRip::Preset->new (
+				name => "vcd_pal_16_9",
+				title => "VCD 16:9, PAL",
+				tc_clip1_top	=> 0,
+				tc_clip1_bottom	=> 0,
+				tc_clip1_left	=> 80,
+				tc_clip1_right	=> 80,
+				tc_zoom_width	=> 352,
+				tc_zoom_height	=> 256,
+				tc_clip2_top	=> -16,
+				tc_clip2_bottom	=> -16,
+				tc_clip2_left	=> 0,
+				tc_clip2_right	=> 0,
+				tc_fast_resize  => 1,
+				tc_fast_bisection => 0,
+			),
+			Video::DVDRip::Preset->new (
+				name => "svcd_pal",
+				title => "SVCD anamorph, PAL",
+				tc_clip1_top	=> 0,
+				tc_clip1_bottom	=> 0,
+				tc_clip1_left	=> 0,
+				tc_clip1_right	=> 0,
+				tc_zoom_width	=> 480,
+				tc_zoom_height	=> 576,
+				tc_clip2_top	=> 0,
+				tc_clip2_bottom	=> 0,
+				tc_clip2_left	=> 0,
+				tc_clip2_right	=> 0,
+				tc_fast_resize  => 1,
+				tc_fast_bisection => 0,
+			),
+			Video::DVDRip::Preset->new (
+				name => "vcd_ntsc_43",
+				title => "VCD 4:3, NTSC",
+				tc_clip1_top	=> 20,
+				tc_clip1_bottom	=> 20,
+				tc_clip1_left	=> 0,
+				tc_clip1_right	=> 0,
+				tc_zoom_width	=> 352,
+				tc_zoom_height	=> 240,
+				tc_clip2_top	=> 0,
+				tc_clip2_bottom	=> 0,
+				tc_clip2_left	=> 0,
+				tc_clip2_right	=> 0,
+				tc_fast_resize  => 1,
+				tc_fast_bisection => 0,
+			),
+			Video::DVDRip::Preset->new (
+				name => "vcd_ntsc_16_9",
+				title => "VCD 16:9, NTSC",
+				tc_clip1_top	=> 0,
+				tc_clip1_bottom	=> 0,
+				tc_clip1_left	=> 16,
+				tc_clip1_right	=> 16,
+				tc_zoom_width	=> 352,
+				tc_zoom_height	=> 208,
+				tc_clip2_top	=> -16,
+				tc_clip2_bottom	=> -16,
+				tc_clip2_left	=> 0,
+				tc_clip2_right	=> 0,
+				tc_fast_resize  => 1,
+				tc_fast_bisection => 0,
+			),
+			Video::DVDRip::Preset->new (
+				name => "svcd_ntsc",
+				title => "SVCD anamorph, NTSC",
+				tc_clip1_top	=> 0,
+				tc_clip1_bottom	=> 0,
+				tc_clip1_left	=> 0,
+				tc_clip1_right	=> 0,
+				tc_zoom_width	=> 480,
+				tc_zoom_height	=> 480,
+				tc_clip2_top	=> 0,
+				tc_clip2_bottom	=> 0,
+				tc_clip2_left	=> 0,
+				tc_clip2_right	=> 0,
+				tc_fast_resize  => 1,
+				tc_fast_bisection => 0,
+			),
+#			Video::DVDRip::Preset->new (
+#				name => "fast_bisection",
+#				title => "Fast Frame Bisection",
+#				tc_clip1_top	=> 0,
+#				tc_clip1_bottom	=> 0,
+#				tc_clip1_left	=> 0,
+#				tc_clip1_right	=> 0,
+#				tc_zoom_width	=> undef,
+#				tc_zoom_height	=> undef,
+#				tc_clip2_top	=> 0,
+#				tc_clip2_bottom	=> 0,
+#				tc_clip2_left	=> 0,
+#				tc_clip2_right	=> 0,
+#				tc_fast_resize  => 0,
+#				tc_fast_bisection => 1,
+#			),
 		);
 	}
 
@@ -411,7 +541,7 @@ sub save {
 	my $fh = FileHandle->new;
 
 	open ($fh, "> $filename") or confess "can't write $filename";
-	print $fh q{# $Id: Config.pm,v 1.11 2002/03/28 21:02:10 joern Exp $},"\n";
+	print $fh q{# $Id: Config.pm,v 1.14 2002/04/27 14:11:17 joern Exp $},"\n";
 	print $fh "# This file was generated by Video::DVDRip Version $Video::DVDRip::VERSION\n\n";
 
 	print $fh ${$data_sref};

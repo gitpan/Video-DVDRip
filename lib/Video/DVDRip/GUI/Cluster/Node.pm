@@ -1,4 +1,4 @@
-# $Id: Node.pm,v 1.7 2002/03/12 13:56:55 joern Exp $
+# $Id: Node.pm,v 1.8 2002/04/17 20:08:27 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -357,6 +357,9 @@ sub test_node_show_result {
 	$text_widget->insert (undef, undef, undef, "Brief report:\n\n".$report);
 
 	if ( $details ) {
+		if ( $result->{output_rest} =~ /\S/ ) {
+			$details .= "Unrecognized output :\n$result->{output_rest}\n\n";
+		}
 		$text_widget->insert (
 			undef, undef, undef,
 			"\nDetailed report:\n\n".$details

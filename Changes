@@ -1,6 +1,126 @@
-$Id: Changes,v 1.72 2002/03/31 08:32:52 joern Exp $
+$Id: Changes,v 1.78 2002/04/27 15:40:56 joern Exp $
 
 Revision history for dvd::rip
+
+0.39 Sat Apr 27 2002, joern
+	Bugfixes:
+	- "4:3 No Letterbox, Fast Resize" preset violated
+	  shrink/expand fast resize rule.
+	- VCD did produce anamorphic result, which isn't supported
+	  by the spec. The frame is now resized with aspect ratio correction,
+	  --export-asr is set to 1 so signal that the movie has already
+	  the correct aspect ratio. SVCD presets still result in anamorphic
+	  videos. This isn't currently tested for NTSC, but should work.
+
+0.39_05 Wed Apr 17 2002, joern
+	Features:
+	- Cluster mode:
+	  - improved Node test. Unrecognized output from the client
+	    is reported, which helps solving unusual ssh problems
+
+	Bugfixes:
+	- Cluster mode: transcode test was broken
+	- (S)VCD mode: use --export_asr to set correct aspect ratio
+	  for the generated mpeg file. Thanks to Uwe Fischer
+	  <uwe.fischer AT berlin.de> for his hint and extensive
+	  feedback on (S)VCD mode.
+	- VCD was broken, it was in fact a somewhat reduced SVCD rip.
+	  This one was reported by Uwe Fischer, too.
+
+0.39_04 Wed Apr 10 2002, joern
+	Features:
+	- rip a multiple selection of titles at once, suggested by
+	  Hrvoje Husic <husic AT zyn.de>. First adjust options
+	  (audio, viewing angle, chapter mode) for each title, then
+	  select all titles using Ctrl and/or Shift key and press
+	  "Rip Selected Title(s)" as usual and all titles are ripped
+	  without interception, each with the options you specified
+	  before.
+
+	Bugfixes:
+	- audio bitrate parameters were not passed to transcode in
+	  cluster mode. Thanks to Rainer Lay for the bug report.
+
+0.39_03 Tue Apr 9 2002, joern
+	Bugfixes:
+	- convert NTSC framerate 29.97 to -f 30,4 instead of -f 30,1.
+	  Thanks to Thomas Östreich for the hint.
+
+0.39_02 Sun Apr 7 2002, joern
+	Features:
+	- added 160 kbit/s to audio bitrate popup, requested by
+	  Christian Lambert
+	- frame rate values 23.976 and 29.97 are interally converted
+	  to transcode's -f 24,1 (resp. 30,1), so transcode calculates
+	  with exact values for NTSC movies. With transcode 0.6.0pre5-*
+	  you can try to ommit the framerate completely, because these
+	  transcode versions do a better job with autodetecting.
+	  Thanks to Christian Lambert for his hint.
+	- I added some experimental (S)VCD capabilities. Not tested
+	  very well and also my knowledge about (S)VCD is very limited,
+	  so this first version might have fundamental problems,
+	  but I created (S)VCD mpegs which are played well by xine.
+	  Not tested yet with a standalone DVD player. You'll need
+	  the mjpeg tools and transcode's mjpeg export filter. bbmpeg
+	  filter is currently unsupported. I'll really appreciate any
+	  hints regarding the (S)VCD mode.
+	  
+	  MINI HOWTO:  on the Clip&Zoom tab select one of the (S)VCD
+	  -----------  presets (PAL or NTSC). They only will scale the
+	  image to the correct target size, assuming the player will
+	  correct the aspect ratio (worked at least with xine, but maybe
+	  dvd::rip has to take care of it). On the Transcode tab select
+	  SVCD or VCD as Video Codec. All parameters which doesn't make
+	  sense for (S)VCD will either be disabled or set to some fixed
+	  values (e.g. bitrates in case of VCD). The .mpg file will
+	  appear in the AVI target folder of the project. Cluster mode 
+	  does not support (S)VCD, also the Chapter Mode isn't available
+	  yet for (S)VCD (to be added in future releases).
+	   
+	Bugfixes:
+	- size of the 1st clipping image was not calculated in
+	  realtime after changing 1st clipping values by hand. Also
+	  "Move 2nd Clipping" threw an exception if the width and height
+	  fields were empty. Thanks to Akos Maroy <darkeye AT tyrell.hu>
+	  for his detailed bugreport.
+
+0.39_01 Sat Apr 6 2002, joern
+	Features:
+	- major redesign of the Transcode tab. Grouping of the options
+	  should now make much more sense. Video Codec, Video Framerate,
+	  Audio Bitrate and Process nice level are combo boxes with
+	  reasonable preset values.
+	- video bitrate calculation is much more flexible: you can enter
+	  a target size by hand or use the dics count and size popups
+	  for calculating the target size. All values are recalculated
+	  on demand, no need to press a "suggest bitrate" button anymore.
+	  Inspired by a suggestion of Chrstian Lambert putting more values
+	  into the disc size popup.
+	- divx4 multipass is switched on by default
+	- new MP3 Quality popup, suggested by Christian Lambert. Needs
+	  transcode 0.6 or better. Default is best quality (on my system
+	  I loose only about 0.5 fps compared with transcode's medium
+	  quality default value), and I want dvd::rip to default to high
+	  quality rips.
+
+	Bugfixes:
+	- in seldom cases dvd::rip threw an error message at the end
+	  of the preview frame grabbing. This happend with projects
+	  which were ripped with 0.37, saved without making a preset
+	  selection, and then opened with 0.38. Thanks to Davide
+	  "Black Shark" <bshark AT libero.it> for his bug report.
+	- the nice program is not installed under /usr/bin/nice on
+	  all Linux systems. nice is now executed with `which nice`,
+	  so this hopefully is no longer a problem. Thanks to
+	  Alexander Toppmann <talex AT karyopse.de> and Christian
+	  Lambert, who reported that this is a problem on Red Hat
+	  and Mandrake systems.
+	- Alexander Troppmann also reported that the Cluster Node
+	  test suite fails, if different RedHat releases are used on
+	  master and slave (7.2 vs. 7.0), because of different
+	  implementations of the ls command - *sigh*. I implemented
+	  the directory content test with "echo" instead, hopefully
+	  at least this behaves identically on all Linux systems... ;)
 
 0.38 easter-egg Sun Mar 31 2002, joern
 	No changes since last pre-release, except for a graphical

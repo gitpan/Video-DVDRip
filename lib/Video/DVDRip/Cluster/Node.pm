@@ -1,4 +1,4 @@
-# $Id: Node.pm,v 1.14 2002/03/12 13:56:55 joern Exp $
+# $Id: Node.pm,v 1.16 2002/04/17 20:08:27 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -308,22 +308,22 @@ sub get_test_command {
 	my $command = "sh -c '";
 	
 	# 1. confirm ssh connection
-	$command .= "echo --ssh_connect--; ".
-		    "echo Ok; ".
-		    "echo --ssh_connect--";
+	$command .= "echo --ssh_connect-- 2>&1; ".
+		    "echo Ok 2>&1; ".
+		    "echo --ssh_connect-- 2>&1";
 	
 	# 2. get content of data_base_dir
 	$data_base_dir ||= $self->data_base_dir;
-	$command .= "echo --data_base_dir_content--; ".
-		    "ls $data_base_dir 2>&1|sort; ".
-		    "echo --data_base_dir_content--; ";
+	$command .= "echo --data_base_dir_content-- 2>&1; ".
+		    "cd $data_base_dir 2>&1; echo * 2>&1 | perl -pe \"s/ /chr(10)/eg\" 2>&1 | sort 2>&1;".
+		    "echo --data_base_dir_content-- 2>&1; ";
 	
 	# 3. try writing in the data_base_dir
 	my $test_file = "$data_base_dir/".$self->name."-file-write-test";
-	$command .= "echo --write_test--; ".
+	$command .= "echo --write_test-- 2>&1; ".
 		    "echo node write test > $test_file 2>&1 && echo SUCCESS; ".
-		    "rm -f $test_file; ".
-		    "echo --write_test--; ";
+		    "rm -f $test_file 2>&1; ".
+		    "echo --write_test-- 2>&1; ";
 
 	# 4. get transcode version
 	$command .= "echo --transcode_version--; ".
@@ -342,12 +342,13 @@ sub parse_test_output {
 
 	# parse output
 	my %result;
+	$result{output} = $output;
 	foreach my $case ( qw ( ssh_connect data_base_dir_content
 				write_test transcode_version ) ) {
-		($result{$case}) = $output =~ m/--$case--\n(.*?)--$case--/s;
+		($result{$case}) = $output =~ s/--$case--\n(.*?)--$case--//s;
 	}
 
-	$result{output} = $output;
+	$result{output_rest} = $output;
 
 	return \%result;
 }

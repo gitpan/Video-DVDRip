@@ -3,18 +3,18 @@ I.   ABOUT
    dvd::rip is a Perl Gtk+ based DVD copy program build on top of a low
    level DVD Ripping API, which uses the Linux Video Stream Processing
    Tool transcode, written by Thomas Oestreich.
-   
+
    It simplifies the whole process of making copies of your DVDs using a
    straightforward 4 step strategy:
-   
+
     1. Specify file system storage locations.
     2. Read TOC from DVD, select a title and rip it.
     3. Adjust clipping and zooming parameters.
     4. Set transcode options and go!
-       
+
    Also dvd::rip also has a powerful cluster mode which will use all your
    hardware to increase transcode performance by parallel encoding.
-   
+
 II.  NOTE
 
    This README is automatically generated from the same sources which
@@ -32,21 +32,21 @@ III. INSTALLATION
    dvd::rip itself is a Gtk+ based program written in Perl, using the
    video processing tool transcode for the internals. So you first have
    to comply some prerequisites before installing dvd::rip.
-   
+
 transcode
 
    dvd::rip delegates all the low level DVD handling to transcode, which
    can be obtained here:
-   
+
      [3]http://www.theorie.physik.uni-goettingen.de/~ostreich/transcode/
-     
+
    dvd::rip expects all transcode binaries to be found in the standard
    search PATH.
-   
+
    Note:
    If you want to use the dvd::rip cluster mode you must install at least
    transcode version 0.6.0pre4.
-   
+
 Image Magick
 
    For image processing dvd::rip uses the widely distributed software
@@ -54,57 +54,57 @@ Image Magick
    should be installed on your system. All versions above version 4
    should work (actually tested with 5.3.1). dvd::rip does not use Perl
    Magick.
-   
+
    If your Linux distribution does not ship Image Magick, you can find it
    here:
-   
+
      [4]http://www.imagemagick.org/
-     
+
    dvd::rip expects the Image Magick binaries to be found in the standard
    search PATH.
-   
+
 Perl Gtk Module
 
    For its GUI component dvd::rip needs the Perl Gtk module, which
    presumes Gtk+ version 1.2 or higher. I tested dvd::rip with Perl Gtk
    0.7008.
-   
+
    You can find the Gtk module on CPAN, e.g.:
-   
+
      [5]http://www.perl.org/CPAN/modules/by-module/Gtk/
-     
+
    Note:
    Perl Gtk detects your installed Gtk libs and build sub components only
    if the correspondent Gtk library was found.
-   
+
    dvd::rip needs the Gtk::Gdk::Pixbuf component which needs gdk-pixbuf
    to be installed on your system. So first make sure, that gdk-pixbuf is
    installed. Then install Perl Gtk and everything should work as
    expected.
-   
+
 xine Video Player with d4d plugin
 
    If you have the movie player xine with the d4d plugin installed, you
    can preview selected DVD titles with the appropriate audio channels.
    Maybe I'll support mplayer, too, in upcoming versions.
-   
+
    You can download xine here:
-   
+
      [6]http://xine.sourceforge.net/
-     
+
    dvd::rip expects the xine binary to be found in the standard search
    PATH.
-   
+
 Installing / Updating dvd::rip itself
 
    This is quite easy, if you have managed installing the packages
    mentioned above... ;)
-   
+
    [7]Download the .tar.gz archive of the dvd::rip version you want to
    install. Then extract the file, change into the created directory,
    generate the Makefile and execute make:
-   
-     tar xfz Video-DVDRip-0.38.tar.gz
+
+     tar xfz Video-DVDRip-0.39.tar.gz
      cd Video-DVDRip-x.xx
      perl Makefile.PL
      make
@@ -112,57 +112,57 @@ Installing / Updating dvd::rip itself
 
    If the "make test" reported no errors, you can install the files into
    your Perl library path. Maybe you must be root to do this:
-   
+
      make install
 
    You can ommit the "make install" step. But then you can execute the
    'dvdrip' binary only from the build directory, otherwise dvd::rip
    can't find its files.
-   
+
    Read the Changes file
-   
+
    I strongly suggest you reading at least the latest change log entry of
    the Changes file, resp. all entries of the versions you probably
    skipped in case of an update. It contains important release notes,
    e.g. about compatibility issues, and all relevant changes from release
    to release.
-   
+
 Additional steps for cluster mode
 
    First ensure that you're using transcode version 0.6.0pre4-20020322 or
    better, because cluster mode doesn't work with earlier versions.
-   
+
 Perl modules
 
    Additionally you need the Storable and the Event Perl modules. You can
    find them on CPAN, e.g.:
-   
+
      [8]http://www.perl.org/CPAN/modules/by-module/Storable/
      [9]http://www.perl.org/CPAN/modules/by-module/Event/
-     
+
 fping and pstree
 
    The dvd::rip cluster control daemon uses fping to check if nodes are
    online and pstree to get information about specific child processes.
    Both tools should be shipped with your Linux distribution (fping
    sometimes isn't, but you can get it here: [10]http://www.fping.com/)
-   
+
    dvd::rip expects fping to be installed set-uid root (because you
    hopefully don't run dvd::rip as root ;), which is not the default for
    most distributions. Please set the set-uid flag by typing this command
    as root:
-   
+
      chmod u+s /usr/sbin/fping
 
    If fping is installed in another location, set a symlink to
    /usr/sbin/fping, because dvd::rip expects it there.
-   
+
    Note: These steps are necessary only on the computer, where the
    cluster control daemon runs. All slave nodes of a dvd::rip cluster
    only need transcode installed, dvd::rip or any packages mentioned here
    aren't needed there.
 
-URL References
+Verweise
 
    1. file://localhost/dvdrip/doc/install.cipp
    2. file://localhost/dvdrip/doc/install.cipp?print=1
@@ -179,38 +179,38 @@ IV.  DOWNLOAD
 
    You can download dvd::rip from this server or all stable releases from
    any CPAN mirror.
-   
+
    Local download of the latest stable release:
-   
-     [3]Video-DVDRip-0.38.tar.gz
-     
+
+     [3]Video-DVDRip-0.39.tar.gz
+
    CPAN download directory:
-   
+
      [4]http://www.perl.org/CPAN/modules/by-authors/id/J/JR/JRED/
-     
+
    Here you can get a list of CPAN mirrors:
-   
+
      [5]http://www.perl.org/CPAN/SITES.html
-     
+
    You can download older versions from here:
-   
+
      [6]http://www.exit1.org/dvdrip/dist/
-     
+
 User contributed downloads
 
    Currently I do not provide RPM archives myself, but other dvd::rip
    users are so kind to build some. You'll find them in my contribution
    directory, beside other interesting donated stuff:
-   
+
      [7]http://www.exit1.org/dvdrip/contrib/
-     
+
    Please understand that I can't offer any support for these files.
 
-URL References
+Verweise
 
    1. file://localhost/dvdrip/download.cipp
    2. file://localhost/dvdrip/download.cipp?print=1
-   3. file://localhost/dvdrip/dist/Video-DVDRip-0.38.tar.gz
+   3. file://localhost/dvdrip/dist/Video-DVDRip-0.39.tar.gz
    4. http://www.perl.org/CPAN/modules/by-authors/id/J/JR/JRED/
    5. http://www.perl.org/CPAN/SITES.html
    6. file://localhost/dvdrip/dist/
@@ -223,17 +223,17 @@ V.   MAILING LIST
    Note: this is a closed mailing list to prevent members from getting
    flooded by spam. So you have to subscribe before posting. This list is
    low traffic and announces, patches etc. will be posted here, too.
-   
+
    The language of the mailing list is english, although the author and
    many users and contributors are germans (or at least speak german ;).
-   
+
      * [3]Mailing list subscription
      * [4]Mailing list archive
-       
+
    Because dvd::rip is highly transcode related, I suggest subscribing to
    the [5]transcode-user mailing list, too.
 
-URL References
+Verweise
 
    1. file://localhost/dvdrip/list.cipp
    2. file://localhost/dvdrip/list.cipp?print=1
@@ -244,26 +244,30 @@ URL References
 VI.  COPYRIGHT / CONTACT
 
    Copyright (C) 2001-2002 by Jörn Reder, All Rights Reserved.
-   
+
    dvd::rip is free software; you can redistribute it and/or modify it
    under the same terms as Perl itself.
-   
+
    You can contact me by mail: [3]joern@zyn.de. Please place the word
    "dvd::rip" everywhere in the subject, in addition to your real topic,
    because this helps me classifying your email correctly. Thanks.
-   
+
+   In case of a bug report: please always tell me which version of
+   dvd::rip and transcode you're using, otherwise I often have to guess
+   wildly what's going wrong.
+
    If users send me suggestions and bug reports I usually add them with
    their name and email address to the Changes or TODO file. If you are
    concerned about privacy, then please tell me that you don't want to be
    listed and I omit that. I fully understand if privacy matters for you.
-   
+
    I'm native german speaker, so you can send your mails in german, if
    you want. The others have to accept my rough english ;)
-   
+
    And: consider subscription and posting to the [4]dvdrip-users mailing
    list list.
 
-URL References
+Verweise
 
    1. file://localhost/dvdrip/copyright.cipp
    2. file://localhost/dvdrip/copyright.cipp?print=1
@@ -271,11 +275,17 @@ URL References
    4. http://lists.exit1.org/mailman/listinfo/dvdrip-users
 
 VII. CHANGES
-   $Id: Changes,v 1.72 2002/03/31 08:32:52 joern Exp $
+   $Id: Changes,v 1.78 2002/04/27 15:40:56 joern Exp $
 
    Revision history for dvd::rip
 
-   0.38 easter-egg Sun Mar 31 2002, joern
-	No changes since last pre-release, except for a graphical
-	dvd::rip startup message, which is totally useless but nice ;)
+   0.39 Sat Apr 27 2002, joern
+	Bugfixes:
+	- "4:3 No Letterbox, Fast Resize" preset violated
+	  shrink/expand fast resize rule.
+	- VCD did produce anamorphic result, which isn't supported
+	  by the spec. The frame is now resized with aspect ratio correction,
+	  --export-asr is set to 1 so signal that the movie has already
+	  the correct aspect ratio. SVCD presets still result in anamorphic
+	  videos. This isn't currently tested for NTSC, but should work.
 

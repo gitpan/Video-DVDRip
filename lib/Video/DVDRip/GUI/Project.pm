@@ -1,4 +1,4 @@
-# $Id: Project.pm,v 1.18 2002/01/03 17:40:01 joern Exp $
+# $Id: Project.pm,v 1.19 2002/04/06 10:15:51 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -52,7 +52,7 @@ sub build {
 
 	my $notebook = Gtk::Notebook->new;
 	$notebook->set_tab_pos ('top');
-	$notebook->set_usize (undef, 100);
+#	$notebook->set_usize (undef, 100);
 	$notebook->set_homogeneous_tabs(1);
 	$notebook->show;
 	

@@ -1,4 +1,4 @@
-# $Id: Title.pm,v 1.66 2002/03/29 16:53:13 joern Exp $
+# $Id: Title.pm,v 1.72 2002/04/27 14:11:53 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -98,6 +98,7 @@ sub tc_audio_codec		{ shift->{tc_audio_codec}		}
 sub tc_video_bitrate		{ shift->{tc_video_bitrate}      	}
 sub tc_audio_bitrate		{ shift->{tc_audio_bitrate}      	}
 sub tc_video_framerate		{ shift->{tc_video_framerate}      	}
+sub tc_fast_bisection		{ shift->{tc_fast_bisection}      	}
 
 sub tc_target_size		{ shift->{tc_target_size}		}
 sub tc_disc_cnt 	    	{ shift->{tc_disc_cnt}			}
@@ -113,6 +114,7 @@ sub tc_options			{ shift->{tc_options}			}
 sub tc_nice			{ shift->{tc_nice}			}
 sub tc_preview			{ shift->{tc_preview}			}
 sub tc_ac3_passthrough		{ shift->{tc_ac3_passthrough}		}
+sub tc_mp3_quality		{ shift->{tc_mp3_quality}		}
 
 sub set_project			{ shift->{project}		= $_[1] }
 sub set_tc_viewing_angle	{ shift->{tc_viewing_angle}	= $_[1]	}
@@ -135,6 +137,7 @@ sub set_tc_audio_codec		{ shift->{tc_audio_codec}	= $_[1]	}
 sub set_tc_video_bitrate	{ shift->{tc_video_bitrate}  	= $_[1]	}
 sub set_tc_audio_bitrate	{ shift->{tc_audio_bitrate} 	= $_[1]	}
 sub set_tc_video_framerate	{ shift->{tc_video_framerate} 	= $_[1]	}
+sub set_tc_fast_bisection	{ shift->{tc_fast_bisection} 	= $_[1]	}
 
 sub set_tc_target_size		{ shift->{tc_target_size}    	= $_[1]	}
 sub set_tc_disc_cnt		{ shift->{tc_disc_cnt}    	= $_[1]	}
@@ -150,6 +153,7 @@ sub set_tc_options		{ shift->{tc_options}		= $_[1] }
 sub set_tc_nice			{ shift->{tc_nice}		= $_[1] }
 sub set_tc_preview		{ shift->{tc_preview}		= $_[1] }
 sub set_tc_ac3_passthrough	{ shift->{tc_ac3_passthrough}	= $_[1] }
+sub set_tc_mp3_quality		{ shift->{tc_mp3_quality}	= $_[1] }
 
 sub tc_volume_rescale {
 	my $self = shift;
@@ -201,19 +205,24 @@ sub create_vob_dir {
 sub avi_file {
 	my $self = shift; $self->trace_in;
 
+	my $video_codec = $self->tc_video_codec;
+	my $ext = ($video_codec =~ /^S?VCD$/) ? "" : ".avi";
+
 	if ( $self->tc_use_chapter_mode ) {
-		return 	sprintf("%s/%03d/%s-%03d-C%03d.avi", 
+		return 	sprintf("%s/%03d/%s-%03d-C%03d$ext", 
 			$self->project->avi_dir,
 			$self->nr,
 			$self->project->name,
 			$self->nr,
-			$self->actual_chapter);
+			$self->actual_chapter
+		);
 	} else {
-		return 	sprintf("%s/%03d/%s-%03d.avi",
+		return 	sprintf("%s/%03d/%s-%03d$ext",
 			$self->project->avi_dir,
 			$self->nr,
 			$self->project->name,
-			$self->nr);
+			$self->nr
+		);
 	}
 }
 
@@ -315,6 +324,8 @@ sub apply_preset {
 	my $self = shift;
 	my %par = @_;
 	my ($preset) = @par{'preset'};
+
+	return 1 if not $preset;
 	
 	$self->set_last_applied_preset ( $preset->name );
 	
@@ -645,10 +656,11 @@ sub get_effective_ratio {
 	my $height       = $self->height;
 	my $clip1_ratio  = $width/$height;
 
-	return ($width, $height, $clip1_ratio) if $type eq 'clip1';
-
 	my $from_width  = $width-$self->tc_clip1_left-$self->tc_clip1_right;
 	my $from_height = $height-$self->tc_clip1_top-$self->tc_clip1_bottom;
+
+	return ($from_width, $from_height, $clip1_ratio) if $type eq 'clip1';
+
 	my $zoom_width  = $self->tc_zoom_width  || $width;
 	my $zoom_height = $self->tc_zoom_height || $height;
 	my $zoom_ratio = ($zoom_width/$zoom_height) * ($width/$height) / ($from_width/$from_height);
@@ -1111,37 +1123,61 @@ sub suggest_transcode_options {
 	$self->set_tc_audio_codec ( "" );
 	$self->set_tc_audio_bitrate ( 128 );
 	$self->set_tc_ac3_passthrough ( 0 );
+	$self->set_tc_mp3_quality ( 0 );
+	$self->set_tc_multipass ( 1 );
 	$self->set_tc_target_size ( 1400 );
 	$self->set_tc_disc_size ( 700 );
 	$self->set_tc_disc_cnt ( 2 );
 	$self->set_tc_video_framerate (
 		$self->video_mode eq 'pal' ? 25 : 23.976
 	);
-	$self->suggest_video_bitrate;
+	$self->calc_video_bitrate;
 	$self->set_preset ( "auto_medium_fast" );
 
 	1;
 }
 
-sub suggest_video_bitrate {
+sub calc_video_bitrate {
 	my $self = shift;
-		
-	my $target_size = $self->tc_target_size;
 
-	$target_size = 4000 if $target_size > 4000;
+	my $video_codec     = $self->tc_video_codec;
 
+	if ( $video_codec eq 'VCD' ) {
+		$self->set_tc_video_bitrate ( 1152 );
+		$self->set_tc_audio_bitrate ( 224 );
+		$self->set_tc_ac3_passthrough ( 0 );
+		$self->set_tc_multipass ( 0 );
+		return 1;
+	}
+	
+	if ( $video_codec eq 'SVCD' ) {
+		$self->set_tc_ac3_passthrough ( 0 );
+		$self->set_tc_multipass ( 0 );
+	}
+
+	my $ac3_passthrough = $self->tc_ac3_passthrough;
+
+	if ( $ac3_passthrough ) {
+		$self->set_tc_audio_bitrate(
+			$self->audio_tracks
+			     ->[$self->audio_channel]
+			     ->{bitrate}
+		);
+	}
+
+	my $target_size   = $self->tc_target_size;
 	my $frames        = $self->frames;
 	my $fps           = $self->frame_rate;
-
 	my $audio_bitrate = $self->tc_audio_bitrate;
 
-	my $runtime = $frames/$fps;
+	my $runtime = $frames / $fps;
 	my $audio_size = int($runtime * $audio_bitrate / 1024 / 8);
 	my $video_size = $target_size - $audio_size;
 
 	my $video_bitrate = int($video_size/$runtime/1000*1024*1024*8);
 	$video_bitrate = 6000 if $video_bitrate > 6000;
-
+	$video_bitrate = 2600 if $video_bitrate > 2600 and
+				 $video_codec eq 'SVCD';
 	$self->set_tc_video_bitrate ( $video_bitrate );
 
 	1;
@@ -1159,15 +1195,27 @@ sub get_transcode_command {
 			      ->[$self->audio_channel];
 
 	my $nice;
-	$nice = "/usr/bin/nice -n ".$self->tc_nice." "
+	$nice = "`which nice` -n ".$self->tc_nice." "
 		if $self->tc_nice =~ /\S/;
+
+	my $mpeg = 0;
+	$mpeg = "svcd" if $self->tc_video_codec =~ /^SVCD$/;
+	$mpeg = "vcd"  if $self->tc_video_codec =~ /^VCD$/;
 
 	my $command =
 		$nice.
 		"transcode".
 		" -i ".$self->vob_dir.
-		" -a ".$self->audio_channel.
-		" -w ".int($self->tc_video_bitrate).",250,100";
+		" -a ".$self->audio_channel;
+	
+	if ( not $mpeg ) {
+		$command .=
+			" -w ".int($self->tc_video_bitrate).",250,100";
+	} elsif ( $mpeg eq 'svcd' ) {
+		$command .=
+			" -w ".int($self->tc_video_bitrate)
+				if $self->tc_video_bitrate;
+	}
 
 	if ( $self->tc_use_chapter_mode and $TC::VERSION < 600 ) {
 		$command .= qq{ -J skip="0-2" };
@@ -1182,14 +1230,40 @@ sub get_transcode_command {
 		$command .= " -c $start_frame-$end_frame";
 	}
 
-	$command .= ",".$self->tc_audio_codec
-		if $self->tc_audio_codec ne '';
-	$command .= " -F ".$self->tc_video_af6_codec
-		if $self->tc_video_af6_codec ne '';
+	if ( $mpeg ) {
+		$command .= " -F 5" if $mpeg eq 'svcd';
+		$command .= " -F 1" if $mpeg eq 'vcd';
+		if ( $mpeg eq 'svcd' ) {
+			if ( $self->aspect_ratio eq '16:9' ) {
+				# 16:9
+				$command .= " --export_asr 3";
+			} else {
+				# 4:3
+				$command .= " --export_asr 2";
+			}
+		} else {
+			$command .= " --export_asr 1";
+		}
+	} else {
+		$command .= " -F ".$self->tc_video_af6_codec
+			if $self->tc_video_af6_codec ne '';
+	}
+
 	$command .= " -d" if $audio_info->{type} eq 'lpcm';
 
-	$command .= " -b ".$self->tc_audio_bitrate
-		if $self->tc_audio_bitrate ne '';
+	if ( $TC::VERSION < 600 ) {
+		$command .= " -b ".$self->tc_audio_bitrate
+			if $self->tc_audio_bitrate ne '';
+	} else {
+		if ( $mpeg ) {
+			$command .= " -b ".
+				$self->tc_audio_bitrate;
+		} else {
+			$command .= " -b ".
+				$self->tc_audio_bitrate.",0,".
+				$self->tc_mp3_quality;
+		}
+	}
 
 	if ( $self->tc_ac3_passthrough ) {
 		$command .=
@@ -1207,8 +1281,15 @@ sub get_transcode_command {
 	$command .= " -I ".$self->tc_deinterlace
 		if $self->tc_deinterlace;
 
-	$command .= " -f ".$self->tc_video_framerate
-		if $self->tc_video_framerate;
+	if ( $TC::VERSION < 600 ) {
+		$command .= " -f ".$self->tc_video_framerate
+			if $self->tc_video_framerate;
+	} elsif ( $self->tc_video_framerate ) {
+		my $fr = $self->tc_video_framerate;
+		$fr = "24,1" if $fr == 23.976;
+		$fr = "30,4" if $fr == 29.97;
+		$command .= " -f $fr";
+	}
 
 	if ( $self->video_mode eq 'ntsc' ) {
 		$command .= " -g 720x480 -M 2";
@@ -1222,7 +1303,7 @@ sub get_transcode_command {
 		    $self->tc_clip1_right;
 
 	$command .= " -j $clip1"
-		if $clip1 =~ /^\d+,\d+,\d+,\d+$/ and $clip1 ne '0,0,0,0';
+		if $clip1 =~ /^-?\d+,-?\d+,-?\d+,-?\d+$/ and $clip1 ne '0,0,0,0';
 
 	my $clip2 = $self->tc_clip2_top.",".
 		    $self->tc_clip2_left.",".
@@ -1230,9 +1311,12 @@ sub get_transcode_command {
 		    $self->tc_clip2_right;
 
 	$command .= " -Y $clip2"
-		if $clip2 =~ /^\d+,\d+,\d+,\d+$/ and $clip2 ne '0,0,0,0';
+		if $clip2 =~ /^-?\d+,-?\d+,-?\d+,-?\d+$/ and $clip2 ne '0,0,0,0';
 
-	if ( not $self->tc_fast_resize ) {
+	if ( $self->tc_fast_bisection ) {
+		$command .= " -r 2,2";
+
+	} elsif ( not $self->tc_fast_resize ) {
 		my $zoom = $self->tc_zoom_width."x".$self->tc_zoom_height;
 		$command .= " -Z $zoom"
 			if $zoom =~ /^\d+x\d+$/;
@@ -1279,7 +1363,12 @@ sub get_transcode_command {
 	if ( not $self->tc_multipass or $pass == 2 ) {
 		$command .= " -x vob";
 		$command .= " -o $avi_file";
-		$command .= " -y ".$self->tc_video_codec;
+		
+		if ( $mpeg ) {
+			$command .= " -y mpeg2enc,mp2enc -E 44100";
+		} else {
+			$command .= " -y ".$self->tc_video_codec;
+		}
 	}
 
 	$self->create_avi_dir;
@@ -1370,6 +1459,55 @@ sub transcode_async_stop {
 
 	my $message =   "Error executing:\n\n".
 			$self->get_transcode_command.
+			$output;
+
+	close $fh;
+	croak ($message) if $?;
+
+	1;
+}
+
+#---------------------------------------------------------------------
+# Methods for MPEG multiplexing
+#---------------------------------------------------------------------
+
+sub get_mplex_command {
+	my $self = shift; $self->trace_in;
+	my %par = @_;
+	my ($split) = @par{'split'};
+
+	my $avi_file = $self->target_avi_file;
+	my $size     = $self->tc_disc_size;
+	my $mplex_f  = $self->tc_video_codec eq 'SVCD' ? 4 : 1;
+	my $mplex_v  = $self->tc_video_codec eq 'SVCD' ? "-V" : "";
+	my $vext     = $self->tc_video_codec eq 'SVCD' ? 'm2v' : 'm1v';
+
+	my $split_option = $split ? "-S $size" : "";
+
+	my $command =
+		"mplex -f $mplex_f $mplex_v $split_option ".
+		"-o $avi_file.mpg $avi_file.$vext $avi_file.mpa";
+	
+	return $command;
+}
+
+sub mplex_async_start {
+	my $self = shift; $self->trace_in;
+
+	return $self->popen (
+		command => $self->get_mplex_command,
+	);
+}
+
+sub mplex_async_stop {
+	my $self = shift; $self->trace_in;
+	my %par = @_;
+	my ($fh, $output) = @par{'fh','output'};
+
+	$output = "\n\nOutput was:\n\n$output" if $output;
+
+	my $message =   "Error executing:\n\n".
+			$self->get_mplex_command.
 			$output;
 
 	close $fh;
@@ -1807,7 +1945,7 @@ sub make_preview_clip {
 	
 	my $new_width  = $width - $left - $right;
 	my $new_height = $height - $top - $bottom;
-	
+
 	$self->system (
 		command => "convert $source_file -crop ".
 			   "${new_width}x${new_height}+$left+$top ".
