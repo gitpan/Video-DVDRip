@@ -1,4 +1,4 @@
-# $Id: ExecuteJobs.pm,v 1.13.2.2 2003/03/31 12:59:05 joern Exp $
+# $Id: ExecuteJobs.pm,v 1.13.2.3 2003/08/16 15:42:02 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -110,11 +110,12 @@ sub execute_jobs {
 
 		$self->log ("This task needs about $max_diskspace_needed MB, $free MB are free.");
 
-		if ( $max_diskspace_needed + 100 > $free ) {
+		my $max_diskspace_needed_plus_spare = $max_diskspace_needed + 100;
+		if ( $max_diskspace_needed_plus_spare > $free ) {
 			$self->confirm_window (
 			    message =>
 				"Warning: diskspace is low. This task needs\n".
-				"about $max_diskspace_needed MB, but only $free MB are available.\n".
+				"about $max_diskspace_needed_plus_spare MB, but only $free MB are available.\n".
 				"Do you want to continue anyway?",
 			    yes_callback => sub {
 			    	$self->execute_jobs (

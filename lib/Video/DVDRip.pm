@@ -8,7 +8,7 @@
 
 package Video::DVDRip;
 
-$VERSION = "0.50.14";
+$VERSION = "0.50.15";
 
 use base Video::DVDRip::Base;
 
@@ -19,7 +19,7 @@ require 5.006;
 %Video::DVDRip::container_formats = (
 	'avi'       => "AVI",
 	'ogg'       => "OGG",
-	'vcd'       => "(S)VCD",
+	'vcd'       => "MPEG",
 );
 
 %Video::DVDRip::deinterlace_filters = (

@@ -1,4 +1,4 @@
-# $Id: Title.pm,v 1.137.2.18 2003/06/29 09:17:02 joern Exp $
+# $Id: Title.pm,v 1.137.2.24 2003/08/24 17:00:20 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -308,6 +308,12 @@ sub set_tc_video_codec {
 	$self->set_tc_video_bitrate_manual (0)
 		if $value eq 'VCD';
 
+	if ( $value =~ /^X?S?VCD$/ ) {
+		foreach my $audio ( @{$self->audio_tracks} ) {
+			$audio->set_tc_mp2_samplerate(44100);
+		}
+	}
+
 	return $value;
 }
 
@@ -354,7 +360,7 @@ sub set_tc_container {
 		}
 		
 		# no (S)VCD here
-		if ( $self->tc_video_codec =~ /^S?VCD$/ ) {
+		if ( $self->tc_video_codec =~ /^(X?S?VCD|CVD)$/ ) {
 			push @messages,
 				"Set video codec to 'xvid', '".
 				$self->tc_video_codec.
@@ -371,13 +377,13 @@ sub set_tc_container {
 					"Set codec of audio track #".$audio->tc_nr.
 					" to 'mp2', '".
 					$audio->tc_audio_codec.
-					"' not supported by (S)VCD";
+					"' not supported by (S)VCD/CVD";
 				$audio->set_tc_audio_codec ('mp2');
 			}
 		}
 
 		# only (S)VCD here
-		if ( $self->tc_video_codec !~ /S?VCD/ ) {
+		if ( $self->tc_video_codec !~ /^(X?S?VCD|CVD)$/ ) {
 			push @messages,
 				"Set video codec to 'SVCD', '".
 				$self->tc_video_codec.
@@ -401,10 +407,10 @@ sub set_tc_container {
 		}
 
 		# no (S)VCD here
-		if ( $self->tc_video_codec =~ /S?VCD/ ) {
+		if ( $self->tc_video_codec =~ /^(X?S?VCD|CVD)$/ ) {
 			$self->set_tc_video_codec ("xvid");
 			push @messages,
-				"Set video codec to 'xvid', (S)VCD not supported by OGG";
+				"Set video codec to 'xvid', (S)VCD/CVD not supported by OGG";
 		}
 	}
 	
@@ -557,7 +563,7 @@ sub get_target_ext {
 	my $self = shift; $self->trace_in;
 
 	my $video_codec = $self->tc_video_codec;
-	my $ext = ($video_codec =~ /^S?VCD$/) ? "" : ".avi";
+	my $ext = ($video_codec =~ /^(X?S?VCD|CVD)$/) ? "" : ".avi";
 
 	$ext = ".".$self->config('ogg_file_ext') if $self->is_ogg;
 
@@ -1463,13 +1469,25 @@ sub suggest_transcode_options {
 
 	my $rip_mode = $self->project->rip_mode;
 
-	$self->set_tc_container ( 'avi' );
 	$self->set_tc_viewing_angle ( 1 );
-	$self->set_tc_video_codec ( $self->config('default_video_codec') );
 	$self->set_tc_multipass ( 1 );
-	$self->set_tc_target_size ( 1406 );
+	$self->set_tc_target_size ( 1400 );
 	$self->set_tc_disc_size ( 700 );
 	$self->set_tc_disc_cnt ( 2 );
+
+	my $container = $self->config('default_container');
+	# Internal value for MPEG/X*S*VCD/CVD container is 'vcd',
+	# but in the Config dialog the more convenient 'mpeg'
+	# is used, so this is translated here.
+	$container = 'vcd' if $container eq 'mpeg';
+
+	$self->set_tc_container   ( $self->config('default_container') );
+	$self->set_tc_video_codec ( $self->config('default_video_codec') );
+
+	if ( $self->tc_video_codec =~ /^(X?S?VCD|CVD)$/ ) {
+		$self->set_tc_container ( 'vcd' );
+	}
+
 	$self->set_tc_video_framerate (
 		$self->video_mode eq 'pal' ? 25 : 23.976
 	);
@@ -1499,6 +1517,23 @@ sub suggest_transcode_options {
 		$self->set_preview_frame_nr ( 200 );
 	}
 
+	my $pref_lang = $self->config('preferred_lang');
+	if ( $pref_lang =~ /^\s*([a-z]{2})/ ) {
+		$pref_lang = $1;
+		foreach my $audio ( @{$self->audio_tracks} ) {
+			if ( $audio->lang eq $pref_lang ) {
+				$self->set_audio_channel ( $audio->tc_nr );
+				last;
+			}
+		}
+		foreach my $subtitle ( values %{$self->subtitles} ) {
+			if ( $subtitle->lang eq $pref_lang ) {
+				$self->set_selected_subtitle_id ( $subtitle->id );
+				last;
+			}
+		}
+	}
+
 	1;
 }
 
@@ -1511,9 +1546,8 @@ sub calc_video_bitrate {
 		$self->audio_track->set_tc_bitrate ( 224 );
 		$self->audio_track->set_tc_audio_codec ( 'mp2' );
 		$self->set_tc_multipass ( 0 );
-	}
-	
-	if ( $video_codec eq 'SVCD' ) {
+
+	} elsif ( $video_codec =~ /^(X?S?VCD|CVD)$/ ) {
 		$self->audio_track->set_tc_audio_codec ( 'mp2' );
 		$self->set_tc_multipass ( 0 );
 	}
@@ -1612,22 +1646,24 @@ sub get_transcode_command {
 		if $self->tc_nice =~ /\S/;
 
 	my $mpeg = 0;
-	$mpeg = "svcd" if $self->tc_video_codec =~ /^SVCD$/;
-	$mpeg = "vcd"  if $self->tc_video_codec =~ /^VCD$/;
+	$mpeg = "svcd" if $self->tc_video_codec =~ /^(X?SVCD|CVD)$/;
+	$mpeg = "vcd"  if $self->tc_video_codec =~ /^X?VCD$/;
 
 	my $command = $nice."dr_exec transcode -H 10";
 
 	$command .= " -a $audio_channel" if $audio_channel != -1;
 
 	$command .= " -".$_." ".$source_options->{$_} for keys %{$source_options};
+
+	$command .= " -w ".int($self->tc_video_bitrate) if $self->tc_video_bitrate;
 	
-	if ( not $mpeg ) {
-		$command .=
-			" -w ".int($self->tc_video_bitrate);
-	} elsif ( $mpeg eq 'svcd' and $self->tc_video_bitrate ) {
-		$command .=
-			" -w ".int($self->tc_video_bitrate);
-	}
+#	if ( not $mpeg ) {
+#		$command .=
+#			" -w ".int($self->tc_video_bitrate);
+#	} elsif ( $mpeg eq 'svcd' and $self->tc_video_bitrate ) {
+#		$command .=
+#			" -w ".int($self->tc_video_bitrate);
+#	}
 
 	if ( $self->tc_start_frame ne '' or
 	     $self->tc_end_frame ne '' ) {
@@ -1690,7 +1726,12 @@ sub get_transcode_command {
 			}
 		} else {
 			$mpeg2enc_opts = ",'$mpeg2enc_opts'" if $mpeg2enc_opts;
-			$command .= " -F 1$mpeg2enc_opts --export_asr 2";
+			
+			if ( $self->tc_video_codec eq 'XVCD' ) {
+				$command .= " -F 2$mpeg2enc_opts --export_asr 2";
+			} else {
+				$command .= " -F 1$mpeg2enc_opts --export_asr 2";
+			}
 		}
 	
 		
@@ -1698,7 +1739,6 @@ sub get_transcode_command {
 		$command .= " -F ".$self->tc_video_af6_codec
 			if $self->tc_video_af6_codec ne '';
 	}
-
 
 	if ( $audio_channel != -1 ) {
 		$command .= " -d" if $audio_info->type eq 'lpcm';
@@ -1826,9 +1866,10 @@ sub get_transcode_command {
 		}
 	}
 
+	my $dir = $self->multipass_log_dir;
+	$command = "mkdir -m 0775 -p '$dir' && cd $dir && $command";
+
 	if ( $self->tc_multipass ) {
-		my $dir = $self->multipass_log_dir;
-		$command = "mkdir -m 0775 -p '$dir' && cd $dir && $command";
 		$command .= " -R $pass";
 
 		$avi_file = "/dev/null" if $pass == 1;
@@ -1850,7 +1891,8 @@ sub get_transcode_command {
 
 	if ( not $self->tc_multipass or ( $pass == 2 xor $self->has_vbr_audio ) ) {
 		if ( $mpeg ) {
-			$command .= " -y mpeg2enc,mp2enc -E 44100";
+			$command .= " -y mpeg2enc,mp2enc";
+			$command .= " -E 44100" if $self->tc_video_codec ne 'CVD';
 		} else {
 			$command .= " -y ".$self->tc_video_codec;
 			if ( $self->tc_container eq 'ogg' and
@@ -1889,7 +1931,7 @@ sub get_transcode_command {
 	$command .= " --print_status 20";
 
 	if ( $self->tc_container eq 'avi' and $self->tc_target_size > 2048 ) {
-		$command .= "--avi_limit 9999";
+		$command .= " --avi_limit 9999";
 	}
 
 	# Filters
@@ -2157,9 +2199,11 @@ sub get_mplex_command {
 	my $avi_file = $self->target_avi_file;
 	my $size     = $self->tc_disc_size;
 
-	my $mplex_f  = $video_codec eq 'SVCD' ? 4 : 1;
-	my $mplex_v  = $video_codec eq 'SVCD' ? "-V" : "";
-	my $vext     = $video_codec eq 'SVCD' ? 'm2v' : 'm1v';
+	my $svcd = $video_codec =~ /^(X?SVCD|CVD)$/;
+
+	my $mplex_f  = $svcd ? 4 : 1;
+	my $mplex_v  = $svcd ? "-V" : "";
+	my $vext     = $svcd ? 'm2v' : 'm1v';
 
 	my $target_file  = "$avi_file-%d.mpg";
 
@@ -2616,11 +2660,19 @@ sub get_view_dvd_command {
 
 	my $nr            = $self->nr;
 	my $audio_channel = $self->audio_channel;
+	my $base_audio_code;
 
+	if ( $self->audio_track->type eq 'lpcm' ) {
+		$base_audio_code = 160;
+	} else {
+		$base_audio_code = 128;
+	}
+		
 	my @opts = ( {
 		t => $self->nr,
 		a => $self->audio_channel,
 		m => $self->tc_viewing_angle,
+		b => $base_audio_code,
 	} );
 		
 	if ( $self->tc_use_chapter_mode eq 'select' ) {
@@ -2972,10 +3024,40 @@ sub get_burn_command {
 	return $command;
 }
 
+sub get_erase_cdrw_command {
+        my $self = shift;
+
+	my $blank_method = $self->config('burn_blank_method');
+	($blank_method) = $blank_method =~ /^\s*([^\s]+)/;
+
+        my $command =
+		$self->config('burn_cdrecord_cmd').
+		" dev=".$self->config('burn_cdrecord_device').
+		" blank=$blank_method";
+
+	$command .= " -dummy" if $self->config('burn_test_mode');
+
+	$command .= " && echo DVDRIP_SUCCESS";
+
+	return $command;
+}
+
+
 sub selected_subtitle {
 	my $self = shift;
 	return undef if not $self->subtitles;
 	return undef if not defined $self->selected_subtitle_id;
+	
+	if ( not $self->subtitles->{$self->selected_subtitle_id} ) {
+		$self->subtitles->{$self->selected_subtitle_id} =
+			Video::DVDRip::Subtitle->new (
+				id    => $self->selected_subtitle_id,
+				lang  => "<unknown>",
+				title => $self,
+			);
+
+	}
+	
 	return $self->subtitles->{$self->selected_subtitle_id};
 }
 
@@ -3459,6 +3541,8 @@ sub check_svcd_geometry {
 	my $codec = $self->tc_video_codec;
 	my $mode  = $self->video_mode;
 	
+	return if $codec =~ /^XS?VCD$/;
+	
 	my $width =
 		($self->tc_zoom_width || $self->width) -
 		$self->tc_clip2_left - $self->tc_clip2_right;
@@ -3470,12 +3554,21 @@ sub check_svcd_geometry {
 	my %valid_values = (
 		"VCD:pal:width"  	=> 352,
 		"VCD:pal:height" 	=> 288,
+
 		"VCD:ntsc:width"  	=> 352,
 		"VCD:ntsc:height" 	=> 240,
+
 		"SVCD:pal:width"  	=> 480,
 		"SVCD:pal:height" 	=> 576,
+
 		"SVCD:ntsc:width"  	=> 480,
 		"SVCD:ntsc:height" 	=> 480,
+		
+		"CVD:pal:width"		=> 352,
+		"CVD:pal:height"	=> 576,
+
+		"CVD:ntsc:width"	=> 352,
+		"CVD:ntsc:height"	=> 480,
 	);
 	
 	my $should_width  = $valid_values{"$codec:$mode:width"};

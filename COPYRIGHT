@@ -48,3 +48,6 @@ Florin Andrei <florin AT andrei.myip.org>
 
 Jonathan Rogers <jonner AT mailandnews.com>
 * 0.50 - OGG cluster mode for movies with more than one PSU.
+
+Moritz Muehlenhoff <jmm AT informatik.uni-bremen.de>.
+* 0.50 - Diskspace warning bugfix.

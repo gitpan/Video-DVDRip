@@ -1,4 +1,4 @@
-# $Id: StorageTab.pm,v 1.21 2003/02/05 22:16:19 joern Exp $
+# $Id: StorageTab.pm,v 1.21.2.1 2003/07/28 12:42:14 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -244,13 +244,13 @@ sub create_source_frame {
 	
 	$self->storage_widgets->{rip_mode_dvd} = $radio;
 
-	# Mode 3 - Use existent DVD image on harddisk
+	# Mode 3 - Use existing DVD image on harddisk
 	++$row;
 	$radio = $radio_group = Gtk::RadioButton->new ("", $radio_group);
 	$radio->show;
 	$table->attach ($radio, 0, 1, $row, $row+1, 'fill','expand',0,0);
 
-	$label = Gtk::Label->new ("Use existent DVD image located in this directory:");
+	$label = Gtk::Label->new ("Use existing DVD image located in this directory:");
 	$label->show;
 	$hbox = Gtk::HBox->new;
 	$hbox->show;

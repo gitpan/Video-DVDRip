@@ -1,4 +1,4 @@
-# $Id: Main.pm,v 1.62.2.1 2003/04/29 20:23:18 joern Exp $
+# $Id: Main.pm,v 1.62.2.2 2003/08/17 06:48:51 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -731,7 +731,7 @@ sub show_transcode_commands {
 		$commands .= $title->get_transcode_command( split => 1 )."\n";
 	}
 	
-	if ( $title->tc_video_codec =~ /^S?VCD$/ ) {
+	if ( $title->tc_container eq 'vcd' ) {
 		$commands .= "\n".$title->get_mplex_command( split => 1 ),"\n";
 	}
 

@@ -1,4 +1,4 @@
-# $Id: BitrateCalc.pm,v 1.10.2.2 2003/06/25 20:47:51 joern Exp $
+# $Id: BitrateCalc.pm,v 1.10.2.3 2003/08/16 15:35:36 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -227,7 +227,7 @@ sub calculate_video_bitrate {
 	if ( $container eq 'vcd' and $title->tc_disc_cnt * $title->tc_disc_size == $title->tc_target_size ) {
 		my $addition = sprintf ("%.2f", (2324/2048-1) * $target_size);
 		$self->add_to_sheet ({
-			label    => "(S)VCD sector size addition (factor: 2324/2048)",
+			label    => "VCD sector size addition (factor: 2324/2048)",
 			operator => "+",
 			value    => $addition,
 			unit     => "MB",
@@ -236,7 +236,7 @@ sub calculate_video_bitrate {
 
 		my $disc_overhead = sprintf ("%.2f", $VCD_DISC_OVERHEAD * $title->tc_disc_cnt / 1024 / 1024);
 		$self->add_to_sheet ({
-			label    => "(S)VCD per disc overhead (600 sectors)",
+			label    => "VCD per disc overhead (600 sectors)",
 			operator => "-",
 			value    => $disc_overhead,
 			unit     => "MB",
@@ -244,7 +244,7 @@ sub calculate_video_bitrate {
 		$target_size -= $disc_overhead;
 
 		$self->add_to_sheet ({
-			label    => "(S)VCD target size",
+			label    => "(X)(S)VCD/CVD target size",
 			operator => "=",
 			value    => $target_size,
 			unit     => "MB",
@@ -382,19 +382,20 @@ sub calculate_video_bitrate {
 		$comment = " (too high, set to ".$self->max_video_rate.")";
 	}
 	
-	if ( $title->tc_video_codec eq 'SVCD' and
+	if ( $title->tc_video_codec =~ /^(X?SVCD|CVD|XVCD)$/ and
 	     $video_bitrate + $audio_bitrate > $self->max_svcd_sum_rate ) {
 		$video_bitrate = $self->max_svcd_sum_rate - $audio_bitrate;
 		$comment = " (too high, limited)";
 	}
 
-	if ( $title->tc_video_codec eq 'SVCD' and
+	if ( $title->tc_video_codec =~ /^(X?SVCD|CVD|XVCD)$/ and
 	     $video_bitrate > $self->max_svcd_video_rate ) {
 		$video_bitrate = $self->max_svcd_video_rate;
 		$comment = " (too high, limited)";
 	}
 
-	if ( $title->tc_video_codec eq 'VCD' and not $title->tc_video_bitrate_manual ) {
+	if ( $title->tc_video_codec =~ /^X?VCD$/ and
+	     not $title->tc_video_bitrate_manual ) {
 		$video_bitrate = $self->vcd_video_rate;
 		$comment = " (VCD has fixed rate)";
 	}

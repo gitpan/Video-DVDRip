@@ -1,4 +1,4 @@
-# $Id: SubtitleTab.pm,v 1.14.2.4 2003/03/03 11:39:27 joern Exp $
+# $Id: SubtitleTab.pm,v 1.14.2.7 2003/07/28 16:48:33 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -880,9 +880,16 @@ sub init_subtitle_values {
 	my %popup_entries;
 	if ( $sensitive ) {
 		foreach my $subtitle ( values %{$subtitles} ) {
-			$popup_entries{$subtitle->id} =
-				$subtitle->id." ".
-				$subtitle->lang;
+			if ( $subtitle->lang ne '<unknown>' ) {
+				$popup_entries{$subtitle->id} =
+					sprintf ("%02d - %s",
+						 $subtitle->id, $subtitle->lang);
+			}
+		}
+		for ( my $i=0; $i < 32; ++$i ) {
+			next if exists $popup_entries{$i};
+			$popup_entries{$i} =
+				sprintf ("[ %02d - %s ]",  $i, "probably unused");
 		}
 	} else {
 		%popup_entries = (

@@ -1,4 +1,4 @@
-# $Id: BurnCD.pm,v 1.6 2003/02/05 22:17:25 joern Exp $
+# $Id: BurnCD.pm,v 1.6.2.3 2003/08/01 09:01:34 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -21,6 +21,9 @@ sub set_max_size		{ shift->{max_size}		= $_[1]	}
 sub test_mode			{ shift->{test_mode}			}
 sub set_test_mode		{ shift->{test_mode}		= $_[1]	}
 
+sub erase_cdrw			{ shift->{erase_cdrw}			}
+sub set_erase_cdrw		{ shift->{erase_cdrw}		= $_[1]	}
+
 sub wait_for_start		{ shift->{wait_for_start}		}
 sub set_wait_for_start		{ shift->{wait_for_start}	= $_[1]	}
 
@@ -38,21 +41,23 @@ sub info {
 	my $test_mode = "";
 	$test_mode = "(simulation) " if $self->test_mode;
 
+	my $what = $self->erase_cdrw ? "Erase CD-RW" : "Burn CD";
+
 	my $info;
 	if ( $self->wait_for_start == -1 ) {
-		$info = "Burn CD $test_mode";
+		$info = "$what $test_mode";
 
 	} elsif ( $self->wait_for_start == -2 ) {
-		$info = "Burn CD $test_mode- waiting 10 seconds";
+		$info = "$what $test_mode- waiting 10 seconds";
 
 	} elsif ( $self->wait_for_start ) {
-		$info = "Burn CD $test_mode- starting in ".$self->wait_for_start. " seconds";
+		$info = "$what $test_mode- starting in ".$self->wait_for_start. " seconds";
 
 	} elsif ( $self->fixating ) {
 		$info = "Fixating CD $test_mode";
 
 	} else {
-		$info = "Burn CD $test_mode";
+		$info = "$what $test_mode";
 	}
 
 	return $info;
@@ -75,7 +80,11 @@ sub init {
 sub command {
 	my $self = shift;
 
-	return $self->title->get_burn_command;
+	if ( $self->erase_cdrw ) {
+		return $self->title->get_erase_cdrw_command;
+	} else {
+		return $self->title->get_burn_command;
+	}
 }
 
 sub parse_output {

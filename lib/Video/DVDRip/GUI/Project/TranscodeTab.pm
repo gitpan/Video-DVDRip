@@ -1,4 +1,4 @@
-# $Id: TranscodeTab.pm,v 1.83.2.8 2003/06/29 09:16:42 joern Exp $
+# $Id: TranscodeTab.pm,v 1.83.2.11 2003/08/24 16:59:29 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -119,10 +119,11 @@ sub create_transcode_tab {
 			$self->update_storage_labels
 				if $method eq 'set_tc_video_bitrate';
 			if ( $attr eq 'tc_video_codec' ) {
-				if ( $value eq 'VCD' ) {
+				if ( $value eq 'VCD' or $value eq 'XVCD') {
 					$self->burn_widgets
 					     ->{burn_cd_type_vcd}->set_active(1);
-				} elsif ( $value eq 'SVCD' ) {
+				} elsif ( $value eq 'SVCD' or $value eq 'XSVCD' or
+					  $value eq 'CVD' ) {
 					$self->burn_widgets
 					     ->{burn_cd_type_svcd}->set_active(1);
 				} else {
@@ -228,7 +229,7 @@ sub create_container_options {
 	$row = 0;
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new ("Target format");
+	$label = Gtk::Label->new ("Select container");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 	$hsize_group->add ($hbox);
@@ -317,14 +318,24 @@ sub create_video_options {
 
 	$entry = Gtk::Combo->new;
 	$entry->show;
-#	$entry->set_popdown_strings ("SVCD","VCD","divx4","divx5","xvid","xvidcvs","ffmpeg","fame","af6");
 	$entry->set_usize(80,undef);
 	$hbox->pack_start($entry, 0, 1, 0);
+
+	$button = Gtk::Button->new (" Configure... ");
+	$button->show;
+	$hbox->pack_start ($button, 0, 1, 0);
 
 	$table->attach_defaults ($hbox, 1, 2, $row, $row+1);
 
 	$self->transcode_widgets->{tc_video_codec} = $entry->entry;
 	$self->transcode_widgets->{tc_video_codec_combo} = $entry;
+	$self->transcode_widgets->{tc_video_codec_label} = $label;
+	$self->transcode_widgets->{tc_video_codec_configure_button} = $button;
+
+	$button->signal_connect ("clicked", sub {
+		$self->open_video_configure_window;
+		1;
+	});
 
 	# AF6 Codec
 	++$row;
@@ -1108,7 +1119,7 @@ sub init_transcode_values {
 
 	$widgets->{tc_exit_afterwards}->set_active($exit_afterwards);
 
-	if ( $video_codec eq 'SVCD' or $video_codec eq 'VCD' ) {
+	if ( $container eq 'vcd' ) {
 		$self->switch_to_mpeg_encoding;
 	} else {
 		$self->switch_to_divx_encoding;
@@ -1133,7 +1144,7 @@ sub init_transcode_values {
 	my $manual_sensitive;
 	my $bitrate_sensitive;
 
-	$manual_sensitive  = $title->tc_video_codec ne 'VCD';
+	$manual_sensitive  = $title->tc_video_codec !~ /^S?VCD$/;
 	$bitrate_sensitive = $title->tc_video_bitrate_manual;
 	$bitrate_sensitive = 0 if $title->tc_video_codec eq 'VCD';
 	
@@ -1149,7 +1160,13 @@ sub init_transcode_values {
 	} else {
 		$widgets->{tc_video_bitrate_range}->set_active(0);
 	}
-	
+
+	if ( $video_codec eq 'xvid4' and $self->version("xvid4conf") >= 10500 ) {
+		$widgets->{tc_video_codec_configure_button}->set_sensitive(1);
+	} else {
+		$widgets->{tc_video_codec_configure_button}->set_sensitive(0);
+	}
+
 	$self->update_storage_labels;
 
 	1;
@@ -1172,6 +1189,7 @@ sub switch_to_mpeg_encoding {
 	$widgets->{avisplit_button}->set_sensitive(0);
 	$widgets->{cluster_button}->set_sensitive(0);
 	$widgets->{view_avi_button}->child->set("View MPEG");
+	$widgets->{tc_video_codec_label}->set ("MPEG Variant");
 
 	$_->hide foreach @{$widgets->{tc_mpeg_hide}};
 
@@ -1192,6 +1210,7 @@ sub switch_to_divx_encoding {
 
 	$widgets->{avisplit_button}->set_sensitive(1);
 	$widgets->{cluster_button}->set_sensitive(1);
+	$widgets->{tc_video_codec_label}->set ("Video codec");
 
 	if ( $title->is_ogg ) {
 		$widgets->{view_avi_button}->child->set("View OGG");
@@ -1217,10 +1236,21 @@ sub init_video_codec_combo {
 
 	if ( $title->tc_container eq 'vcd' ) {
 		$widgets->{tc_video_codec_combo}
-			->set_popdown_strings( "SVCD", "VCD" );
+			->set_popdown_strings( "SVCD", "VCD", "XSVCD", "XVCD", "CVD" );
 	} else {
-		$widgets->{tc_video_codec_combo}
-			->set_popdown_strings( "divx4","divx5","xvid","xvidcvs","ffmpeg","fame","af6" );
+		if ( $self->version ("transcode") < 609 ) {
+			$widgets->{tc_video_codec_combo}
+				->set_popdown_strings(
+					"divx4","divx5","xvid",
+					"xvidcvs","ffmpeg","fame","af6"
+				);
+		} else {
+			$widgets->{tc_video_codec_combo}
+				->set_popdown_strings(
+					"divx4","divx5","xvid","xvid2","xvid3",
+					"xvid4","ffmpeg","fame","af6"
+				);
+		}
 	}
 
 	$widgets->{tc_video_codec}->set_text($title->tc_video_codec);
@@ -1285,7 +1315,7 @@ sub transcode {
 		filename => $title->info_file,
 	)->write;
 
-	my $mpeg = $title->tc_video_codec =~ /^S?VCD$/;
+	my $mpeg = $title->tc_video_codec =~ /^(X?S?VCD|CVD)$/;
 
 	if ( not $title->tc_use_chapter_mode ) {
 		$chapters = [ undef ];
@@ -1336,20 +1366,20 @@ sub transcode {
 	}
 
 	if ( keys %{$title->get_additional_audio_tracks} ) {
-		if ( $title->tc_video_codec eq 'VCD' ) {
+		if ( $title->tc_video_codec =~ /^X?VCD$/ ) {
 			$self->message_window (
 				message =>
 					"Having more than one audio track ".
-					"isn't possible on a VCD."
+					"isn't possible on a (X)VCD."
 			);
 			return 1;
 		}
-		if ( $title->tc_video_codec eq 'SVCD' and
+		if ( $title->tc_video_codec =~ /^(X?SVCD|CVD)$/ and
 		     keys %{$title->get_additional_audio_tracks} > 1 ) {
 			$self->message_window (
 				message =>
 					"WARNING: Having more than two audio tracks\n".
-					"on a SVCD is not standard conform. You may\n".
+					"on a (X)SVCD/CVD is not standard conform. You may\n".
 					"encounter problems on hardware players."
 			);
 		}
@@ -1818,7 +1848,7 @@ sub add_to_cluster {
 
 	if ( $title->tc_container eq 'vcd' ) {
 		$self->message_window (
-			message => "(S)VCD is not supported for cluster mode."
+			message => "MPEG processing is not supported for cluster mode."
 		);
 		return 1;
 	}
@@ -1907,6 +1937,24 @@ sub transcode_filters {
 	$filters->open_window;
 
 	1;	
+}
+
+sub open_video_configure_window {
+	my $self = shift;
+
+	my $title = $self->selected_title;
+	return 1 if not $title;
+
+	my $in_filename  = $title->multipass_log_dir."/xvid4.cfg";
+	my $out_filename = $in_filename;
+
+	if ( not -f $in_filename ) {
+		system ("xvid4conf '$out_filename' &");
+	} else {
+		system ("xvid4conf '$out_filename' '$in_filename' &");
+	}
+
+	1;
 }
 
 1;

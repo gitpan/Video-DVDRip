@@ -1,4 +1,4 @@
-# $Id: Config.pm,v 1.42.2.7 2003/05/23 19:49:35 joern Exp $
+# $Id: Config.pm,v 1.42.2.11 2003/08/24 16:58:15 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -73,9 +73,9 @@ my %CONFIG_PARAMETER = (
 	play_dvd_command => {
 		label => "DVD player command",
 		type  => 'string',
-		value => 'mplayer <dvd://%t -aid %(%a+128) -chapter %c -dvdangle %m>',
+		value => 'mplayer <dvd://%t -aid %(%a+%b) -chapter %c -dvdangle %m>',
 		presets => [
-			'mplayer <dvd://%t -aid %(%a+128) -chapter %c-%c -dvdangle %m>',
+			'mplayer <dvd://%t -aid %(%a+%b) -chapter %c -dvdangle %m>',
 			'xine -a %a -p <dvd://%t.%c>',
 		],
 	},
@@ -145,14 +145,21 @@ my %CONFIG_PARAMETER = (
 		value => 1,
 	},
 	default_video_codec => {
-		label => "Default Video Codec",
+		label => "Default video codec",
 		type  => 'string',
 		value => 'divx4',
 		presets => [
-			"SVCD","VCD","divx4","divx5",
-			"xvid","xvidcvs","ffmpeg","fame",
-			"af6"
+			"SVCD","VCD","XSVCD","XVCD","CVD",
+			"divx4","divx5",
+			"xvid","xvidcvs","xvid2","xvid3","xvid4",
+			"ffmpeg","fame","af6"
 		],
+	},
+	default_container => {
+		label => "Default container format",
+		type  => 'string',
+		value => 'avi',
+		presets => [ "avi", "ogg", "mpeg" ],
 	},
 	burn_cdrecord_device => {
 		label => "cdrecord device (n,n,n or filename)",
@@ -231,6 +238,68 @@ my %CONFIG_PARAMETER = (
 		type  => 'string',
 		value => '',
 	},
+	burn_blank_method => {
+		label => "CD-RW blank method",
+		type  => 'string',
+		value => 'fast - minimally blank the entire disk',
+		presets => [
+			'all - blank the entire disk',
+			'fast - minimally blank the entire disk',
+#			'unclose - unclose last session',
+#			'session - blank last session',
+#			'disc - blank the entire disk',
+#			'disk - blank the entire disk',
+#			'minimal - minimally blank the entire disk',
+#			'track - blank a track',
+#			'unreserve - unreserve a track',
+#			'trtail - blank a track tail',
+		],
+	},
+
+	preferred_lang => {
+		label => "Preferred language",
+		type  => 'string',
+		value => '<none>',
+		presets => [
+			'<none>',
+			"en - English", "de - Deutsch", "fr - Francais", "es - Espanol",
+			"it - Italiano", "nl - Nederlands",
+			"aa - Afar", "ab - Abkhazian", "af - Afrikaans", "am - Amharic",
+			"ar - Arabic", "as - Assamese", "ay - Aymara", "az - Azerbaijani",
+			"ba - Bashkir", "be - Byelorussian", "bg - Bulgarian", "bh - Bihari",
+			"bi - Bislama", "bn - Bengali / Bangla", "bo - Tibetan",
+			"br - Breton", "ca - Catalan", "co - Corsican", "cs - Czech", "cy - Welsh",
+			"da - Dansk", "dz - Bhutani", "el - Greek",
+			"eo - Esperanto", "et - Estonian",
+			"eu - Basque", "fa - Persian", "fi - Suomi", "fj - Fiji", "fo - Faroese",
+			"fy - Frisian", "ga - Gaelic", "gd - Scots Gaelic",
+			"gl - Galician", "gn - Guarani", "gu - Gujarati",
+			"ha - Hausa", "he - Hebrew", "hi - Hindi", "hr - Hrvatski", "hu - Magyar",
+			"hy - Armenian", "ia - Interlingua", "id - Indonesian",
+			"ie - Interlingue", "ik - Inupiak", "in - Indonesian", "is - Islenska",
+			"iu - Inuktitut", "iw - Hebrew", "ja - Japanese", 
+			"ji - Yiddish", "jw - Javanese", "ka - Georgian", "kk - Kazakh",
+			"kl - Greenlandic", "km - Cambodian", "kn - Kannada", "ko - Korean",
+			"ks - Kashmiri", "ku - Kurdish", "ky - Kirghiz", "la - Latin",
+			"ln - Lingala", "lo - Laothian", "lt - Lithuanian", "lv - Latvian, Lettish",
+			"mg - Malagasy", "mi - Maori", "mk - Macedonian", "ml - Malayalam",
+			"mn - Mongolian", "mo - Moldavian", "mr - Marathi", "ms - Malay",
+			"mt - Maltese", "my - Burmese", "na - Nauru", "ne - Nepali", 
+			"no - Norsk", "oc - Occitan", "om - Oromo", "or - Oriya", "pa - Punjabi",
+			"pl - Polish", "ps - Pashto, Pushto", "pt - Portugues", "qu - Quechua",
+			"rm - Rhaeto-Romance", "rn - Kirundi", "ro - Romanian", "ru - Russian",
+			"rw - Kinyarwanda", "sa - Sanskrit", "sd - Sindhi", "sg - Sangho",
+			"sh - Serbo-Croatian", "si - Sinhalese", "sk - Slovak", "sl - Slovenian",
+			"sm - Samoan", "sn - Shona", "so - Somali", "sq - Albanian", "sr - Serbian",
+			"ss - Siswati", "st - Sesotho", "su - Sundanese", "sv - Svenska",
+			"sw - Swahili", "ta - Tamil", "te - Telugu", "tg - Tajik", "th - Thai",
+			"ti - Tigrinya", "tk - Turkmen", "tl - Tagalog", "tn - Setswana",
+			"to - Tonga", "tr - Turkish", "ts - Tsonga", "tt - Tatar", "tw - Twi",
+			"ug - Uighur", "uk - Ukrainian", "ur - Urdu", "uz - Uzbek", "vi - Vietnamese",
+			"vo - Volapuk", "wo - Wolof", "xh - Xhosa", "yi - Yiddish", "yo - Yoruba",
+			"za - Zhuang", "zh - Chinese", "zu - Zulu",
+		],
+	},
 );
 
 my @CONFIG_ORDER = (
@@ -248,6 +317,7 @@ my @CONFIG_ORDER = (
 		burn_cdrecord_cmd    burn_cdrdao_cmd
 		burn_mkisofs_cmd     burn_vcdimager_cmd
 		burn_writing_speed   burn_estimate_size
+		burn_blank_method
 	)],
 	"cdrdao options" => [qw(
 		burn_cdrdao_driver   burn_cdrdao_overburn
@@ -258,10 +328,13 @@ my @CONFIG_ORDER = (
 		cluster_master_port  
 	)],
 	"Miscellaneous options" => [qw(
-		default_video_codec  show_tooltips
+		default_video_codec  default_container
 		main_window_width    main_window_height
+		preferred_lang       show_tooltips
 	)],
 );
+
+sub config_definition { \%CONFIG_PARAMETER }
 
 sub new {
 	my $type = shift;
@@ -392,6 +465,38 @@ sub new {
 			tc_fast_bisection => 0,
 		),
 		Video::DVDRip::Preset->new (
+			name => "xsvcd_pal",
+			title => "XSVCD anamorph, PAL",
+			tc_clip1_top	=> 0,
+			tc_clip1_bottom	=> 0,
+			tc_clip1_left	=> 0,
+			tc_clip1_right	=> 0,
+			tc_zoom_width	=> 720,
+			tc_zoom_height	=> 576,
+			tc_clip2_top	=> 0,
+			tc_clip2_bottom	=> 0,
+			tc_clip2_left	=> 0,
+			tc_clip2_right	=> 0,
+			tc_fast_resize  => 1,
+			tc_fast_bisection => 0,
+		),
+		Video::DVDRip::Preset->new (
+			name => "cvd_pal",
+			title => "CVD anamorph, PAL",
+			tc_clip1_top	=> 0,
+			tc_clip1_bottom	=> 0,
+			tc_clip1_left	=> 0,
+			tc_clip1_right	=> 0,
+			tc_zoom_width	=> 352,
+			tc_zoom_height	=> 576,
+			tc_clip2_top	=> 0,
+			tc_clip2_bottom	=> 0,
+			tc_clip2_left	=> 0,
+			tc_clip2_right	=> 0,
+			tc_fast_resize  => 1,
+			tc_fast_bisection => 0,
+		),
+		Video::DVDRip::Preset->new (
 			name => "vcd_ntsc_43",
 			title => "VCD 4:3, NTSC",
 			tc_clip1_top	=> 0,
@@ -447,6 +552,38 @@ sub new {
 			tc_clip1_left	=> 0,
 			tc_clip1_right	=> 0,
 			tc_zoom_width	=> 480,
+			tc_zoom_height	=> 480,
+			tc_clip2_top	=> 0,
+			tc_clip2_bottom	=> 0,
+			tc_clip2_left	=> 0,
+			tc_clip2_right	=> 0,
+			tc_fast_resize  => 1,
+			tc_fast_bisection => 0,
+		),
+		Video::DVDRip::Preset->new (
+			name => "xsvcd_ntsc",
+			title => "XSVCD anamorph, NTSC",
+			tc_clip1_top	=> 0,
+			tc_clip1_bottom	=> 0,
+			tc_clip1_left	=> 0,
+			tc_clip1_right	=> 0,
+			tc_zoom_width	=> 720,
+			tc_zoom_height	=> 480,
+			tc_clip2_top	=> 0,
+			tc_clip2_bottom	=> 0,
+			tc_clip2_left	=> 0,
+			tc_clip2_right	=> 0,
+			tc_fast_resize  => 1,
+			tc_fast_bisection => 0,
+		),
+		Video::DVDRip::Preset->new (
+			name => "cvd_ntsc",
+			title => "CVD anamorph, NTSC",
+			tc_clip1_top	=> 0,
+			tc_clip1_bottom	=> 0,
+			tc_clip1_left	=> 0,
+			tc_clip1_right	=> 0,
+			tc_zoom_width	=> 352,
 			tc_zoom_height	=> 480,
 			tc_clip2_top	=> 0,
 			tc_clip2_bottom	=> 0,
@@ -525,7 +662,7 @@ sub save {
 	my $fh = FileHandle->new;
 
 	open ($fh, "> $filename") or die "can't write $filename";
-	print $fh q{# $Id: Config.pm,v 1.42.2.7 2003/05/23 19:49:35 joern Exp $},"\n";
+	print $fh q{# $Id: Config.pm,v 1.42.2.11 2003/08/24 16:58:15 joern Exp $},"\n";
 	print $fh "# This file was generated by Video::DVDRip Version $Video::DVDRip::VERSION\n\n";
 
 	print $fh ${$data_sref};

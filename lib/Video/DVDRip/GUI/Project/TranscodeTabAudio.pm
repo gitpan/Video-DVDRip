@@ -1,4 +1,4 @@
-# $Id: TranscodeTabAudio.pm,v 1.13.2.1 2003/05/23 19:51:22 joern Exp $
+# $Id: TranscodeTabAudio.pm,v 1.13.2.4 2003/08/17 06:57:13 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -437,9 +437,6 @@ sub create_audio_mp2_tab {
 		hsize_group => $hsize_group
 	);
 	
-	$self->transcode_widgets->{tc_mp2_samplerate}->set_text ( 44100 );
-	$self->transcode_widgets->{tc_mp2_samplerate_combo}->set_sensitive ( 0 );
-
 	return $frame_hbox;
 }
 
@@ -470,7 +467,7 @@ sub create_audio_bitrate {
 		is_min		=> 1,
 	);
 	$entry->show;
-	$entry->set_popdown_strings (64, 96, 128, 160, 192, 256, 320, 384);
+	$entry->set_popdown_strings (64, 96, 128, 160, 192, 224, 256, 320, 384);
 	$entry->set_usize(60,undef);
 	$hbox->pack_start($entry, 0, 1, 0);
 
@@ -895,10 +892,15 @@ sub init_audio_values {
 		);
 	}
 
-	if ( $title->tc_video_codec eq 'VCD' ) {
+	if ( $title->tc_video_codec eq "VCD" ) {
 		$widgets->{tc_mp2_bitrate_combo}->set_sensitive ( 0 );
-	} else {
+		$widgets->{tc_mp2_samplerate_combo}->set_sensitive ( 0 );
+	} elsif ( $title->tc_video_codec eq "SVCD" ) {
 		$widgets->{tc_mp2_bitrate_combo}->set_sensitive ( 1 );
+		$widgets->{tc_mp2_samplerate_combo}->set_sensitive ( 0 );
+	} elsif ( $title->tc_video_codec =~ /^(XS?VCD|CVD)$/ ) {
+		$widgets->{tc_mp2_bitrate_combo}->set_sensitive ( 1 );
+		$widgets->{tc_mp2_samplerate_combo}->set_sensitive ( 1 );
 	}
 
 	$widgets->{tc_audio_codec_notebook}->set_sensitive (
@@ -906,6 +908,7 @@ sub init_audio_values {
 	);
 
 	$widgets->{tc_mp3_samplerate}->set_text ( $title->audio_track->tc_mp3_samplerate );
+	$widgets->{tc_mp2_samplerate}->set_text ( $title->audio_track->tc_mp2_samplerate );
 	$widgets->{tc_vorbis_samplerate}->set_text ( $title->audio_track->tc_vorbis_samplerate );
 	$widgets->{tc_vorbis_quality}->set_text ( $title->audio_track->tc_vorbis_quality );
 

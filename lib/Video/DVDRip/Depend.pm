@@ -1,4 +1,4 @@
-# $Id: Depend.pm,v 1.2.2.6 2003/05/23 19:50:51 joern Exp $
+# $Id: Depend.pm,v 1.2.2.9 2003/08/24 17:18:05 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -30,7 +30,7 @@ my %TOOLS = (
 	},
 	convert 	=> 'default',
 	min 		=> "0.6.2",
-	suggested 	=> "0.6.3",
+	suggested 	=> "0.6.9",
 	installed	=> undef,	# set by ->new
 	installed_num	=> undef,	# set by ->new
 	min_num		=> undef,	# set by ->new
@@ -49,6 +49,19 @@ my %TOOLS = (
 	convert 	=> 'default',
 	min 		=> "4.0.0",
 	suggested 	=> "5.5.3",
+    },
+    xvid4conf => {
+    	order		=> ++$ORDER,
+    	comment		=> "xvid4 configuration tool",
+	optional	=> 1,
+	get_version 	=> sub {
+		qx[xvid4conf -v 2>&1] =~ /(\d+\.\d+(\.\d+)?)/i;
+		wait;	# saw zombies on a Slackware system without it.
+		return $1;
+	},
+	convert 	=> 'default',
+	min 		=> "1.6",
+	suggested 	=> "1.6",
     },
     subtitle2pgm => {
      	order		=> ++$ORDER,

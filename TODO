@@ -1,4 +1,4 @@
-$Id: TODO,v 1.117.2.11 2003/06/29 09:17:16 joern Exp $
+$Id: TODO,v 1.117.2.15 2003/08/16 15:50:30 joern Exp $
 
 KNOWN BUGS:
 ===========
@@ -28,7 +28,12 @@ may be implemented soon, some eventually never... ;)
 
 TODO:
 =====
+- .dvdrip-info file should list filters. Suggested by Götz Waschk.
 - support multiple subtitles in the same vobsub file
+- make frame range transcoding with cluster mode possible:
+  transcode the whole thing and cut the desired frames
+  afterwards (before splitting). Suggested by Jens Carsten
+  Hansen <greylion AT gmx.net>
 - add a preference option whether dvd::rip project data files
   should be saved in the project directory by default,
   suggested by Davide Ferrari
@@ -73,8 +78,6 @@ TODO:
   and avimerge)
 - link ETA compution of a 2-pass transcode together, requested by Ole Tange.
 - add a DVD profile, Suggested by Felix Maibaum <f.maibaum AT tu-bs.de>
-- mplayer aid parameter must be codec specific. Thanks for
-  the report to Fabio Russo.
 - support vobsub generation with cluster mode
 - delete a file selection on the burn tab, requested by Tony Clark
   <tclark AT bredband.net>
@@ -83,8 +86,6 @@ TODO:
   with different settings. Suggested by Christoph Bartoschek.
 - check and print diskspace for VOB/AVI directories separately.
   Suggested by Bodo Bauer <bb AT bb-zone.com>
-- consider avi/ogg containter overhead when calculating the
-  video bitrate, suggested by Markus Liebl
 - overall video bitrate calculation for a collection of
   selected titles. Requested by Felix Knecht <felixknecht AT web.de>
 - print actual bits/pixel somewhere on the clip&zoom tab,

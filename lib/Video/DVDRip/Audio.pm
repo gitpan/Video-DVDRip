@@ -1,4 +1,4 @@
-# $Id: Audio.pm,v 1.10 2003/01/28 20:19:57 joern Exp $
+# $Id: Audio.pm,v 1.10.2.1 2003/08/16 15:33:34 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -37,7 +37,7 @@ sub set_scan_output		{ shift->{scan_output}		= $_[1] }
 
 sub tc_nr			{ shift->{tc_nr}			}
 sub tc_target_track		{ shift->{tc_target_track}		}
-sub tc_audio_filter		{ shift->{tc_audio_filter}			}
+sub tc_audio_filter		{ shift->{tc_audio_filter}		}
 sub tc_option_n			{ shift->{tc_option_n}			}
 sub tc_volume_rescale		{ shift->{tc_volume_rescale}		}
 
@@ -55,8 +55,9 @@ sub tc_ac3_bitrate		{ shift->{tc_ac3_bitrate}		}
 sub tc_vorbis_bitrate		{ shift->{tc_vorbis_bitrate}		}
 sub tc_vorbis_samplerate	{ shift->{tc_vorbis_samplerate}		}
 sub tc_vorbis_quality		{ shift->{tc_vorbis_quality}		}
-sub tc_vorbis_quality_enable	{ shift->{tc_vorbis_quality_enable}		}
+sub tc_vorbis_quality_enable	{ shift->{tc_vorbis_quality_enable}	}
 sub tc_mp2_bitrate		{ shift->{tc_mp2_bitrate}		}
+sub tc_mp2_samplerate		{ shift->{tc_mp2_samplerate}		}
 sub tc_pcm_bitrate		{ shift->{tc_pcm_bitrate}		}
 
 sub set_tc_audio_codec		{ shift->{tc_audio_codec}	= $_[1]	}
@@ -67,8 +68,9 @@ sub set_tc_ac3_bitrate		{ shift->{tc_ac3_bitrate}	= $_[1]	}
 sub set_tc_vorbis_bitrate	{ shift->{tc_vorbis_bitrate}	= $_[1]	}
 sub set_tc_vorbis_samplerate	{ shift->{tc_vorbis_samplerate}	= $_[1]	}
 sub set_tc_vorbis_quality	{ shift->{tc_vorbis_quality}	= $_[1]	}
-sub set_tc_vorbis_quality_enable{ shift->{tc_vorbis_quality_enable}= $_[1]	}
+sub set_tc_vorbis_quality_enable{ shift->{tc_vorbis_quality_enable}=$_[1]}
 sub set_tc_mp2_bitrate		{ shift->{tc_mp2_bitrate}	= $_[1]	}
+sub set_tc_mp2_samplerate	{ shift->{tc_mp2_samplerate}	= $_[1]	}
 sub set_tc_pcm_bitrate		{ shift->{tc_pcm_bitrate}	= $_[1]	}
 
 sub new {

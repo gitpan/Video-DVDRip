@@ -1,6 +1,73 @@
-$Id: Changes,v 1.131.2.34 2003/06/29 09:17:16 joern Exp $
+n$Id: Changes,v 1.131.2.46 2003/08/24 17:30:07 joern Exp $
 
 Revision history and release notes for dvd::rip.
+
+0.50.15 [stable branch] Sun Aug 24 2003, joern
+	Bugfixes:
+	- mplayer DVD player command didn't work for LPCM tracks.
+	  Thanks to Fabio Russo for the patch. You must re-select
+	  the mplayer command from the Preferences page for this to
+	  take effect.
+	- Free diskspace warning wasn't exact. Thanks for the patch
+	  to Moritz Muehlenhoff <jmm AT informatik.uni-bremen.de>.
+	- Fixed a typo in the --avilimit option (for AVI files >2GB).
+	  Thanks for the report to Jarkko Seppa <Jarkko.Seppa AT oulu.fi>.
+	- Default target size was set to 1406, instead of 1400 (2x700).
+
+	Features:
+	- Expanded the subtitle selection popup to the maximum of
+	  32 entries, not only the probed entries. With some DVD's the
+	  subtitle probing fails. This way you can select even
+	  "impossible" subtitles, if they weren't detected correctly.
+	  Thanks for the suggestion to Stefan Raspl <stefan.raspl AT
+	  playofmind.net>.
+	- Blank CD-RW (uses the configured cdrecord command and device),
+	  supporting 'fast' and 'all' methods (choose in the preferences).
+	  Not really tested yet due to lack of CD-RW media. Suggested
+	  by <dvdrip AT vikas.mailshell.com>.
+	- New preference "Preferred language". Default audio track
+	  and subtitle are selected accordingly after reading TOC,
+	  resp. the first audio track / subtitle matching the
+	  preferred language will be selected. Note that you still
+	  should review this setting, because the first matching item
+	  found must not be the one you really want. Suggested by
+	  John Washington <washingtonj AT acm.org>. Credits for the
+	  list of available language codes go to Chris Phillips 
+	  <acid_kewpie AT users.sourceforge.net>, the author of lsdvd,
+	  from which I extracted the list.
+	- Video codec list takes the new XviD variants of transcode 0.6.9
+	  into account (xvid, xvid2, xvid3 and xvid4). For earlier
+	  transcode versions still xvid and xvidcvs are listed here.
+	- Support for xvid4conf, a tool to tweak all options of the
+	  new dev-api-4 XviD codec. You need at least transcode 0.6.9
+	  and xvid4conf 1.6 for this to work.
+	  Note: the xvid4 settings will be used for all titles of your
+	  project. Also they don't take effect in cluster mode. This will
+	  change for future dvd::rip/transcode releases.
+
+	New/Changed X?S?VCD|CVD stuff:
+	==============================
+	- Renamed '(S)VCD' container format to 'MPEG', which is in fact
+	  what it is.
+	- Added new MPEG "Codecs": XSVCD, XVCD and CVD
+	  - SVCD and VCD create standard conform streams. You
+	    can't change parameters to non-standard values.
+	  - XSVCD and XVCD allow you to choose arbitrary video and
+	    audio bitrates / samplerates.
+	  - CVD allows you everything (like X(S)VCD), but additionally
+	    dvd::rip checks for correct frame sizes.
+	- Added new Clip & Zoom presets: CVD anamorph and XSVCD
+	  anamorph for PAL and NTSC.
+	- Added new Preference: "Default Container Format", fixing also
+	  a mismatch, if you choosed 'SVCD' or 'VCD' as a default codec,
+	  but dvd::rip still set to 'avi' container format by default.
+	- Audio bitrate 224 was missing in the popup list.
+	- Renamed 'Target format' to 'Select container' and the 'Video
+	  codec' label got renamed to 'MPEG variant' for the MPEG
+	  container"
+
+	Thanks to James L. Paul who urged me to implement the CVD
+	stuff, which hopefully introduced not too many bugs ;)
 
 0.50.14 [stable branch] Sun 29 Jun 2003, joern
 	Bugfixes:
@@ -23,11 +90,11 @@ Revision history and release notes for dvd::rip.
 	  report to Tyler <dvdrip AT unixgod.net> and Florin.
 	- NTSC: resolution was set to 720x480, even if the movie
 	  had 704x480. dvd::rip now sets no resolution at all, because
-	  transcode autodectes the resolution. Thanks for the report to
+	  transcode autodetects the resolution. Thanks for the report to
 	  Francisco J. León <fleona AT cantv.net>.
 
 	Features:
-	- transcoce >= 0.6.6 sets mpeg2enc -I 0 by default, but
+	- transcode >= 0.6.6 sets mpeg2enc -I 0 by default, but
 	  older versions doesn't. This speeds up things signifcantly,
 	  because now mpeg2enc skips deinterlace processing (it was
 	  done even for non-interlaced material and wasted time).

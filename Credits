@@ -131,6 +131,11 @@
   Richard Kilgore <rkilgore AT hotpop.com>
   Tyler <dvdrip AT unixgod.net>
   Francisco J. León <fleona AT cantv.net>  
+  Stefan Raspl <stefan.raspl AT playofmind.net>
+  <dvdrip AT vikas.mailshell.com>
+  John Washington <washingtonj AT acm.org>.
+  Moritz Muehlenhoff <jmm AT informatik.uni-bremen.de>.
+  Jarkko Seppa <Jarkko.Seppa AT oulu.fi>
 
   (please contact me if you're missing your name here)
 
@@ -143,3 +148,6 @@
   Doug Shea <doug_shea AT alumni.ucsd.edu>
   Douglas Bollinger <dcb AT 321.net>
 
+* Chris Phillips <acid_kewpie AT users.sourceforge.net>,
+  the author of lsdvd, from which I extracted the list of
+  ISO-639 language codes.

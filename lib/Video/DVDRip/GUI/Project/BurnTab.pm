@@ -1,4 +1,4 @@
-# $Id: BurnTab.pm,v 1.13.2.1 2003/03/28 20:36:52 joern Exp $
+# $Id: BurnTab.pm,v 1.13.2.3 2003/08/16 15:42:48 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -135,12 +135,12 @@ sub create_burn_cd_type {
 	$radio_iso->set_sensitive(0) if not $self->has ("mkisofs") or
 					not $self->has ("cdrecord");
 	$hbox->pack_start($radio_iso, 0, 1, 0);
-	my $radio_svcd = Gtk::RadioButton->new ("SVCD (.mpg files)   ", $radio_iso);
+	my $radio_svcd = Gtk::RadioButton->new ("(X)SVCD/CVD (.mpg files)   ", $radio_iso);
 	$radio_svcd->show;
 	$radio_svcd->set_sensitive(0) if not $self->has ("vcdimager") or
 					 not $self->has ("cdrdao");
 	$hbox->pack_start($radio_svcd, 0, 1, 0);
-	my $radio_vcd = Gtk::RadioButton->new ("VCD (.mpg files)   ", $radio_iso);
+	my $radio_vcd = Gtk::RadioButton->new ("(X)VCD (.mpg files)   ", $radio_iso);
 	$radio_vcd->show;
 	$radio_vcd->set_sensitive(0) if not $self->has ("vcdimager") or
 					not $self->has ("cdrdao");
@@ -512,22 +512,22 @@ sub create_burn_operate {
 	my $widgets = $self->burn_widgets;
 
 	my ($frame, $frame_hbox, $table, $row, $hbox, $label, $entry);
-	my ($button, $button_box);
+	my ($button, $button_box, $frame_vbox);
 
 	# Frame
 	$frame = Gtk::Frame->new ("Operate");
 	$frame->show;
 
-	# Frame HBox
-	$frame_hbox = Gtk::HBox->new;
-	$frame_hbox->set_border_width(5);
-	$frame_hbox->show;
-	$frame->add ($frame_hbox);
-
+	# Frame VBox
+	$frame_vbox = Gtk::VBox->new;
+	$frame_vbox->show;
+	$frame_vbox->set_border_width(5);
+	$frame->add ($frame_vbox);
+	
 	# ButtonBox
 	$button_box = Gtk::HBox->new;
 	$button_box->show;
-	$frame_hbox->pack_start ($button_box, 0, 1, 0);
+	$frame_vbox->pack_start ($button_box, 0, 1, 0);
 
 	# Burn Button
 	$button = Gtk::Button->new_with_label ("  Burn selected file(s)  ");
@@ -545,6 +545,11 @@ sub create_burn_operate {
 
 	$widgets->{image_button} = $button;
 
+	# ButtonBox
+	$button_box = Gtk::HBox->new;
+	$button_box->show;
+	$frame_vbox->pack_start ($button_box, 0, 1, 0);
+
 	# Eject Button
 	$button = Gtk::Button->new_with_label (" Open burner tray ");
 	$button->show;
@@ -557,6 +562,12 @@ sub create_burn_operate {
 	$button->signal_connect ("clicked", sub { $self->insert_media } );
 	$button_box->pack_start ($button, 0, 1, 0);
 
+	# Blank CD-RW button
+	$button = Gtk::Button->new_with_label (" Blank CD-RW ");
+	$button->show;
+	$button->signal_connect ("clicked", sub { $self->burn_cd ( erase_cdrw => 1 ) } );
+	$button_box->pack_start ($button, 0, 1, 0);
+	
 	return $frame;
 }
 
@@ -799,6 +810,8 @@ sub create_cd_image {
 
 sub burn_cd {
 	my $self = shift;
+	my %par = @_;
+	my ($erase_cdrw) = @par{'erase_cdrw'};
 
 	my $title = $self->selected_title;
 	return 1 if not $title;
@@ -811,7 +824,8 @@ sub burn_cd {
 		nr    => ++$nr,
 		title => $title,
 	);
-	$job->set_test_mode ($self->config('burn_test_mode'));
+	$job->set_test_mode ( $self->config('burn_test_mode') );
+	$job->set_erase_cdrw ( $erase_cdrw );
 	$job->set_max_size ( $self->sum_mb );
 
 	$last_job = $exec->add_job ( job => $job );
@@ -840,6 +854,5 @@ sub insert_media {
 
         1;
 }
-
 
 1;
