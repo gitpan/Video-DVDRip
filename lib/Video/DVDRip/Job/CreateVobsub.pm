@@ -1,4 +1,4 @@
-# $Id: CreateVobsub.pm,v 1.3.2.1 2003/03/03 11:41:06 joern Exp $
+# $Id: CreateVobsub.pm,v 1.3.2.2 2004/04/10 09:42:39 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -66,13 +66,13 @@ sub command {
 	my ($start, $end);
 	if ( $file_nr == 0 ) {
 		$start = 0;
-		$end   = int ($self->count_job->files_scanned->[$file_nr]->{frames}/
-			      $self->title->tc_video_framerate);
+		$end   = $self->count_job->files_scanned->[$file_nr]->{frames}/
+			      $self->title->tc_video_framerate;
 	} else {
 		$start = $self->count_job->files_scanned->[$file_nr-1]->{end};
 		$end   = $start + 
-			 int ($self->count_job->files_scanned->[$file_nr]->{frames}/
-			      $self->title->tc_video_framerate);
+			 $self->count_job->files_scanned->[$file_nr]->{frames}/
+			      $self->title->tc_video_framerate;
 		$end += 1000 if $file_nr ==
 				@{$self->count_job->files_scanned} - 1;
 	}

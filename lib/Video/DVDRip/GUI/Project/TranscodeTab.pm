@@ -1,4 +1,4 @@
-# $Id: TranscodeTab.pm,v 1.83.2.14 2003/10/26 12:45:13 joern Exp $
+# $Id: TranscodeTab.pm,v 1.83.2.15 2004/04/10 09:42:06 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -1120,9 +1120,11 @@ sub init_transcode_values {
 	$widgets->{tc_multipass_reuse_log}->set_sensitive($multipass);
 	$widgets->{tc_multipass_reuse_log}->set_active($title->tc_multipass_reuse_log);
 
+	#-- determine index for deinterlace popup (fishy)
 	$deinterlace = 4 if $deinterlace eq '32detect';
-	$deinterlace = 5 if $deinterlace eq 'ivtc';
-	$deinterlace = 6 if $deinterlace eq 'smart';
+	$deinterlace = 5 if $deinterlace eq '5';
+	$deinterlace = 6 if $deinterlace eq 'ivtc';
+	$deinterlace = 7 if $deinterlace eq 'smart';
 
 	$widgets->{tc_deinterlace_popup}->set_history ($deinterlace);
 #	$widgets->{tc_anti_alias_popup}->set_history ($anti_alias);

@@ -1,8 +1,34 @@
-$Id: TODO,v 1.117.2.19 2003/10/26 14:36:35 joern Exp $
+$Id: TODO,v 1.117.2.20 2004/04/10 09:44:34 joern Exp $
 
 KNOWN BUGS:
 ===========
-- Currently no issue the developer would call a "bug" is known ;)
+
+- shutting down dvd::rip on the logging tab is slow. Reported
+  by Christoph Lampert.
+- vobsub creation fails on vfat partitions. Reported by
+  Christoph Lampert.
+- creating vobsub after transcoding doesn't work for (S)VCD
+  (it's useless anyway, but dvd::rip should warn about this).
+  Thanks to Kai Bartels <kaba AT picturesafe.de>.
+
+- NTSC frame rate issue, reported by Frank Sigi' Luithle
+  <sigi AT fsinfo.cs.uni-sb.de>:
+
+  I just found that auto-corrected frame-rates from wrongly detected NTSC
+  movies are not transferred into the FPS drop-down in the 'Transcode' tab.
+
+  According to Changelog for 0.50.11 this was a workaround for a transcode
+  bug.  Actually the correct frame-rate is shown in the 'Rip' tab, so the
+  workaround seems to be OK.  Unfortunately the incorrect framerate still
+  appears under 'Video framerate' in the 'Transcode' tab.
+
+  If one forgets to correct this by hand, one gets incorrectly encoded videos
+  (in my case audio lag was the result).  This is quite annoying since you
+  wouldn't find out until the final video is encoded...
+
+- Rip button not always greyed out in "DVD image" mode (e.g. when
+  chapter selection changes). Reported by Geoffrey Trexler <skynet AT
+  charter.net>
 
 NOTE:
 =====
@@ -13,10 +39,36 @@ may be implemented soon, some eventually never... ;)
 
 TODO:
 =====
+- open a HOWTO section in the documentation, starting with
+  Gunnar's <gunix AT comhem.se> HOWTO for a quick rip including
+  subtitles.
+- support transcode's --export_par option, requested by Jim Darby
+  <jim AT jimbocorp.uklinux.net>
+- interactive video frame selection on clip&zoom page, requested
+  by Florian Erfurthh <floh-erfurth AT vodafone.de>
+- extract/transcode additional sound tracks to an already
+  transcoded movie.
+- round split timestamp for splitted vobsubs, as long subtitleripper
+  can't split at millisecond accuracy. Suggested by Jean-Yves Simon.
+- add a template of the vobsub creation command to debugging window,
+  suggested by Christoph Lampert.
+- vobsub: use fractional values for splitting, suggested by
+  Jean-Yves Simon.
+- make cluster webinterface fully interactive, requested by
+  Stuecker, Sebastian <Stuecker AT nm.hsd.utc.com>
+- add support for new pixel aspect ratio transcode feature (ffmpeg
+  and xvid). Suggested by Christoph Lampert.
+- generic target aspect ratio mechanism: user can provide an arbitrary
+  target aspect ratio (e.g. 1:1, 12:11, 16:11, 10:11 and 40:33)
+  All autoadjusting presets take that into account (currently they
+  always produce 1:1 ratio). Suggested by Christoph Lampert
+  <chl AT math.uni-bonn.de>
 - add support for MPEG2 requantization (needs transcode 0.6.11
   or better) and basic DVD authoring.
 - extra logfile for dvdrip-master, suggested by
   Martin Lohmeier <blackm AT ferris.dyndns.info>
+- make list of video codecs on Transcode tab configurable.
+  Suggested by Sven Gehr <sven AT dreampixel.de>
 - support lame preset option resp. mp3/vbr audio
 - a preference for default transcode options, suggested by Mark Rose.
 - add eMoviX support, requested by Daniel Laska <dalas AT web.de>
@@ -37,11 +89,6 @@ TODO:
 - Make creating vcd11 images possible (e.g. by not overiding a
   --type=vcd11 setting in the preferences). Suggested by
   "Eric Fether" <efether AT rwconsulting.com>
-- generic target aspect ratio mechanism: user can provide an arbitrary
-  target aspect ratio (e.g. 1:1, 12:11, 16:11, 10:11 and 40:33)
-  All autoadjusting presets take that into account (currently they
-  always produce 1:1 ratio). Suggested by Christoph Lampert
-  <chl AT math.uni-bonn.de>
 - check for fat32 file system and warn, that files may not get
   larger than 2 GB (and suggest to use unix filsystems instead ;)
   Suggested by Felix Knecht.

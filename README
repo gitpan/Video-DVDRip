@@ -93,15 +93,11 @@ deb http://marillat.free.fr/ unstable main
 
 1.1.2 SuSE packages
 
-   Rainer Ley builds dvd::rip SuSE RPM's you can download from the
-   contrib directory:
+   On packman.links2linux.org you find several video related RPM's,
+   including dvd::rip and transcode:
 
-     http://www.exit1.org/dvdrip/contrib/suse/
-
-   On packman.links2linux.de you find several video related RPM's,
-   including transcode:
-
-     http://packman.links2linux.de/index.php4
+     dvd::rip at packman.links2linux.org
+     http://packman.links2linux.org/ homepage
 
 1.1.3 Mandrake packages
 
@@ -147,8 +143,8 @@ deb http://marillat.free.fr/ unstable main
    Local download of the latest stable release: (currently no unstable
    release available)
 
-     Video-DVDRip-0.50.16.tar.gz
-     Video-DVDRip-0.50.16.tar.gz.asc (GnuPG signature, get key)
+     Video-DVDRip-0.50.17.tar.gz
+     Video-DVDRip-0.50.17.tar.gz.asc (GnuPG signature, get key)
 
    CPAN download directory: (list of mirrors)
 
@@ -282,7 +278,9 @@ cd dvdrip; cvs -z3 update
    dvd::rip delegates all the low level video processing to transcode,
    which can be obtained from here:
 
+     http://www.transcoding.org/
      http://www.theorie.physik.uni-goettingen.de/~ostreich/transcode/
+     (old page)
 
    dvd::rip should work with the latest transcode releases (at least with
    the latest major stable release). Otherwise correspondent notes are
@@ -419,7 +417,7 @@ chmod u+s /usr/sbin/fping
    generate the Makefile and execute make:
 
 # as a normal user
-tar xfz Video-DVDRip-0.50.16.tar.gz
+tar xfz Video-DVDRip-0.50.17.tar.gz
 cd Video-DVDRip-x.xx
 perl Makefile.PL
 make
@@ -473,7 +471,7 @@ make install
    otherwise some dvd::rip helper binaries may be taken from another
    place.
 
-tar xvfz Video-DVDRip-0.50.16.tar.gz
+tar xvfz Video-DVDRip-0.50.17.tar.gz
 cd Video-DVDRip-x.xx
 perl Makefile.PL && make
 export PATH=.:$PATH
@@ -527,13 +525,16 @@ IV.  MAILING LIST
 
    The language of the mailing list is english.
 
-This is a closed mailing list: subscribe before posting.
+This is a closed mailing list: subscribe before posting
 
-   The list is closed to prevent members from getting flooded by spam. So
-   you have to subscribe before posting. Postings from non subscribed
-   users may be discarded without notification! Also you must use the
-   correct sender address, because the mailing list program has no idea
-   of your alternative mail addresses.
+   The list is closed to prevent members and administrators from getting
+   flooded by spam. So you have to subscribe before posting. Postings
+   from non subscribed addresses are discarded without notification!
+
+   Important: You must use the sender address, which is subscribed to the
+   mailing list, because the list manager has no idea of your alternative
+   mail addresses. Postings with unknown sender addresses are discarded
+   without notification!
 
    Before posting any questions or bug reports: please first check the
    [3]documentation, in particular the [4]FAQ.
@@ -570,7 +571,7 @@ URL References
    3. http://www.exit1.org/dvdrip/doc/
    4. http://www.exit1.org/dvdrip/doc/faq.cipp
    5. http://lists.exit1.org/mailman/listinfo/dvdrip-users
-   6. http://www.exit1.org/dvdrip/htdig/search.cipp
+   6. http://www.exit1.org/archive/dvdrip-users/
    7. http://www.gmane.org/
    8. http://news.gmane.org/thread.php?group=gmane.comp.video.dvdrip.user
    9. http://www.theorie.physik.uni-goettingen.de/mailman/listinfo/transcode-users
@@ -581,14 +582,58 @@ Getting help
 
    If you encounter problems, which are not covered by the
    [3]documentation, in particular the [4]FAQ, subscribe to the
-   [5]dvdrip-users mailing list and ask your question there. Don't forget
-   to tell the dvd::rip and transcode versions you're using.
+   [5]dvdrip-users mailing list and ask your question there (but not
+   before you read all information on this page!).
 
    Eric S. Raymond wrote an excellent article about [6]"How To Ask
    Questions The Smart Way ". You probably want to take a look at it
    before posting ;)
 
-Getting no help
+Reporting bugs and suggestions (*please* read this!)
+
+   If you want to send a bug report, patch or feature request, please
+   make sure, that you're using the most recent version of dvd::rip (at
+   least the latest stable release). Also first check the
+   [7]documentation, in particular the [8]FAQ, the [9]ChangeLog and the
+   [10]mailing list archive to see, if the bug is reported and probably
+   fixed already in the development release. For feature requests, please
+   check if it's not already noted on the [11]TODO list. We all know,
+   reading documentation is boring, but it saves time ;) Thanks.
+
+   It's really important that you add the following information to your
+   bug reports, otherwise you'll likely don't get any helpful answers
+   (probably no answer at all, because for most people it's boring to ask
+   for this again and again...):
+     * a description of how the bug can be reproduced.
+     * information about your Linux installation, in particular which
+       distribution/version you are using
+     * exact versions of all affected packages. That's always dvd::rip
+       and transcode, but often a bunch of other packages are important,
+       e.g. ogmtools (if it's about ogg/vorbis) or mjpegtools (if it's
+       about (S)VCD processing) and so on. You can get a list of most of
+       these version numbers by pressing Ctrl+D in the dvd::rip main
+       window.
+     * information about usage of binary packages or self compiled
+       packages. In case of binary packages: from where did you get them.
+     * if dvd::rip crashes or it looks like an internal dvd::rip bug and
+       not like a bug of external command execution, add the output of
+       "perl -V".
+     * if a specific command executed by dvd::rip fails, grab the
+       corresponding command line from the log and execute it by hand. It
+       is important that you add the complete command line and the
+       complete command output to your report.
+
+transcode related issues
+
+   If dvd::rip mainly works for you but you encounter problems ripping
+   specific DVDs, this is probably a transcode problem. Maybe you want to
+   report this directly to the transcode developers resp. to the
+   [12]transcode-users list. If you're not sure about this, report the
+   problem to the dvdrip-users list, and we'll see, what we can do for
+   you. But aware, that you may be pointed to the transcode-users list...
+   ;)
+
+Encrypted DVD's
 
    Please note: copying encrypted DVD's is illegal in many countries.
    Also it's illegal to provide information about how this could be
@@ -597,37 +642,6 @@ Getting no help
    list. Corresponding mails will be silently ignored, correspondent
    posts will be removed from the mailing list archive without
    notification.
-
-Reporting bugs and suggestions
-
-   If you want to send a bug report, patch or feature request, please
-   make sure, that you're using the most recent version of dvd::rip (at
-   least the latest stable release). Please first check the
-   [7]documentation, in particular the [8]FAQ, the [9]ChangeLog and the
-   [10]mailing list archive to see, if the bug is reported and probably
-   fixed already in the development release. For feature requests, please
-   check if it's not already noted on the [11]TODO list. We all know,
-   reading documentation is boring, but it saves time ;) Thanks.
-
-   If you find a bug, please report it and add the following information:
-     * information about your Linux installation, which may be
-       interesting (at least the distribution you're using)
-     * information about your Perl installation. Simply send the output
-       of the "perl -V" command (only necessary in case of an internal
-       error message or fatal crash)
-     * version numbers of all tools which are affected (at least
-       transcode) - you can get a list of all version numbers by pressing
-       Ctrl+D in the dvd::rip main window.
-     * a description of how the bug can be reproduced.
-
-transcode related issues
-
-   If you encounter problems ripping specific DVDs, this is probably a
-   transcode problem. Maybe you want to report this directly to the
-   transcode developers resp. to the [12]transcode-user list. If you're
-   not sure about this, report the problem to the dvdrip-users list, and
-   we'll see, what we can do for you. But aware, that you may be pointed
-   to the transcode-users list... ;)
 
 Contribute with patches
 
@@ -679,29 +693,29 @@ URL References
    7. http://www.exit1.org/dvdrip/doc/
    8. http://www.exit1.org/dvdrip/doc/faq.cipp
    9. http://www.exit1.org/dvdrip/changes.cipp
-  10. http://www.exit1.org/dvdrip/htdig/search.cipp
+  10. http://www.exit1.org/archive/dvdrip-users/
   11. http://www.exit1.org/dvdrip/todo.cipp
-  12. http://www.theorie.physik.uni-goettingen.de/mailman/listinfo/transcode-users
+  12. http://lists.exit1.org/mailman/listinfo/transcode-users
   13. http://www.exit1.org/dvdrip/doc/install.cipp#cvs
   14. mailto:?subject=dvd::rip
   15. http://wwwkeys.de.pgp.net:11371/pks/lookup?op=get&search=0x285CF473
 
 VI. CHANGES
-   n$Id: Changes,v 1.131.2.49 2003/10/26 14:36:35 joern Exp $
+   $Id: Changes,v 1.131.2.50 2004/04/10 09:44:33 joern Exp $
 
    Revision history and release notes for dvd::rip.
 
-   0.50.16 [stable branch] Sun Oct 26 2003, joern
-	Note:
-	- If you have Perl 5.8.1 you *need* this release. Older
-	  versions of dvd::rip do not work with Perl 5.8.1.
-
+   0.50.17 [stable branch] Sat Apr 10 2004, joern
 	Features:
-	- New checkbox "Reuse log" for 2-pass encoding on the
-	  Transcode tab. Once activated an existent 2-pass
-	  logfile will be reused resp. pass 1 is skipped. This
-	  way you can continue a 2-pass transcoding if the 2nd
-	  pass went wrong for some reason. Long awaited feature
-	  requested by many users, including myself ;)
-	- Workaround for transcode filters which declare options
-	  multiple times (as the unsharp filter in transcode
+	- support for another transcode deinterlacer (I=5),
+	  suggested by Jean-Yves Simon <lethalwp AT tiscali.be>
+
+	Bugfixes:
+	- mp3 samplerate setting didn't work, only 48khz
+	  for CVD. Thanks for the report to Neverstopdreaming
+	  <neverstopdreaming AT tiscali.it>.
+	- dvd::rip couldn't open empty project files
+	- prevent timeouts when encoding Ogg/Vorbis in cluster mode
+	- vobsub creation now splits with millisecond precision,
+	  thanks for the patch to Jean-Yves Simon
+

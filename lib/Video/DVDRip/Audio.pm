@@ -1,4 +1,4 @@
-# $Id: Audio.pm,v 1.10.2.1 2003/08/16 15:33:34 joern Exp $
+# $Id: Audio.pm,v 1.10.2.2 2003/12/16 21:25:50 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -145,8 +145,6 @@ sub set_tc_bitrate {
 sub tc_samplerate {
 	my $self = shift;
 	my $audio_codec = $self->tc_audio_codec;
-	return 44100 if $audio_codec eq 'mp2';
-	return if $audio_codec !~ /^(mp3|vorbis)$/;
 	my $method = "tc_".$audio_codec."_samplerate";
 	return $self->$method();
 }

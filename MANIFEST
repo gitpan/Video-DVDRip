@@ -107,3 +107,4 @@ src/dr_splitpipe.c
 src/Makefile
 test.pl
 TODO
+META.yml                                 Module meta-data (added by MakeMaker)

@@ -1,4 +1,4 @@
-# $Id: Title.pm,v 1.137.2.28 2003/10/26 14:21:30 joern Exp $
+# $Id: Title.pm,v 1.137.2.29 2004/04/10 09:19:11 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -1900,7 +1900,8 @@ sub get_transcode_command {
 	if ( not $self->tc_multipass or ( $pass == 2 xor $self->has_vbr_audio ) ) {
 		if ( $mpeg ) {
 			$command .= " -y mpeg2enc,mp2enc";
-			$command .= " -E 44100" if $self->tc_video_codec ne 'CVD';
+			$command .= " -E ".$audio_info->tc_samplerate
+				if $audio_info->tc_samplerate;
 		} else {
 			$command .= " -y ".$self->tc_video_codec;
 			if ( $self->tc_container eq 'ogg' and
@@ -2210,7 +2211,7 @@ sub get_mplex_command {
 	my $svcd = $video_codec =~ /^(X?SVCD|CVD)$/;
 
 	my $mplex_f  = $svcd ? 4 : $video_codec eq 'XVCD' ? 2 : 1;
-	my $mplex_v  = $svcd ? "-V" : "";
+	my $mplex_v  = $svcd||$video_codec eq 'XVCD' ? "-V" : "";
 	my $vext     = $svcd ? 'm2v' : 'm1v';
 
 	my $target_file  = "$avi_file-%d.mpg";
@@ -2230,11 +2231,18 @@ sub get_mplex_command {
 		}
 	}
 
-	#-- calculate overall bitrate, needed for X(S)VCD.
-	my $bitrate = $self->tc_video_bitrate;
-	foreach my $audio ( @{$self->audio_tracks} ) {
-		next if $audio->tc_target_track == -1;
-		$bitrate += $audio->tc_bitrate;
+	my $opt_r;
+	if ( $video_codec =~ /^(XS?VCD|CVD)$/ ) {
+		#-- get overall bitrate, needed for X(S)VCD.
+		my $bc = Video::DVDRip::BitrateCalc->new (
+			title => $self,
+		);
+		$bc->calculate_video_bitrate;
+		my $bitrate = 
+			$bc->video_bitrate +
+			$bc->audio_bitrate +
+			$bc->vcd_reserve_bitrate;
+		$opt_r = "-r $bitrate";
 	}
 
 	my $nice;
@@ -2242,7 +2250,7 @@ sub get_mplex_command {
 		if $self->tc_nice =~ /\S/;
 
 	my $command =
-		"${nice}dr_exec mplex -f $mplex_f -r $bitrate $mplex_v ".
+		"${nice}dr_exec mplex -f $mplex_f $opt_r $mplex_v ".
 		"-o $target_file $avi_file.$vext $avi_file.mpa ".
 		"$add_audio_tracks && echo DVDRIP_SUCCESS";
 	

@@ -8,7 +8,7 @@
 
 package Video::DVDRip;
 
-$VERSION = "0.50.16";
+$VERSION = "0.50.17";
 
 use base Video::DVDRip::Base;
 
@@ -27,6 +27,7 @@ require 5.006;
 	1          => "Interpolate scanlines (fast)",
 	2          => "Handled by encoder (may segfault)",
 	3          => "Zoom to full frame (slow)",
+	5          => "Interpolate scanlines / blend frames (pp=lb)",
 	'32detect' => "Automatic deinterlacing of single frames",
 	'smart'    => "Smart deinterlacing",
 	'ivtc'     => "Inverse telecine",

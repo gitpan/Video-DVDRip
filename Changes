@@ -1,6 +1,20 @@
-n$Id: Changes,v 1.131.2.49 2003/10/26 14:36:35 joern Exp $
+$Id: Changes,v 1.131.2.50 2004/04/10 09:44:33 joern Exp $
 
 Revision history and release notes for dvd::rip.
+
+0.50.17 [stable branch] Sat Apr 10 2004, joern
+	Features:
+	- support for another transcode deinterlacer (I=5),
+	  suggested by Jean-Yves Simon <lethalwp AT tiscali.be>
+
+	Bugfixes:
+	- mp3 samplerate setting didn't work, only 48khz
+	  for CVD. Thanks for the report to Neverstopdreaming
+	  <neverstopdreaming AT tiscali.it>.
+	- dvd::rip couldn't open empty project files
+	- prevent timeouts when encoding Ogg/Vorbis in cluster mode
+	- vobsub creation now splits with millisecond precision,
+	  thanks for the patch to Jean-Yves Simon
 
 0.50.16 [stable branch] Sun Oct 26 2003, joern
 	Note:
