@@ -1,4 +1,4 @@
-# $Id: TranscodeAudio.pm,v 1.4 2002/09/15 15:31:10 joern Exp $
+# $Id: AddAudioMerge.pm,v 1.1 2002/09/15 15:31:28 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -7,24 +7,31 @@
 # redistribute it and/or modify it under the same terms as Perl itself.
 #-----------------------------------------------------------------------
 
-package Video::DVDRip::Cluster::Job::TranscodeAudio;
+package Video::DVDRip::Cluster::Job::AddAudioMerge;
 
-use base Video::DVDRip::Job::TranscodeAudio;
+use base Video::DVDRip::Job::MergeAudio;
 
 use Carp;
 use strict;
 
 sub psu				{ shift->{psu}				}
-sub chunk_cnt			{ shift->{chunk_cnt}			}
+sub move_final			{ shift->{move_final}			}
 
 sub set_psu			{ shift->{psu}			= $_[1]	}
-sub set_chunk_cnt		{ shift->{chunk_cnt}		= $_[1]	}
+sub set_move_final		{ shift->{move_final}		= $_[1]	}
+
+sub type {
+	return "merge audio";
+}
 
 sub info {
 	my $self = shift;
 
-	return  "transcode audio track #".
-		$self->vob_nr.", psu ".$self->psu;
+	my $info = "add audio, track #".
+		   $self->vob_nr.
+		   ", psu ".$self->psu;
+	
+	return $info;
 }
 
 sub init {
@@ -46,15 +53,18 @@ sub command {
 	my $self = shift;
 
 	my $project = $self->project;
-	my $title   = $project->title;
+	my $title   = $self->title;
 
-	# get transcode command
+	$title->set_actual_chapter ($self->chapter);
 	$project->set_assigned_job ( $self );
-	my $command = $title->get_transcode_audio_command (
+
+	my $command = $title->get_merge_audio_command (
 		vob_nr    => $self->vob_nr,
 		target_nr => $self->avi_nr,
 	);
+
 	$project->set_assigned_job ( undef );
+	$title->set_actual_chapter (undef);
 
 	return $command;
 }

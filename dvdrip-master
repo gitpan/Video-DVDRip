@@ -1,6 +1,6 @@
-#!/usr/local/bin/perl
+#!/usr/bin/perl
 
-# $Id: dvdrip-master,v 1.18 2002/07/15 07:26:21 joern Exp $
+# $Id: dvdrip-master,v 1.19 2002/09/15 15:37:18 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -15,6 +15,13 @@ use strict;
 use lib 'lib';
 
 BEGIN {
+	# That's Perl! The job classes inherit from this class,
+	# which is decided at *runtime* - this way standard and
+	# cluster mode can share the same job execution system
+	# by inserting the cluster logic dynamically into the
+	# inheritence line... great stuff!
+	$Video::DVDRip::JobClass = "Video::DVDRip::Cluster::Job";
+
 	my @missing_modules;
 	foreach my $module ( qw ( Event Storable ) ) {
 		eval "use $module";

@@ -1,4 +1,4 @@
-# $Id: Project.pm,v 1.24 2002/06/23 21:43:36 joern Exp $
+# $Id: Project.pm,v 1.25 2002/09/15 15:31:09 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -17,12 +17,10 @@ use Video::DVDRip::Cluster::PSU;
 use Video::DVDRip::Cluster::Job::TranscodeAudio;
 use Video::DVDRip::Cluster::Job::TranscodeVideo;
 use Video::DVDRip::Cluster::Job::MergeVideoAudio;
+use Video::DVDRip::Cluster::Job::AddAudioMerge;
 use Video::DVDRip::Cluster::Job::MergePSUs;
 use Video::DVDRip::Cluster::Job::Split;
 use Video::DVDRip::Cluster::Job::RemoveVOBs;
-
-# use Video::DVDRip::Cluster::Job::MergeChunks;
-# use Video::DVDRip::Cluster::Job::MergeAudio;
 
 use Carp;
 use strict;
@@ -172,125 +170,6 @@ sub new {
 	return $project;
 }
 
-sub create_job_plan_audio_one_pass {
-	my $self = shift;
-
-	$self->log ("Creating job plan");
-
-	my $title     = $self->title;
-	my $multipass = $title->tc_multipass;
-
-	my @pass = ( 1 );
-	push @pass, 2 if $multipass;
-
-	my (@jobs, $job, $last_job);
-	my @depend_merge_video;
-	my $audio_job;
-
-	my $nr = 1;
-
-	# first the audio processing job
-	$job = Video::DVDRip::Cluster::Job::TranscodeAudio->new ( nr => $nr++ );
-	push @jobs, $job;
-	$job->set_project ($self);
-	$job->set_prefer_local_access (1);
-	$audio_job = $job;
-
-	my $frames_per_chunk = $title->frames_per_chunk || 10000;
-
-	# then we have to do some work per psu
-	foreach my $psu ( @{$title->program_stream_units} ) {
-		next if not $psu->selected;
-
-		# calculate chunk cnt of this psu
-		my $chunk_cnt = int($psu->frames / $frames_per_chunk);
-		my $nodes_cnt =
-			Video::DVDRip::Cluster::Master->get_master
-						      ->get_online_nodes_cnt + 1;
-
-		$chunk_cnt = $nodes_cnt if $chunk_cnt < $nodes_cnt;
-		$chunk_cnt = 2          if $chunk_cnt < 2;
-
-		$psu->set_chunk_cnt ($chunk_cnt);
-
-		# add transcode jobs for each chunk
-		for (my $i=0; $i < $chunk_cnt; ++$i ) {
-			# one job for each pass
-			foreach my $pass ( @pass ) {
-				$job = Video::DVDRip::Cluster::Job::Transcode->new ( nr => $nr++ );
-				push @jobs, $job;
-				$job->set_project ($self);
-				$job->set_pass ($pass);
-				$job->set_chunk ($i);
-				$job->set_chunk_cnt ($chunk_cnt);
-				$job->set_psu ($psu->nr);
-
-				push @depend_merge_video, $job
-					if not $multipass or $pass == 2;
-
-				$job->set_depends_on_jobs ( [ $last_job ] )
-					if $pass == 2;
-
-				$last_job = $job;
-			}
-		}
-	}
-
-if ( 0 ) {
-	# video has to be merged
-	$job = Video::DVDRip::Cluster::Job::MergeChunks->new ( nr => $nr++ );
-	push @jobs, $job;
-	$job->set_project ($self);
-	$job->set_prefer_local_access (1);
-	$job->set_depends_on_jobs ( [ $audio_job, @depend_merge_video ] );
-	$last_job = $job;
-
-	# audio and video has to be merged
-	$job = Video::DVDRip::Cluster::Job::MergeAudio->new ( nr => $nr++ );
-	push @jobs, $job;
-	$job->set_project ($self);
-	$job->set_prefer_local_access (1);
-	$job->set_depends_on_jobs ( [ $last_job ] );
-	$last_job = $job;
-}
-
-	# audio and video has to be merged
-	$job = Video::DVDRip::Cluster::Job::MergeAudio->new ( nr => $nr++ );
-	push @jobs, $job;
-	$job->set_project ($self);
-	$job->set_prefer_local_access (1);
-	$job->set_depends_on_jobs ( [ $audio_job, @depend_merge_video ] );
-	$last_job = $job;
-
-	# finally split the AVI if requested
-	if ( $title->with_avisplit ) {
-		$job = Video::DVDRip::Cluster::Job::Split->new ( nr => $nr++ );
-		push @jobs, $job;
-		$job->set_project ($self);
-		$job->set_prefer_local_access (1);
-		$job->set_depends_on_jobs ( [ $last_job ] );
-		$last_job = $job;
-	}
-	
-	# remove VOB files afterwards?
-	if ( $title->with_vob_remove ) {
-		$job = Video::DVDRip::Cluster::Job::RemoveVOBs->new ( nr => $nr++ );
-		push @jobs, $job;
-		$job->set_project ($self);
-		$job->set_depends_on_jobs ( [ $last_job ] );
-		$last_job = $job;
-	}
-	
-	# calc dep strings
-	$_->calc_dep_string foreach @jobs;
-
-	# store job plan
-	$self->set_jobs ( \@jobs );
-
-	1;
-}
-
-
 sub create_job_plan {
 	my $self = shift;
 
@@ -325,12 +204,17 @@ sub create_job_plan {
 		$psu->set_chunk_cnt ($chunk_cnt);
 
 		# first an audio processing job
+		my $vob_nr = $title->get_first_audio_track || 0;
+		my $avi_nr = $title->tc_audio_tracks->[$vob_nr]->tc_target_track;
+		
 		$job = Video::DVDRip::Cluster::Job::TranscodeAudio->new ( nr => $nr++ );
 		push @jobs, $job;
 		$job->set_project ($self);
 		$job->set_psu ( $psu->nr );
 		$job->set_chunk_cnt ($chunk_cnt);
 		$job->set_prefer_local_access (1);
+		$job->set_vob_nr ($vob_nr);
+		$job->set_avi_nr ($avi_nr);
 		push @depend_merge_chunk, $job;
 
 		# add transcode jobs for each chunk
@@ -362,8 +246,42 @@ sub create_job_plan {
 		$job->set_psu ( $psu->nr );
 		$job->set_prefer_local_access (1);
 		$job->set_depends_on_jobs ( \@depend_merge_chunk );
-		push  @depend_merge_psu, $job;
 		$last_job = $job;
+		
+		my $merge_video_audio_job = $job;
+		
+		# now evtl. add. audio tracks
+		my $add_audio_tracks = $title->get_additional_audio_tracks;
+		if ( keys %{$add_audio_tracks} ) {
+			my ($avi_nr, $vob_nr);
+			while ( ($avi_nr, $vob_nr) = each %{$add_audio_tracks} ) {
+
+				$job = Video::DVDRip::Cluster::Job::TranscodeAudio->new ( nr => $nr++ );
+				push @jobs, $job;
+				$job->set_project ($self);
+				$job->set_psu ( $psu->nr );
+				$job->set_chunk_cnt ($chunk_cnt);
+				$job->set_prefer_local_access (1);
+				$job->set_vob_nr ($vob_nr);
+				$job->set_avi_nr ($avi_nr);
+				$job->set_depends_on_jobs ( [] );
+				$last_job = $job;
+
+				$job = Video::DVDRip::Cluster::Job::AddAudioMerge->new ( nr => $nr++ );
+				push @jobs, $job;
+				$job->set_avi_nr ( $avi_nr );
+				$job->set_vob_nr ( $vob_nr );
+				$job->set_project ($self);
+				$job->set_psu ( $psu->nr );
+				$job->set_prefer_local_access (1);
+				$job->set_depends_on_jobs ( [$merge_video_audio_job, $last_job] );
+				$last_job = $job;
+			}
+		}
+
+		# Push the last job of this PSU to the psu array.
+		# If there are more than 1 PSU, these must be merged later.
+		push @depend_merge_psu, $last_job;
 	}
 	
 	# do we need merging of psu AVIs?

@@ -1,4 +1,4 @@
-# $Id: TranscodeVideo.pm,v 1.1 2002/06/23 21:46:40 joern Exp $
+# $Id: TranscodeVideo.pm,v 1.2 2002/09/15 15:31:10 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -9,7 +9,7 @@
 
 package Video::DVDRip::Cluster::Job::TranscodeVideo;
 
-use base Video::DVDRip::Cluster::Job;
+use base Video::DVDRip::Job::TranscodeVideo;
 
 use Carp;
 use strict;
@@ -31,13 +31,23 @@ sub type {
 sub info {
 	my $self = shift;
 
-	return  "transcode".
+	return  "transcode video".
 		" chunk ".$self->chunk."/".$self->chunk_cnt.
 		", pass ".$self->pass.
 		", psu ".$self->psu;
 }
 
-sub start {
+sub init {
+	my $self = shift;
+	 
+	$self->SUPER::init;
+	 
+	$self->set_progress_max ($self->title->frames_per_chunk);
+	
+	1;
+}
+
+sub command {
 	my $self = shift;
 
 	my $project = $self->project;
@@ -48,38 +58,7 @@ sub start {
 	my $command = $title->get_transcode_command ( pass => $self->pass );
 	$project->set_assigned_job ( undef );
 
-	# start command
-	my $frames_cnt;
-	my $successful_finished = 0;
-
-	$self->set_progress_frames (0);
-
-	$self->popen (
-		command      => $command,
-		cb_line_read => sub {
-			my ($line) = @_;
-			if ( $line =~ /split.*?mapped.*?-c\s+\d+-(\d+)/ ) {
-				$self->set_progress_frames_cnt ($1);
-				$frames_cnt = $1;
-				$self->set_progress_start_time(time);
-
-			} elsif ( $line =~ /\[\d{6}-(\d+)\]/ ) {
-				$self->set_progress_frames($1);
-
-			} elsif ( $line =~ /DVDRIP_SUCCESS/ ) {
-				$successful_finished = 1;
-			}
-		},
-		cb_finished  => sub {
-			if ( $successful_finished ) {
-				$self->commit_job;
-			} else {
-				$self->abort_job;
-			}
-		},
-	);
-	
-	1;
+	return $command;
 }
 
 sub commit {
@@ -92,11 +71,8 @@ sub commit {
 
 	$title->set_frames_finished (
 		$title->frames_finished +
-		$self->progress_frames_cnt
+		$self->progress_max
 	);
-
-	# job is finished
-	$self->set_state ('finished');
 
 	1;
 }

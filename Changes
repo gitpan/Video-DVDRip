@@ -1,6 +1,189 @@
-$Id: Changes,v 1.97 2002/07/19 21:07:13 joern Exp $
+$Id: Changes,v 1.104 2002/09/22 14:38:56 joern Exp $
 
 Revision history for dvd::rip
+
+0.45 Sun 22 Sep 2002, joern
+	Important note:
+	===============
+	- File format changed with release 0.45_04. Files created with
+	  older versions will be converted automatically, but can't
+	  be used with older versions anymore after saving!!!
+	  Consider making backup copies of your project files.
+	- This version of dvd::rip works with transcode 0.6.0 and
+	  0.6.1. Further development is done using transcode 0.6.1,
+	  so this is the recommended version.
+
+	Features:
+	- after TOC reading and ripping a backup copy of the
+	  project file is stored to project/tmp/backup.rip.
+	  For all the people who forget to save their projects ;)
+	- new audio filter selection: none (volume rescale only),
+	  range compression (using liba52) and normalizing (using
+	  transcode's port of mplayer's normalizing filter). It's
+	  not recommended to use volume rescaling in conjunction
+	  with the normalizing filter, because volume rescaling is
+	  done *after* normalizing, so the result may be distorted.
+	  That's why dvd::rip clears the volume rescale entry when
+	  normalizing is selected. Requested by Torsten Howard and
+	  Markus Liebl. Thanks to Tilmann Bitterberg <transcode AT
+	  tibit.org> for answering  my questions regarding the filter
+	  execution order in transcode.
+	- added a text entry for arbitrary command execution after
+	  transcoding, suggested by simbolo <simbolo225 AT yahoo.com>
+	- added a checkbox "exit after transcoding" which saves the
+	  project and exits after transcoding. Suggested by Florin Andrei.
+	- dvd::rip now uses transcode's option --print_status 20 to
+	  reduce the progress updating (only for transcode >= 0.6.1).
+	  Thanks to Tilmann Bitterberg for the hint.
+
+	Bugfixes:
+	- at least dvd::rip 0.44 cluster mode didn't report correct
+	  progress and fps information with transcode 0.6.1.
+	- DVD image / on the fly ripping
+	  - transcode frame range selection didn't work, reported
+	    by Ryan Underwood <nemesis-lists AT icequake.net>
+	  - adding audio tracks didn't work, reported by 
+	    Arne Driescher <driescher AT mpi-magdeburg.mpg.de> and
+	    Roland Seuhs <roland AT hasos.com>
+	- (S)VCD mode: splitting didn't work, reported by Markus Liebl
+ 	- Cluster mode: audio transcoding didn't work if no
+	  volume rescale value was set
+	- progress calculation was messed up when transcoding a
+	  frame range
+
+0.45_05 Sun 15 Sep 2002, joern
+	Features:
+	- cluster mode adopted to new job execution subsystem,
+	  now it supports additional audio tracks. Not much tested yet.
+	  Reports (of bugs and success stories ;) are welcome.
+
+	Bugfixes:
+	- with Perl 5.8.0 opening a new project always threw
+	  an exception. Thanks to Raymond Olufsen <oluray AT online.no>
+	  for his report.
+	- add. transcode option parser didn't recognize "-D -10"
+	  correctly, so -D and -10 didn't appear in a row in the
+	  final command. Reported by Lukas Ertl <l.ertl AT univie.ac.at>.
+	- sometimes renaming of AVI files after splitting didn't
+	  worked. Removed this completely, now using the standard
+	  transcode method (name-0000.avi instead of name-01.avi) for
+	  standard and cluster mode.
+	- removed "DVD on the fly transcoding may damage your drive"
+	  note. Was too hard and too confusing. Also the standard
+	  disclaimer in the GPL is sufficient.
+
+	Note:
+	- I took the Perl 5.8.0 issue as a occasion to upgrade my
+	  Perl installation to 5.8.0 (Debian rules, btw ;), so further
+	  development will be on 5.8.0. I don't plan to use any 5.8.0
+	  features soon, so dvd::rip will run with 5.6.1 (and maybe
+	  on 5.005), too.
+
+0.45_04 Sun 01 Sep 2002, joern
+	Note:
+	- File format changed for this release. Files created with
+	  older versions will be converted automatically, but can't
+	  be used with older versions anymore after saving!!!
+	  Consider making backup copies of your project files.
+	- Please test this release. Many internals changed. Also I
+	  tested many scenarios, there may be bugs. Reports are welcome.
+	
+	Features:
+	- multiple audio track support: add as much available
+	  audio tracks you want to the resulting AVI file
+	  ((S)VCD and cluster mode currently not supported
+	  but planned). Short description of how this works:
+	  - on the Transcode tab there are two popups in the audio
+	    options area: "Select a DVD audio track" and "Target track".
+	  - the first one lists all available tracks on the DVD
+	  - select an entry you want to have
+	  - then select the target track you want for the selected
+	    DVD track (starting with 0)
+	  - select as many DVD tracks you want and add them as target
+	    track 1, 2 and so on.
+	  - video bitrate calculation will take the additional
+	    audio tracks into account
+	  - by default the track you selected before ripping will
+	    be used as target track #0, which is dvd::rip's old
+	    behaviour. So you can ignore this feature, if you don't
+	    need it.
+	- transcoding a frame range uses now fast VOB navigation,
+	  if possible (no slow skipping of the first frames).
+	- major redesign of the internal command execution subsystem
+	  and progress information module
+	- volume scanning can be done after ripping for arbitrary
+	  audio tracks. The correspondent button is beside the
+	  text entry field on the Transcode tab.
+
+	Bugfixes:
+	- added a proper -B option to mpeg2enc to get correct
+	  split points. Thanks for the hint to Michal Szymanski.
+	- canceling a transcode process (in standard mode) killed all
+	  transcode processes, in case of several dvd::rip instances
+	  are started. Reported by Torsten Howard.
+	- many changes to internals, cleaner code, improved
+	  maintainability, improved stability regarding unusual
+	  DVD's (e.g. titles without audio, very small chapters)
+
+0.45_03 Sun Aug 25 2002, joern
+	Bugfix:
+	- audio channel selection was ignored for transcoding
+	  (always channel #0 was processed).
+
+0.45_02 Sun Aug 18 2002, joern
+	Features:
+	- dvd::rip now compares the ripped frame count with frame
+	  count of the DVD title. If the difference is too big,
+	  a corresponding warning message appears.
+	- ripping ETA/FPS calculation now considers the time needed
+	  to get the DVD title keys, so these values are more
+	  accurate now.
+	- renamed clip&zoom preset "No Preset" to "No Modifications",
+	  suggested by Ole Tange <tange AT tange.dk>
+	- new data source modes: on the fly DVD transcoding and
+	  using an existent DVD image on harddisk. But these modes
+	  have some restrictions:
+
+	  * no fast preview frame grabbing
+	  * no movie preview starting at a specific frame
+	  * no psu core
+	  * no cluster mode
+
+	  Scanning for volume rescale information is optional
+	  for the new modes (this is usually done while ripping).
+	  
+	  This feature (and the whole release) is considered
+	  experimental, because I needed to make many changes to
+	  dvd::rip's internals. Please test all three modes and
+	  report bugs. Thanks.
+
+0.45_01 Wed Aug 14 2002, joern
+	Features:
+	- added ffmpeg4 to the video codec list, suggested
+	  by Moritz Bunkus.
+	- removed opendivx from the codec list because
+	  it's really outdated and shouldn't be used anymore
+	  (type it in by hand, if you *really* need it ;).
+	  Thanks for his suggestion go to Christoph Lampert.
+	- new preference for default .rip file directory,
+	  suggested by Florin Andrei.
+	- added a window manager icon (didn't forget it, Florin ;)
+
+	Bugfixes:
+	- to be consistent with the latest transcode release, I
+	  changed the "bits per kilo pixel" value of the Zoom Calculator
+	  window to "bits per pixel". Also the video bitrate was
+	  calculated based on 1024 instead of 1000. Now dvd::rip's values
+	  are equal with transcode's. Thanks for the hint to
+	  Markus Liebl <lieblm AT web.de>.
+	- general exception handler failed, when no project was open,
+	  reported by Jeremy Mann <jeremy AT bioc09.v19.uthscsa.edu>
+	- fourth deinterlace option wasn't saved, reported by
+	  Torsten Howard.
+	- if the VOB navigation file was incomplete or messed up illegal
+	  parameters were passed to transcode, which results in
+	  a misleading dvd::rip error message. Now you get a better
+	  error message.
 
 0.44 Fri Jul 19 2002, joern
 	No changes since 0.44_06, just a stable release.

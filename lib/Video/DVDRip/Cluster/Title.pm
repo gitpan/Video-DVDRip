@@ -1,4 +1,4 @@
-# $Id: Title.pm,v 1.28 2002/07/06 08:03:37 joern Exp $
+# $Id: Title.pm,v 1.31 2002/09/22 09:35:36 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -97,19 +97,20 @@ sub avi_file {					# transcode output file
 	);
 }
 
-sub audio_psu_file {				# audio only file
+sub target_avi_audio_file {
 	my $self = shift;
 
 	my $job = $self->project->assigned_job or croak "No job assigned";
 	
 	return sprintf (
-		"%s/%03d/audio-psu-%02d/%s-%03d-audio-psu-%02d.avi",
+		"%s/%03d/audio-psu-%02d/%s-%03d-audio-psu-%02d-%02d.avi",
 		$self->project->final_avi_dir,
 		$self->nr,
 		$job->psu,
 		$self->project->name,
 		$self->nr,
 		$job->psu,
+		$job->avi_nr,
 	);
 }
 
@@ -203,55 +204,49 @@ sub get_transcode_command {
 
 sub get_transcode_audio_command {
 	my $self = shift;
-	
+	my %par = @_;
+	my ($vob_nr, $target_nr) = @par{'vob_nr','target_nr'};
+
+	my $command = $self->SUPER::get_transcode_audio_command (@_);
+	$command =~ s/\s+&& echo DVDRIP_SUCCESS//;
+
+	# add PSU selection and -W cluster parameter
 	my $job = $self->project->assigned_job or croak "No job assigned";
 
-	my $audio_psu_file = $self->audio_psu_file;
-	my $audio_psu_dir  = dirname($self->audio_psu_file);
-
-	my $nice;
-	$nice = "/usr/bin/nice -n ".$self->tc_nice." "
-		if $self->tc_nice =~ /\S/;
-
-	my $command =
-		"mkdir -m 0775 -p '$audio_psu_dir' && ".
-		$nice.
-		"transcode -i ".$self->vob_dir.
-		" -x null,vob -g 0x0 -y raw -u 50".
-		" -a ".$self->audio_channel.
-		" -o ".$audio_psu_file.
+	$command .=
 		" -S ".$job->psu.
 		" -W ".$job->chunk_cnt.",".$job->chunk_cnt.",".
 		       $self->vob_nav_file;
 
-	if ( $self->video_mode eq 'ntsc' ) {
-#		$command .= " -M 2 ";
-	}
-
-	if ( $self->tc_video_framerate ) {
-		my $fr = $self->tc_video_framerate;
-		$fr = "24,1" if $fr == 23.976;
-		$fr = "30,4" if $fr == 29.97;
-		$command .= " -f $fr";
-	}
-
-	if ( $self->tc_ac3_passthrough ) {
-		$command .= " -A -N ".
-			$self->audio_tracks
-			     ->[$self->audio_channel]
-			     ->{tc_option_n};
-	} else {
-		$command .= 
-			" -b ".$self->tc_audio_bitrate.",0,".
-			       $self->tc_mp3_quality.
-			" -s ".$self->tc_volume_rescale;
-		
-		$command .= " --a52_drc_off "
-			if not $self->tc_audio_drc;
-	}
-
 	$command .= " && echo DVDRIP_SUCCESS";
-	
+
+	return $command;
+}
+
+sub get_merge_audio_command {
+	my $self = shift;
+	my %par = @_;
+	my ($vob_nr, $target_nr) = @par{'vob_nr','target_nr'};
+
+	my $job = $self->project->assigned_job or croak "No job assigned";
+
+	my $avi_file      = $self->audio_video_psu_file;
+	my $audio_file    = $self->target_avi_audio_file ( nr => $target_nr );
+	my $target_file   = $avi_file;
+
+	$target_file = $self->target_avi_file
+		if $job->move_final;
+
+	my $command =
+		"avimerge".
+		" -i $avi_file".
+		" -p $audio_file".
+		" -a $target_nr".
+		" -o $avi_file.merged &&".
+		" mv $avi_file.merged $target_file &&".
+		" rm $audio_file &&".
+		" echo DVDRIP_SUCCESS";
+
 	return $command;
 }
 
@@ -262,10 +257,10 @@ sub get_merge_video_audio_command {
 
 	my $avi_chunks_dir       = $self->avi_chunks_dir;
 	my $audio_video_psu_file = $self->audio_video_psu_file;
-	$audio_video_psu_file = $self->target_avi_file
+	$audio_video_psu_file    = $self->target_avi_file
 		if $job->move_final;
 	my $audio_video_psu_dir  = dirname ( $audio_video_psu_file );
-	my $audio_psu_file       = $self->audio_psu_file;
+	my $audio_psu_file       = $self->target_avi_audio_file;
 
 	my $chunks_mask = sprintf (
 		"%s/%03d/chunks-psu-??/*",
@@ -311,16 +306,9 @@ sub get_split_command {
 	my $self = shift;
 
 	my $target_avi_file   = $self->target_avi_file;
-	my $avi_dir           = dirname($target_avi_file);
 
-	my $command =
-		$self->SUPER::get_split_command.
-		" && echo DVDRIP_SUCCESS && ".
-		q[perl -e 'while (<].$avi_dir.q[/*avi-0*>) {].
-		q[$from=$_; s/.avi-00(..)/q{-}.sprintf(qq{%02d},$1+1).qq{.avi}/e;].
-		q[rename ($from, $_);}'];
-	
-	$command .= " && rm '$target_avi_file'" if $self->with_cleanup;
+	my $command = $self->SUPER::get_split_command;
+	$command   .= " && rm '$target_avi_file'" if $self->with_cleanup;
 	
 	return $command;
 }

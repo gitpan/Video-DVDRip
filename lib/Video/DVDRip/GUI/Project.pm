@@ -1,4 +1,4 @@
-# $Id: Project.pm,v 1.20 2002/06/23 21:39:14 joern Exp $
+# $Id: Project.pm,v 1.22 2002/09/01 13:52:02 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -23,6 +23,8 @@ use Video::DVDRip::GUI::Project::TitleTab;
 use Video::DVDRip::GUI::Project::ClipZoomTab;
 use Video::DVDRip::GUI::Project::TranscodeTab;
 use Video::DVDRip::GUI::Project::LoggingTab;
+
+use Video::DVDRip::GUI::ExecuteJobs;
 
 use Carp;
 use strict;
@@ -68,20 +70,26 @@ sub build {
 
 	my $label;
 
+	my $transcode_tab = $self->create_transcode_tab;
+	my $storage_tab   = $self->create_storage_tab;
+	my $title_tab     = $self->create_title_tab;
+	my $adjust_tab    = $self->create_adjust_tab;
+	my $logging_tab   = $self->create_logging_tab;
+
 	$label = Gtk::Label->new ("Storage");
-	$notebook->append_page ($self->create_storage_tab, $label);
+	$notebook->append_page ($storage_tab, $label);
 
 	$label = Gtk::Label->new ("RIP Title");
-	$notebook->append_page ($self->create_title_tab, $label);
+	$notebook->append_page ($title_tab, $label);
 
 	$label = Gtk::Label->new ("  Clip & Zoom  ");
-	$notebook->append_page ($self->create_adjust_tab, $label);
+	$notebook->append_page ($adjust_tab, $label);
 
 	$label = Gtk::Label->new ("Transcode");
-	$notebook->append_page ($self->create_transcode_tab, $label);
+	$notebook->append_page ($transcode_tab, $label);
 
 	$label = Gtk::Label->new ("Logging");
-	$notebook->append_page ($self->create_logging_tab, $label);
+	$notebook->append_page ($logging_tab, $label);
 
 	$vbox->pack_start ($notebook, 1, 1, 0);
 
@@ -119,13 +127,14 @@ sub build {
 }
 
 sub fill_with_values {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 
 	$self->init_title_labels;
 	$self->init_audio_popup;
 	$self->init_chapter_list;
 	$self->init_adjust_values;
 	$self->init_transcode_values;
+	$self->init_storage_values;
 
 	1;
 }

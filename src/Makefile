@@ -1,9 +1,12 @@
-# $Id: Makefile,v 1.8 2002/03/31 08:10:54 joern Exp $
+# $Id: Makefile,v 1.9 2002/09/01 15:57:09 joern Exp $
 
-all:	splitpipe
+all:	dr_splitpipe dr_progress
 
-splitpipe:	splitpipe.c
-	cc -o splitpipe splitpipe.c && mv splitpipe ..
+dr_splitpipe:	dr_splitpipe.c
+	cc -o dr_splitpipe dr_splitpipe.c && mv dr_splitpipe ..
+
+dr_progress:	dr_progress.c
+	cc -o dr_progress dr_progress.c && mv dr_progress ..
 
 clean:
-	rm -f splitpipe ../splitpipe
+	rm -f dr_splitpipe ../dr_splitpipe dr_progress ../dr_progress

@@ -1,4 +1,4 @@
-# $Id: ClipZoomTab.pm,v 1.30 2002/07/07 20:13:23 joern Exp $
+# $Id: ClipZoomTab.pm,v 1.33 2002/09/01 15:26:58 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -41,7 +41,7 @@ sub create_adjust_tab {
 
 	my $title = $self->selected_title;
 
-	$frame = Gtk::Frame->new ("Preview Images");
+	$frame = Gtk::Frame->new ("Preview images");
 	$frame->show;
 	$vbox->pack_start ( $frame, 0, 1, 0);
 
@@ -55,7 +55,7 @@ sub create_adjust_tab {
 	$hbox->show;
 	$box->pack_start($hbox, 0, 1, 0);
 
-	$label = Gtk::Label->new ("Grab Preview Frame #");
+	$label = Gtk::Label->new ("Grab preview frame #");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 	
@@ -65,15 +65,16 @@ sub create_adjust_tab {
 	$hbox->pack_start($entry, 0, 1, 0);
 	$self->adjust_widgets->{preview_frame_nr} = $entry;
 
-	$button = Gtk::Button->new_with_label (" Grab Frame from ripped VOB ");
+	$button = Gtk::Button->new_with_label (" Grab frame ");
 	$button->show;
 	$button->signal_connect ("clicked", sub { $self->grab_preview_frame } );
 	$hbox->pack_start($button, 0, 1, 0);
 
-	$vbutton = Gtk::Button->new_with_label (" Show Video from here ");
-	$vbutton->show;
-	$vbutton->signal_connect ("clicked", sub { $self->preview_video } );
-	$hbox->pack_start($vbutton, 0, 1, 0);
+	$button = Gtk::Button->new_with_label (" Show video from here ");
+	$button->show;
+	$button->signal_connect ("clicked", sub { $self->preview_video } );
+	$hbox->pack_start($button, 0, 1, 0);
+	$self->adjust_widgets->{show_video_from_here_button} = $button;
 
 	# images
 
@@ -111,7 +112,7 @@ sub create_adjust_tab {
 
 	$self->adjust_widgets->{image_clip1} = $image;
 
-	$label = Gtk::Label->new ("After 1st Clipping");
+	$label = Gtk::Label->new ("After 1st clipping");
 	$label->show;
 	$box->pack_start ($label, 0, 1, 0);
 	$label = Gtk::Label->new ("");
@@ -148,7 +149,7 @@ sub create_adjust_tab {
 
 	$self->adjust_widgets->{image_zoom} = $image;
 	
-	$label = Gtk::Label->new ("After Zoom");
+	$label = Gtk::Label->new ("After zoom");
 	$label->show;
 	$box->pack_start ($label, 0, 1, 0);
 	$label = Gtk::Label->new ("");
@@ -185,7 +186,7 @@ sub create_adjust_tab {
 
 	$self->adjust_widgets->{image_clip2} = $image;
 	
-	$label = Gtk::Label->new ("After 2nd Clipping");
+	$label = Gtk::Label->new ("After 2nd clipping");
 	$label->show;
 	$box->pack_start ($label, 0, 1, 0);
 	$label = Gtk::Label->new ("");
@@ -195,7 +196,7 @@ sub create_adjust_tab {
 
 	# Adjust Size and Clipping Parameters ------------------------------
 
-	$frame = Gtk::Frame->new ("Adjust Clip and Zoom Parameters");
+	$frame = Gtk::Frame->new ("Adjust clip and zoom parameters");
 	$frame->show;
 	$vbox->pack_start ( $frame, 0, 1, 0);
 
@@ -248,11 +249,12 @@ sub create_adjust_tab {
 	$self->adjust_widgets->{preset_popup}      = $popup;
 	$self->adjust_widgets->{preset_popup_menu} = $popup_menu;
 
-	$button = Gtk::Button->new_with_label ("Apply Preset Values");
+	$button = Gtk::Button->new_with_label ("Apply preset values");
 	$button->show;
 	$button->signal_connect ("clicked", sub {
 		my $title = $self->selected_title;
 		return 1 if not $title;
+		return 1 if not $title->is_ripped;
 		my $preset = $self->config_object->get_preset (
 			name => $title->preset
 		);
@@ -268,7 +270,7 @@ sub create_adjust_tab {
 	++$row;
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new ("1st Clipping");
+	$label = Gtk::Label->new ("1st clipping");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 	$table->attach_defaults ($hbox, 0, 1, $row, $row+1);
@@ -325,7 +327,7 @@ sub create_adjust_tab {
 
 	$self->adjust_widgets->{tc_clip1_right}      = $entry;
 
-	$button = Gtk::Button->new_with_label (" Generate Preview Images ");
+	$button = Gtk::Button->new_with_label (" Generate preview images ");
 
 	$button->show;
 	$button->signal_connect ("clicked", sub {
@@ -382,14 +384,14 @@ sub create_adjust_tab {
 	
 	$table->attach_defaults ($hbox, 2, 3, $row, $row+1);
 
-	$button = Gtk::Button->new_with_label (" Calc Height ");
+	$button = Gtk::Button->new_with_label (" Calc height ");
 	$button->show;
 	$button->signal_connect ("clicked", sub {
 		$self->calc_zoom ( height => 1 );
 	});
 	$hbox->pack_start ($button, 0, 1, 0);
 	
-	$button = Gtk::Button->new_with_label (" Calc Width ");
+	$button = Gtk::Button->new_with_label (" Calc width ");
 	$button->show;
 	$button->signal_connect ("clicked", sub {
 		$self->calc_zoom ( width => 1 );
@@ -400,7 +402,7 @@ sub create_adjust_tab {
 	++$row;
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new ("Use Fast Resizing");
+	$label = Gtk::Label->new ("Use fast resizing");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 	$table->attach_defaults ($hbox, 0, 1, $row, $row+1);
@@ -421,7 +423,7 @@ sub create_adjust_tab {
 	# fast bisection
 
 if ( 0 ) {
-	$label = Gtk::Label->new ("Fast Frame Bisection");
+	$label = Gtk::Label->new ("Fast frame bisection");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 
@@ -436,7 +438,7 @@ if ( 0 ) {
 	$self->adjust_widgets->{tc_fast_bisection_no}  = $radio_no;
 }
 
-	$button = Gtk::Button->new_with_label (" Open Zoom Calculator ");
+	$button = Gtk::Button->new_with_label (" Open zoom calculator ");
 
 	$button->show;
 	$button->signal_connect ("clicked", sub {
@@ -448,7 +450,7 @@ if ( 0 ) {
 	++$row;
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new ("2nd Clipping");
+	$label = Gtk::Label->new ("2nd clipping");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 	$table->attach_defaults ($hbox, 0, 1, $row, $row+1);
@@ -505,7 +507,7 @@ if ( 0 ) {
 
 	$self->adjust_widgets->{tc_clip2_right}      = $entry;
 
-	$button = Gtk::Button->new_with_label (" Move 2nd Clipping to 1st ");
+	$button = Gtk::Button->new_with_label (" Move 2nd clipping to 1st ");
 
 	$button->show;
 	$button->signal_connect ("clicked", sub {
@@ -677,7 +679,7 @@ sub update_fast_resize_info {
 
 			$style = $self->text_warn_style;
 		} else {
-			$info = "Fast Resize: Ok";
+			$info = "Fast resize: Ok";
 			$self->adjust_widgets->{"zoom_info_label"}->set_style ($self->text_norm_style);
 			$self->adjust_widgets->{"clip1_info_label"}->set_style ($self->text_norm_style);
 		}
@@ -769,7 +771,7 @@ sub show_preview_labels {
 			$warn_width   ||= "!" if $title->tc_clip2_left %2 or
 						 $title->tc_clip2_right %2;
 		}
-		$text = sprintf ("Size: %d%sx%d%s\nEff. ratio: %s, Phys. ratio: %s",
+		$text = sprintf ("Size: %d%sx%d%s\nEff. ratio: %s, phys. ratio: %s",
 			$width, $warn_width, $height, $warn_height,
 			$ratio, $phys_ratio
 		);
@@ -814,71 +816,36 @@ sub grab_preview_frame {
 		return 1;
 	}
 
-	my $open_callback = sub {
-		return $title->take_snapshot_async_start (
-			frame    => $frame_nr,
-			filename => $filename,
-		);
-	};
+	my $nr;
+	my $last_job;
 
-	my $progress_callback = sub {
-		return 1;
-	};
-
-	my $close_callback = sub {
-		my %par = @_;
-		my ($progress, $output) = @par{'progress','output'};
-
-		$progress->set_label ("Convert PPM to JPEG");
-
-		$self->log ("Convert PPM to JPEG");
-		$self->log (
-			"Command:".
-			$title->get_convert_snapshot_command (
-				filename => $title->snapshot_filename
-			)
-		);
-
-		$title->take_snapshot_async_stop (
-			fh => $progress->fh,
-			output => $output
-		);
-
-		$title->apply_preset ( 
-			preset => $self->config_object->get_preset (
-				name => $title->preset
-			)
-		) if not $title->last_applied_preset;
-
-		$self->make_previews;
-		$self->show_preview_images;
-		$self->init_adjust_values;
-
-		$self->log ("Preview grabbing finished.");
-
-		return 'finished';
-	};
-
-	my $cancel_callback = sub {
-		my %par = @_;
-		my ($progress) = @par{'progress'};
-		close ($progress->fh) if $progress->fh;
-		return 1;
-	};
-
-	$self->comp('progress')->open (
-		label             => "Grab frame $frame_nr of title #".
-				     $title->nr,
-		need_output       => 0,
-		show_percent      => 0,
-		show_fps          => 0,
-		show_eta          => 0,
-		max_value         => 1,
-		open_callback     => $open_callback,
-		progress_callback => $progress_callback,
-		cancel_callback   => $cancel_callback,
-		close_callback    => $close_callback,
+	my $job = Video::DVDRip::Job::GrabPreviewFrame->new (
+		nr    => ++$nr,
+		title => $title,
 	);
+
+	my $exec;
+	$exec = Video::DVDRip::GUI::ExecuteJobs->new (
+		cb_finished => sub {
+			return 1 if not $job->operation_successful;
+			return 1 if $exec->cancelled;
+			$title->apply_preset ( 
+				preset => $self->config_object->get_preset (
+					name => $title->preset
+				)
+			) if not $title->last_applied_preset;
+
+			$self->make_previews;
+			$self->show_preview_images;
+			$self->init_adjust_values;
+			
+			1;
+		}
+	);
+
+	$last_job = $exec->add_job ( job => $job );
+
+	$exec->execute_jobs;
 
 	1;
 }
@@ -897,6 +864,13 @@ sub preview_video {
 	if ( not $title->is_ripped ) {
 		$self->message_window (
 			message => "You first have to rip this title."
+		);
+		return 1;
+	}
+
+	if ( $title->project->rip_mode ne 'rip' ) {
+		$self->message_window (
+			message => "This function is only avaiable for ripped DVD's."
 		);
 		return 1;
 	}
@@ -939,7 +913,7 @@ sub open_preview_window {
 	return 1 if defined $self->adjust_widgets->{"window_$type"};
 	my $title = $self->selected_title;
 	return 1 if not $title;
-
+	
 	my $file_type;
 	$file_type = 'orig' if $type eq 'clip1';
 	$file_type = 'zoom' if $type eq 'zoom';
@@ -1027,6 +1001,13 @@ sub move_clip2_to_clip1 {
 
 	my $title = $self->selected_title;
 	return 1 if not $title;
+
+	if ( not $title->is_ripped ) {
+		$self->message_window (
+			message => "You first have to rip this title."
+		);
+		return 1;
+	}
 
 	if ( $title->tc_fast_resize ) {
 		$self->message_window (
@@ -1128,6 +1109,13 @@ sub calc_zoom {
 	my $title = $self->selected_title;
 	return 1 if not $title;
 
+	if ( not $title->is_ripped ) {
+		$self->message_window (
+			message => "You first have to rip this title."
+		);
+		return 1;
+	}
+
 	$title->calc_zoom (
 		width  => $width,
 		height => $height,
@@ -1144,6 +1132,13 @@ sub zoom_calculator {
 	
 	my $title = $self->selected_title;
 	return 1 if not $title;
+
+	if ( not $title->is_ripped ) {
+		$self->message_window (
+			message => "You first have to rip this title."
+		);
+		return 1;
+	}
 
 	my $calculator = Video::DVDRip::GUI::ZoomCalculator->new;
 	$calculator->open_window;

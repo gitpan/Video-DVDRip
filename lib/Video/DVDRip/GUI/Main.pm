@@ -1,4 +1,4 @@
-# $Id: Main.pm,v 1.42 2002/06/29 20:18:59 joern Exp $
+# $Id: Main.pm,v 1.47 2002/09/22 09:36:22 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -73,9 +73,8 @@ sub start {
 			$self->long_message_window (
 				message => $error
 			);
-			if ( $self->comp('progress')->is_active ) {
-				$self->comp('progress')->cancel;
-			}
+			my $progress = eval { $self->comp('progress') };
+			$progress->cancel if $progress and $progress->is_active;
 			next;
 		} else {
 			last;
@@ -111,12 +110,9 @@ sub build {
 sub create_greetings {
 	my $self = shift;
 	
-	my $splash_file;
-	foreach my $INC ( @INC ) {
-		$splash_file = "$INC/Video/DVDRip/splash.png";
-		last if -f $splash_file;
-		$splash_file = "";
-	}
+	my $splash_file = $self->search_perl_inc (
+		rel_path => "Video/DVDRip/splash.png"
+	);
 
 	if ( not $splash_file ) {
 		my $text = <<__EOT;
@@ -160,7 +156,7 @@ __EOT
 sub create_window {
 	my $self = shift; $self->trace_in;
 	
-	my $win = Gtk::Window->new; # new Gtk::Window -toplevel;
+	my $win = Gtk::Window->new;
 	$win->set_title($self->config('program_name'));
 	$win->signal_connect("delete-event", sub { $self->exit_program (force => 0) } );
 	$win->border_width(0);
@@ -177,6 +173,23 @@ sub create_window {
 			$self->set_config('main_window_height', $_[1]->[3]);
 		}
 	);
+
+	# set window manager icon
+
+	my $icon_file = $self->search_perl_inc (
+		rel_path => "Video/DVDRip/icon.xpm"
+	);
+
+	if ( $icon_file ) {
+		my ($icon, $mask) = Gtk::Gdk::Pixmap->create_from_xpm(
+			$win->window,
+			$win->style->white,
+			$icon_file
+		);
+		
+		$win->window->set_icon(undef, $icon, $mask);
+		$win->window->set_icon_name("dvd::rip");
+	}
 
 	$self->set_gtk_win ($win);
 	
@@ -302,8 +315,10 @@ sub new_project {
 sub set_window_title {
 	my $self = shift;
 
-	my $filename = basename($self->comp('project')->project->filename) ||
-		       "<unnamed project>";
+	my $filename = basename(
+		$self->comp('project')->project->filename ||
+		"<unnamed project>"
+	);
 
 	$self->widget->set_title (
 		$self->config('program_name')." - ".$filename
@@ -323,7 +338,7 @@ sub open_project {
 	$self->close_project;
 	
 	$self->show_file_dialog (
-		dir      => ".",
+		dir      => $self->config('dvdrip_files_dir'),
 		filename => "",
 		cb       => sub {
 			$self->open_project_file ( filename => $_[0] );
@@ -364,6 +379,13 @@ sub open_project_file {
 		$self->config('dvd_device')
 	);
 
+	if ( $project->convert_message ) {
+		$self->message_window (
+			message => $project->convert_message
+		);
+		$project->set_convert_message("");
+	}
+
 	1;
 }
 
@@ -379,7 +401,7 @@ sub save_project {
 
 	} else {
 		$self->show_file_dialog (
-			dir      => ".",
+			dir      => $self->config('dvdrip_files_dir'),
 			filename => $self->comp('project')->project->name.".rip",
 			confirm  => 1,
 			cb       => sub {
@@ -397,7 +419,7 @@ sub save_project_as {
 	return if not $self->project_opened;
 
 	$self->show_file_dialog (
-		dir      => ".",
+		dir      => $self->config('dvdrip_files_dir'),
 		filename => $self->comp('project')->project->name.".rip",
 		confirm  => 1,
 		cb       => sub {
@@ -520,13 +542,19 @@ sub show_transcode_commands {
 
 	$commands .= "\n\n";
 
-	my $rip_method = $title->tc_use_chapter_mode ?
-		"get_rip_command" :
-		"get_rip_and_scan_command";
-
-	$commands .= "Rip Command:\n".
-		    "============\n".
-		    $title->$rip_method()."\n";
+	if ( $title->project->rip_mode eq 'rip' ) {
+		my $rip_method = $title->tc_use_chapter_mode ?
+			"get_rip_command" :
+			"get_rip_and_scan_command";
+	
+		$commands .= "Rip Command:\n".
+			    "============\n".
+			    $title->$rip_method()."\n";
+	} else {
+		$commands .= "Scan Command:\n".
+			    "============\n".
+			    $title->get_scan_command()."\n";
+	}
 
 	$commands .= "\n\n";
 	
@@ -563,6 +591,27 @@ sub show_transcode_commands {
 	}
 
 	$commands .= "\n\n";
+
+	my $add_audio_tracks = $title->get_additional_audio_tracks;
+
+	if ( keys %{$add_audio_tracks} ) {
+		$commands .= "Additional audio tracks commands:\n".
+			     "============================\n";
+
+		my ($avi_nr, $vob_nr);
+		while ( ($avi_nr, $vob_nr) = each %{$add_audio_tracks} ) {
+			$commands .= "\n".$title->get_transcode_audio_command (
+				vob_nr => $vob_nr,
+				target_nr => $avi_nr,
+			)."\n";
+			$commands .= "\n".$title->get_merge_audio_command (
+				vob_nr => $vob_nr,
+				target_nr => $avi_nr,
+			);
+		}
+		
+		$commands .= "\n\n";
+	}
 
 	$commands .= "View DVD Command:\n".
 		     "=================\n".

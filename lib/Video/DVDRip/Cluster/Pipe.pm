@@ -1,4 +1,4 @@
-# $Id: Pipe.pm,v 1.6 2002/03/12 13:59:44 joern Exp $
+# $Id: Pipe.pm,v 1.7 2002/09/15 15:31:09 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -21,26 +21,48 @@ use strict;
 
 my $LIFO_SIZE = 40;
 
-sub lifo			{ shift->{lifo}				}
-sub lifo_idx			{ shift->{lifo_idx}			}
-sub pid				{ shift->{pid}				}
-sub fh				{ shift->{fh}				}
+sub command			{ shift->{command}			}
 sub timeout			{ shift->{timeout}			}
 sub cb_finished			{ shift->{cb_finished}			}
 sub cb_line_read		{ shift->{cb_line_read}			}
-sub command			{ shift->{command}			}
 
+sub lifo			{ shift->{lifo}				}
+sub lifo_idx			{ shift->{lifo_idx}			}
+
+sub fh				{ shift->{fh}				}
+sub pid				{ shift->{pid}				}
 sub line_buffer			{ shift->{line_buffer}			}
-sub set_line_buffer		{ shift->{line_buffer}		= $_[1]	}
-
 sub event_waiter		{ shift->{event_waiter}			}
-sub set_event_waiter		{ shift->{event_waiter}	= $_[1]		}
+
+sub set_fh			{ shift->{fh}			= $_[1]	}
+sub set_pid			{ shift->{pid}			= $_[1]	}
+sub set_event_waiter		{ shift->{event_waiter}		= $_[1]	}
+sub set_line_buffer		{ shift->{line_buffer}		= $_[1]	}
 
 sub new {
 	my $class = shift;
 	my %par = @_;
 	my  ($command, $cb_line_read, $cb_finished, $timeout) =
 	@par{'command','cb_line_read','cb_finished','timeout'};
+
+	my $self = {
+		timeout		=> $timeout,
+		command		=> $command,
+		cb_line_read	=> $cb_line_read,
+		cb_finished	=> $cb_finished,
+		event_waiter	=> undef,
+		output_lifo	=> [ ( undef ) x $LIFO_SIZE ],
+		lifo_idx	=> -1,
+	};
+
+	return bless $self, $class;
+}
+
+sub open {
+	my $self = shift;
+
+	my $timeout = $self->timeout;
+	my $command = $self->command;
 
 	my $fh  = FileHandle->new;
 	my $pid;
@@ -65,58 +87,29 @@ sub new {
 	# we are the parent and go further, holding the
 	# pid of our child in $pid
 
-	my $self = bless {
-		timeout		=> $timeout,
-		command		=> $command,
-		cb_line_read	=> $cb_line_read,
-		cb_finished	=> $cb_finished,
-		fh   		=> $fh,
-		pid		=> $pid,
-		event_waiter	=> undef,
-		output_lifo	=> [ ( undef ) x $LIFO_SIZE ],
-		lifo_idx	=> -1,
-	}, $class;
+	$self->set_fh($fh);
+	$self->set_pid($pid);
 
 	my %timeout_options;
 	%timeout_options = (
 		timeout 	=> $timeout,
-		timeout_cb	=> sub { $self->timeout },
+		timeout_cb	=> sub { $self->timeout_expired },
 	) if $timeout;
 
-	$self->{event_waiter} = Event->io (
+	$self->set_event_waiter (
+	    Event->io (
 		fd      	=> $fh,
 		poll    	=> 'r',
 		desc 		=> "command execution",
 		nice    	=> NICE,
 		cb   		=> sub { $self->input ( $_[1] ) },
 		%timeout_options,
+	    )
 	);
 
 	$self->log (3, "execute command: $command");
 
 	return $self;
-}
-
-sub abort {
-	my $self = shift;
-
-	# this pid belong to the sh we started with exec
-	my $pid = $self->pid;
-	
-	# but we want to have its child. We use pstree for that.
-	my $pstree = qx[pstree -p $pid];
-	$pstree =~ /\($pid\).*?\((\d+)/;
-	my $child_pid = $1;
-
-	# if there was no sh with a further child, we have to kill
-	# our child process directly
-	$child_pid ||= $pid;
-
-	# kill the child
-	$self->log ("Aborting command. Sending signal 15 to PID $child_pid...");
-	kill 15, $child_pid;
-
-	1;
 }
 
 sub add_lifo_line {
@@ -146,13 +139,13 @@ sub output_tail {
 	return $tail;
 }
 
-sub timeout {
+sub timeout_expired {
 	my $self = shift;
 
 	$self->log ("Command cancelled due to timeout");
 
 	kill 15, $self->pid;
-#	$self->abort;
+	$self->cancel;
 
 	1;
 }
@@ -165,12 +158,9 @@ sub input {
 
 	# eof or abort?
 	if ( $abort or eof ($fh) ) {
+		$self->close;
 		my $cb_finished = $self->cb_finished;
-		&$cb_finished if $cb_finished;
-		$self->event_waiter->cancel;
-		$self->set_event_waiter (undef);
-		close $fh;
-		$self->log (5, "command finished: ".$self->command);
+		&$cb_finished ();
 		return;
 	}
 
@@ -204,5 +194,46 @@ sub input {
 
 	1;
 }
+
+sub close {
+	my $self = shift;
+	
+	my $fh = $self->fh;
+	
+	$self->event_waiter->cancel if $self->event_waiter;
+	$self->set_event_waiter (undef);
+
+	close $fh;
+
+	$self->log (5, "command finished: ".$self->command);
+	
+	1;
+}
+
+sub cancel {
+	my $self = shift;
+
+	# this pid belong to the sh we started with exec
+	my $pid = $self->pid;
+	
+	# but we want to have its child. We use pstree for that.
+	my $pstree = qx[pstree -p $pid];
+	$pstree =~ /\($pid\).*?\((\d+)/;
+	my $child_pid = $1;
+
+	# if there was no sh with a further child, we have to kill
+	# our child process directly
+	$child_pid ||= $pid;
+
+	# kill the child
+	$self->log ("Aborting command. Sending signal 15 to PID $child_pid...");
+	kill 15, $child_pid;
+
+	# close this pipe
+	$self->close;
+
+	1;
+}
+
 
 1;

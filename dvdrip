@@ -1,6 +1,6 @@
-#!/usr/local/bin/perl
+#!/usr/bin/perl
 
-# $Id: dvdrip,v 1.11 2002/05/14 22:24:50 joern Exp $
+# $Id: dvdrip,v 1.12 2002/09/15 15:37:18 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -14,6 +14,14 @@ package Video::DVDRip;
 use strict;
 use lib 'lib';
 use Getopt::Std;
+
+# That's Perl! The job classes derive from this class,
+# which is decided at *runtime* - this way standard and
+# cluster mode can share the same job execution system
+# by inserting the cluster logic dynamically into the
+# inheritence line... great stuff!
+
+BEGIN {	$Video::DVDRip::JobClass = "Video::DVDRip::Job" }
 
 use Video::DVDRip;
 use Video::DVDRip::GUI::Main;

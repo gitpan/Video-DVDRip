@@ -1,4 +1,4 @@
-# $Id: MergePSUs.pm,v 1.5 2002/06/23 21:43:35 joern Exp $
+# $Id: MergePSUs.pm,v 1.6 2002/09/15 15:31:09 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -24,7 +24,15 @@ sub info {
 	return "merge program stream units";
 }
 
-sub start {
+sub init {
+	my $self = shift;
+
+	$self->set_progress_max ($self->title->frames);
+	
+	1;
+}
+
+sub command {
 	my $self = shift;
 
 	my $project  = $self->project;
@@ -35,30 +43,20 @@ sub start {
 	my $command = $title->get_merge_psu_command;
 	$project->set_assigned_job ( undef );
 
-	$self->set_progress_frames_cnt ($title->frames);
+	return $command;
+}
 
-	my $successful_finished = 0;
-	my $first = 1;
-	$self->popen (
-		command      => $command,
-		cb_line_read => sub {
-			my ($line) = @_;
-			if ( $line =~ /\(\d+-(\d+)\)/ ) {
-				$self->set_progress_start_time(time) if $first;
-				$self->set_progress_frames ($1);
-				$first = 0;
-			} elsif ( $line =~ /DVDRIP_SUCCESS/ ) {
-				$successful_finished = 1;
-			}
-		},
-		cb_finished  => sub {
-			if ( $successful_finished ) {
-				$self->commit_job;
-			} else {
-				$self->abort_job;
-			}
-		},
-	);
+sub parse_output {
+	my $self = shift;
+	my ($line) = @_;
+
+	if ( $line =~ /\(\d+-(\d+)\)/ ) {
+		$self->set_progress_cnt ($1);
+
+	}
+
+	$self->set_operation_successful ( 1 )
+		if $line =~ /DVDRIP_SUCCESS/;
 
 	1;
 }

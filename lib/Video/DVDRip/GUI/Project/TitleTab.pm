@@ -1,4 +1,4 @@
-# $Id: TitleTab.pm,v 1.37 2002/07/15 07:29:00 joern Exp $
+# $Id: TitleTab.pm,v 1.41 2002/09/22 09:38:22 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -19,7 +19,6 @@ sub set_clist_row2title_nr	{ shift->{clist_row2title_nr}	= $_[1] }
 
 sub rip_title_widgets		{ shift->{rip_title_widgets}		}
 sub set_rip_title_widgets	{ shift->{rip_title_widgets}	= $_[1] }
-
 
 #------------------------------------------------------------------------
 # Build RIP Title Tab
@@ -42,7 +41,7 @@ sub create_title_tab {
 	$hbox->set_border_width(5);
 	$hbox->show;
 
-	my $button = Gtk::Button->new_with_label ("Read DVD Table of Contents");
+	my $button = Gtk::Button->new_with_label ("Read DVD table of contents");
 	$button->show;
 	$button->signal_connect ("clicked", sub { $self->read_dvd_toc } );
 
@@ -58,7 +57,7 @@ sub create_title_tab {
 	$vbox->pack_start ( $frame, 0, 1, 0);
 
 	# 2. TOC List / Frame
-	$frame = Gtk::Frame->new ("DVD Table of Contents");
+	$frame = Gtk::Frame->new ("DVD table of contents");
 	$frame->show;
 	$vbox->pack_start ( $frame, 0, 1, 0);
 
@@ -76,13 +75,17 @@ sub create_title_tab {
 	$sw->set_policy( 'automatic', 'automatic' );
 
 	my $clist = Gtk::CList->new_with_titles (
-		"Title", "Technical Information"
+		"Title", "Technical information"
 	);
 	$clist->show,
 	$clist->set_usize (450, 372);
 	$clist->set_selection_mode( 'extended' ); 
-	$clist->signal_connect ("select_row",   sub { $self->cb_select_title (@_) } );
-	$clist->signal_connect ("unselect_row", sub { $self->cb_select_title (@_) } );
+	$clist->signal_connect ("select_row",   sub {
+		$self->cb_select_title (@_);
+	} );
+	$clist->signal_connect ("unselect_row", sub {
+		$self->cb_select_title (@_);
+	} );
 
 	$sw->add( $clist );
 
@@ -97,7 +100,7 @@ sub create_title_tab {
 	
 	my $label_hbox = Gtk::HBox->new;
 	$label_hbox->show;
-	$label = Gtk::Label->new ("Select Audio Channel");
+	$label = Gtk::Label->new ("Select primary audio track");
 	$label->show;
 	$label->set_justify('left');
 	$label_hbox->pack_start ($label, 0, 1, 0);
@@ -119,7 +122,7 @@ sub create_title_tab {
 	# Viewing Angle Selection
 	$label_hbox = Gtk::HBox->new;
 	$label_hbox->show;
-	$label = Gtk::Label->new ("Select Viewing Angle");
+	$label = Gtk::Label->new ("Select viewing angle");
 	$label->show;
 	$label->set_justify('left');
 	$label_hbox->pack_start ($label, 0, 1, 0);
@@ -141,7 +144,7 @@ sub create_title_tab {
 	# Chapter mode ripping
 	$label_hbox = Gtk::HBox->new;
 	$label_hbox->show;
-	$label = Gtk::Label->new ("Specify Chapter Mode");
+	$label = Gtk::Label->new ("Specify chapter mode");
 	$label->show;
 	$label_hbox->pack_start ($label, 0, 1, 0);
 	$audio_vbox->pack_start ($label_hbox, 0, 1, 0);
@@ -186,7 +189,7 @@ sub create_title_tab {
 	$list_vbox->pack_start($hbox, 1, 1, 0);
 
 	my $button;
-	$button = Gtk::Button->new_with_label ("View Selected Title/Chapter(s)");
+	$button = Gtk::Button->new_with_label ("View\nselected title/chapter(s)");
 	$button->show;
 	$hbox->pack_start ($button, 1, 1, 0);
 	$button->signal_connect ("clicked",
@@ -196,7 +199,7 @@ sub create_title_tab {
 	$self->rip_title_widgets->{view_title_button} = $button;
 
 	$button = Gtk::Button->new_with_label (
-		"RIP Selected Title(s)/Chapter(s)"
+		"RIP\nselected title(s)/chapter(s)"
 	);
 	$button->show;
 	$button->signal_connect ("clicked",
@@ -214,6 +217,9 @@ sub create_title_tab {
 			return 1 if not $self->selected_title;
 			$self->selected_title->set_tc_use_chapter_mode('all');
 			$self->init_chapter_list ( without_radio => 1 );
+			$self->rip_title_widgets->{rip_button}->set_sensitive(
+				$self->project->rip_mode eq 'rip'
+			);
 		}
 	);
 	$self->rip_title_widgets->{tc_use_chapter_mode_no}->signal_connect (
@@ -221,6 +227,7 @@ sub create_title_tab {
 			return 1 if not $self->selected_title;
 			$self->selected_title->set_tc_use_chapter_mode(0);
 			$self->init_chapter_list ( without_radio => 1 );
+			$self->rip_title_widgets->{rip_button}->set_sensitive(1);
 		}
 	);
 	$self->rip_title_widgets->{tc_use_chapter_mode_select}->signal_connect (
@@ -228,6 +235,9 @@ sub create_title_tab {
 			return 1 if not $self->selected_title;
 			$self->selected_title->set_tc_use_chapter_mode('select');
 			$self->init_chapter_list ( without_radio => 1 );
+			$self->rip_title_widgets->{rip_button}->set_sensitive(
+				$self->project->rip_mode eq 'rip'
+			);
 		}
 	);
 	my $select_callback =  sub {
@@ -259,9 +269,25 @@ sub cb_select_title {
 
 	my $nr = $self->clist_row2title_nr->{$row};
 	$self->project->set_selected_title_nr ($nr);
-	$self->set_selected_title($self->project->content->titles->{$nr});
+	my $title = $self->set_selected_title($self->project->content->titles->{$nr});
 
 	$self->fill_with_values;
+	
+	my $rip_mode = $self->project->rip_mode;
+	
+	if ( $rip_mode eq 'rip' ) {
+		$self->rip_title_widgets->{view_title_button}->set_sensitive(1);
+		$self->rip_title_widgets->{rip_button}->set_sensitive(1);
+
+	} elsif ( $rip_mode eq 'dvd' or $rip_mode eq 'dvd_image' ) {
+		$self->rip_title_widgets->{view_title_button}->set_sensitive(
+			$rip_mode eq 'dvd'
+		);
+		$self->rip_title_widgets->{rip_button}->set_sensitive(
+			not $title->tc_use_chapter_mode
+		) if $title;
+
+	}
 	
 	1;
 }
@@ -273,36 +299,15 @@ sub init_audio_popup {
 	my $title = $self->selected_title;
 	return if not $title;
 
-	my $audio_popup = $self->rip_title_widgets->{audio_popup};
-	
-	my $audio_popup_menu = Gtk::Menu->new;
-	$audio_popup_menu->show;
-	$audio_popup->set_menu($audio_popup_menu);
-
-	my $item;
-	my $i = 0;
-	foreach my $audio ( @{$title->audio_tracks} ) {
-		my $sample_rate = $audio->{sample_rate};
-		$sample_rate = "48kHz"   if $sample_rate == 48000;
-		$sample_rate = "41.1kHz" if $sample_rate == 44100;
-		$item = Gtk::MenuItem->new (
-			"$i: $audio->{lang} $audio->{type} ".
-			"$sample_rate $audio->{channels}Ch"
-		);
-		$item->show;
-		$item->signal_connect (
-			"select", sub {
-				$_[1]->set_audio_channel($_[2]);
-				$self->init_title_labels;
-				$self->init_transcode_values;
-			},
-			$title, $i
-		);
-		$audio_popup_menu->append($item);
-		++$i;
-	}
-
-	$audio_popup->set_history($title->audio_channel);
+	$self->fill_audio_popup (
+		audio_popup => $self->rip_title_widgets->{audio_popup},
+		tab         => "rip_title",
+	);
+	$self->fill_audio_popup (
+		audio_popup => $self->transcode_widgets->{select_audio_channel_popup},
+		tab         => "transcode",
+	);
+	$self->fill_target_audio_popup;
 
 	# viewing angle popup
 
@@ -312,6 +317,7 @@ sub init_audio_popup {
 	$view_angle_popup_menu->show;
 	$view_angle_popup->set_menu($view_angle_popup_menu);
 
+	my $item;
 	foreach my $angle ( 1 .. $title->viewing_angles ) {
 		$item = Gtk::MenuItem->new ( "Angle $angle" );
 		$item->show;
@@ -326,6 +332,140 @@ sub init_audio_popup {
 	}
 
 	$view_angle_popup->set_history($title->tc_viewing_angle-1);
+
+	1;
+}
+
+sub fill_audio_popup {
+	my $self = shift;
+	my %par = @_;
+	my ($audio_popup, $tab) = @par{'audio_popup','tab'};
+
+	my $title = $self->selected_title;
+
+	my $audio_popup_menu = Gtk::Menu->new;
+	$audio_popup_menu->show;
+	$audio_popup->set_menu($audio_popup_menu);
+
+	my $tc_audio_tracks = $title->tc_audio_tracks;
+
+	my $item;
+	my $i = 0;
+	foreach my $audio ( @{$title->audio_tracks} ) {
+		my $sample_rate = $audio->sample_rate;
+		$sample_rate = "48kHz"   if $sample_rate == 48000;
+		$sample_rate = "41.1kHz" if $sample_rate == 44100;
+
+		my $target_track = "";
+		if ( $tc_audio_tracks->[$i]->tc_target_track != -1 ) {
+			$target_track = " => ".$tc_audio_tracks->[$i]->tc_target_track;
+		}
+		$item = Gtk::MenuItem->new (
+			"$i: ".$audio->lang." ".$audio->type." ".
+			"$sample_rate ".$audio->channels."Ch".
+			$target_track
+		);
+		$item->show;
+		$item->signal_connect (
+			"select", sub {
+				return if $self->in_transcode_init;
+				$_[1]->set_audio_channel($_[2]);
+				$self->init_title_labels;
+				if ( $tab eq 'rip_title' ) {
+					$self->init_audio_values (
+					    switch_popup =>
+						$self->transcode_widgets
+						     ->{select_audio_channel_popup}
+					);
+					$self->init_transcode_values (
+						no_audio => 1
+					);
+				} else {
+					$self->init_audio_values (
+					    switch_popup =>
+						$self->rip_title_widgets
+						     ->{audio_popup}
+					);
+					$self->init_transcode_values (
+						no_audio => 1
+					);
+				}
+			},
+			$title, $i
+		);
+		$audio_popup_menu->append($item);
+		++$i;
+	}
+
+	if ( $title->audio_channel == -1 ) {
+		$item = Gtk::MenuItem->new ("No audio");
+		$item->show;
+		$audio_popup_menu->append($item);
+		$audio_popup->set_history(0);
+		
+	} else {
+		$audio_popup->set_history($title->audio_channel);
+	}
+
+	1;
+}
+
+sub fill_target_audio_popup {
+	my $self = shift;
+
+	my $title = $self->selected_title;
+
+	my $audio_popup = $self->transcode_widgets->{tc_target_audio_channel_popup};
+
+	my $audio_popup_menu = Gtk::Menu->new;
+	$audio_popup_menu->show;
+	$audio_popup->set_menu($audio_popup_menu);
+
+	my %track_is_assigned;
+	foreach my $audio ( @{$title->tc_audio_tracks} ) {
+		$track_is_assigned{$audio->tc_target_track} = 1
+			if $audio->tc_target_track != -1;
+	}
+
+	my $item;
+	my $text;
+	my %history;
+	my $history = 0;
+	for (my $i=-1; $i < @{$title->audio_tracks}; ++$i ) {
+		$text = $i == -1 ? "Don't add this track" : "Track #$i";
+		next if $track_is_assigned{$i} and
+			$title->tc_target_track != $i;
+		$history{$i} = $history;
+		$item = Gtk::MenuItem->new ($text);
+		$item->show;
+		$item->signal_connect (
+			"select", sub {
+				return if $self->in_transcode_init;
+				$title->set_tc_target_track ($_[1]);
+				$title->calc_video_bitrate;
+				$self->init_transcode_values (
+					no_audio => 1
+				);
+				# this corrects the target track
+				# in both popups
+				$self->fill_audio_popup (
+					audio_popup => $self->transcode_widgets
+						 	    ->{select_audio_channel_popup},
+					tab	    => "transcode"
+				);
+				$self->fill_audio_popup (
+					audio_popup => $self->rip_title_widgets
+						 	    ->{audio_popup},
+					tab	    => "rip"
+				);
+				1;
+			},$i,
+		);
+		$audio_popup_menu->append($item);
+		++$history;
+	}
+
+	$audio_popup->set_history ($history{$title->tc_target_track});
 
 	1;
 }
@@ -386,19 +526,19 @@ sub init_title_labels {
 			       ->audio_tracks
 			       ->[$audio_channel];
 		$audio_label =
-			"Viewing Angle #".$title->tc_viewing_angle.", ".
-			"Audio Channel: #$audio_channel - ".
-			"$audio->{lang} $audio->{type} ".
-			"$audio->{sample_rate} $audio->{channels}Ch";
+			"Viewing angle #".$title->tc_viewing_angle.", ".
+			"Audio track: #$audio_channel - ".
+			$audio->lang." ".$audio->type." ".
+			$audio->sample_rate." ".$audio->channels."Ch";
 	} else {
-		$audio_label = "No Audio\n";
+		$audio_label = "No audio\n";
 	}
 
 	my $nr = $title->nr;
 
 	foreach my $label ( @{$self->gtk_title_labels} ) {
 		$label->set_text (
-			"DVD Title #$nr - ".
+			"DVD title #$nr - ".
 			$self->get_title_info (title => $title).
 			"\n".$audio_label
 		);
@@ -436,71 +576,43 @@ sub read_dvd_toc {
 	}
 	
 	my $titles = $content->get_titles_by_nr;
-	my $step = -1;
 
-	my $open_callback = sub {
-		++$step;
-		return $titles->[$step]->probe_async_start;
-	};	
-
-	my $progress_callback = sub {
-		return $step+1;
-	};
-
-	my $close_callback = sub {
-		my %par = @_;
-		my ($progress, $output) = @par{'progress','output'};
-		eval {
-			$titles->[$step]->probe_async_stop (
-				fh     => $progress->fh,
-				output => $output
-			);
-			$titles->[$step]->suggest_transcode_options;
-		};
-
-		if ( not $@ ) {
-			$self->append_content_list ( title => $titles->[$step] );
-			$self->log ("Successfully probed title #".($step+1));
-
-		} else {
-			$self->message_window (
-				message => "Can't probe Track #$step\n\n".
-					   "Track will not be listed.\n\n".
-					   "Output of tcprobe was:\n\n$output\n\n$@"
-			);
-			$self->log ("Error probing title #".($step+1));
-		}
-		
-		++$step;
-
-		if ( $step == @{$titles} ) {
-			my $nr = $self->clist_row2title_nr->{0};
-			$self->project->set_selected_title_nr ($nr);
-			my $title = $self->project->content->titles->{$nr};
-			$self->set_selected_title( $title );
-			$self->fill_with_values;
-			$self->rip_title_widgets->{content_clist}->select_row (0,0);
-			return 'finished';
-
-		} else {
-			$progress->init_pipe (
-				fh => $titles->[$step]->probe_async_start
-			);
-			return 'continue';
-		}
-	};
-
-	$self->comp('progress')->open (
-		label             => "Reading DVD TOC",
-		need_output       => 1,
-		show_eta          => 1,
-		show_percent      => 1,
-		show_fps          => 0,
-		max_value         => scalar(@{$titles}),
-		open_callback     => $open_callback,
-		progress_callback => $progress_callback,
-		close_callback    => $close_callback,
+	my $nr;
+	my $job;
+	my $last_job;
+	my $exec = Video::DVDRip::GUI::ExecuteJobs->new (
+		reuse_progress => 1
 	);
+	
+	foreach my $title ( @{$titles} ) {
+		$job  = Video::DVDRip::Job::Probe->new (
+			nr    => ++$nr,
+			title => $title,
+		);
+
+		$job->set_progress_max(scalar(@{$titles})+0.001);
+
+		$job->set_cb_finished (sub {
+			$self->append_content_list ( title => $title );
+		});
+
+		$last_job = $exec->add_job ( job => $job );
+	}
+	
+	$exec->set_cb_finished (sub{
+		return if $exec->cancelled;
+
+		my $nr = $self->clist_row2title_nr->{0};
+		$self->project->set_selected_title_nr ($nr);
+
+		my $title = $self->project->content->titles->{$nr};
+		$self->set_selected_title( $title );
+		$self->fill_with_values;
+		$self->rip_title_widgets->{content_clist}->select_row (0,0);
+		$self->project->backup_copy;
+	});
+
+	$exec->execute_jobs;
 
 	1;
 }
@@ -547,7 +659,6 @@ sub append_content_list {
 
 	my $row = $self->rip_title_widgets->{content_clist}->append (
 		$title->nr,
-#		int($title->size/1024/1024),
 		$self->get_title_info ( title => $title ),
 	);
 	
@@ -583,7 +694,7 @@ sub get_title_info {
 sub create_selected_title {
 	my $self = shift; $self->trace_in;
 
-	my $frame = Gtk::Frame->new ("Selected Title");
+	my $frame = Gtk::Frame->new ("Selected title");
 	$frame->show;
 
 	my $hbox = Gtk::HBox->new;
@@ -624,10 +735,6 @@ sub rip_title_selection_sensitive {
 
 sub rip_title {
 	my $self = shift; $self->trace_in;
-	my %par = @_;
-	my ($sel_idx) = @par{'sel_idx'};
-
-	$sel_idx ||= 0;
 
 	return if $self->comp('progress')->is_active;
 
@@ -640,203 +747,58 @@ sub rip_title {
 
 	$self->rip_title_selection_sensitive(0);
 
-	my @sel = $self->rip_title_widgets->{content_clist}->selection;
-	my $nr = $sel[$sel_idx] + 1;
-	my $title = $self->project->content->titles->{$nr};
-
 	eval { $self->project->check_dvd_in_drive };
 	if ( $@ ) {
+		$self->rip_title_selection_sensitive(1);
 		$self->message_window (
 			message => "Please put a disc into your drive."
 		);
 		return;
 	}
 
-	return $self->rip_title_chapters ( title => $title, sel_idx => $sel_idx )
-		if $title->tc_use_chapter_mode;
-
-	$title->set_actual_chapter ( undef );
-
-	my $with_scanning = $title->audio_channel != -1;
-
-	my $start_method = $with_scanning ? "rip_and_scan_async_start" :
-					    "rip_async_start";
-	my $stop_method  = $with_scanning ? "rip_and_scan_async_stop" :
-					    "rip_async_stop";
-
-	my $open_callback = sub {
-		return $title->$start_method();
-	};
-
-	my $frames = 0;
-	my $progress_callback = sub {
-		# otherwise we get the output of "tcdemux -W" here,
-		# where we just need to count lines (one frame per line)
-		my %par = @_;
-		my ($buffer) = @par{'buffer'};
-		$frames += $buffer =~ tr/\n/\n/;
-		return $frames;
-	};
-
-	my $close_callback = sub {
-		my %par = @_;
-		my ($progress, $output) = @par{'progress', 'output'};
-		$title->$stop_method (
-			fh     => $progress->fh,
-			output => $output,
-		);
-		$title->probe_audio;
-		$title->suggest_transcode_options;
-		$title->calc_program_stream_units;
-		$self->fill_with_values;
-
-		if ( $sel_idx == @sel - 1 ) {
-			$self->rip_title_selection_sensitive(1);
-			return sub {
-				$self->grab_preview_frame;
-			};
-		}
-		return sub {
-			$self->rip_title ( sel_idx => $sel_idx + 1);
-		};
-	};
-
-	my $cancel_callback = sub {
-		my %par = @_;
-		my ($progress) = @par{'progress'};
-		system ("killall splitpipe");
-		close ($progress->fh);
-		$title->remove_vob_files;
-		$self->rip_title_selection_sensitive(1);
-		return 1;
-	};
-
-	$self->comp('progress')->open (
-		label             => "Ripping Title #".$title->nr,
-		need_output       => 1,
-		show_percent      => 1,
-		show_eta          => 1,
-		show_fps          => 1,
-		max_value         => $title->frames,
-		open_callback     => $open_callback,
-		progress_callback => $progress_callback,
-		cancel_callback   => $cancel_callback,
-		close_callback    => $close_callback,
-	);
-
-	1;
-}
-
-sub rip_title_chapters {
-	my $self = shift; $self->trace_in;
-	my %par = @_;
-	my ($title, $sel_idx) = @par{'title','sel_idx'};
-
-	return if not $title;
-	return if $self->comp('progress')->is_active;
-
-	my $chapter_mode = $title->tc_use_chapter_mode;
-
-	croak "Title is not in chapter mode" if not $chapter_mode;
-
-	my $nr = $title->nr;
-
 	my @sel = $self->rip_title_widgets->{content_clist}->selection;
+	
+	my $nr;
+	my $job;
+	my $last_job;
+	my $exec = Video::DVDRip::GUI::ExecuteJobs->new;
 
-	my @chapters  = @{$title->get_chapters};
-	my $max_value = $chapter_mode eq 'select' ?
-				@chapters : 
-				$title->frames;
+	foreach my $sel ( @sel ) {
+		my $title = $self->project->content->titles->{$sel+1};
 
-	if ( not @chapters ) {
-		$self->message_window (
-			message => "No chapters selected."
-		);
-		return;
-	}
-
-	my $cnt = 1;
-	my $base_progress = 0;
-	my $old_progress  = 0;
-
-	my $chapter = shift @chapters;
-
-	$title->set_actual_chapter ( $chapter );
-
-	my $open_callback = sub {
-		return $title->rip_async_start;
-	};
-
-	my $frames = 0;
-	my $progress_callback = sub {
-		return $cnt if $chapter_mode eq 'select';
-		my %par = @_;
-		my ($buffer) = @par{'buffer'};
-		$frames += $buffer =~ tr/\n/\n/;
-		return $frames;
-	};
-
-	my $close_callback = sub {
-		my %par = @_;
-		my ($progress, $output) = @par{'progress', 'output'};
-		$title->rip_async_stop (
-			fh     => $progress->fh,
-			output => $output,
-		);
-
-		++$cnt;
-		$chapter = shift @chapters;
-		$title->set_actual_chapter($chapter);
-
-		if ( not defined $chapter ) {
-			$title->probe_audio;
-			$title->suggest_transcode_options;
-			$self->fill_with_values;
-			if ( $sel_idx == @sel - 1 ) {
-				$self->rip_title_selection_sensitive(1);
-				return sub {
-					$self->grab_preview_frame;
-				};
-			}
-			return sub {
-				$self->rip_title ( sel_idx => $sel_idx + 1);
-			};
+		if ( not $title->tc_use_chapter_mode ) {
+		    my $job = Video::DVDRip::Job::Rip->new (
+			nr    => ++$nr,
+			title => $title,
+		    );
+		    $last_job = $exec->add_job ( job => $job );
 
 		} else {
-			$progress->set_label (
-				"Ripping Chapter $chapter of Title #".$title->nr
+		    foreach my $chapter ( @{$title->get_chapters} ) {
+			$job = Video::DVDRip::Job::Rip->new (
+			    nr    => ++$nr,
+			    title => $title,
 			);
-			$progress->init_pipe (
-				fh => $title->rip_async_start
-			);
-			$base_progress = $old_progress;
-			return 'continue';
+			$job->set_chapter ( $chapter );
+			$last_job = $exec->add_job ( job => $job );
+		    }
 		}
-	};
+	}
 
-	my $cancel_callback = sub {
-		my %par = @_;
-		my ($progress) = @par{'progress'};
-		close ($progress->fh);
-		$title->remove_vob_files;
-		$title->set_actual_chapter(undef);
+	$exec->set_cb_finished (sub {
+		if ( $exec->cancelled ) {
+			$exec->cancelled_job->title->remove_vob_files;
+		} else {
+			$self->grab_preview_frame;
+			$self->fill_with_values;
+			$self->project->backup_copy;
+		}
 		$self->rip_title_selection_sensitive(1);
-		return 1;
-	};
+		1;
+	});
 
-	$self->comp('progress')->open (
-		label             => "Ripping Chapter $chapter of Title #".$title->nr,
-		need_output       => 0,
-		show_percent      => ($chapter_mode ne 'select'),
-		show_eta          => ($chapter_mode ne 'select'),
-		show_fps          => ($chapter_mode ne 'select'),
-		max_value         => $max_value,
-		open_callback     => $open_callback,
-		progress_callback => $progress_callback,
-		cancel_callback   => $cancel_callback,
-		close_callback    => $close_callback,
-	);
-	
+	$exec->execute_jobs;
+
 	1;
 }
 

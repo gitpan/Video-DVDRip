@@ -1,4 +1,4 @@
-# $Id: StorageTab.pm,v 1.8 2002/01/03 17:40:01 joern Exp $
+# $Id: StorageTab.pm,v 1.11 2002/09/15 15:30:31 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -12,6 +12,12 @@ package Video::DVDRip::GUI::Project;
 use Carp;
 use strict;
 
+sub storage_widgets		{ shift->{storage_widgets}		}
+sub set_storage_widgets		{ shift->{storage_widgets}	= $_[1]	}
+
+sub in_storage_init		{ shift->{in_storage_init}		}
+sub set_in_storage_init		{ shift->{in_storage_init}	= $_[1]	}
+
 #------------------------------------------------------------------------
 # Build Storage Tab
 #------------------------------------------------------------------------
@@ -19,9 +25,23 @@ use strict;
 sub create_storage_tab {
 	my $self = shift; $self->trace_in;
 
+	$self->set_storage_widgets({});
+
 	my $vbox = Gtk::VBox->new;
 	$vbox->set_border_width(5);
 	$vbox->show;
+	
+	my $storage_frame = $self->create_storage_frame;
+	my $source_frame  = $self->create_source_frame;
+	
+	$vbox->pack_start ( $storage_frame, 0, 1, 0);
+	$vbox->pack_start ( $source_frame, 0, 1, 0);
+	
+	return $vbox;
+}
+
+sub create_storage_frame {
+	my $self = shift; $self->trace_in;
 	
 	my $frame = Gtk::Frame->new ("Storage path information");
 	$frame->show;
@@ -31,11 +51,11 @@ sub create_storage_tab {
 	$hbox->show;
 
 	my ($dialog, $widgets) = $self->create_dialog (
-		{ label => "Project Name",
+		{ label => "Project name",
 		  value => $self->project->name,
 		  type  => 'text'
 		},
-		{ label => "VOB Directory",
+		{ label => "VOB directory",
 		  value => $self->project->vob_dir,
 		  type  => 'text',
 		  onchange => sub {
@@ -47,7 +67,7 @@ sub create_storage_tab {
 		  	$self->project->set_vob_dir ($text)
 		  },
 		},
-		{ label => "AVI Directory",
+		{ label => "AVI directory",
 		  value => $self->project->avi_dir,
 		  type  => 'text',
 		  onchange => sub {
@@ -59,7 +79,7 @@ sub create_storage_tab {
 		  	$self->project->set_avi_dir ($text)
 		  },
 		},
-		{ label => "Temp Directory",
+		{ label => "Temporary directory",
 		  value => $self->project->snap_dir,
 		  type  => 'text',
 		  onchange => sub {
@@ -116,9 +136,190 @@ sub create_storage_tab {
 
 	$hbox->pack_start ( $dialog, 0, 1, 0);
 	$frame->add ($hbox);
-	$vbox->pack_start ( $frame, 0, 1, 0);
 
-	return $vbox;
+	return $frame;
+}
+
+sub create_source_frame {
+	my $self = shift; $self->trace_in;
+	
+	my $frame = Gtk::Frame->new ("Data source mode selection");
+	$frame->show;
+
+	my $frame_hbox = Gtk::HBox->new;
+	$frame_hbox->set_border_width(5);
+	$frame_hbox->show;
+	$frame->add ($frame_hbox);
+
+	my ($table, $hbox, $vbox, $row, $radio, $radio_group, $label, $entry);
+
+	# Table
+	$table = Gtk::Table->new ( 4, 2, 0 );
+	$table->show;
+	$table->set_row_spacings ( 2 );
+	$table->set_col_spacings ( 7 );
+	$frame_hbox->pack_start ($table, 1, 1, 0);
+
+	# Mode 1 - rip data to hd
+	$row = 0;
+	$hbox = Gtk::HBox->new;
+	$hbox->show;
+	$radio = $radio_group = Gtk::RadioButton->new;
+	$radio->show;
+	$hbox->pack_start($radio, 0, 1, 0);
+	$table->attach ($hbox, 0, 1, $row, $row+1, 'fill','expand',0,0);
+
+	$label = Gtk::Label->new ("Rip data from DVD to harddisk before encoding");
+	$label->show;
+	$hbox = Gtk::HBox->new;
+	$hbox->show;
+	$hbox->pack_start($label, 0, 1, 0);
+	$table->attach ($hbox, 1, 2, $row, $row+1, 'fill','expand',0,0);
+
+	$self->storage_widgets->{rip_mode_rip} = $radio;
+
+	# Mode 2 - transcode on the fly from dvd
+	++$row;
+	$hbox = Gtk::HBox->new;
+	$hbox->show;
+	$radio = $radio_group = Gtk::RadioButton->new ("", $radio_group);
+	$radio->show;
+	$hbox->pack_start($radio, 0, 1, 0);
+	$table->attach ($hbox, 0, 1, $row, $row+1, 'fill','expand',0,0);
+
+	$label = Gtk::Label->new ("Encode DVD on the fly");
+	$label->show;
+	$hbox = Gtk::HBox->new;
+	$hbox->show;
+	$hbox->pack_start($label, 0, 1, 0);
+	$table->attach ($hbox, 1, 2, $row, $row+1, 'fill','expand',0,0);
+	
+	$self->storage_widgets->{rip_mode_dvd} = $radio;
+
+	# Mode 3 - Use existent DVD image on harddisk
+	++$row;
+	$radio = $radio_group = Gtk::RadioButton->new ("", $radio_group);
+	$radio->show;
+	$table->attach ($radio, 0, 1, $row, $row+1, 'fill','expand',0,0);
+
+	$label = Gtk::Label->new ("Use existent DVD image located in this directory:");
+	$label->show;
+	$hbox = Gtk::HBox->new;
+	$hbox->show;
+	$hbox->pack_start($label, 0, 1, 0);
+
+	$table->attach ($hbox, 1, 2, $row, $row+1, 'fill','expand',0,0);
+
+	++$row;
+
+	$entry = Gtk::Entry->new;
+	$entry->show;
+	$entry->set_sensitive(0);
+
+	$table->attach ($entry, 1, 2, $row, $row+1, 'fill','expand',0,0);
+
+	$self->storage_widgets->{rip_mode_dvd_image} = $radio;
+	$self->storage_widgets->{rip_mode_dvd_image_dir} = $entry;
+if ( 0 ) {
+	# Mode 4 - Use existent VOB title on harddisk
+	++$row;
+	$radio = $radio_group = Gtk::RadioButton->new ("", $radio_group);
+	$radio->show;
+	$table->attach ($radio, 0, 1, $row, $row+1, 'fill','expand',0,0);
+
+	$label = Gtk::Label->new ("Use existent title VOB files(s) on harddisk, directory location:");
+	$label->show;
+	$hbox = Gtk::HBox->new;
+	$hbox->show;
+	$hbox->pack_start($label, 0, 1, 0);
+
+	$table->attach ($hbox, 1, 2, $row, $row+1, 'fill','expand',0,0);
+
+	++$row;
+
+	$entry = Gtk::Entry->new;
+	$entry->show;
+	$entry->set_sensitive(0);
+
+	$table->attach ($entry, 1, 2, $row, $row+1, 'fill','expand',0,0);
+
+	$self->storage_widgets->{rip_mode_vob_title} = $radio;
+	$self->storage_widgets->{rip_mode_vob_title_dir} = $entry;
+}
+	# Connect Signals
+	my $widgets = $self->storage_widgets;
+	foreach my $mode ( qw ( rip dvd dvd_image ) ) {
+		$widgets->{"rip_mode_$mode"}->signal_connect ("clicked", sub {
+			return 1 if $self->in_storage_init;
+			$self->change_rip_mode ( mode => $mode );
+		} );
+	}
+	
+	$widgets->{rip_mode_dvd_image_dir}->signal_connect ("changed", sub {
+		return 1 if $self->in_storage_init;
+	  	my $text = $_[0]->get_text;
+		if ( not $text =~ m!^/! ) {
+			$text = "/$text";
+			$_[0]->set_text($text);
+		}
+		$self->project->set_dvd_image_dir ( $text );
+	} );
+
+if ( 0 ) {
+	$widgets->{rip_mode_vob_title_dir}->signal_connect ("changed", sub {
+		return 1 if $self->in_storage_init;
+	  	my $text = $_[0]->get_text;
+		if ( not $text =~ m!^/! ) {
+			$text = "/$text";
+			$_[0]->set_text($text);
+		}
+		$self->project->set_vob_title_dir ( $text );
+	} );
+}
+	return $frame;
+}
+
+sub init_storage_values {
+	my $self = shift; $self->trace_in;
+
+	$self->set_in_storage_init(1);
+	
+	my $project = $self->project;
+
+	my $widgets = $self->storage_widgets;
+	$widgets->{rip_mode_dvd_image_dir}->set_text ($project->dvd_image_dir);
+#	$widgets->{rip_mode_vob_title_dir}->set_text ($project->vob_title_dir);
+
+	my $mode = $project->rip_mode || "rip";
+
+	$self->set_in_storage_init(0);
+
+	$widgets->{"rip_mode_$mode"}->set_active(1);
+
+	1;
+}
+
+sub change_rip_mode {
+	my $self = shift; $self->trace_in;
+	my %par = @_;
+	my ($mode) = @par{'mode'};
+
+	$self->project->set_rip_mode ($mode);
+	
+	my $widgets = $self->storage_widgets;
+	$widgets->{rip_mode_dvd_image_dir}->set_sensitive ($mode eq 'dvd_image');
+#	$widgets->{rip_mode_vob_title_dir}->set_sensitive ($mode eq 'vob_title');
+	
+	return 1 if not $self->transcode_widgets->{tc_psu_core_yes};
+
+	if ( $mode ne 'rip' ) {
+		$self->rip_title_widgets->{rip_button}->child->set("Volume Scan\nSelected Title(s) [optional]");
+	} else {
+		$self->rip_title_widgets->{rip_button}->child->set("Rip\nSelected Title(s)/Chapter(s)");
+	}
+
+	
+	1;
 }
 
 1;

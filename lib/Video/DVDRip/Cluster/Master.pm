@@ -1,4 +1,4 @@
-# $Id: Master.pm,v 1.22 2002/03/24 22:51:38 joern Exp $
+# $Id: Master.pm,v 1.23 2002/09/15 15:31:09 joern Exp $
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
 # 
@@ -230,7 +230,7 @@ sub node_check {
 			$self->job_control if $idle_nodes and
 					      not $self->in_job_control;
 		},
-	);
+	)->open;
 	
 	1;
 }

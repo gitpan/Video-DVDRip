@@ -1,4 +1,4 @@
-# $Id: MergeVideoAudio.pm,v 1.1 2002/06/23 21:46:40 joern Exp $
+# $Id: MergeVideoAudio.pm,v 1.2 2002/09/15 15:31:09 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -9,7 +9,7 @@
 
 package Video::DVDRip::Cluster::Job::MergeVideoAudio;
 
-use base Video::DVDRip::Cluster::Job;
+use base Video::DVDRip::Job::MergeAudio;
 
 use Carp;
 use strict;
@@ -30,7 +30,22 @@ sub info {
 	return "multiplex video and audio psu ".$self->psu;
 }
 
-sub start {
+sub init {
+	my $self = shift;
+	 
+	$self->SUPER::init;
+	 
+	$self->set_progress_max (
+		$self->title
+		     ->program_stream_units
+		     ->[$self->psu]
+		     ->frames
+	);
+	
+	1;
+}
+
+sub command {
 	my $self = shift;
 
 	my $project  = $self->project;
@@ -41,32 +56,7 @@ sub start {
 	my $command = $title->get_merge_video_audio_command;
 	$project->set_assigned_job ( undef );
 
-	$self->set_progress_frames_cnt ($title->frames);
-
-	my $successful_finished = 0;
-	my $first = 1;
-	$self->popen (
-		command      => $command,
-		cb_line_read => sub {
-			my ($line) = @_;
-			if ( $line =~ /\(\d+-(\d+)\)/ ) {
-				$self->set_progress_start_time(time) if $first;
-				$self->set_progress_frames ($1);
-				$first = 0;
-			} elsif ( $line =~ /DVDRIP_SUCCESS/ ) {
-				$successful_finished = 1;
-			}
-		},
-		cb_finished  => sub {
-			if ( $successful_finished ) {
-				$self->commit_job;
-			} else {
-				$self->abort_job;
-			}
-		},
-	);
-
-	1;
+	return $command;
 }
 
 1;

@@ -1,15 +1,19 @@
-$Id: TODO,v 1.79 2002/07/19 21:22:28 joern Exp $
+$Id: TODO,v 1.86 2002/09/22 12:13:03 joern Exp $
 
 KNOWN BUGS:
 ===========
 - cluster mode
   - cluster control daemon leaks memory
-- canceling a transcode process (in standard mode) kills all
-  transcode processes, in case of several dvd::rip instances
-  are started. Reported by Torsten Howard <torsten AT inetw.net>
 - negative cropping isn't visualized in the preview image
   (all calculations and the transcoding itself work, so
    it's not that big problem ;)
+- Autoadjust presets don't work if black bars can't be
+  autodetected correctly, because the image itself is
+  mostly black.
+- cluster mode: on FreeBSD pstree's output looks different,
+  so stopping jobs doesn't work on FreeBSD. Should use some
+  Perl modules instead. Reported by Lukas Ertl <l.ertl AT
+  univie.ac.at>
 
 NOTE:
 =====
@@ -20,15 +24,58 @@ may be implented soon, some eventually never... ;)
 
 TODO:
 =====
-- support generating multilanguage AVIs
-- support rendering subtitles
+- probe audio on the ripped VOB data. Some DVD's report wrong
+  information when probed from the DVD.
+- xvid properties window as a frontend for the xvid.cfg file,
+  suggested by Edouard Gomez <ed.gomez AT wanadoo.fr>
+- command line switches for immediate start of transcoding
+  (opt. with splitting) a project. Simple batching is
+  possible this way. Suggested by Rainer Lay
+- print actual bits/pixel somewhere on the clip&zoom tab,
+  suggested by Florin Andrei
 - use tccat -P instead of -T if chapter mode is disabled,
-  suggested by Sven Hartge
-- autosave function (after ripping, every X seconds or something)
+  suggested by Sven Hartge (under investigation)
+- add (S)VCD support to cluster mode
+- add multi audio support to (S)VCD mode
+- add additionals VCD presets, which doesn't clip the width,
+  requested by Dave Van Dijck <dvandijck AT connect.be>
+- warn (S)VCD rip's with illegal frame sizes, suggested by Rainer Lay
+- pre-define user defaults for all clip & zoom and transcode parameters
+  in a special project .rip file located in the user's home directory.
+  The file can be loaded, all parameters changed, and saved. Future
+  projects will take their default parameters from this file.
+- add proper disc size presets for (S)VCD
+- pcm passthrough
+  -y (video codec),raw -N 0x1 (remove -b), requested by
+  Jamie Manley <jamie AT homebrewcomputing.com> and
+  <xercist AT xernet.lammah.com>
+- support rendering subtitles
+- add ogg/vorbis support
+- preset a reasonably default value for the project data directory
+  on first startup, suggested by Ole Tange <tange AT tange.dk>
+- add some explantation to all those codecs to the docs
+  (divx4/divx5/xvid/xvidcvs etc.)
+- open preference window on 1st startup (if ~/.dvdriprc isn't there)
+- button for deletion of VOB's and temp files,
+  suggested by Robert NEMKIN <buci AT buci.hu>
+- add preference "default clip&zoom preset"
+- copy IFO files to HD, suggested by Magnus Sandin <magnus AT sandin.cx>
+- preference for standard additional transcode options,
+  suggested by Uwe Ade <uwe.ade AT gmx.de>
 - lock project file to prevent multiple instances of the
   same project at the same time, suggested by Sven Hartge
 - localize the GUI
+- transcode the movie twice, if the divergence of the avi size
+  is too big. Decrease/Increase the video bitrate according to
+  the divergence in the second run. Suggested by Stefan Raspl
+  <stefan.raspl AT playofmind.net>
+- speed up 2pass transcoding with hq resizing by using fast
+  resizing in the 1st pass. Suggested by Magnus Sandin <magnus AT sandin.cx>
 - cluster mode
+  - assign "preferred job types" to nodes, for speed optimizing. e.g.
+    pass 1 jobs should be done by fast nodes, pass 2 by slow
+    nodes to prevent fast nodes from waiting on slow nodes.
+    Based on a suggestion from Markus Liebl
   - cleanup all files in tmp/ and cluster/ if VOB cleanup is
     enabled. Suggested by Stefan Opsomer <stefan.opsomer AT wanadoo.be>
   - no VOB cleanup if AVI size > requested size,
@@ -47,20 +94,24 @@ TODO:
   - schedule start/end time of a node, suggested by Rainer Lay
   - stop node after current job, suggested by Rainer Lay
 - check file access rights before operation (ripping, transcoding etc.)
+- print "ETA: not computable" for chapter ripping instead of
+  a 100% progress bar, suggested by Ole Tange <tange AT tange.dk>
+- chapter mode: check if preview frame # is available in 1st
+  chapter and print better error message, suggested by
+  Ole Tange <tange AT tange.dk>
+- add rewind (1/10/60 seconds) buttons to preview frame # entry,
+  suggested by Ole Tange <tange AT tange.dk>
+- add a 'about' window with all important information, inclduing
+  on how to send bug reports, suggested by Ole Tange <tange AT tange.dk>
 - enable transcode's debugging mode (-q 2) and collect messages
   in a specific logfile (suggested by Florin Andrei)
 - log some statistics after transcoding (e.g. avi size, actual bitrate,
   total time, total CPU time, sysload...), suggested by Florin Andrei
-- add checkbox "exit after transcoding" which saves the project
-  and exits after transcoding. Suggested by Florin Andrei
-- pcm passthrough
 - add a preference option whether dvd::rip project data files
   should be saved in the project directory by default,
   suggested by Davide Ferrari
 - option for disabling audio processing completely, suggested by
   <xercist AT xernet.lammah.com>
-- enable dvd::rip to work on already existent VOB copies in filesystem
-- add a dvd::rip window manager icon, suggested by Florin Andrei
 - export some sort of Makefile export for transcoding as a
   simple batch mode, suggested by Moritz Bunkus <moritz AT bunkus.org>
 - option for forking the transcode process into the background,
@@ -73,20 +124,11 @@ TODO:
   or adjacent chapters in separate files. Suggested by
   Certron DiSoni <certron_80 AT yahoo.com>
 - enable video bitrate calculation for chapter mode
-- textfield for arbitrary command execution after transcoding,
-  e.g. for system shutdown. Suggested by simbolo <simbolo225 AT yahoo.com>
-  - add checkbox for executing in a xterm, suggested by Florin Andrei
 - enable pausing after 1st pass of a two-pass divx4 encoding,
   suggested by Chris <chris AT axique.de>.
 - don't rip chapters already ripped in chapter selection mode
 - check space on filesystem before ripping and transcoding
 - extensive checking of user input. most input is currently
   passed through without examination
-- on the fly ripping & transcoding (very low priority, most likely
-  never implemented)
 - audio resampling, suggested by Certron DiSoni <certron_80 AT yahoo.com>
 - create personal clip&zoom preferences
-- double check ripped data for correct audio streams
-  (needed in seldom cases for ugly DVDs which lie about
-   the audio streams with tcprobe from DVD)
-

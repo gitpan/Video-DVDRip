@@ -1,4 +1,4 @@
-# $Id: ZoomCalculator.pm,v 1.3 2002/07/07 20:14:24 joern Exp $
+# $Id: ZoomCalculator.pm,v 1.5 2002/09/01 13:55:28 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -115,7 +115,7 @@ sub build {
 	$row = 0;
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new ("Fast Resize Alignment");
+	$label = Gtk::Label->new ("Fast resize alignment");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 	$table->attach ($hbox, 0, 1, $row, $row+1, 'fill','expand',0,0);
@@ -154,7 +154,7 @@ sub build {
 	++$row;
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new ("Result Frame Align");
+	$label = Gtk::Label->new ("Result frame align");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 	$table->attach ($hbox, 0, 1, $row, $row+1, 'fill','expand',0,0);
@@ -184,7 +184,7 @@ sub build {
 	++$row;
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new ("Achieve Result Align");
+	$label = Gtk::Label->new ("Achieve result align");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 	$table->attach ($hbox, 0, 1, $row, $row+1, 'fill','expand',0,0);
@@ -221,7 +221,7 @@ sub build {
 	++$row;
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new ("Auto Clipping");
+	$label = Gtk::Label->new ("Auto clipping");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 	$table->attach ($hbox, 0, 1, $row, $row+1, 'fill','expand',0,0);
@@ -275,12 +275,12 @@ sub build {
 	$sw->set_policy( 'automatic', 'automatic' );
 
 	$clist = Gtk::CList->new_with_titles (
-		"Result Size    ",
-		"BPKP    ",
+		"Result size    ",
+		"BPP     ",
 		"Eff. AR    ",
-		"AR Error    ",
+		"AR error    ",
 		"Clip1 (t/b/l/r)      ",
-		"Zoom Size    ",
+		"Zoom size    ",
 		"Clip2 (t/b/l/r)      ",
 	);
 	$clist->show,
@@ -332,7 +332,7 @@ sub create_video_bitrate_calc {
 	my $title = $self->comp('project')->selected_title;
 
 	# Frame
-	$frame = Gtk::Frame->new ("Video Bitrate Calculation");
+	$frame = Gtk::Frame->new ("Video bitrate calculation");
 	$frame->show;
 
 	# Frame HBox
@@ -352,7 +352,7 @@ sub create_video_bitrate_calc {
 	$row = 0;
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new ("Target Media");
+	$label = Gtk::Label->new ("Target media");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 	$table->attach ($hbox, 0, 1, $row, $row+1, 'fill','expand',0,0);
@@ -460,7 +460,7 @@ sub create_video_bitrate_calc {
 	++$row;
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new ("Target Size");
+	$label = Gtk::Label->new ("Target size");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 	$table->attach ($hbox, 0, 1, $row, $row+1, 'fill','expand',0,0);
@@ -486,7 +486,7 @@ sub create_video_bitrate_calc {
 	++$row;
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new ("Video Bitrate");
+	$label = Gtk::Label->new ("Video bitrate");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 	$table->attach ($hbox, 0, 1, $row, $row+1, 'fill','expand',0,0);
@@ -571,7 +571,7 @@ sub init_calc_list {
 	foreach my $result ( @{$calc_lref} ) {
 		$clist->append (
 			"$result->{clip2_width}x$result->{clip2_height}",
-			sprintf("%.2f", $result->{bpkp}),
+			sprintf("%.3f", $result->{bpp}),
 			sprintf("%.4f", $result->{eff_ar}),
 			sprintf("%.4f%%", $result->{ar_err}),
 			"$result->{clip1_top} / $result->{clip1_bottom} / ".

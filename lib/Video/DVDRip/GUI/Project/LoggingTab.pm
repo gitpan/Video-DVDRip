@@ -1,4 +1,4 @@
-# $Id: LoggingTab.pm,v 1.2 2002/01/03 17:40:01 joern Exp $
+# $Id: LoggingTab.pm,v 1.3 2002/09/01 15:26:58 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -25,7 +25,7 @@ sub create_logging_tab {
 	$vbox->set_border_width(5);
 	$vbox->show;
 	
-	my $frame = Gtk::Frame->new ("Log Messages");
+	my $frame = Gtk::Frame->new ("Log messages");
 	$frame->show;
 
 	my $hbox = Gtk::HBox->new;

@@ -1,4 +1,4 @@
-# $Id: Base.pm,v 1.20 2002/06/29 20:39:54 joern Exp $
+# $Id: Base.pm,v 1.24 2002/09/15 15:28:10 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -16,6 +16,7 @@ use strict;
 use FileHandle;
 use IO::Pipe;
 use Fcntl;
+use Data::Dumper;
 
 my $CONFIG_OBJECT = Video::DVDRip::Config->new;
 $CONFIG_OBJECT->set_filename ("$ENV{HOME}/.dvdriprc");
@@ -108,9 +109,10 @@ sub trace_out {
 
 sub dump {
 	my $self = shift;
-	
-	use Data::Dumper;
-	print Dumper (@_);
+
+	my $dd = Data::Dumper->new ( \@_ );
+	$dd->Indent(1);
+	print $dd->Dump;
 	
 	1;
 }
@@ -214,7 +216,8 @@ sub format_time {
 
 sub stripped_exception {
 	my $text = $@;
-	$text =~ s/\s+at\s+.*?line\s+\d+//;
+	$text =~ s/\s+at\s+[^\s]+\s+line\s+\d+//;
+	$text =~ s/^msg:\s*//;
 	return $text;
 }
 
@@ -288,7 +291,9 @@ sub get_shell_options {
 	my $opt;
 	for (my $i=0; $i < @words; ++$i) {
 		$words[$i] = "'$words[$i]'" if $words[$i] =~ /\s/;
-		if ( $words[$i] =~ /^(-+.*)/ ) {
+		if ( $words[$i] =~ /^(-+\D.*)/ ) {
+			# why \D? Answer: minus followed by a number is
+			# surley a value, no option.
 			$opt = $1;
 			if ( $i+1 != @words and $words[$i+1] !~ /^-/ ) {
 				$options{$opt} = "$opt $words[$i+1]";
@@ -406,5 +411,20 @@ sub apply_template {
 	return $template;
 }
 
+sub search_perl_inc {
+	my $self = shift;
+	my %par = @_;
+	my ($rel_path) = @par{'rel_path'};
+
+	my $file;
+
+	foreach my $INC ( @INC ) {
+		$file = "$INC/$rel_path";
+		last if -f $file;
+		$file = "";
+	}
+
+	return $file;
+}
 
 1;

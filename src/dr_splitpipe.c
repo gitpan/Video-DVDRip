@@ -1,4 +1,4 @@
-/* $Id: splitpipe.c,v 1.9 2002/03/28 21:04:05 joern Exp $
+/* $Id: dr_splitpipe.c,v 1.1 2002/09/01 13:58:10 joern Exp $
  *
  * Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
  * 
@@ -26,7 +26,7 @@ FILE*   open_tcdemux_pipe ( char* filename );
 
 /* print usage */
 void usage (void) {
-	printf ("usage: splitpipe [-f vob_nav_file] size-in-mb base-filename extension\n\n");
+	printf ("usage: splitpipe [-f vob_nav_file] size-in-mb base-filename extension\n");
 	printf ("       -f   use tcdemux for progress information (transcode 0.6.0)\n");
 	exit(1);
 }
@@ -143,6 +143,8 @@ void split_pipe ( int chunk_size, char* base_filename, char* extension,
 
 /* write data to split file */
 void write_split_file ( int split_fd, char* buffer, size_t cnt ) {
+	if ( split_fd == -1 )
+		return;
 	if ( -1 == write (split_fd, buffer, cnt) )
 		fatal ("Can't write to split file");
 }
@@ -157,6 +159,9 @@ int open_split_file( int old_fd, int chunk_cnt,
 		/* ok, first close last split file */
 		close (old_fd);
 	}
+	
+	if ( !strncmp(base_filename, "-", 1) )
+		return -1;
 	
 	/* now open a new split file */
 	sprintf (filename, "%s-%03d.%s", base_filename, chunk_cnt, extension);

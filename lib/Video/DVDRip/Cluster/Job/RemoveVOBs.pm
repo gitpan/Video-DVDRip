@@ -1,4 +1,4 @@
-# $Id: RemoveVOBs.pm,v 1.1 2002/03/03 15:09:28 joern Exp $
+# $Id: RemoveVOBs.pm,v 1.2 2002/09/15 15:31:09 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -18,7 +18,7 @@ sub info {
 	return "remove vob files";
 }
 
-sub start {
+sub command {
 	my $self = shift;
 
 	my $project = $self->project;
@@ -29,31 +29,17 @@ sub start {
 	my $command = $title->get_remove_vobs_command;
 	$project->set_assigned_job ( undef );
 	
-	my $successful_finished = 0;
-	$self->popen (
-		command      => $command,
-		cb_line_read => sub {
-			my ($line) = @_;
-			if ( $line =~ /DVDRIP_SUCCESS/ ) {
-				$successful_finished = 1;
-			}
-		},
-		cb_finished  => sub {
-			if ( $successful_finished ) {
-				$self->commit_job;
-			} else {
-				$self->abort_job;
-			}
-		},
-	);
-
-	1;
+	return $command;
 }
 
-sub calc_progress {
+sub parse_output {
 	my $self = shift;
+	my ($line) = @_;
+	
+	$self->set_operation_successful ( 1 )
+		if $line =~ /DVDRIP_SUCCESS/;
 
-	return "removing VOB files";
+	1;
 }
 
 1;

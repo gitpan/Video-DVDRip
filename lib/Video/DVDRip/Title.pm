@@ -1,4 +1,4 @@
-# $Id: Title.pm,v 1.86 2002/07/17 19:47:57 joern Exp $
+# $Id: Title.pm,v 1.93 2002/09/22 14:38:56 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -14,6 +14,8 @@ use base Video::DVDRip::Base;
 use Video::DVDRip::Scan;
 use Video::DVDRip::Probe;
 use Video::DVDRip::PSU;
+use Video::DVDRip::Audio;
+use Video::DVDRip::ProbeAudio;
 
 use Carp;
 use strict;
@@ -22,6 +24,11 @@ use FileHandle;
 use File::Path;
 use File::Basename;
 use File::Copy;
+
+# Back reference to the project of this title
+
+sub project			{ shift->{project}			}
+sub set_project			{ shift->{project}		= $_[1] }
 
 #------------------------------------------------------------------------
 # These attributes are probed from the DVD
@@ -44,7 +51,6 @@ sub viewing_angles		{ shift->probe_result->viewing_angles	}
 sub nr				{ shift->{nr}				}
 sub size			{ shift->{size}				}
 sub audio_channel		{ shift->{audio_channel}		}
-sub scan_result			{ shift->{scan_result}			}
 sub probe_result		{ shift->{probe_result}			}
 sub preset			{ shift->{preset}			}
 sub last_applied_preset		{ shift->{last_applied_preset}		}
@@ -59,9 +65,9 @@ sub bbox_max_y			{ shift->{bbox_max_y}			}
 sub chapter_frames		{ shift->{chapter_frames} ||= {}	}
 
 sub set_nr			{ shift->{nr}			= $_[1] }
+sub set_frames			{ shift->{frames}		= $_[1]	}
 sub set_size			{ shift->{size}			= $_[1] }
 sub set_audio_channel		{ shift->{audio_channel}	= $_[1] }
-sub set_scan_result		{ shift->{scan_result}		= $_[1] }
 sub set_probe_result		{ shift->{probe_result}		= $_[1] }
 sub set_preset			{ shift->{preset}		= $_[1] }
 sub set_last_applied_preset	{ shift->{last_applied_preset}	= $_[1]	}
@@ -78,7 +84,7 @@ sub set_bbox_max_y		{ shift->{bbox_max_y}		= $_[1]	}
 # input parameters for the transcode process.
 #------------------------------------------------------------------------
 
-sub project			{ shift->{project}			}
+sub tc_audio_tracks		{ shift->{tc_audio_tracks}		}
 sub tc_viewing_angle		{ shift->{tc_viewing_angle}      	}
 sub tc_deinterlace		{ shift->{tc_deinterlace}      		}
 sub tc_anti_alias		{ shift->{tc_anti_alias}      		}
@@ -95,12 +101,9 @@ sub tc_clip2_right		{ shift->{tc_clip2_right}		}
 sub tc_use_yuv_internal		{ shift->{tc_use_yuv_internal}  	}
 sub tc_video_codec		{ shift->{tc_video_codec}		}
 sub tc_video_af6_codec		{ shift->{tc_video_af6_codec}		}
-sub tc_audio_codec		{ shift->{tc_audio_codec}		}
 sub tc_video_bitrate		{ shift->{tc_video_bitrate}      	}
-sub tc_audio_bitrate		{ shift->{tc_audio_bitrate}      	}
 sub tc_video_framerate		{ shift->{tc_video_framerate}      	}
 sub tc_fast_bisection		{ shift->{tc_fast_bisection}      	}
-sub tc_audio_drc		{ shift->{tc_audio_drc}      		}
 sub tc_psu_core			{ shift->{tc_psu_core}      		}
 
 sub tc_target_size		{ shift->{tc_target_size}		}
@@ -116,10 +119,10 @@ sub tc_selected_chapters	{ shift->{tc_selected_chapters}		}
 sub tc_options			{ shift->{tc_options}			}
 sub tc_nice			{ shift->{tc_nice}			}
 sub tc_preview			{ shift->{tc_preview}			}
-sub tc_ac3_passthrough		{ shift->{tc_ac3_passthrough}		}
-sub tc_mp3_quality		{ shift->{tc_mp3_quality}		}
+sub tc_execute_afterwards	{ shift->{tc_execute_afterwards}	}
+sub tc_exit_afterwards		{ shift->{tc_exit_afterwards}		}
 
-sub set_project			{ shift->{project}		= $_[1] }
+sub set_tc_audio_tracks		{ shift->{tc_audio_tracks}	= $_[1]	}
 sub set_tc_viewing_angle	{ shift->{tc_viewing_angle}	= $_[1]	}
 sub set_tc_deinterlace		{ shift->{tc_deinterlace}	= $_[1]	}
 sub set_tc_anti_alias		{ shift->{tc_anti_alias}	= $_[1]	}
@@ -136,12 +139,9 @@ sub set_tc_clip2_right		{ shift->{tc_clip2_right}	= $_[1]	}
 sub set_tc_use_yuv_internal	{ shift->{tc_use_yuv_internal}  = $_[1]	}
 sub set_tc_video_codec		{ shift->{tc_video_codec}	= $_[1]	}
 sub set_tc_video_af6_codec	{ shift->{tc_video_af6_codec}	= $_[1]	}
-sub set_tc_audio_codec		{ shift->{tc_audio_codec}	= $_[1]	}
 sub set_tc_video_bitrate	{ shift->{tc_video_bitrate}  	= $_[1]	}
-sub set_tc_audio_bitrate	{ shift->{tc_audio_bitrate} 	= $_[1]	}
 sub set_tc_video_framerate	{ shift->{tc_video_framerate} 	= $_[1]	}
 sub set_tc_fast_bisection	{ shift->{tc_fast_bisection} 	= $_[1]	}
-sub set_tc_audio_drc		{ shift->{tc_audio_drc} 	= $_[1]	}
 sub set_tc_psu_core		{ shift->{tc_psu_core} 		= $_[1]	}
 
 sub set_tc_target_size		{ shift->{tc_target_size}    	= $_[1]	}
@@ -157,22 +157,148 @@ sub set_tc_selected_chapters	{ shift->{tc_selected_chapters}	= $_[1] }
 sub set_tc_options		{ shift->{tc_options}		= $_[1] }
 sub set_tc_nice			{ shift->{tc_nice}		= $_[1] }
 sub set_tc_preview		{ shift->{tc_preview}		= $_[1] }
-sub set_tc_ac3_passthrough	{ shift->{tc_ac3_passthrough}	= $_[1] }
-sub set_tc_mp3_quality		{ shift->{tc_mp3_quality}	= $_[1] }
+sub set_tc_execute_afterwards	{ shift->{tc_execute_afterwards}= $_[1]	}
+sub set_tc_exit_afterwards	{ shift->{tc_exit_afterwards}	= $_[1]	}
+
+#------------------------------------------------------------------------
+# The following methods are for audio options and access the appropriate
+# attributes of the actually selected audio channel.
+#------------------------------------------------------------------------
 
 sub tc_volume_rescale {
 	my $self = shift;
-	return $self->audio_tracks
-		    ->[$self->audio_channel]
-		    ->{tc_volume_rescale};
+	return if $self->audio_channel == -1;
+	$self->tc_audio_tracks
+	     ->[$self->audio_channel]
+	     ->tc_volume_rescale;
+}
+
+sub volume_rescale {
+	my $self = shift;
+	return if $self->audio_channel == -1;
+	$self->audio_tracks
+	     ->[$self->audio_channel]
+	     ->volume_rescale;
+}
+
+sub tc_mp3_quality {
+	my $self = shift;
+	return if $self->audio_channel == -1;
+	$self->tc_audio_tracks
+	     ->[$self->audio_channel]
+	     ->tc_mp3_quality;
+}
+
+sub tc_ac3_passthrough {
+	my $self = shift;
+	return if $self->audio_channel == -1;
+	$self->tc_audio_tracks
+	     ->[$self->audio_channel]
+	     ->tc_ac3_passthrough;
+}
+
+sub tc_audio_codec {
+	my $self = shift;
+	return if $self->audio_channel == -1;
+	$self->tc_audio_tracks
+	     ->[$self->audio_channel]
+	     ->tc_audio_codec;
+}
+
+sub tc_audio_bitrate {
+	my $self = shift;
+	return if $self->audio_channel == -1;
+	$self->tc_audio_tracks
+	     ->[$self->audio_channel]
+	     ->tc_bitrate;
+}
+
+sub tc_audio_filter {
+	my $self = shift;
+	return if $self->audio_channel == -1;
+	$self->tc_audio_tracks
+	     ->[$self->audio_channel]
+	     ->tc_audio_filter;
+}
+
+sub tc_option_n {
+	my $self = shift;
+	return if $self->audio_channel == -1;
+	$self->tc_audio_tracks
+	     ->[$self->audio_channel]
+	     ->tc_option_n;
+}
+
+sub tc_target_track {
+	my $self = shift;
+	return -1 if $self->audio_channel == -1;
+	$self->tc_audio_tracks
+	     ->[$self->audio_channel]
+	     ->tc_target_track;
 }
 
 sub set_tc_volume_rescale {
 	my $self = shift;
-	my ($value) = @_;
-	$self->audio_tracks
+	return if $self->audio_channel == -1;
+	$self->tc_audio_tracks
 	     ->[$self->audio_channel]
-	     ->{tc_volume_rescale} = $value;
+	     ->set_tc_volume_rescale ($_[0]);
+}
+
+sub set_tc_mp3_quality {
+	my $self = shift;
+	return if $self->audio_channel == -1;
+	$self->tc_audio_tracks
+	     ->[$self->audio_channel]
+	     ->set_tc_mp3_quality ($_[0]);
+}
+
+sub set_tc_ac3_passthrough {
+	my $self = shift;
+	return if $self->audio_channel == -1;
+	$self->tc_audio_tracks
+	     ->[$self->audio_channel]
+	     ->set_tc_ac3_passthrough ($_[0]);
+}
+
+sub set_tc_audio_codec {
+	my $self = shift;
+	return if $self->audio_channel == -1;
+	$self->tc_audio_tracks
+	     ->[$self->audio_channel]
+	     ->set_tc_audio_codec ($_[0]);
+}
+
+sub set_tc_audio_bitrate {
+	my $self = shift;
+	return if $self->audio_channel == -1;
+	$self->tc_audio_tracks
+	     ->[$self->audio_channel]
+	     ->set_tc_bitrate ($_[0]);
+}
+
+sub set_tc_audio_filter {
+	my $self = shift;
+	return if $self->audio_channel == -1;
+	$self->tc_audio_tracks
+	     ->[$self->audio_channel]
+	     ->set_tc_audio_filter ($_[0]);
+}
+
+sub set_tc_option_n {
+	my $self = shift;
+	return if $self->audio_channel == -1;
+	$self->tc_audio_tracks
+	     ->[$self->audio_channel]
+	     ->set_tc_option_n ($_[0]);
+}
+
+sub set_tc_target_track {
+	my $self = shift;
+	return if $self->audio_channel == -1;
+	$self->tc_audio_tracks
+	     ->[$self->audio_channel]
+	     ->set_tc_target_track ($_[0]);
 }
 
 sub vob_dir {
@@ -192,6 +318,87 @@ sub vob_dir {
 	}
 	
 	return $vob_dir;
+}
+
+sub get_vob_size {
+	my $self = shift;
+	
+	my $vob_dir = $self->vob_dir;
+	
+	my $vob_size = 0;
+	$vob_size += -s for <$vob_dir/*>;
+	$vob_size = int ($vob_size/1024/1024);
+	
+	return $vob_size;
+}
+
+sub transcode_data_source {
+	my $self = shift; $self->trace_in;
+	
+	my $project = $self->project;
+	my $mode    = $project->rip_mode;
+
+	my $source;
+
+	if ( $mode eq 'rip' ) {
+		$source = $self->vob_dir;
+
+	} elsif ( $mode eq 'dvd' ) {
+		$source = $project->dvd_device;
+
+	} elsif ( $mode eq 'dvd_image' ) {
+		$source = $project->dvd_image_dir;
+
+	} elsif ( $mode eq 'vob_title' ) {
+		$source = $project->vob_title_dir;
+	}
+
+	return $source;
+}
+
+sub data_source_options {
+	my $self = shift; $self->trace_in;
+	my %par = @_;
+	my ($audio_channel) = @par{'audio_channel'};
+	
+	$audio_channel = $self->audio_channel
+		if not defined $audio_channel;
+	
+	my $mode   = $self->project->rip_mode;
+	my $source = $self->transcode_data_source;
+
+	my ($input_filter, $need_title);
+
+	if ( $mode eq 'rip' ) {
+		$input_filter = "vob";
+		$need_title = 0;
+
+	} elsif ( $mode eq 'dvd' ) {
+		$input_filter = "dvd";
+		$need_title = 1;
+
+	} elsif ( $mode eq 'dvd_image' ) {
+		$input_filter = "dvd";
+		$need_title = 1;
+
+	} elsif ( $mode eq 'vob_title' ) {
+		$input_filter = "vob";
+		$need_title = 0;
+	}
+
+	$input_filter .= ",null" if $audio_channel == -1;
+
+	my %options = (
+		i => $source,
+		x => $input_filter
+	);
+	
+	if ( $need_title ) {
+		my $chapter = $self->actual_chapter || -1;
+		$options{T} = $self->nr.",$chapter,".$self->tc_viewing_angle;
+	}
+	
+	return \%options;
 }
 
 sub create_vob_dir {
@@ -234,6 +441,16 @@ sub avi_file {
 sub target_avi_file {
 	my $self = shift; $self->trace_in;
 	return $self->avi_file;
+}
+
+sub target_avi_audio_file {
+	my $self = shift;
+	my %par = @_;
+	my ($nr) = @par{'nr'};
+	my $audio_file = $self->target_avi_file;
+	$audio_file =~ s/\.[^.]+$//;
+	$audio_file = sprintf ("%s-%02d.audio", $audio_file, $nr);
+	return $audio_file;
 }
 
 sub multipass_log_dir {
@@ -284,6 +501,22 @@ sub vob_nav_file {
 	}
 	
 	return $file;
+}
+
+sub has_vob_nav_file {
+	my $self = shift; $self->trace_in;
+
+	my $old_chapter = $self->actual_chapter;
+
+	$self->set_actual_chapter ( $self->get_first_chapter )
+		if $self->tc_use_chapter_mode;
+
+	my $vob_nav_file = $self->vob_nav_file;
+
+	$self->set_actual_chapter ( $old_chapter )
+		if $self->tc_use_chapter_mode;
+
+	return -f $vob_nav_file;
 }
 
 sub new {
@@ -353,6 +586,19 @@ sub apply_preset {
 	1;
 }
 
+sub get_chapters {
+	my $self = shift;
+
+	my @chapters;
+	if ( $self->tc_use_chapter_mode eq 'select' ) {
+		@chapters = sort { $a <=> $b } @{$self->tc_selected_chapters || []};
+	} else {
+		@chapters = (1 .. $self->chapters);
+	}
+
+	return \@chapters;
+}
+
 sub get_first_chapter {
 	my $self = shift;
 	
@@ -367,17 +613,14 @@ sub get_first_chapter {
 	}
 }
 
-sub get_chapters {
+sub get_last_chapter {
 	my $self = shift;
-
-	my @chapters;
-	if ( $self->tc_use_chapter_mode eq 'select' ) {
-		@chapters = sort { $a <=> $b } @{$self->tc_selected_chapters || []};
-	} else {
-		@chapters = (1 .. $self->chapters);
-	}
-
-	return \@chapters;
+	
+	my $chapter_mode = $self->tc_use_chapter_mode;
+	return if not $chapter_mode;
+	
+	my $chapters = $self->get_chapters;
+	return $chapters->[@{$chapters}-1];
 }
 
 sub calc_program_stream_units {
@@ -748,11 +991,11 @@ sub get_zoom_parameters {
 
 	my $phys_ar = $clip2_width/$clip2_height;
 
-	# kilo pixels per second
-	my $kpps = $self->frame_rate * $clip2_width * $clip2_height / 1024;
+	# pixels per second
+	my $pps = $self->frame_rate * $clip2_width * $clip2_height;
 	
-	# bits per kilo pixel
-	my $bpkp = $video_bitrate * 1024 / $kpps;
+	# bits per pixel
+	my $bpp = $video_bitrate * 1000 / $pps;
 	
 	return {
 		zoom_width	=> $zoom_width,
@@ -772,7 +1015,7 @@ sub get_zoom_parameters {
 		clip2_width	=> $clip2_width,
 		clip2_height	=> $clip2_height,
 		phys_ar		=> $phys_ar,
-		bpkp		=> $bpkp,
+		bpp		=> $bpp,
 		exact_width     => $actual_width,
 		exact_height    => $actual_height,
 	};
@@ -785,7 +1028,10 @@ sub get_zoom_parameters {
 sub is_ripped {
 	my $self = shift;
 	
-	my $name = $self->project->name;
+	my $project = $self->project;
+	return 1 if $project->rip_mode ne 'rip';
+
+	my $name = $project->name;
 
 	if ( not $self->tc_use_chapter_mode ) {
 		my $vob_dir = $self->vob_dir;
@@ -823,64 +1069,10 @@ sub get_rip_command {
 
 	my $command = "rm -f $vob_dir/$name-???.vob &&\n".
 	           "tccat -t dvd -T $nr,$chapter,$angle -i $dvd_device ".
-	           "| splitpipe -f $vob_nav_file 1024 ".
+	           "| dr_splitpipe -f $vob_nav_file 1024 ".
 		   "  $vob_dir/$name vob >/dev/null && echo DVDRIP_SUCCESS";
 
 	return $command;
-}
-
-sub rip {
-	my $self = shift; $self->trace_in;
-
-	$self->system (
-		command => $self->get_rip_command,
-	);
-
-	$self->set_chapter_length if $self->tc_use_chapter_mode;
-	
-	1;
-}
-
-sub rip_with_callback {
-	my $self = shift; $self->trace_in;
-	my %par = @_;
-	my ($callback) = @par{'callback'};
-	
-	$self->popen (
-		command  => $self->get_rip_command,
-		callback => $callback,
-	);
-	
-	$self->set_chapter_length if $self->tc_use_chapter_mode;
-
-	1;
-}
-
-sub rip_async_start {
-	my $self = shift; $self->trace_in;
-	
-	return $self->popen (
-		command => $self->get_rip_command,
-	);
-}
-
-sub rip_async_stop {
-	my $self = shift; $self->trace_in;
-	my %par = @_;
-	my ($fh, $output) = @par{'fh','output'};
-
-	$output = "\n\nOutput was:\n\n$output" if $output;
-
-	my $message =   "Error executing:\n\n".
-			$self->get_rip_command.
-			$output;
-
-	close $fh;
-	croak ($message) if $output !~ /DVDRIP_SUCCESS/;
-
-	$self->set_chapter_length if $self->tc_use_chapter_mode;
-
-	1;
 }
 
 sub set_chapter_length {
@@ -903,100 +1095,41 @@ sub set_chapter_length {
 }
 
 #---------------------------------------------------------------------
-# Methods for Scanning
+# Methods for Volume Scanning
 #---------------------------------------------------------------------
 
 sub get_scan_command {
 	my $self = shift; $self->trace_in;
 
-	my $vob_dir       = $self->vob_dir;
-	my $audio_channel = $self->audio_channel;
+	my $nr             = $self->tc_title_nr;
+	my $audio_channel  = $self->audio_channel;
+	my $name           = $self->project->name;
+	my $data_source    = $self->transcode_data_source;
+	my $vob_dir    	   = $self->vob_dir;
+	my $source_options = $self->data_source_options;
+	my $rip_mode       = $self->project->rip_mode;
 
-	return "cat $vob_dir/* ".
+	$self->create_vob_dir;
+
+	my $command;
+	
+	if ( $rip_mode eq 'rip' ) {
+		my $vob_size = $self->get_vob_size;
+		$command = "cat $vob_dir/* | dr_progress -m $vob_size -i 5 | tccat -t vob ";
+
+	} else  {
+		$command = "tccat ";
+		delete $source_options->{x};
+		$command .= " -".$_." ".$source_options->{$_} for keys %{$source_options};
+		$command .= "| dr_splitpipe -f /dev/null 0 - - ";
+	}
+
+	$command .=
 	       "| tcextract -a $audio_channel -x ac3 -t vob ".
 	       "| tcdecode -x ac3 ".
 	       "| tcscan -x pcm && echo DVDRIP_SUCCESS";
-}
 
-sub scan {
-	my $self = shift; $self->trace_in;
-
-	my $output = $self->system (
-		command => $self->get_scan_command,
-	);
-	
-	$self->analyze_scan_output (
-		output => $output
-	);
-	
-	1;
-}
-
-sub scan_with_callback {
-	my $self = shift; $self->trace_in;
-	my %par = @_;
-	my ($callback) = @par{'callback'};
-	
-	my $output = $self->popen (
-		command => $self->get_scan_command,
-		callback => $callback,
-		catch_output => 1,
-	);
-	
-	$self->analyze_scan_output (
-		output => $output
-	);
-
-	1;
-}
-
-sub scan_async_start {
-	my $self = shift; $self->trace_in;
-	
-	return $self->popen (
-		command => $self->get_scan_command,
-	);
-}
-
-sub scan_async_stop {
-	my $self = shift; $self->trace_in;
-	my %par = @_;
-	my ($fh, $output) = @par{'fh','output'};
-
-	$output = "\n\nOutput was:\n\n$output" if $output;
-
-	my $message =   "Error executing:\n\n".
-			$self->get_scan_command.
-			$output;
-
-	close $fh;
-	croak ($message) if $output !~ /DVDRIP_SUCCESS/;
-
-	$self->analyze_scan_output (
-		output => $output
-	);
-	
-	1;
-}
-
-sub analyze_scan_output {
-	my $self = shift; $self->trace_in;
-	my %par = @_;
-	my ($output) = @par{'output'};
-
-	$output =~ s/^.*?--splitpipe-finished--\n//s;
-
-	my $scan_result = Video::DVDRip::Scan->analyze (
-		scan_output => $output,
-	);
-
-	$self->audio_tracks
-	     ->[$self->audio_channel]
-	     ->{scan_result} = $scan_result;
-
-	$self->set_tc_volume_rescale ( $scan_result->volume_rescale );
-
-	1;
+	return $command;
 }
 
 #---------------------------------------------------------------------
@@ -1021,80 +1154,44 @@ sub get_rip_and_scan_command {
 	my $angle = $self->tc_viewing_angle || 1;
 
 	my $command =
-	       "rm -f $vob_dir/$name-???.vob && \n".
-	       "tccat -t dvd -T $nr,$chapter,$angle -i $dvd_device ".
-	       "| splitpipe -f $vob_nav_file 1024 $vob_dir/$name vob ".
-	       "| tcextract -a $audio_channel -x ac3 -t vob ".
-	       "| tcdecode -x ac3 ".
-	       "| tcscan -x pcm && echo DVDRIP_SUCCESS";
+		"rm -f $vob_dir/$name-???.vob && ".
+		"tccat -t dvd -T $nr,$chapter,$angle -i $dvd_device ".
+		"| dr_splitpipe -f $vob_nav_file 1024 $vob_dir/$name vob ";
+
+	if ( $audio_channel != -1 ) {
+		$command .= 
+		       "| tcextract -a $audio_channel -x ac3 -t vob ".
+		       "| tcdecode -x ac3 ".
+		       "| tcscan -x pcm && echo DVDRIP_SUCCESS";
+	} else {
+		$command .= ">/dev/null";
+	}
 
 	return $command;
 }
 
-sub rip_and_scan {
-	my $self = shift; $self->trace_in;
-
-	my $output = $self->system (
-		command => $self->get_rip_and_scan_command,
-	);
-
-	$self->analyze_scan_output (
-		output => $output
-	);
-
-	$self->set_chapter_length if $self->tc_use_chapter_mode;
-	
-	1;
-}
-
-sub rip_and_scan_with_callback {
+sub analyze_scan_output {
 	my $self = shift; $self->trace_in;
 	my %par = @_;
-	my ($callback) = @par{'callback'};
-	
-	my $output = $self->popen (
-		command      => $self->get_rip_and_scan_command,
-		callback     => $callback,
-		catch_output => 1,
+	my ($output) = @par{'output'};
+
+	return 1 if $self->audio_channel == -1;
+
+	$output =~ s/^.*?--splitpipe-finished--\n//s;
+
+	my $scan_result = Video::DVDRip::Scan->analyze (
+		scan_output => $output,
 	);
 
-	$self->analyze_scan_output (
-		output => $output
-	);
+	$self->audio_tracks
+	     ->[$self->audio_channel]
+	     ->{scan_result} = $scan_result;
 
-	$self->set_chapter_length if $self->tc_use_chapter_mode;
+	$self->audio_tracks
+	     ->[$self->audio_channel]
+	     ->set_volume_rescale ( $scan_result->volume_rescale );
 
-	1;
-}
-
-sub rip_and_scan_async_start {
-	my $self = shift; $self->trace_in;
-	
-	return $self->popen (
-		command   => $self->get_rip_and_scan_command,
-#		line_mode => 1,
-	);
-}
-
-sub rip_and_scan_async_stop {
-	my $self = shift; $self->trace_in;
-	my %par = @_;
-	my ($fh, $output) = @par{'fh','output'};
-
-	$output = "\n\nOutput was:\n\n$output" if $output;
-
-	my $message =   "Error executing:\n\n".
-			$self->get_rip_and_scan_command.
-			$output;
-
-	close $fh;
-	croak ($message) if $output !~ /DVDRIP_SUCCESS/;
-
-	$self->analyze_scan_output (
-		output => $output
-	);
-	
-	$self->set_chapter_length if $self->tc_use_chapter_mode;
+	$self->set_tc_volume_rescale ( $scan_result->volume_rescale );
 
 	1;
 }
@@ -1107,71 +1204,11 @@ sub get_probe_command {
 	my $self = shift; $self->trace_in;
 	
 	my $nr            = $self->tc_title_nr;
-	my $dvd_device    = $self->project->dvd_device;
+	my $data_source   = $self->project->rip_data_source;
 
-	return "tcprobe -i $dvd_device -T $nr && echo DVDRIP_SUCCESS";
-}
+	my $command =  "tcprobe -i $data_source -T $nr && echo DVDRIP_SUCCESS";
 
-sub probe {
-	my $self = shift; $self->trace_in;
-	
-	my $dvd_device = $self->project->dvd_device;
-
-	my $output = $self->system (
-		command => $self->get_probe_command
-	);
-	
-	$self->analyze_probe_output (
-		output => $output
-	);
-	
-	1;
-}
-
-sub probe_with_callback {
-	my $self = shift; $self->trace_in;
-	my %par = @_;
-	my ($callback) = @par{'callback'};
-	
-	my $output = $self->popen (
-		command => $self->get_probe_command,
-		callback => $callback,
-		catch_output => 1,
-	);
-	
-	$self->analyze_probe_output (
-		output => $output
-	);
-
-	1;
-}
-
-sub probe_async_start {
-	my $self = shift; $self->trace_in;
-	
-	return $self->popen (
-		command => $self->get_probe_command,
-	);
-}
-
-sub probe_async_stop {
-	my $self = shift; $self->trace_in;
-	my %par = @_;
-	my ($fh, $output) = @par{'fh','output'};
-
-	my $message =   "Error executing:\n\n".
-			$self->get_probe_command.
-			"\n\nOutput was:\n\n".
-			$output;
-
-	close $fh;
-	croak ($message) if $output !~ /DVDRIP_SUCCESS/;
-
-	$self->analyze_probe_output (
-		output => $output
-	);
-	
-	1;
+	return $command;
 }
 
 sub analyze_probe_output {
@@ -1179,15 +1216,12 @@ sub analyze_probe_output {
 	my %par = @_;
 	my ($output) = @par{'output'};
 
-
-
 	$self->set_probe_result (
 		Video::DVDRip::Probe->analyze (
 			probe_output => $output,
+			title        => $self,
 		)
 	);
-
-	$self->set_audio_channel(0);
 
 	1;
 }
@@ -1208,14 +1242,17 @@ sub get_probe_audio_command {
 sub probe_audio {
 	my $self = shift; $self->trace_in;
 	
+	return 1 if $self->audio_channel == -1;
+	
 	my $output = $self->system (
 		command => $self->get_probe_audio_command
 	);
 	
 	$self->analyze_probe_audio_output (
-		output => $output
+		output => $output,
 	);
 	
+	1;
 }
 
 sub analyze_probe_audio_output {
@@ -1224,7 +1261,8 @@ sub analyze_probe_audio_output {
 	my ($output) = @par{'output'};
 
 	$self->probe_result->analyze_audio (
-		probe_output => $output
+		probe_output => $output,
+		title  => $self,
 	);
 
 	1;
@@ -1237,34 +1275,33 @@ sub analyze_probe_audio_output {
 sub suggest_transcode_options {
 	my $self = shift; $self->trace_in;
 
+	my $rip_mode = $self->project->rip_mode;
+
 	$self->set_tc_viewing_angle ( 1 );
 	$self->set_tc_use_yuv_internal ( 1 );
 	$self->set_tc_video_codec ( $self->config('default_video_codec') );
-	$self->set_tc_audio_codec ( "" );
-	$self->set_tc_audio_bitrate ( 128 );
-	$self->set_tc_ac3_passthrough ( 0 );
-	$self->set_tc_mp3_quality ( 0 );
 	$self->set_tc_multipass ( 1 );
-	$self->set_tc_audio_drc ( 0 );
 	$self->set_tc_target_size ( 1400 );
 	$self->set_tc_disc_size ( 700 );
 	$self->set_tc_disc_cnt ( 2 );
 	$self->set_tc_video_framerate (
 		$self->video_mode eq 'pal' ? 25 : 23.976
 	);
-	$self->set_tc_psu_core (
-		$self->video_mode eq 'pal' ? 0 : 1
-	);
+	$self->set_tc_psu_core ( $self->video_mode eq 'ntsc' and $rip_mode eq 'rip' );
 	$self->calc_video_bitrate;
 	$self->set_preset ( "auto_medium_fast" );
 
-	if ( $self->tc_use_chapter_mode ) {
-		my $chapter = $self->get_first_chapter;
-		$self->set_preview_frame_nr (
-			int($self->chapter_frames->{$chapter} / 2)
-		);
+	if ( $rip_mode eq 'rip' ) {
+		if ( $self->tc_use_chapter_mode ) {
+			my $chapter = $self->get_first_chapter;
+			$self->set_preview_frame_nr (
+				int($self->chapter_frames->{$chapter} / 2)
+			);
+		} else {
+			$self->set_preview_frame_nr ( int($self->frames / 2) );
+		}
 	} else {
-		$self->set_preview_frame_nr ( int($self->frames / 2) );
+		$self->set_preview_frame_nr ( 200 );
 	}
 
 	1;
@@ -1273,7 +1310,7 @@ sub suggest_transcode_options {
 sub calc_video_bitrate {
 	my $self = shift;
 
-	my $video_codec     = $self->tc_video_codec;
+	my $video_codec = $self->tc_video_codec;
 
 	if ( $video_codec eq 'VCD' ) {
 		$self->set_tc_video_bitrate ( 1152 );
@@ -1307,6 +1344,26 @@ sub calc_video_bitrate {
 	return 1;
 }
 
+sub get_overall_audio_size_and_bitrate {
+	my $self = shift;
+
+	my $frames        = $self->frames;
+	my $fps           = $self->frame_rate;
+
+	my $runtime = $frames / $fps;
+
+	my $audio_size;
+	my $audio_bitrate;
+
+	foreach my $audio ( @{$self->tc_audio_tracks} ) {
+		next if $audio->tc_target_track == -1;
+		$audio_size += int($runtime * $audio->tc_bitrate / 1000 / 8);
+		$audio_bitrate += $audio->tc_bitrate;
+	}
+
+	return ($audio_size, $audio_bitrate);
+}
+
 sub get_optimal_video_bitrate {
 	my $self = shift;
 	my %par = @_;
@@ -1314,10 +1371,11 @@ sub get_optimal_video_bitrate {
 
 	my $frames        = $self->frames;
 	my $fps           = $self->frame_rate;
-	my $audio_bitrate = $self->tc_audio_bitrate;
 
 	my $runtime = $frames / $fps;
-	my $audio_size = int($runtime * $audio_bitrate / 1024 / 8);
+
+	my ($audio_size, $audio_bitrate) = $self->get_overall_audio_size_and_bitrate;
+
 	my $video_size = $target_size - $audio_size;
 
 	my $video_bitrate = int($video_size/$runtime/1000*1024*1024*8);
@@ -1331,16 +1389,49 @@ sub get_optimal_video_bitrate {
 	return $video_bitrate;
 }
 
+sub get_first_audio_track {
+	my $self = shift;
+	
+	return -1 if $self->audio_channel == -1;
+
+	foreach my $audio ( @{$self->tc_audio_tracks} ) {
+		return $audio->tc_nr if $audio->tc_target_track == 0;
+	}
+	
+	return -1;
+}
+
+sub get_additional_audio_tracks {
+	my $self = shift;
+	
+	my %avi2vob;
+	foreach my $audio ( @{$self->tc_audio_tracks} ) {
+		next if $audio->tc_target_track == -1;
+		next if $audio->tc_target_track == 0;
+		$avi2vob{$audio->tc_target_track} = $audio->tc_nr;
+	}
+	
+	return \%avi2vob;
+}
+
 sub get_transcode_command {
 	my $self = shift; $self->trace_in;
 	my %par = @_;
 	my ($pass, $split) = @par{'pass','split'};
 
-	my $nr       = $self->nr;
-	my $avi_file = $self->avi_file;
+	my $nr             = $self->nr;
+	my $avi_file       = $self->avi_file;
+	my $audio_channel  = $self->get_first_audio_track;
+	my $source_options = $self->data_source_options (
+		audio_channel => $audio_channel
+	);
 
-	my $audio_info = $self->audio_tracks
-			      ->[$self->audio_channel];
+	my ($tc_audio_info, $audio_info);
+
+	if ( $audio_channel != -1 ) {
+		$tc_audio_info = $self->tc_audio_tracks->[$audio_channel];
+		$audio_info    = $self->audio_tracks->[$audio_channel];
+	}
 
 	my $nice;
 	$nice = "`which nice` -n ".$self->tc_nice." "
@@ -1350,11 +1441,11 @@ sub get_transcode_command {
 	$mpeg = "svcd" if $self->tc_video_codec =~ /^SVCD$/;
 	$mpeg = "vcd"  if $self->tc_video_codec =~ /^VCD$/;
 
-	my $command =
-		$nice.
-		"transcode".
-		" -i ".$self->vob_dir.
-		" -a ".$self->audio_channel;
+	my $command = $nice."transcode";
+
+	$command .= " -a $audio_channel" if $audio_channel != -1;
+
+	$command .= " -".$_." ".$source_options->{$_} for keys %{$source_options};
 	
 	if ( not $mpeg ) {
 		$command .=
@@ -1371,14 +1462,33 @@ sub get_transcode_command {
 		my $end_frame   = $self->tc_end_frame;
 		$start_frame ||= 0;
 		$end_frame   ||= $self->frames;
-		$command .= " -c $start_frame-$end_frame";
+
+		if ( $start_frame != 0 ) {
+			my $options = $self->get_frame_grab_options (
+				frame => $start_frame
+			);
+			$options->{c} =~ /(\d+)/;
+			my $c1 = $1;
+			my $c2 = $c1 + $end_frame - $start_frame;
+			$command .= " -c $c1-$c2";
+			$command .= " -L $options->{L}"
+				if $options->{L} ne '';
+
+		} else {
+			$command .= " -c $start_frame-$end_frame";
+		}
 	}
 
 	if ( $mpeg ) {
 		my $size = int($self->tc_disc_size * 0.99);
 		my $mpeg2enc_opts = "";
-		$mpeg2enc_opts .= $split ? " -S $size " : "";
+		$mpeg2enc_opts .= $split ? " -S $size" : "";
+		my ($audio_size, $audio_bitrate) =
+			$self->get_overall_audio_size_and_bitrate;
+		$audio_bitrate = int($audio_bitrate * 1.01);
+		$mpeg2enc_opts .= " -B $audio_bitrate";
 		$mpeg2enc_opts = ",'$mpeg2enc_opts'" if $mpeg2enc_opts;
+
 		$command .= " -F 5$mpeg2enc_opts" if $mpeg eq 'svcd';
 		$command .= " -F 1$mpeg2enc_opts" if $mpeg eq 'vcd';
 		if ( $mpeg eq 'svcd' ) {
@@ -1396,31 +1506,38 @@ sub get_transcode_command {
 		} else {
 			$command .= " --export_asr 2";
 		}
+	
+		
 	} else {
 		$command .= " -F ".$self->tc_video_af6_codec
 			if $self->tc_video_af6_codec ne '';
 	}
 
-	$command .= " -d" if $audio_info->{type} eq 'lpcm';
 
-	if ( $mpeg ) {
-		$command .= " -b ".
-			$self->tc_audio_bitrate;
-	} else {
-		$command .= " -b ".
-			$self->tc_audio_bitrate.",0,".
-			$self->tc_mp3_quality;
-	}
+	if ( $audio_channel != -1 ) {
+		$command .= " -d" if $audio_info->type eq 'lpcm';
 
-	if ( $self->tc_ac3_passthrough ) {
-		$command .=
-			" -A -N ".$audio_info->{tc_option_n};
-	} else {
-		$command .= " -s ".$audio_info->{tc_volume_rescale}
-			if $audio_info->{tc_volume_rescale} != 0 and 
-			   $audio_info->{type} ne 'lpcm';
-		$command .= " --a52_drc_off "
-			if not $self->tc_audio_drc;
+		if ( $mpeg ) {
+			$command .= " -b ".
+				$tc_audio_info->tc_bitrate;
+		} else {
+			$command .= " -b ".
+				$tc_audio_info->tc_bitrate.",0,".
+				$tc_audio_info->tc_mp3_quality;
+		}
+
+		if ( $tc_audio_info->tc_ac3_passthrough ) {
+			$command .=
+				" -A -N ".$tc_audio_info->tc_option_n;
+		} else {
+			$command .= " -s ".$tc_audio_info->tc_volume_rescale
+				if $tc_audio_info->tc_volume_rescale != 0 and 
+				   $audio_info->type ne 'lpcm';
+			$command .= " --a52_drc_off"
+				if $tc_audio_info->tc_audio_filter ne 'a52drc';
+			$command .= " -J normalize"
+				if $tc_audio_info->tc_audio_filter eq 'normalize';
+		}
 	}
 
 	$command .= " -V "
@@ -1506,15 +1623,13 @@ sub get_transcode_command {
 		$command .= " -R $pass";
 
 		if ( $pass == 1 ) {
-			$command .= " -x vob,null ";
+			$command =~ s/(-x\s+[^\s]+)/$1,null/;
 			$command .= " -y ".$self->tc_video_codec.",null";
 			$avi_file = "/dev/null";
 		}
 	}
 	
 	if ( not $self->tc_multipass or $pass == 2 ) {
-		$command .= " -x vob";
-		
 		if ( $mpeg ) {
 			$command .= " -y mpeg2enc,mp2enc -E 44100";
 		} else {
@@ -1530,6 +1645,8 @@ sub get_transcode_command {
 	
 	$command .= " -o $avi_file";
 
+	$command .= " --print_status 20" if $TC::VERSION >= 610;
+
 	$self->create_avi_dir;
 
 	$command = $self->combine_command_options (
@@ -1538,7 +1655,106 @@ sub get_transcode_command {
 		options  => $self->tc_options,
 	) if $self->tc_options =~ /\S/;
 
-	$command = "$command && echo DVDRIP_SUCCESS";
+	$command = "$command && echo DVDRIP_SUCCESS ";
+
+	return $command;
+}
+
+sub get_transcode_audio_command {
+	my $self = shift;
+	my %par = @_;
+	my ($vob_nr, $target_nr) = @par{'vob_nr','target_nr'};
+
+	my $source_options = $self->data_source_options (
+		audio_channel => $vob_nr
+	);
+
+	$source_options->{x} = "null,$source_options->{x}";
+
+	my $tc_audio_info = $self->tc_audio_tracks->[$vob_nr];
+	my $audio_info    = $self->audio_tracks->[$vob_nr];
+
+	my $audio_file = $self->target_avi_audio_file ( nr => $target_nr );
+	my $dir = dirname ($audio_file);
+	
+	my $command =
+		"mkdir -p $dir && transcode ".
+		" -i $source_options->{i}".
+		" -x $source_options->{x}".
+		" -g 0x0 -y raw -u 50".
+		" -a $vob_nr".
+		" -o ".$audio_file;
+
+	if ( $self->tc_video_framerate ) {
+		my $fr = $self->tc_video_framerate;
+		$fr = "24,1" if $fr == 23.976;
+		$fr = "30,4" if $fr == 29.97;
+		$command .= " -f $fr";
+	}
+
+	if ( $tc_audio_info->tc_ac3_passthrough ) {
+		$command .= " -A -N ".
+			$tc_audio_info->tc_option_n;
+	} else {
+		$command .= 
+			" -b ".$tc_audio_info->tc_bitrate.",0,".
+			       $tc_audio_info->tc_mp3_quality;
+		$command .= " -s ".$tc_audio_info->tc_volume_rescale
+			if $tc_audio_info->tc_volume_rescale != 0;
+		
+		$command .= " --a52_drc_off "
+			if $tc_audio_info->tc_audio_filter ne 'a52drc';
+		$command .= " -J normalize"
+			if $tc_audio_info->tc_audio_filter eq 'normalize';
+	}
+
+	if ( $self->tc_start_frame ne '' or
+	     $self->tc_end_frame ne '' ) {
+		my $start_frame = $self->tc_start_frame;
+		my $end_frame   = $self->tc_end_frame;
+		$start_frame ||= 0;
+		$end_frame   ||= $self->frames;
+
+		if ( $start_frame != 0 ) {
+			my $options = $self->get_frame_grab_options (
+				frame => $start_frame
+			);
+			$options->{c} =~ /(\d+)/;
+			my $c1 = $1;
+			my $c2 = $c1 + $end_frame - $start_frame;
+			$command .= " -c $c1-$c2";
+			$command .= " -L $options->{L}"
+				if $options->{L} ne '';
+
+		} else {
+			$command .= " -c $start_frame-$end_frame";
+		}
+	}
+
+	$command .= " --print_status 20" if $TC::VERSION >= 601;
+
+	$command .= " && echo DVDRIP_SUCCESS";
+
+	return $command;
+}
+
+sub get_merge_audio_command {
+	my $self = shift;
+	my %par = @_;
+	my ($vob_nr, $target_nr) = @par{'vob_nr','target_nr'};
+
+	my $avi_file      = $self->target_avi_file;
+	my $audio_file    = $self->target_avi_audio_file ( nr => $target_nr );
+
+	my $command =
+		"avimerge".
+		" -i $avi_file".
+		" -p $audio_file".
+		" -a $target_nr".
+		" -o $avi_file.merged &&".
+		" mv $avi_file.merged $avi_file &&".
+		" rm $audio_file &&".
+		" echo DVDRIP_SUCCESS";
 
 	return $command;
 }
@@ -1576,64 +1792,6 @@ sub get_fast_resize_options {
 	return ($width_n, $height_n, $err_div32, $err_shrink_expand);
 }
 
-sub transcode {
-	my $self = shift; $self->trace_in;
-	my %par = @_;
-	my ($pass) = @par{'pass'};
-
-	$self->system (
-		command => $self->get_transcode_command ( pass => $pass ),
-	);
-	
-	1;
-}
-
-sub transcode_with_callback {
-	my $self = shift; $self->trace_in;
-	my %par = @_;
-	my  ($callback, $pass, $split) = @par{'callback','pass','split'};
-
-	$self->popen (
-		command  => $self->get_transcode_command (
-			pass  => $pass,
-			split => $split
-		),
-		callback => $callback,
-	);
-	
-	1;
-}
-
-sub transcode_async_start {
-	my $self = shift; $self->trace_in;
-	my %par = @_;
-	my ($pass, $split) = @par{'pass','split'};
-
-	return $self->popen (
-		command => $self->get_transcode_command (
-			pass => $pass,
-			split => $split
-		),
-	);
-}
-
-sub transcode_async_stop {
-	my $self = shift; $self->trace_in;
-	my %par = @_;
-	my ($fh, $output, $pass) = @par{'fh','output','pass'};
-
-	$output = "\n\nOutput was:\n\n$output" if $output;
-
-	my $message =   "Error executing:\n\n".
-			$self->get_transcode_command ( pass => $pass ).
-			$output;
-
-	close $fh;
-	croak ($message) if $output !~ /DVDRIP_SUCCESS/;
-
-	1;
-}
-
 #---------------------------------------------------------------------
 # Methods for MPEG multiplexing
 #---------------------------------------------------------------------
@@ -1659,33 +1817,6 @@ sub get_mplex_command {
 	return $command;
 }
 
-sub mplex_async_start {
-	my $self = shift; $self->trace_in;
-	my %par = @_;
-	my ($split) = @par{'split'};
-	
-	return $self->popen (
-		command => $self->get_mplex_command ( split => $split ),
-	);
-}
-
-sub mplex_async_stop {
-	my $self = shift; $self->trace_in;
-	my %par = @_;
-	my ($fh, $output, $split) = @par{'fh','output','split'};
-
-	$output = "\n\nOutput was:\n\n$output" if $output;
-
-	my $message =   "Error executing:\n\n".
-			$self->get_mplex_command ( split => $split ).
-			$output;
-
-	close $fh;
-	croak ($message) if $output !~ /DVDRIP_SUCCESS/;
-
-	1;
-}
-
 #---------------------------------------------------------------------
 # Methods for AVI Splitting
 #---------------------------------------------------------------------
@@ -1699,103 +1830,54 @@ sub get_split_command {
 	my $avi_dir = dirname $avi_file;
 	$avi_file   = basename $avi_file;
 
-	my $command = "cd $avi_dir && avisplit -s $size -i $avi_file && echo DVDRIP_SUCCESS";
+	my $split_mask = sprintf (
+		"%s-%03d",
+		$self->project->name,
+		$self->nr
+	);
+
+	my $command =
+		"cd $avi_dir && ".
+		"avisplit -s $size -i $avi_file -o $split_mask && ".
+		"echo DVDRIP_SUCCESS";
 	
 	return $command;
-}
-
-sub split {
-	my $self = shift; $self->trace_in;
-
-	my $command = $self->get_split_command;
-	return if not $command;
-
-	$self->system (
-		command => $command
-	);
-	
-	$self->rename_avi_files;
-	
-	return 1;
-}
-
-sub rename_avi_files {
-	my $self = shift; $self->trace_in;
-	
-	my $avi_file = $self->avi_file;
-	
-	my $new_file;
-	foreach my $file ( glob ("$avi_file-*") ) {
-		$new_file = $file;
-		$new_file =~ s/\.avi-(\d+)$/"-".($1+1).".avi"/e;
-		rename ($file, $new_file);
-	}
-	
-	1;
-}
-
-sub split_with_callback {
-	my $self = shift; $self->trace_in;
-	my %par = @_;
-	my ($callback) = @par{'callback'};
-
-	my $command = $self->get_split_command;
-	return if not $command;
-
-	$self->popen (
-		command => $command,
-		callback => $callback,
-	);
-	
-	$self->rename_avi_files;
-	
-	1;
-}
-
-sub split_async_start {
-	my $self = shift; $self->trace_in;
-	
-	my $command = $self->get_split_command;
-	return if not $command;
-
-	return $self->popen (
-		command => $command,
-	);
-}
-
-sub split_async_stop {
-	my $self = shift; $self->trace_in;
-	my %par = @_;
-	my ($fh, $output) = @par{'fh','output'};
-
-	$output = "\n\nOutput was:\n\n$output" if $output;
-
-	my $message =   "Error executing:\n\n".
-			$self->get_split_command.
-			$output;
-
-	close $fh;
-	croak ($message) if $output !~ /DVDRIP_SUCCESS/;
-
-	$self->rename_avi_files;
-
-	1;
 }
 
 #---------------------------------------------------------------------
 # Methods for taking Snapshots
 #---------------------------------------------------------------------
 
-sub snapshot_filename	  	{ shift->{snapshot_filename}  	 	}
-sub set_snapshot_filename  	{ shift->{snapshot_filename}  = $_[1] 	}
+sub snapshot_filename {
+	my $self = shift;
 
-sub raw_snapshot_filename	{ shift->{raw_snapshot_filename}   	}
-sub set_raw_snapshot_filename	{ shift->{raw_snapshot_filename} = $_[1]}
+	return $self->preview_filename( type => 'orig' );
+}
+
+sub raw_snapshot_filename {
+	my $self = shift;
+	
+	my $raw_filename = $self->snapshot_filename;
+	$raw_filename =~ s/\.jpg$/.raw/;
+	
+	return $raw_filename;
+}
 
 sub get_frame_grab_options {
 	my $self = shift;
 	my %par = @_;
 	my ($frame) = @par{'frame'};
+
+	if ( $self->project->rip_mode ne 'rip' or not $self->has_vob_nav_file ) {
+		$self->log ("Fast VOB navigation only available for ripped DVD's, ".
+			    "falling back to slow method.")
+			if $self->project->rip_mode ne 'rip';
+		$self->log ("VOB navigation file is missing. Slow navigation method used.")
+			if $self->project->rip_mode eq 'rip' and not $self->has_vob_nav_file;
+		return {
+			c => $frame."-".($frame+1),
+		};
+	}
 
 	my $old_chapter = $self->actual_chapter;
 
@@ -1809,21 +1891,33 @@ sub get_frame_grab_options {
 
 	my $fh = FileHandle->new;
 	open ($fh, $vob_nav_file) or
-		croak "Can't read VOB navigation file '$vob_nav_file'";
+		croak "msg:Can't read VOB navigation file '$vob_nav_file'";
 
-	my ($frames, $block_offset, $frame_offset);
-	
+	my ($found, $block_offset, $frame_offset);
+
+	my $frames = 0;
+
 	while (<$fh>) {
 		if ( $frames == $frame ) {
 			s/^\s+//;
+			s/\s+$//;
+			croak "msg:VOB navigation file '$vob_nav_file' is ".
+			      "corrupted. Please contact the author."
+				if !/^\d+\s+\d+\s+\d+\s+\d+\s+\d+\s+\d+$/;
 			($block_offset, $frame_offset) =
 				(split (/\s+/, $_))[4,5];
+			$found = 1;
 			last;
 		}
 		++$frames;
 	}
 	
 	close $fh;
+	
+	croak "msg:Can't find frame $frame in VOB navigation file ".
+	      "'$vob_nav_file' (which has only $frames frames). ".
+	      "Please contact the author."
+		if not $found;
 	
 	return {
 		L => $block_offset,
@@ -1834,156 +1928,42 @@ sub get_frame_grab_options {
 
 sub get_take_snapshot_command {
 	my $self = shift; $self->trace_in;
-	my %par = @_;
-	my ($frame) = @par{'frame'};
 
-	my $nr      = $self->nr;
-	my $tmp_dir = "/tmp/dvdrip$$.ppm";
+	my $nr           = $self->nr;
+	my $frame	 = $self->preview_frame_nr;
+	my $tmp_dir      = "/tmp/dvdrip$$.ppm";
+	my $filename     = $self->preview_filename( type => 'orig' );
+	my $raw_filename = $self->raw_snapshot_filename;
 	
+	my $source_options = $self->data_source_options;
+
+	$source_options->{x} .= ",null";
+
 	my $command =
 	       "mkdir -m 0775 $tmp_dir; ".
 	       "cd $tmp_dir; ".
-	       "transcode".
-	       " -z -k -i ".$self->vob_dir.
+	       "transcode ".
+	       " -z -k ".
 	       " -o snapshot ".
-	       " -x vob,null -y ppm,null ";
+	       " -y ppm,null ";
 
-	my $options = $self->get_frame_grab_options ( frame => $frame );
-	
-	my ($opt, $val);
-	while ( ($opt, $val) = each %{$options} ) {
-		$command .= "-$opt $val ";
-	}
+	$command .= " -".$_." ".$source_options->{$_} for keys %{$source_options};
 
-	$command = "$command && echo DVDRIP_SUCCESS";
+	my $grab_options = $self->get_frame_grab_options ( frame => $frame );
 
-	return $command;
-}
+	$command .= " -".$_." ".$grab_options->{$_} for keys %{$grab_options};
 
-sub take_snapshot {
-	my $self = shift; $self->trace_in;
-	my %par = @_;
-	my ($frame, $filename) = @par{'frame','filename'};
-	
-	$self->system (
-		command => $self->get_take_snapshot_command (
-			frame => $frame
-		),
-	);
-	
-	$self->convert_snapshot (
-		filename => $filename,
-	);
-	
-	1;
-}
-
-sub get_convert_snapshot_command {
-	my $self = shift;
-	my %par = @_;
-	my ($filename) = @par{'filename'};
-
-	my $tmp_dir = "/tmp/dvdrip$$.ppm";
-	my $dirname = dirname ($filename);
-
-	my $raw_filename = $self->raw_snapshot_filename;
-
-	return	"mkdir -m 0775 -p $dirname && ".
+	$command .= " && ".
 		"convert".
 		" -size ".$self->width."x".$self->height.
 		" $tmp_dir/snapshot*.ppm $filename && ".
 		"convert".
 		" -size ".$self->width."x".$self->height.
 		" $tmp_dir/snapshot*.ppm gray:$raw_filename &&".
-		" rm -r $tmp_dir && echo DVDRIP_SUCCESS";
+		" rm -r $tmp_dir && ".
+		"echo DVDRIP_SUCCESS";
 
-}
-
-sub convert_snapshot {
-	my $self = shift; $self->trace_in;
-	my %par = @_;
-	my ($filename) = @par{'filename'};
-
-	unlink $filename;
-	unlink $self->raw_snapshot_filename;
-
-	my $command = $self->get_convert_snapshot_command (
-		filename => $filename
-	);
-	
-	$self->system (
-		command => $command
-	);
-
-	if ( not -f $filename or not -f $self->raw_snapshot_filename ) {
-		croak "msg: Can't grab preview frame!\nPress Cancel and try a smaller frame number."
-	}
-
-	$self->calc_snapshot_bounding_box;
-
-	1;
-}
-
-sub take_snapshot_with_callback {
-	my $self = shift; $self->trace_in;
-	my %par = @_;
-	my  ($frame, $filename, $callback) =
-	@par{'frame','filename','callback'};
-
-	$self->popen (
-		command => $self->get_take_snapshot_command (
-			frame => $frame
-		),
-		callback => $callback,
-	);
-	
-	$self->convert_snapshot (
-		filename => $filename,
-	);
-	
-	1;
-}
-
-sub take_snapshot_async_start {
-	my $self = shift; $self->trace_in;
-	my %par = @_;
-	my  ($frame, $filename,) =
-	@par{'frame','filename'};
-	
-	$self->set_snapshot_filename ($filename);
-	$filename =~ s/\.[^.]+$//;
-	$self->set_raw_snapshot_filename ($filename.".raw");
-
-	return $self->popen (
-		command => $self->get_take_snapshot_command (
-			frame => $frame
-		),
-	);
-}
-
-sub take_snapshot_async_stop {
-	my $self = shift; $self->trace_in;
-	my %par = @_;
-	my ($fh, $output) = @par{'fh','output'};
-
-	$output = "\n\nOutput was:\n\n$output" if $output;
-
-	my $message =   "Error executing:\n\n".
-			$self->get_take_snapshot_command (
-				frame => $self->preview_frame_nr
-			).
-			$output;
-
-	close $fh;
-	croak ($message) if $output !~ /DVDRIP_SUCCESS/;
-
-	$self->convert_snapshot (
-		filename => $self->snapshot_filename,
-	);
-
-	$self->set_snapshot_filename(undef);
-
-	1;
+	return $command;
 }
 
 sub calc_snapshot_bounding_box {
@@ -2249,24 +2229,44 @@ sub get_view_stdin_command {
 	my %par = @_;
 	my ($command_tmpl) = @par{'command_tmpl'};
 
-	my $nr            = $self->nr;
 	my $audio_channel = $self->audio_channel;
 
 	my @opts = ( {
-		a => $self->audio_channel,
-		m => $self->tc_viewing_angle,
+		a => 0,
 	} );
-	
+
 	my $command = $self->apply_command_template (
 		template => $command_tmpl,
 		opts     => \@opts,
 	);
-
+	
 	my $opts = $self->get_frame_grab_options (
 		frame => $self->preview_frame_nr,
 	);
 
-	$command = "tccat -i ".$self->vob_dir." -S $opts->{L} | $command";
+	my $source_options = $self->data_source_options;
+
+	$command =
+		"tccat -i $source_options->{i}".
+		" -T $source_options->{T}".
+		" -a $audio_channel -S $opts->{L} | $command";
+
+	return $command;
+}
+
+sub get_view_vob_image_command {
+	my $self = shift;
+	my %par = @_;
+	my ($command_tmpl) = @par{'command_tmpl'};
+
+	my $nr            = $self->nr;
+	my $audio_channel = $self->audio_channel;
+	my $angle         = $self->tc_viewing_angle;
+
+	my $command =
+		"tccat -i ".$self->project->dvd_device.
+		" -a $audio_channel -L ".
+		" -T $nr,1,$angle | $command_tmpl";
 
 	return $command;
 }

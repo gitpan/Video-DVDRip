@@ -1,4 +1,4 @@
-# $Id: Node.pm,v 1.17 2002/05/26 22:15:32 joern Exp $
+# $Id: Node.pm,v 1.18 2002/09/15 15:31:09 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -29,8 +29,8 @@ sub ssh_cmd			{ shift->{ssh_cmd}			}
 sub speed			{ shift->{speed}			}
 sub tc_options			{ shift->{tc_options}			}
 
-sub progress_frames		{ shift->{progress_frames}		}
-sub progress_frames_cnt		{ shift->{progress_frames_cnt}		}
+sub progress_cnt		{ shift->{progress_cnt}			}
+sub progress_max		{ shift->{progress_max}			}
 sub progress_merge		{ shift->{progress_merge}		}
 sub progress_start_time		{ shift->{progress_start_time}		}
 sub assigned_job		{ shift->{assigned_job} 		}
@@ -48,8 +48,8 @@ sub set_ssh_cmd			{ shift->{ssh_cmd}		= $_[1] }
 sub set_speed			{ shift->{speed}		= $_[1] }
 sub set_tc_options		{ shift->{tc_options}		= $_[1] }
 
-sub set_progress_frames		{ shift->{progress_frames}	= $_[1] }
-sub set_progress_frames_cnt	{ shift->{progress_frames_cnt}	= $_[1] }
+sub set_progress_cnt		{ shift->{progress_cnt}		= $_[1] }
+sub set_progress_max		{ shift->{progress_max}		= $_[1] }
 sub set_progress_merge		{ shift->{progress_merge}	= $_[1] }
 sub set_progress_start_time	{ shift->{progress_start_time}	= $_[1] }
 sub set_assigned_job		{ shift->{assigned_job} 	= $_[1] }
@@ -223,7 +223,7 @@ sub stop {
 	$self->log ("Node '".$self->name."' stopped");
 	$self->save;
 
-	$job->stop if $job;
+	$job->cancel if $job;
 	
 	1;
 }
