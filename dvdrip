@@ -1,6 +1,6 @@
 #!/usr/local/bin/perl
 
-# $Id: dvdrip,v 1.8 2002/01/03 17:39:59 joern Exp $
+# $Id: dvdrip,v 1.9 2002/01/27 11:39:33 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -13,23 +13,48 @@ package Video::DVDRip;
 
 use strict;
 use lib 'lib';
+use Getopt::Std;
 
 use Video::DVDRip::GUI::Main;
 
+my $USAGE = <<'_USAGE';
+
+usage: dvdrip [-c] [-d level] [filename]
+
+       -c open cluster control window
+       -d set debugging level
+
+_USAGE
+
 main: {
-	Video::DVDRip::GUI::Main->set_debug_level(0);
+	# get options
+	my %opt;
+	my $opt_ok = getopts ('cd:', \%opt);
+	usage() if not $opt_ok;
 
 	# fetch filename paramter
 	my $filename = shift @ARGV;
+
+	# no more args allowed
+	usage() if @ARGV;
+
+	# set requested debugging level
+	Video::DVDRip::GUI::Main->set_debug_level( $opt{d} || 0 );
 
 	# create GUI object
 	my $gui = Video::DVDRip::GUI::Main->new;
 
 	# start GUI
 	$gui->start (
-		filename => $filename
+		filename	     => $filename,
+		open_cluster_control => $opt{c}
 	);
+
 
 	END { Gtk->exit(0) }
 }
 
+sub usage {
+	print $USAGE;
+	exit 1;
+}

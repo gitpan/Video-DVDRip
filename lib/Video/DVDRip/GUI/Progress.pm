@@ -1,4 +1,4 @@
-# $Id: Progress.pm,v 1.14 2002/01/03 17:40:01 joern Exp $
+# $Id: Progress.pm,v 1.15 2002/01/30 22:46:33 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -186,9 +186,9 @@ sub progress {
 	my $fh = $self->fh;
 
 	# read all date from the pipe
-	my ($buffer, $rc);
-	while ( $rc = $fh->read ($buffer, 8192) ) {
-		$buffer .= $rc;
+	my ($tmp, $buffer);
+	while ( $fh->read ($tmp, 8192) ) {
+		$buffer .= $tmp;
 	}
 
 	# store output

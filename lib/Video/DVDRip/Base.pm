@@ -1,4 +1,4 @@
-# $Id: Base.pm,v 1.10 2002/01/03 17:40:00 joern Exp $
+# $Id: Base.pm,v 1.14 2002/02/23 17:28:25 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -206,6 +206,121 @@ sub log {
 	return if not defined $logger;
 	$logger->log(@_);
 	1;
+}
+
+sub clone {
+	my $self = shift;
+	my %par = @_;
+	my ($deep) = @par{'deep'};
+
+	if ( not $deep ) {
+		my %object = %{$self};
+		return bless \%object, ref $self;
+	} else {
+		croak "deep cloning currently not supported";
+	}
+
+}
+
+sub combine_command_options {
+	my $self = shift;
+	my %par = @_;
+	my  ($cmd, $cmd_line, $options) =
+	@par{'cmd','cmd_line','options'};
+
+	# split command line into separate commands
+	$cmd_line =~ s/\s+$//;
+	$cmd_line .= ";" if $cmd_line !~ /;$/;
+	my @parts = grep !/^$/, (
+		$cmd_line =~ m!(.*?)\s*(\(|\)|;|&&|\|\||/usr/bin/nice\s+-n\s+\d+)\s*!g
+	);
+
+	# walk through and process requested command
+	foreach my $part ( @parts ) {
+		next if $part !~ s/^$cmd\s+//;
+		my $options = $self->get_shell_options (
+			options => $part." ".$options
+		);
+		$part = "$cmd ".join (" ", values %{$options});
+	}
+
+	# remove trailing semicolon
+	pop @parts;
+
+	# join parts and return
+	return join (" ", @parts);
+}
+
+sub get_shell_options {
+	my $self = shift;
+	my %par = @_;
+	my ($options) = @par{'options'};
+	
+	my %options;
+	my @words = map {/\s/ ? "'$_'" : $_} $self->get_shell_words($options);
+
+	my $opt;
+	for (my $i=0; $i < @words; ++$i) {
+		$words[$i] = "'$words[$i]'" if $words[$i] =~ /\s/;
+		if ( $words[$i] =~ /^-(.*)/ ) {
+			$opt = $1;
+			if ( $i+1 != @words and $words[$i+1] !~ /^-/ ) {
+				$options{$opt} = "-$opt $words[$i+1]";
+				++$i;
+			} else {
+				$options{$opt} = "-$opt";
+			}
+		} else {
+			$options{$opt} .= " ".$words[$i];
+		}
+	}
+	
+	return \%options;
+}
+
+# This subroutine is taken from "shellwords.pl" (standard Perl
+# library) and slightly modified (mainly usage of lexical
+# variables instead of globals).
+
+sub get_shell_words {
+	my $thing = shift;
+
+	local($_) = join('', @_) if @_;
+
+	my (@words,$snippet,$field);
+
+	s/^\s+//;
+	while ($_ ne '') {
+	    $field = '';
+	    for (;;) {
+		if (s/^"(([^"\\]|\\.)*)"//) {
+		    ($snippet = $1) =~ s#\\(.)#$1#g;
+		}
+		elsif (/^"/) {
+		    die "Unmatched double quote: $_\n";
+		}
+		elsif (s/^'(([^'\\]|\\.)*)'//) {
+		    ($snippet = $1) =~ s#\\(.)#$1#g;
+		}
+		elsif (/^'/) {
+		    die "Unmatched single quote: $_\n";
+		}
+		elsif (s/^\\(.)//) {
+		    $snippet = $1;
+		}
+		elsif (s/^([^\s\\'"]+)//) {
+		    $snippet = $1;
+		}
+		else {
+		    s/^\s+//;
+		    last;
+		}
+		$field .= $snippet;
+	    }
+	    push(@words, $field);
+	}
+
+	return @words;
 }
 
 1;

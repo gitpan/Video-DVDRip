@@ -1,0 +1,126 @@
+#!/usr/local/bin/perl
+
+# $Id: dvdrip-master,v 1.15 2002/03/02 16:25:30 joern Exp $
+
+#-----------------------------------------------------------------------
+# Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
+# 
+# This program is part of Video::DVDRip, which is free software; you can
+# redistribute it and/or modify it under the same terms as Perl itself.
+#-----------------------------------------------------------------------
+
+package Video::DVDRip;
+
+use strict;
+use lib 'lib';
+
+use Video::DVDRip::RPC::Server;
+
+main: {
+	my $log_level = shift @ARGV || 0;
+
+	# setup master RPC Server with class interface declaration
+	my $master = Video::DVDRip::RPC::Server->new (
+		name    => "dvd::rip cluster control daemon",
+		port    => 28646,
+		classes => {
+			'Video::DVDRip::Cluster::Master' => {
+				get_master		=> '_constructor',
+				hello			=> 1,
+				save            	=> 1,
+				add_project		=> 'Video::DVDRip::Cluster::Project',
+				add_node		=> 'Video::DVDRip::Cluster::Node',
+				projects		=> 'Video::DVDRip::Cluster::Project',
+				nodes			=> 'Video::DVDRip::Cluster::Node',
+				move_up_project 	=> 1,
+				move_down_project	=> 1,
+				remove_node		=> 1,
+				schedule_project	=> 1,
+				remove_project		=> 1,
+				shutdown		=> 1,
+				get_projects_lref	=> 1,
+				get_jobs_lref		=> 1,
+				get_nodes_lref		=> 1,
+			},
+
+			'Video::DVDRip::Cluster::Project' => {
+				new			=> '_constructor',
+				id			=> 1,
+				name			=> 1,
+				label			=> 1,
+				state			=> 1,
+				progress		=> 1,
+				create_job_plan		=> 1,
+				title			=> 'Video::DVDRip::Cluster::Title',
+				reset_job		=> 1,
+			},
+
+			'Video::DVDRip::Cluster::Node' => {
+				new			=> '_constructor',
+				save			=> 1,
+				name			=> 1,
+				hostname		=> 1,
+				data_base_dir		=> 1,
+				is_master		=> 1,
+				data_is_local		=> 1,
+				username		=> 1,
+				ssh_cmd			=> 1,
+				state			=> 1,
+				job_info		=> 1,
+				progress		=> 1,
+				project_name		=> 1,
+				tc_options		=> 1,
+				set_name		=> 1,
+				set_hostname		=> 1,
+				set_data_base_dir	=> 1,
+				set_is_master		=> 1,
+				set_data_is_local	=> 1,
+				set_username		=> 1,
+				set_ssh_cmd		=> 1,
+				set_tc_options		=> 1,
+				stop			=> 1,
+				start			=> 1,
+			},
+			'Video::DVDRip::Cluster::Title' => {
+				project			=> 'Video::DVDRip::Cluster::Project',
+				program_stream_units    => 'Video::DVDRip::Cluster::PSU',
+				save			=> 1,
+				calc_chunk_cnt		=> 1,
+				chunk_cnt_sum		=> 1,
+				with_avisplit		=> 1,
+				set_with_avisplit	=> 1,
+				with_cleanup		=> 1,
+				set_with_cleanup	=> 1,
+				with_vob_remove		=> 1,
+				set_with_vob_remove	=> 1,
+			},
+			'Video::DVDRip::Cluster::PSU' => {
+				nr			=> 1,
+				frames			=> 1,
+				selected		=> 1,
+				set_selected		=> 1,
+			},
+		},
+	);
+
+	# set log level
+	$master->set_log_level ( $log_level );
+
+	# The Video::DVDRip::Cluster::Master class picks
+	# up its logger object from here.
+	$Video::DVDRip::Cluster::logger = $master;
+	
+	# start master thread
+	$master->load_class (
+		class => 'Video::DVDRip::Cluster::Master',
+	);
+	Video::DVDRip::Cluster::Master->get_master;
+
+#	use NetServer::Portal;
+#	use NetServer::Portal::Top;
+#	NetServer::Portal->start( NetServer::Portal->new_socket ( 28647 ) );
+
+	# start the object RPC server
+	$master->start_server;
+}
+

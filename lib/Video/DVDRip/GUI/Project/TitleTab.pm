@@ -1,4 +1,4 @@
-# $Id: TitleTab.pm,v 1.23 2002/01/10 22:22:21 joern Exp $
+# $Id: TitleTab.pm,v 1.27 2002/03/03 21:26:29 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -77,7 +77,7 @@ sub create_title_tab {
 		"Title", "Technical Information"
 	);
 	$clist->show,
-	$clist->set_usize (400, 300);
+	$clist->set_usize (450, 300);
 	$clist->set_selection_mode( 'browse' ); 
 	$clist->signal_connect ("select_row", sub { $self->cb_select_title (@_) } );
 
@@ -640,14 +640,17 @@ sub rip_title {
 			fh     => $progress->fh,
 			output => $output,
 		);
+		$title->probe_audio;
 		$title->suggest_transcode_options;
 		$self->fill_with_values;
+		$title->calc_program_stream_units if $TC::VERSION >= 600;
 		return 'finished';
 	};
 
 	my $cancel_callback = sub {
 		my %par = @_;
 		my ($progress) = @par{'progress'};
+		system ("killall splitpipe");
 		close ($progress->fh);
 		$title->remove_vob_files;
 		return 1;

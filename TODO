@@ -1,33 +1,51 @@
-$Id: TODO,v 1.23 2002/01/19 11:05:36 joern Exp $
+$Id: TODO,v 1.50 2002/03/03 21:30:09 joern Exp $
+
+KNOWN BUGS
+- cluster mode
+  - cluster control daemon leaks memory
+  - still avimerge progress problems. GUI freezes sometimes
+    but merging does work Ok.
+  - problems with avimerge and very small chunks? (not verified yet)
+- transcode didn't accept YUV mode with odd frame sizes, so
+  dvd::rip shouldn't either
+- Gtk assertion when closing a project
 
 TODO
-- add a FAQ section to the homepage
-- AC3 passthrough
-- show div8 exclamation marks only in clip2 stage
+- cluster mode:
+  - schedule start/end time of a node, suggested by Rainer Lay
+  - stop node after current job, suggested by Rainer Lay
+  - enhance chunk calculation (e.g. min: number of idle nodes)
+  - test mode, which checks if a node is configured correctly:
+    - does file system access work
+    - does the transcode version match
+- support DVDs with pcm encoded audio
+- check out if pgmfindclip is useful for dvd::rip
+- display a status of the selected title
+  - ripped
+  - preview grabbed
+  - transcoded
+- enable dvd::rip to work on already existent VOB copies
+  in filesystem, suggested by flier <flier AT scrollz.com>
 - enable pausing after 1st pass of a two-pass divx4 encoding,
   suggested by Chris <chris AT axique.de>.
 - don't rip chapters already ripped in chapter selection mode
+- support generating multilanguage AVIs
+- rip multiple titles in batch mode, suggested by Hrvoje Husic
+  <husic AT zyn.de>
+- add a FAQ section to the homepage
+- show div8 exclamation marks only in clip2 stage
 - provide avimerge option in chapter mode
 - check space on filesystem before ripping and transcoding
-- rip without audio scanning
 - changing sample rate, suggested by Certron DiSoni <certron_80 AT yahoo.com>
 - selection box for supported video codecs, suggested by Certron DiSoni
-- these two tasks should be combined
-  - batch mode for transcoding a bunch of projects, suggested by
-    Ralf Furhmann <rfuhrmann AT ht-troplast.com>
-  - cluster transcoding (delegate chapters or smaller parts to nodes),
-    suggested by Allen Day <allenday AT 1-up.net> and myself ;)
 - avisplit in chapter mode
-- generic transcode option text entry (with override of parameters
-  already added by dvd::rip)
 - extensive checking of user input. most input is currently
   passed through without examination
 - enable debugging mode by menu
 - calculate and show real aspect ratio of all processing steps,
   particularly needed for the fast resize option
 - on the fly ripping & transcoding, requested by many users ;)
-- exact letterbox autodetection
 - create personal clip&zoom preferences
 - mplayer support
-- VCD and SVCD support (transcode 0.6.x), requested by
-  George Farris <george AT gmsys.com>
+- VCD and SVCD support (transcode 0.6.x)
+

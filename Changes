@@ -1,6 +1,240 @@
-$Id: Changes,v 1.30 2002/01/19 11:05:36 joern Exp $
+$Id: Changes,v 1.57 2002/03/03 21:30:08 joern Exp $
 
 Revision history for Perl extension Video::DVDRip
+
+0.34 Sun Mar 03 2002, joern
+    Note:
+    - Cluster mode: you need the pstree command on the cluster
+      control computer from now
+
+    Features:
+    - Cluster mode:
+      - now you can reset a single job, if something went wrong
+	with it, so you don't have to start the whole project
+	again. All dependent jobs are reset automatically.
+	Thanks to Sloan Poe for his suggestion.
+      - cluster mode scheduler optimization regarding the
+	delegation of IO intensive jobs preferably to nodes
+	with local resp. fast file system access. In earlier
+	versions a local node could be blocked too early by
+	a non-local job, so local jobs later had to be
+	delegated to non-local nodes. The scheduler now
+	tries delegating local jobs to local nodes first,
+	and then normal jobs to idle nodes, if there are any.
+      - you can optionally let dvd::rip delete the VOBs
+	after finishing, making bigger project queues possible,
+	even with little harddisk space (but is risky, if
+	something goes wrong).
+    - AC3 audio passthrough support. If you're upgrading and
+      you have an existent project, you need to rip the title
+      again, because the necessary probing is done directly
+      after ripping. There is no restriction for new projects.
+    - Currently it's not possible to use AC3 passthrough in
+      cluster mode, because I hadn't the time to test it.
+    - the layout of the Transcode Tab changed slightly, to get
+      space for the AC3 radio buttons.
+    - all directories are now created with mode 0775, to
+      prevent file access problems in cluster mode, if
+      the user ids of all nodes doesn't match. Suggested
+      by Sloan Poe.
+    - range transcoding: default for the start value is 0.
+      default for end value is number of frames. Until now
+      you had to fill both values to get a range transcoding.
+      Suggested by Douglas Bollinger <dcb AT 321.net>.
+
+    Bugfixes:
+    - Cluster mode:
+      - on some systems stopping a node didn't work (dvd::rip
+	hung). Now the child process is killed explicitely and
+	this should work on any system. You need 'pstree' on
+	the cluster control computer from now. Thanks to
+	Sloan Poe, who helped me debugging this problem.
+      - in multipass mode dvd::rip tried moving the AVI file
+	to its final destination after the first pass. This
+	threw an error message, but had no other effect.
+	Anyway it was useless and confusing.
+      - switching off avisplit of a just added project didn't work
+    - removed DVD mount point from preferences, because this
+      isn't needed anymore
+
+0.33 Tue Feb 19 2002, joern
+	Bugfixes:
+	- The node name/hostname feature didn't work. The cluster
+	  control daemon always tried to fping the node name instead
+	  of the hostname. Thanks to Rainer Lay for the bug report.
+
+0.32 Mon Feb 18 2002, joern
+	Features:
+	- (one feature so this isn't only a bugfix release ;)
+	  You can enable a transcoding preview window. You need
+	  the filter_preview transcode plugin, which is build
+	  automatically if you have libdv installed on your system.
+	  Also your X Server must have XV support.
+	  Really nice feature. Useless, but fancy ;)
+	  Warning: closing the preview window will kill the
+	  transcode process.
+
+	Bugfixes:
+	- Some cluster jobs were aborted due to timeout accidentally.
+	  Because there occur some really strange problems with
+	  the output of avimerge, I disabled the timeout completely.
+	  This shouldn't matter, because it was added to prevent
+	  hanging ssh sessions which prompt for a password. This
+	  case is catched anyway not using a timeout, so everything
+	  should work better this way. Thanks for the reports to
+	  Andrew Yantis and Rainer Lay.
+	- project progress didn't count aborted jobs. They are now
+	  added to the waiting value. Thanks to Rainer again for
+	  this one.
+	- nice -n made problems with tcsh. Using /usr/bin/nice
+	  instead. Guess who reported this one? Yes. Thanks Rainer ;)
+	- no progress was shown on avisplit due to a bug in the
+	  avisplit output parsing regex.
+
+0.31 Sun Feb 17 2002, joern
+	Features:
+	- You can provide additional transcode options on the
+	  Transcode Tab. These options are added to the
+	  internal transcode call, resp. they override corresponding
+	  options already computed by dvd::rip. This is for experts
+	  who want to use special transcode features not currently
+	  officially supported by dvd::rip (or to fix dvd::rip bugs
+	  which are not fixed yet ;).
+	- adjusting the nice level of the transcode process per
+	  project (also used in cluster mode) on the Transcode Tab.
+	  Suggested by Hrvoje Husic.
+	- Cluster Mode:
+	  - error handling for remotely executed commands. The last
+	    lines received from the command are logged, so you can
+	    see what's going wrong. Also the corresponding node will
+	    be aborted. You have to start it again, otherwise no jobs
+	    will be scheduled to it. This prevents infinite job
+	    execution on a false configured node.
+	  - internal node name and hostname of the node are now
+	    distinguished (useful to address multi processor machines
+	    as multiple nodes). Suggested by Rainer Lay.
+	  - additional transcode options per node (samy funcionality as
+	    described for non cluster mode above). One good example
+	    for this is increasing transcode threads if you have a multi-
+	    processor node (e.g. -u 4,2). Suggested by Peter Lohmann.
+
+	Bugfixes:
+	- cluster daemon hung if ssh prompted for a password.
+	- made TOC list wider so content should fit better
+	
+0.31_05 Tue Feb 13 2002, joern
+	Bugfixes:
+	- All regarding the cluster mode and reported by
+	  Rainer Lay <Rainer.Lay AT informatik.uni-erlangen.de>
+          - command execution via the hardwired 'ssh -CP' command
+	    made problems, at least with OpenSSH. You now can
+	    configure the ssh command per Node in the Edit Node
+	    window. Default is 'ssh -C' which should work on most
+	    systems.
+	  - many commands had a construct "test dir || mkdir -p dir",
+	    where the "test" command is a nop, because "mkdir -p"
+	    doesn't fail, if the directory exists. Removed the "test"
+	    command.
+
+0.31_04 Tue Feb 12 2002, joern
+	Features:
+	- Added a job list to the cluster mode, accompanied by
+	  rewriting some internals. This was necessary to get rid
+	  of the PSU problem without messing up the internal
+	  cluster workflow. The advantage is, now you can exactly
+	  see what steps have to be done.
+
+	Bugfixes:
+	- cluster mode now supports titles encoded in more than
+	  one program stream unit. Thanks to Thomas Östreich for
+	  his help.
+	- Net::Ping was loaded in cluster mode, but is not
+	  required anymore.
+	- Hrvoje Husic told me, that 760 MB seems to be the maximum
+	  to burn on an 800 MB medium, so I corrected the
+	  corresponding disc popup entry.
+	- Layout of the Transcode Tab was somewhat messed up, at
+	  least with the default Gtk theme. I shrinked the buttons
+	  so now everything should fit. Thanks to Torsten Howard 
+	  <torsten AT inetw.net> for reporting this "buglet"
+	  (his word ;)
+
+0.31_03 Sat Feb 09 2002, joern
+	Note:
+	- Cluster mode is currently useless for titles with more
+	  than one program stream unit (that means: many DVDs
+	  are affected). I'm working on this issue, resp. am
+	  in contact with Thomas Östreich to check, whether
+	  transcode or dvd::rip should fix this.
+	- WARNING: first finish all your cluster projects before
+	  upgrading to this version, because cluster file names
+	  changed.
+
+	Features:
+	- Cluster Mode
+	  - multipass encoding now supported
+	  - show ETA for transcoding and audio processing states
+	  - optional avisplit and cleanup after transcoding. you
+	    can edit these project properties in the Cluster Control
+	    window
+	  - cluster control daemon can be shut down from the GUI
+	- multipass encoding: omit audio on first pass,
+	  thanks to Norbert Preining for his hint.
+	- better NTSC Support, suggested by Norbert Preining
+	  - set frame rate by default to 23.976, but user can
+	    overwrite it
+	  - set transcode options: -g 720x480 -M 2
+	- disc popup now has an entry for 800 MB discs,
+	  thanks to Hrvoje Husic <husic AT zyn.de> for his hint.
+
+	Bugfixes:
+	- Cluster Mode
+	  - adding a node with an existent name crashed the
+	    cluster control daemon
+	  - dvd::rip GUI now handles cluster daemon exits cleanly
+	  - View AVI works now for cluster transcoded titles
+	  - adding chapter mode titles to the cluster is
+	    prevented now
+	  - project removal threw an exception, sometimes
+	  - no volume rescaling was done
+	  - daemon crashed if a log client sent something
+	- Storable module was required, even when no cluster
+	  stuff was activated. Thanks to Timothy Harris
+	  <tim AT pongle.net> and Torsten Howard <torsten
+	  AT inetw.net> for their bug reports.
+
+0.31_02 Mon Feb 04 2002, joern
+	Bugfixes:
+	- sometimes dvd::rip stopped transcoding too short.
+	  This release should fix this problem. Thanks to
+	  Doug Shea for his bug report and
+	  <ulmo AT garozzo.franken.de> for the hint, which
+	  led me to the solution (omitting the transcode
+	  -c 0-n parameter).
+
+0.31_01 Sun Feb 03 2002, joern
+	Features:
+	- all generated files and directories now have names
+	  with correct alphanumerical order. Thanks to Doug Shea
+	  <doug_shea AT alumni.ucsd.edu> for his patch.
+
+	  WARNING: First finish all projects before upgrading
+		   to this version, because dvd::rip 0.31_01
+		   will badly fail finding files generated with
+		   previous versions!!!
+
+	- this is the first public pre-release with cluster
+	  transcoding support. Please refer to the dvd::rip
+	  homepage for documentation about this.
+	- omit '-J skip="0-2"' in chapter mode if transcode
+	  version >= 0.6 is detected. Thanks for the hint go
+	  to Norbert Preining and Ron Smits <rons AT ronsmits.com>.
+
+
+	Bugfixes:
+	- opened project was not closed, if you opened it via
+	  command line option and opened a new project via
+	  menu
 
 0.30 Sat Jan 19 2002, joern
 	Features:
@@ -31,6 +265,12 @@ Revision history for Perl extension Video::DVDRip
 	  demystifying the navigation logfile ;)
 
 0.29 Thu Jan 10 2002, joern
+	Features:
+	- transcode version is detected on startup, so different
+	  behaviour for different transcode versions is possible.
+	- preparing for cluster mode: dvd::rip already creates
+	  the neccessary vob navigation logging data.
+
 	Bugfixes:
 	- ripping progress bar enabled for transcode >= 0.6.0
 	  (you *must* use at least transcode-0.6.0pre2-20020107.
@@ -41,12 +281,6 @@ Revision history for Perl extension Video::DVDRip
 	  fps. Coooool... ;)
 	- You can use dvd::rip with transcode 0.5.x (x>=3),
 	  but the ripping progress bar will be disabled.
-
-	Features:
-	- transcode version is detected on startup, so different
-	  behaviour for different transcode versions is possible.
-	- preparing for cluster mode: dvd::rip already creates
-	  the neccessary vob navigation logging data.
 
 0.29_01 Sun Jan 07 2002, joern
 	Bugfixes:
@@ -205,14 +439,7 @@ Revision history for Perl extension Video::DVDRip
 	  message, even if started without splitting.
 
 0.22  Sun Dec 09 2001, joern
-	Bugfixes:
-	- applied Perl 5.005 patch supplied by Norbert
-	  Preining <preining AT logic.at>. Thanks.
-	- DVD read-toc code always tried a mount, even if the
-	  DVD was already mounted. This could confuse systems
-	  using automounter.
-
-	New Features:
+	Features:
 	- Support of the fast resizing algorithm of transcode
 	  (transcode-0.5.2-20011206 is recommended because of
 	  a bug in the horizontal fast resize code in earlier
@@ -230,14 +457,21 @@ Revision history for Perl extension Video::DVDRip
 	- transcode progress label shows, whether started with or
 	  without splitting
 
-0.21  Sat Dec 01 2001, joern
 	Bugfixes:
-	- fixed color problem with snapshot images
-	
-	New Features:
+	- applied Perl 5.005 patch supplied by Norbert
+	  Preining <preining AT logic.at>. Thanks.
+	- DVD read-toc code always tried a mount, even if the
+	  DVD was already mounted. This could confuse systems
+	  using automounter.
+
+0.21  Sat Dec 01 2001, joern
+	Features:
 	- transcode 0.5.1 supports 4GB AVI files, so max.
 	  filesize for the bitrate suggestion is now 4000 MB
 	  (was 2000 MB with transcode 0.5.0)
+
+	Bugfixes:
+	- fixed color problem with snapshot images
 
 0.20  Tue Nov 27 2001, joern
 	- First public release. Should be usable but is not tested

@@ -1,4 +1,4 @@
-# $Id: Main.pm,v 1.24 2002/01/19 10:46:52 joern Exp $
+# $Id: Main.pm,v 1.32 2002/03/02 16:21:27 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -37,7 +37,8 @@ sub set_project_opened		{ shift->{project_opened}	= $_[1] }
 sub start {
 	my $self = shift; $self->trace_in;
 	my %par = @_;
-	my ($filename) = @par{'filename'};
+	my  ($filename, $open_cluster_control) =
+	@par{'filename','open_cluster_control'};
 
 	Gtk->init;
 	Gtk::Widget->set_default_colormap(Gtk::Gdk::Rgb->get_cmap());
@@ -59,11 +60,18 @@ sub start {
 		);
 	}
 
+	$self->cluster_control if $open_cluster_control;
+
 	$self->log ("Detected transcode version: ".$TC::VERSION);
 
 	while ( 1 ) {
 		eval { Gtk->main };
-		if ( $@ ) {
+		if ( $@ =~ /^msg:\s*(.*)\s+at.*?line\s+\d+/ ) {
+			$self->message_window (
+				message => $1,
+			);
+			next;
+		} elsif ( $@ ) {
 			my $error =
 				"An internal exception was thrown!\n".
 				"The error message was:\n\n$@";
@@ -199,6 +207,13 @@ sub create_menubar {
 		  accelerator => '<control>p',
                   callback    => sub { $self->edit_preferences } },
 
+		{ path        => '/_Cluster',
+                  type        => '<Branch>' },
+
+                { path        => '/_Cluster/Contro_l...',
+		  accelerator => '<control>m',
+                  callback    => sub { $self->cluster_control } },
+
 		{ path        => '/_Debug',
                   type        => '<Branch>' },
 
@@ -242,9 +257,6 @@ sub new_project {
 	);
 	$project->set_snap_dir (
 		$self->config('base_project_dir')."/unnamed/tmp",
-	);
-	$project->set_mount_point (
-		$self->config('dvd_mount_point'),
 	);
 	$project->set_dvd_device (
 		$self->config('dvd_device'),
@@ -325,9 +337,6 @@ sub open_project_file {
 	$project->set_dvd_device (
 		$self->config('dvd_device')
 	);
-	$project->set_mount_point (
-		$self->config('dvd_mount_point')
-	);
 
 	1;
 }
@@ -399,7 +408,10 @@ sub unsaved_project_open {
 	my ($wants) = @par{'wants'};
 	
 	return if not $self->project_opened;
-	return if not $self->comp('project')->project->changed;
+	if ( not $self->comp('project')->project->changed ) {
+		$self->close_project ( dont_ask => 1 );
+		return;
+	}
 
 	$self->confirm_window (
 		message => "Do you want to save this project first?",
@@ -442,6 +454,27 @@ sub edit_preferences {
 	my $pref = Video::DVDRip::GUI::Config->new;
 	$pref->open_window;
 	
+	1;
+}
+
+sub cluster_control {
+	my $self = shift;
+
+	require Video::DVDRip::GUI::Cluster::Control;
+
+	if ( ($self->config('cluster_master_local') or
+	      $self->config('cluster_master_server')) and
+	      $self->config('cluster_master_port') ) {
+
+		my $cluster = Video::DVDRip::GUI::Cluster::Control->new;
+		$cluster->open_window;
+	} else {
+		$self->message_window (
+			message => "You must first configure a cluster control daemon\n".
+				   "in the Preferences dialog.",
+		);
+	}
+
 	1;
 }
 

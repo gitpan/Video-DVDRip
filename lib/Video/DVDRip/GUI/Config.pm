@@ -1,4 +1,4 @@
-# $Id: Config.pm,v 1.12 2002/01/03 17:40:01 joern Exp $
+# $Id: Config.pm,v 1.15 2002/03/02 16:21:08 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -24,7 +24,7 @@ sub build {
 	my $win = Gtk::Window->new ( -toplevel );
 	$win->set_title($self->config('program_name'). " Preferences");
 	$win->signal_connect("destroy" => sub {
-		$self->set_comp (undef => undef);
+		$self->set_comp (config => undef);
 	});
 	$win->border_width(0);
 	$win->set_uposition (10,10);
@@ -54,18 +54,24 @@ sub build {
 	my $config_object = $self->config_object;
 	foreach my $field ( @{$config_object->order} ) {
 		my %field = %{$config_object->config->{$field}};
-		$field{onchange} = sub {
-			my $value = $_[0]->get_text;
-			if ( $field{type} eq 'file' or $field{type} eq 'dir' ) {
-				if ( $value !~ m!^/! ) {
-					$value = "/$value";
-					$_[0]->set_text($value);
+		if ( $field{type} eq 'switch' ) {
+			$field{onchange} = sub {
+				$config_object->set_value ($field, $_[0]);
+			};
+		} else {
+			$field{onchange} = sub {
+				my $value = $_[0]->get_text;
+				if ( $field{type} eq 'file' or $field{type} eq 'dir' ) {
+					if ( $value !~ m!^/! ) {
+						$value = "/$value";
+						$_[0]->set_text($value);
+					}
 				}
-			}
-			$config_object->set_value (
-				$field, $value
-			);
-		};
+				$config_object->set_value (
+					$field, $value
+				);
+			};
+		}
 		push @fields, \%field;
 	}
 	
@@ -87,9 +93,6 @@ sub build {
 		return if not $project;
 		$project->project->set_dvd_device (
 			$config_object->get_value('dvd_device')
-		);
-		$project->project->set_mount_point (
-			$config_object->get_value('dvd_mount_point')
 		);
 	} );
 	$hbox->pack_start ($button, 0, 1, 0);

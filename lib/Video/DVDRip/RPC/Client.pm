@@ -1,4 +1,4 @@
-# $Id: Client.pm,v 1.1 2002/01/19 11:05:37 joern Exp $
+# $Id: Client.pm,v 1.7 2002/02/17 09:34:42 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -9,17 +9,55 @@
 
 package Video::DVDRip::RPC::Client;
 
+use base Video::DVDRip::Base;
+
+use Video::DVDRip::RPC::Message;
+
 use Carp;
 use strict;
-use Storable;
 use IO::Socket;
 
-sub server			{ shift->{server}		}
-sub port			{ shift->{port}			}
-sub sock			{ shift->{sock}			}
-sub loaded_classes		{ shift->{loaded_classes}	}
+sub server			{ shift->{server}			}
+sub port			{ shift->{port}				}
+sub sock			{ shift->{sock}				}
+sub loaded_classes		{ shift->{loaded_classes}		}
+sub error_cb			{ shift->{error_cb}			}
+
+sub connected			{ shift->{connected}			}
+sub set_connected		{ shift->{connected}		= $_[1]	}
+
+my $self = bless { loaded_classes => {}, connected => 0 }, 'Video::DVDRip::RPC::Client';
 
 sub connect {
+	my $class = shift;
+	my %par = @_;
+	my  ($server, $port, $error_cb) =
+	@par{'server','port','error_cb'};
+	
+	croak "double client connection detected" if $self->connected;
+	
+	my $sock = IO::Socket::INET->new(
+		Proto     => 'tcp',
+        	PeerPort  => $port,
+        	PeerAddr  => $server,
+		Type      => SOCK_STREAM
+	) or croak "Can't open connection to $server:$port - $!";
+
+	my $loaded_classes = $self->loaded_classes;
+
+	%{$self} = (
+		server	        => $server,
+		port  	        => $port,
+		sock  	        => $sock,
+		error_cb        => $error_cb,
+		loaded_classes  => $loaded_classes,
+		connected       => 1,
+	);
+
+	return bless $self, $class;
+}
+
+sub log_connect {
 	my $class = shift;
 	my %par = @_;
 	my ($server, $port) = @par{'server','port'};
@@ -31,28 +69,42 @@ sub connect {
 		Type      => SOCK_STREAM
 	) or croak "Can't open connection to $server:$port - $!";
 
-	my $self = {
-		server	       => $server,
-		port  	       => $port,
-		sock  	       => $sock,
-		loaded_classes => {},
-	};
-
-	return bless $self, $class;
+	return $sock;
 }
 
 sub disconnect {
 	my $self = shift;
 
 	my $sock = $self->sock;
-	
+	print $sock "DISCONNECT\n";
 	close ($sock);
-	
+
+	$self->set_connected(0);
+
 	1;
 }
 
 sub DESTROY {
 	shift->disconnect;
+}
+
+sub error {
+	my $self = shift;
+
+	my $error_cb = $self->error_cb;
+	
+	if ( $error_cb ) {
+		my $message = &$error_cb;
+		$message ||= "msg: Client/Server communication aborted";
+		$self->set_connected(0);
+		croak $message;
+
+	} else {
+		$self->disconnect;
+		croak "Unhandled error in client/server communication";
+	}
+	
+	1;
 }
 
 sub load_class {
@@ -73,11 +125,32 @@ sub load_class {
 	my $local_class = $class;
 	my $methods = $rc->{methods};
 
+	# create local destructor for this class
+	if ( 0 ) {
+		no strict 'refs';
+		my $local_method = $local_class.'::'."DESTROY";
+
+		# print "Registering local method: $local_method\n";
+
+		*$local_method = sub {
+			Carp::cluck();
+			my $oid_ref = shift;
+			$self->send_request (
+				cmd    => "destroy",
+				oid    => ${$oid_ref},
+			);
+			# print "destroy: $local_method ${$oid_ref}\n";
+		};
+	}
+
 	# create local methods for this class
 	foreach my $method ( keys %{$methods} ) {
 		$local_method = "$local_class".'::'."$method";
-		
+
 		my $method_type = $methods->{$method};
+
+		# print "Registering local method: $local_method / type=$method_type\n";
+		
 		if ( $method_type eq '_constructor' ) {
 			# this is a constructor for this class
 			my $request_method = $class.'::'.$method;
@@ -121,6 +194,7 @@ sub load_class {
 					method => $request_method,
 					params => \@_,
 				)->{rc};
+#print "${$oid_ref}: method=$request_method length(answer)=".length(Data::Dumper::Dumper($rc)),"\n";
 				foreach my $val ( @{$rc} ) {
 					if ( ref $val eq 'ARRAY' ) {
 						foreach my $list_elem ( @{$val} ) {
@@ -148,7 +222,7 @@ sub load_class {
 			$self->load_class ( class => $method_type );
 		}
 	}
-	
+
 	return $local_class;
 }
 
@@ -156,20 +230,18 @@ sub send_request {
 	my $self = shift;
 	my %request = @_;
 	
-	my $request = Storable::freeze (\%request);
-	$request =~ s/\\/\\\\/g;
-	$request =~ s/\n/\\n/g;
-	
+	my $request = Video::DVDRip::RPC::Message->pack (\%request);
+
 	my $sock = $self->sock;
 
-	print $sock $request, "\n";
-	
+	print $sock $request, "\n" or return $self->error;
+
 	my $rc = <$sock>;
-	
-	$rc =~ s/\\n/\n/g;
-	$rc =~ s/\\\\/\\/g;
-	$rc = Storable::thaw($rc);
-	
+
+	$rc = Video::DVDRip::RPC::Message->unpack ($rc);
+
+	return $self->error if not defined $rc;
+
 	if ( not $rc->{ok} ) {
 		$rc->{msg} .= "\n" if not $rc->{msg} =~ /\n$/;
 		croak "$rc->{msg}".
@@ -178,6 +250,6 @@ sub send_request {
 
 	return $rc;
 }
-	
+
 1;
 

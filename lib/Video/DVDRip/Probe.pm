@@ -1,4 +1,4 @@
-# $Id: Probe.pm,v 1.10 2002/01/03 17:40:00 joern Exp $
+# $Id: Probe.pm,v 1.11 2002/03/03 21:26:47 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -47,7 +47,7 @@ sub set_viewing_angles	{ shift->{viewing_angles}=$_[1]	}
 sub analyze {
 	my $class = shift;
 	my %par = @_;
-	my  ($probe_output) = @par{'probe_output'};
+	my ($probe_output) = @par{'probe_output'};
 
 	my ($width, $height, $aspect_ratio, $video_mode, $letterboxed);
 	my ($frames, $runtime, $frame_rate, $audio_size, $chapters, $angles);
@@ -80,10 +80,14 @@ sub analyze {
 	my (@audio_tracks);
 	while ( $probe_output =~
 		/audio\s+track:\s*-a\s*(\d+).*?-e\s+(\d+),(\d+),(\d+)/g ) {
-		$audio_tracks[$1] = {
-			sample_rate  => $2,
-			sample_width => $3,
-		};
+		if ( $2 and $3 ) {
+			$audio_tracks[$1] = {
+				sample_rate  => $2,
+				sample_width => $3,
+				bitrate      => undef,	# later set by analyze_audio
+				tc_option_n  => undef,	# later set by analyze_audio
+			};
+		}
 	}
 
 	my $i = 0;
@@ -113,5 +117,27 @@ sub analyze {
 	
 	return bless $self, $class;
 }
+
+sub analyze_audio {
+	my $self = shift;
+	my %par = @_;
+	my ($probe_output) = @par{'probe_output'};
+	
+	my @lines = split (/\n/, $probe_output);
+	
+	my $nr;
+	for ( my $i=0; $i < @lines; ++$i ) {
+		if ( $lines[$i] =~ /audio\s+track:\s+-a\s+(\d+).*?-n\s+([x0-9]+)/ ) {
+			$nr = $1;
+			$self->audio_tracks->[$nr]->{tc_option_n} = $2;
+			++$i;
+			$lines[$i] =~ /bitrate\s*=(\d+)/;
+			$self->audio_tracks->[$nr]->{bitrate} = $1;
+		}
+	}
+	
+	1;
+}
+
 
 1;

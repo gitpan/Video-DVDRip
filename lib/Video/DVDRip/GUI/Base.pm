@@ -1,4 +1,4 @@
-# $Id: Base.pm,v 1.11 2002/01/03 17:40:00 joern Exp $
+# $Id: Base.pm,v 1.13 2002/02/08 13:00:23 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -232,20 +232,61 @@ sub create_dialog {
 		my $hbox = Gtk::HBox->new;
 		$hbox->show;
 		$hbox->pack_start($label, 0, 1, 0);
-		my $entry;
-		$entry = Gtk::Entry->new;
-		$entry->set_visibility (0) if $field->{type} eq 'password'; 
-		$entry->set_text ($field->{value});
-		$entry->set_usize(300,undef);
-		$entry->show;
-		if ( $field->{onchange} ) {
-			$entry->signal_connect (
-				"changed", $field->{onchange}
-			);
-		}
-		push @widgets, $entry;
 		$table->attach_defaults ($hbox, 0, 1, $i, $i+1);
-		$table->attach_defaults ($entry, 1, 2, $i, $i+1);
+		
+		if ( $field->{readonly} and $field->{type} eq 'switch' ) {
+			$label = Gtk::Label->new ( $field->{value} ? 'Yes' : 'No' );
+			$label->show;
+			$table->attach_defaults ($label, 1, 2, $i, $i+1);
+
+		} elsif ( $field->{readonly} ) {
+			$label = Gtk::Label->new ( $field->{value} );
+			$label->show;
+			$table->attach_defaults ($label, 1, 2, $i, $i+1);
+		
+		} elsif ( $field->{type} eq 'switch' ) {
+			$hbox = Gtk::HBox->new;
+			$hbox->show;
+			my $radio_yes = Gtk::RadioButton->new ("Yes");
+			$radio_yes->show;
+			$hbox->pack_start($radio_yes, 0, 1, 0);
+			my $radio_no = Gtk::RadioButton->new ("No", $radio_yes);
+			$radio_no->show;
+			$hbox->pack_start($radio_no, 0, 1, 0);
+
+			$table->attach_defaults ($hbox, 1, 2, $i, $i+1);
+
+			if ( $field->{onchange} ) {
+				my $cb = $field->{onchange};
+				$radio_yes->signal_connect (
+					"clicked", sub { &$cb(1) }
+				);
+				$radio_no->signal_connect (
+					"clicked", sub { &$cb(0) }
+				);
+			}
+			
+			if ( $field->{value} ) {
+				$radio_yes->set_active(1);
+			} else {
+				$radio_no->set_active(1);
+			}
+			
+		} else {
+			my $entry;
+			$entry = Gtk::Entry->new;
+			$entry->set_visibility (0) if $field->{type} eq 'password'; 
+			$entry->set_text ($field->{value});
+			$entry->set_usize(($field->{width}||300),undef);
+			$entry->show;
+			if ( $field->{onchange} ) {
+				$entry->signal_connect (
+					"changed", $field->{onchange}
+				);
+			}
+			push @widgets, $entry;
+			$table->attach_defaults ($entry, 1, 2, $i, $i+1);
+		}
 		++$i;
 	}
 

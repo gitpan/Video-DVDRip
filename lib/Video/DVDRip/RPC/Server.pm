@@ -1,4 +1,4 @@
-# $Id: Server.pm,v 1.1 2002/01/19 11:05:37 joern Exp $
+# $Id: Server.pm,v 1.10 2002/02/17 09:34:42 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -11,39 +11,66 @@ package Video::DVDRip::RPC::Server;
 
 use base Video::DVDRip::Base;
 
+use Video::DVDRip::RPC::Message;
+
 use Carp;
 use strict;
-use Storable;
-use Socket qw(inet_ntoa);
+use Symbol;
+use Socket;
 
-use POE qw( Wheel::SocketFactory  Wheel::ReadWrite
-            Filter::Line          Driver::SysRW );
+use Event;
+use constant NICE => -1;
 
-my $CONNECTION_ID;
+$Event::DIED = sub {
+	Event::verbose_exception_handler(@_);
+	Event::unloop_all();
+};
 
-sub port		{ shift->{port}				}
-sub set_port		{ shift->{port}			= $_[1] }
+sub port			{ shift->{port}				}
+sub set_port			{ shift->{port}			= $_[1] }
 
-sub oid			{ shift->{oid}				}
-sub set_oid		{ shift->{oid}			= $_[1] }
+sub name			{ shift->{name}				}
+sub set_name			{ shift->{name}			= $_[1] }
 
-sub classes		{ shift->{classes}			}
-sub set_classes		{ shift->{classes}		= $_[1] }
+sub classes			{ shift->{classes}			}
+sub set_classes			{ shift->{classes}		= $_[1] }
 
-sub loaded_classes	{ shift->{loaded_classes}		}
-sub set_loaded_classes	{ shift->{loaded_classes}	= $_[1] }
+sub loaded_classes		{ shift->{loaded_classes}		}
+sub set_loaded_classes		{ shift->{loaded_classes}	= $_[1] }
+
+sub clients_connected		{ shift->{clients_connected}		}
+sub set_clients_connected	{ shift->{clients_connected}	= $_[1] }
+
+sub log_clients_connected	{ shift->{log_clients_connected}	}
+sub set_log_clients_connected	{ shift->{log_clients_connected}= $_[1] }
+
+sub logging_clients		{ shift->{logging_clients}		}
+sub set_logging_clients		{ shift->{logging_clients}	= $_[1] }
+
+sub log_level			{ shift->{log_level}			}
+sub set_log_level		{ shift->{log_level} 		= $_[1]	}
+
+my $INSTANCE;
+sub instance { $INSTANCE }
 
 sub new {
 	my $class = shift;
 	my %par = @_;
-	my ($port, $classes) = @par{'port','classes'};
+	my  ($port, $classes, $name) =
+	@par{'port','classes','name'};
 	
 	my $self = bless {}, $class;
 
 	$self->set_port ($port);
-	$self->set_oid (0);
+	$self->set_name ($name);
 	$self->set_classes ($classes);
 	$self->set_loaded_classes ({});
+	$self->set_logging_clients ({});
+	$self->set_clients_connected (0);
+	
+	$INSTANCE = $self;
+
+	$self->set_logger ($self);
 
 	return $self;
 }
@@ -51,155 +78,256 @@ sub new {
 sub start_server {
 	my $self = shift;
 
-	POE::Session->create (
-		object_states => [
-			$self => [ '_start', '_stop',
-				   'accept_new_client', 'accept_failed' ]
-		],
+	$self->log ($self->name." started");
+
+	# setup rpc listener
+	my $proto = getprotobyname('tcp');
+	my $sock  = gensym();
+	my $port  = $self->port;
+	
+	socket($sock, PF_INET, SOCK_STREAM, $proto)
+		or die "socket: $!";
+	setsockopt($sock, SOL_SOCKET, SO_REUSEADDR, pack('l', 1))
+        	or die "setsockopt: $!";
+	bind($sock, sockaddr_in($port, INADDR_ANY))
+		or die "bind: $!";
+	listen($sock, SOMAXCONN);
+
+	Event->io (
+		fd   => $sock,
+		poll => 'r',
+		nice => NICE,
+		cb   => [ $self, "accept_new_client" ],
+		desc => "rpc listener port $port"
 	);
 
-	$poe_kernel->run();
-	
-	1;
-}
+	$self->log ("Started rpc listener on TCP port ".$self->port);
 
-sub _start {
-	my $self = $_[OBJECT];
+	# setup log listener
+	$proto = getprotobyname('tcp');
+	$sock  = gensym();
+	$port  = $self->port + 10;
 
-	$_[HEAP]->{listener} = POE::Wheel::SocketFactory->new (
-		BindPort     => $self->port,
-		Reuse        => 'yes',
-		SuccessState => "accept_new_client",
-		FailureState => "accept_failed",
+	socket($sock, PF_INET, SOCK_STREAM, $proto)
+		or die "socket: $!";
+	setsockopt($sock, SOL_SOCKET, SO_REUSEADDR, pack('l', 1))
+        	or die "setsockopt: $!";
+	bind($sock, sockaddr_in($port, INADDR_ANY))
+		or die "bind: $!";
+	listen($sock, SOMAXCONN);
+
+	Event->io (
+		fd   => $sock,
+		poll => 'r',
+		nice => NICE,
+		cb   => [ $self, "accept_new_log_client" ],
+		desc => "log listener port $port"
 	);
-	
-	$self->log ("Master daemon started listening on port ".$self->port);
-	
-	1;
-}
 
-sub _stop {
-	my $self = $_[OBJECT];
+	$self->log ("Started log listener on TCP port $port");
 
-	$self->log ("Master daemon stopped");
-	
+	Event::loop();
+
+	$self->log ("Server stopped");
+
 	1;
 }
 
 sub accept_new_client {
-	my $self = $_[OBJECT];
-	my ($socket, $peeraddr, $peerport) = @_[ARG0 .. ARG2];
+	my $self = shift;
+	my ($event) = @_;
+	
+	my $sock = gensym;
+	my $paddr = accept $sock, $event->w->fd or die "accept: $!";
+	my ($port, $ip) = sockaddr_in($paddr);
 
-	$peeraddr = inet_ntoa($peeraddr);
+	$ip = inet_ntoa($ip);
 
-	POE::Session->create (
-		object_states => [
-			$self => {
-				_start       => 'client_start',
-				_stop	     => 'client_done',
-				client_error => 'client_error',
-				client_input => 'client_input',
-			}
-		],
-		args => [ $socket, $peeraddr, $peerport ],
+	# switch off buffering
+	my $old_fd = select $sock;
+	$| = 1;
+	select $old_fd;
+
+	Video::DVDRip::RPC::Server::Client->new (
+		ip     => $ip,
+		port   => $port,
+		sock   => $sock,
+		server => $self,
 	);
 
+	$self->set_clients_connected ( 1 + $self->clients_connected );
+
 	1;
 }
 
-sub accept_failed {
-	my $self = $_[OBJECT];
-	my ($function, $error) = @_[ARG0, ARG2];
-
-	delete $_[HEAP]->{listener};
-
-	$self->log ("Call to $function() failed: $error");
+sub accept_new_log_client {
+	my $self = shift;
+	my ($event) = @_;
 	
+	my $sock = gensym;
+	my $paddr = accept $sock, $event->w->fd or die "accept: $!";
+	my ($port, $ip) = sockaddr_in($paddr);
+
+	$ip = inet_ntoa($ip);
+
+	# switch off buffering
+	my $old_fd = select $sock;
+	$| = 1;
+	select $old_fd;
+
+	my $log_client = Video::DVDRip::RPC::Server::LogClient->new (
+		ip     => $ip,
+		port   => $port,
+		sock   => $sock,
+		server => $self,
+	);
+
+	$self->set_log_clients_connected ( 1 + $self->log_clients_connected );
+	$self->logging_clients->{$log_client->cid} = $log_client;
+
 	1;
 }
 
-sub client_start {
-	my $self = $_[OBJECT];
-	my ($heap, $socket) = @_[HEAP, ARG0];
+sub load_class {
+	my $self = shift;
+	my %par = @_;
+	my ($class) = @par{'class'};
 
-	$heap->{readwrite} = POE::Wheel::ReadWrite->new (
-		Handle     => $socket,
-		Driver     => POE::Driver::SysRW->new(),
-		Filter     => POE::Filter::Line->new(),
-		InputState => 'client_input',
-		ErrorState => 'client_error',
+	my $client = Video::DVDRip::RPC::Server::Client->new (
+		server => $self,
 	);
 	
-	$heap->{peername} = join ':', @_[ARG1, ARG2];
-	$heap->{id} = "cid=".++$CONNECTION_ID;
-
-	$self->log (2, "Got connection from $heap->{peername}. Connection ID is $heap->{id}");
-
-	1;
-}
-
-sub client_done {
-	my $self = $_[OBJECT];
-	my $heap = $_[HEAP];
-
-	delete $_[HEAP]->{readwrite};
-
-	$self->log(2, "Client $heap->{id} disconnected from ".$_[HEAP]->{peername});
+	$client->load_class ( class => $class );
 	
 	1;
 }
 
-sub client_error {
-	my $self = $_[OBJECT];
-	my $heap = $_[HEAP];
-
-	my ($function, $error) = @_[ARG0, ARG2];
-
-	delete $_[HEAP]->{readwrite};
+sub log {
+	my $self = shift;
 	
-	$self->log ("$heap->{id}: Call to $function() failed: $error") if $error;
-	
+	my ($level, $msg);
+	if ( @_ == 2 ) {
+		($level, $msg) = @_;
+	} else {
+		($msg) = @_;
+		$level = 1;
+	}
+
+	return if $level > $self->log_level;
+
+	# log this to STDERR
+	my $line = localtime(time)." $msg\n";
+	print STDERR $line;
+
+	# then push this information to our logging clients
+	foreach my $log_client ( values %{$self->logging_clients} ) {
+		$log_client->print ($line);
+	}
+
 	1;
 }
 
-sub client_input {
-	my $self = $_[OBJECT];
-	my $request = $_[ARG0];
-	my $heap = $_[HEAP];
+package Video::DVDRip::RPC::Server::Client;
 
-	# Storable data is compressed into one line. First unpack this.
-	$request =~ s/\\n/\n/g;
-	$request =~ s/\\\\/\\/g;
-	$request = Storable::thaw($request);
+@Video::DVDRip::RPC::Server::Client::ISA = qw ( Video::DVDRip::Base );
 
-	#-------------------------------------------------------------
-	# 1. $request = {
-	#	cmd	  => 'new',
-	#	method    => 'Foo::new',
-	#	params	  => [ ... ]
-	#    };
-	#
-	#    => returns object identifier to network client
-	#    => stores object reference accessable through
-	#	the object identifier in POE Session
-	#
-	# 2. $request => {
-	#	cmd	  => 'exec',
-	#	oid	  => Object Identifier returned by 1st step,
-	#	method    => 'bra',
-	#	params    => [ ... ]
-	#    };
-	#
-	#    => returns return value of method call to network client
-	#
-	# 3. $request => {
-	#	cmd	  => 'class_info'
-	#	class	  => name of class whose methods should
-	#		     returned
-	#    };
-	#
-	#    => returns list of allowed methods
-	#-------------------------------------------------------------
+use Carp;
+use Socket;
+
+use constant NICE => -1;
+
+my $CONNECTION_ID;
+
+sub cid			{ shift->{cid}				}
+sub ip			{ shift->{ip}				}
+sub port		{ shift->{port}				}
+sub sock		{ shift->{sock}				}
+sub server		{ shift->{server}			}
+sub watcher		{ shift->{watcher}			}
+
+sub classes		{ shift->{server}->classes		}
+sub loaded_classes	{ shift->{server}->loaded_classes	}
+sub objects		{ shift->{objects}			}
+
+sub set_watcher		{ shift->{watcher}		= $_[1]	}
+
+sub new {
+	my $class = shift;
+	my %par = @_;
+	my  ($ip, $port, $sock, $server) =
+	@par{'ip','port','sock','server'};
+
+	my $cid = ++$CONNECTION_ID;
+	
+	my $self = bless {
+		cid     => $cid,
+		ip      => $ip,
+		port    => $port,
+		sock    => $sock,
+		server  => $server,
+		objects => {},
+		watcher => undef,
+	}, $class;
+
+	if ( $sock ) {
+
+		$self->log (2, "Got connection from $ip:$port. Connection ID is $cid");
+	
+		$self->{watcher} = Event->io (
+			fd   => $sock,
+			poll => 'r',
+			nice => NICE,
+			cb   => [ $self, "input" ],
+			desc => "rpc client cid=$cid",
+		);
+	}
+	
+	return $self;
+}
+
+sub disconnect {
+	my $self = shift;
+
+	close $self->sock;
+	$self->watcher->cancel;
+	$self->set_watcher(undef);
+
+	$self->server->set_clients_connected ( $self->server->clients_connected - 1 );
+
+	$self->log(2, "Client disconnected");
+
+	1;
+}
+
+sub log {
+	my $self = shift;
+
+	my ($level, $msg);
+	if ( @_ == 2 ) {
+		($level, $msg) = @_;
+	} else {
+		($msg) = @_;
+		$level = 1;
+	}
+
+	$msg = "cid=".$self->cid.": $msg";
+	
+	return $self->server->log ($level, $msg);
+}
+
+sub input {
+	my $self = shift;
+
+	my $sock = $self->sock;
+	return $self->disconnect if eof($sock);
+
+	my $request = <$sock>;	
+	
+	return $self->disconnect if $request eq "DISCONNECT\n";
+
+	$self->log (4, "Length of input request = ".length($request));
+
+	$request = Video::DVDRip::RPC::Message->unpack ($request);
 
 	my $rc;
 	my $cmd = $request->{cmd};
@@ -207,34 +335,36 @@ sub client_input {
 	if ( $cmd eq 'new' ) {
 		$rc = $self->create_new_object (
 			request => $request,
-			heap    => $_[HEAP]
 		);
 
 	} elsif ( $cmd eq 'exec' ) {
 		$rc = $self->execute_object_method (
 			request => $request,
-			heap    => $_[HEAP]
 		);
 
 	} elsif ( $cmd eq 'class_info' ) {
 		$rc = $self->get_class_info (
 			request => $request,
-			heap    => $_[HEAP]
+		);
+
+	} elsif ( $cmd eq 'destroy' ) {
+		$rc = $self->destroy_object (
+			request => $request,
 		);
 
 	} else {
-		$self->log ("$heap->{id}: Unknown request command '$cmd'");
+		$self->log ("Unknown request command '$cmd'");
 		$rc = {
 			ok  => 0,
 			msg => "Unknown request command '$cmd'",
 		};
 	}
 
-	$rc = Storable::freeze ( $rc );
-	$rc =~ s/\\/\\\\/g;
-	$rc =~ s/\n/\\n/g;
-	
-	$_[HEAP]->{readwrite}->put( $rc );
+	$rc = Video::DVDRip::RPC::Message->pack ($rc);
+
+	$self->log (4, "Length of request answer = ".length($rc));
+
+	print $sock $rc,"\n";
 
 	1;
 }
@@ -242,18 +372,18 @@ sub client_input {
 sub create_new_object {
 	my $self = shift;
 	my %par = @_;
-	my ($request, $heap) = @par{'request','heap'};
+	my ($request) = @par{'request'};
 
 	# Let's create a new object
 	my $class_method = $request->{method};
 	my $class = $class_method;
 	$class =~ s/::[^:]+$//;
-	$class_method =~ s/^[^:]+:://;
+	$class_method =~ s/^.*:://;
 
 	# check if access to this class/method is allowed
 	if ( not defined $self->classes->{$class}->{$class_method} or
 	     $self->classes->{$class}->{$class_method} ne '_constructor' ) {
-		$self->log ("$heap->{id}: Illegal constructor access to $class->$class_method");
+		$self->log ("Illegal constructor access to $class->$class_method");
 		return {
 			ok  => 0,
 			msg => "Illegal constructor access to $class->$class_method"
@@ -262,7 +392,10 @@ sub create_new_object {
 	}
 	
 	# load the class if not done yet
-	$self->load_class ( class => $class, heap => $heap );
+	$self->load_class ( class => $class );
+
+	# resolve object params
+	$self->resolve_object_params ( params => $request->{params} );
 
 	# ok, the class is there, let's execute the method
 	my $object = eval {
@@ -271,7 +404,7 @@ sub create_new_object {
 
 	# report error
 	if ( $@ ) {
-		$self->log ("$heap->{id}: Error: can't create object ".
+		$self->log ("Error: can't create object ".
 			    "($class->$class_method): $@");
 		return {
 			ok  => 0,
@@ -280,15 +413,15 @@ sub create_new_object {
 	}
 
 	# store object
-	my $oid = $self->set_oid($self->oid+1);
+	my $oid = "$object";
 
-	$heap->{objects}->{$oid} = {
+	$self->objects->{$oid} = {
 		object => $object,
 		class  => $class
 	};
 
 	# log and return
-	$self->log (3, "$heap->{id}: Created new object ".
+	$self->log (3, "Created new object ".
 		    "($class->$class_method) ".
 		    "with oid=$oid");
 	return {
@@ -300,7 +433,7 @@ sub create_new_object {
 sub load_class {
 	my $self = shift;
 	my %par = @_;
-	my ($class, $heap) = @par{'class','heap'};
+	my ($class) = @par{'class'};
 	
 	my $mtime;
 	my $load_class_info = $self->loaded_classes->{$class};
@@ -326,13 +459,13 @@ sub load_class {
 			$load_class_info->{filename} = $filename;
 		}
 	
-		$self->log (3, "$heap->{id}: Class '$class' ($load_class_info->{filename}) changed on disk. Reloading...")
+		$self->log (3, "Class '$class' ($load_class_info->{filename}) changed on disk. Reloading...")
 			if $mtime > $load_class_info->{mtime};
 
 		do $load_class_info->{filename};
 
 		if ( $@ ) {
-			$self->log ("$heap->{id}: Can't load class '$class': $@");
+			$self->log ("Can't load class '$class': $@");
 			$load_class_info->{mtime} = 0;
 
 			return {
@@ -341,12 +474,12 @@ sub load_class {
 			};
 
 		} else {
-			$self->log (3, "$heap->{id}: Class '$class' successfully loaded");
+			$self->log (3, "Class '$class' successfully loaded");
 			$load_class_info->{mtime} = time;
 		}
 	}
 	
-	$self->log (4, "$heap->{id}: filename=".$load_class_info->{filename}.
+	$self->log (4, "filename=".$load_class_info->{filename}.
 		    ", mtime=".$load_class_info->{mtime} );
 
 	$self->loaded_classes->{$class} ||= $load_class_info;
@@ -357,16 +490,16 @@ sub load_class {
 sub execute_object_method {
 	my $self = shift;
 	my %par = @_;
-	my ($request, $heap) = @par{'request','heap'};
+	my ($request) = @par{'request'};
 
 	# Method call of an existent object
 	my $oid = $request->{oid};
-	my $object_entry = $heap->{objects}->{$oid};
+	my $object_entry = $self->objects->{$oid};
 	my $method = $request->{method};
 
 	if ( not defined $object_entry ) {
 		# object does not exists
-		$self->log ("$heap->{id}: Illegal access to unknown object with oid=$oid");
+		$self->log ("Illegal access to unknown object with oid=$oid");
 		return {
 			ok  => 0,
 			msg => "Illegal access to unknown object with oid=$oid"
@@ -377,7 +510,7 @@ sub execute_object_method {
 	my $class = $object_entry->{class};
 	if ( not defined $self->classes->{$class}->{$method} ) {
 		# illegal access to this method
-		$self->log ("$heap->{id}: Illegal access to $class->$method");
+		$self->log ("Illegal access to $class->$method");
 		return {
 			ok  => 0,
 			msg => "Illegal access to $class->$method"
@@ -386,7 +519,10 @@ sub execute_object_method {
 	}
 	
 	# (re)load the class if not done yet
-	$self->load_class ( class => $class, heap => $heap );
+	$self->load_class ( class => $class );
+
+	# resolve object params
+	$self->resolve_object_params ( params => $request->{params} );
 
 	# ok, try executing the method
 	my @rc = eval {
@@ -395,7 +531,7 @@ sub execute_object_method {
 
 	# report error
 	if ( $@ ) {
-		$self->log ("$heap->{id}: Error: can't call '$method' of object ".
+		$self->log ("Error: can't call '$method' of object ".
 			    "with oid=$oid: $@");
 		return {
 			ok  => 0,
@@ -404,7 +540,7 @@ sub execute_object_method {
 	}
 	
 	# log
-	$self->log (4, "$heap->{id}: Called method '$method' of object ".
+	$self->log (4, "Called method '$method' of object ".
 		       "with oid=$oid");
 
 	# check if objects are returned by this method
@@ -412,38 +548,49 @@ sub execute_object_method {
 	# (if not already done yet)
 	my $key;
 	foreach my $rc ( @rc ) {
-		if ( eval { $rc->isa ('UNIVERSAL') } ) {
+		if ( ref ($rc) and ref ($rc) !~ /ARRAY|HASH|SCALAR/ ) {
 			# returns a single object
-			$self->log (4, "$heap->{id}: Method returns object: $rc");
+			$self->log (4, "Method returns object: $rc");
 			$key = "$rc";
-			if ( not defined $heap->{objects}->{$key} ) {
-				$heap->{objects}->{$key}->{object} = $rc;
-				$heap->{objects}->{$key}->{class}  = ref $rc;
+			if ( not defined $self->objects->{$key} ) {
+				$self->objects->{$key}->{object} = $rc;
+				$self->objects->{$key}->{class}  = ref $rc;
+				$self->log (5, "Object $rc registered ".(ref $rc));
 			}
 			$rc = $key;
 
 		} elsif ( ref $rc eq 'ARRAY' ) {
 			# possibly returns a list of objects
-			foreach my $val ( @{$rc} ) {
-				if ( eval { $val->isa ('UNIVERSAL') } ) {
-					$self->log (4, "$heap->{id}: Method returns object lref: $val");
+			# make a copy, otherwise the original object references
+			# will be overwritten
+			my @val = @{$rc};
+			$rc = \@val;
+			foreach my $val ( @val ) {
+				if ( ref ($val) and ref ($val) !~ /ARRAY|HASH|SCALAR/ ) {
+					$self->log (4, "Method returns object lref: $val");
 					$key = "$val";
-					if ( not defined $heap->{objects}->{$key} ) {
-						$heap->{objects}->{$key}->{object} = $val;
-						$heap->{objects}->{$key}->{class}  = ref $val;
+					if ( not defined $self->objects->{$key} ) {
+						$self->objects->{$key}->{object} = $val;
+						$self->objects->{$key}->{class}  = ref $val;
+						$self->log (5, "Object $val registered ".(ref $val));
 					}
 					$val = $key;
 				}
 			}
 		} elsif ( ref $rc eq 'HASH' ) {
 			# possibly returns a hash of objects
-			foreach my $val ( values %{$rc} ) {
-				if ( eval { $val->isa ('UNIVERSAL') } ) {
-					$self->log (4, "$heap->{id}: Method returns object href: $val");
+			# make a copy, otherwise the original object references
+			# will be overwritten
+			my %val = %{$rc};
+			$rc = \%val;
+			foreach my $val ( values %val ) {
+				if ( ref ($val) and ref ($val) !~ /ARRAY|HASH|SCALAR/ ) {
+					$self->log (4, "Method returns object href: $val");
 					$key = "$val";
-					if ( not defined $heap->{objects}->{$key} ) {
-						$heap->{objects}->{$key}->{object} = $val;
-						$heap->{objects}->{$key}->{class}  = ref $val;
+					if ( not defined $self->objects->{$key} ) {
+						$self->objects->{$key}->{object} = $val;
+						$self->objects->{$key}->{class}  = ref $val;
+						$self->log (5, "Object $val registered ".(ref $val));
 					}
 					$val = $key;
 				}
@@ -458,27 +605,173 @@ sub execute_object_method {
 	};
 }
 
+sub destroy_object {
+	my $self = shift;
+	my %par = @_;
+	my ($request) = @par{'request'};
+
+	# Destroy existant object
+	my $oid = $request->{oid};
+	my $object_entry = $self->objects->{$oid};
+
+	if ( not defined $object_entry ) {
+		# object does not exists
+		$self->log ("Illegal access to unknown object with oid=$oid");
+		return {
+			ok  => 0,
+			msg => "Illegal access to unknown object with oid=$oid"
+		};
+
+	}
+
+	# simply delete cache entry: this will implicitely call
+	# a destructor, if there is one
+	delete $self->objects->{$oid};
+	
+	print "DESTROY $oid\n";
+
+	return {
+		ok => 1
+	};
+}
+
 sub get_class_info {
 	my $self = shift;
 	my %par = @_;
-	my ($request, $heap) = @par{'request','heap'};
+	my ($request) = @par{'request'};
 
 	my $class = $request->{class};
 	
 	if ( not defined $self->classes->{$class} ) {
-		$self->log ("$heap->{id}: Unknown class '$class'");
+		$self->log ("Unknown class '$class'");
 		return {
 			ok  => 0,
 			msg => "Unknown class '$class'"
 		};
 	}
 	
-	$self->log (4, "$heap->{id}: Class info for '$class' requested");
+	$self->log (4, "Class info for '$class' requested");
 
 	return {
 		ok           => 1,
 		methods      => $self->classes->{$class},
 	};
+}
+
+sub resolve_object_params {
+	my $self = shift;
+	my %par = @_;
+	my ($params) = @par{'params'};
+	
+	my $key;
+	foreach my $par ( @{$params} ) {
+		if ( defined $self->classes->{ref($par)} ) {
+			$key = ${$par};
+			$key = "$key";
+			croak "unknown object with key '$key'"
+				if not defined $self->objects->{$key};
+			$par = $self->objects->{$key}->{object};
+		}
+	}
+	
+	1;
+}
+
+
+package Video::DVDRip::RPC::Server::LogClient;
+
+use Carp;
+use Socket;
+
+use constant NICE => -1;
+
+my $LOG_CONNECTION_ID;
+
+sub cid			{ shift->{cid}				}
+sub ip			{ shift->{ip}				}
+sub port		{ shift->{port}				}
+sub sock		{ shift->{sock}				}
+sub server		{ shift->{server}			}
+sub watcher		{ shift->{watcher}			}
+
+sub new {
+	my $class = shift;
+	my %par = @_;
+	my  ($ip, $port, $sock, $server) =
+	@par{'ip','port','sock','server'};
+
+	my $cid = ++$LOG_CONNECTION_ID;
+	
+	my $self = bless {
+		cid     => $cid,
+		ip      => $ip,
+		port    => $port,
+		sock    => $sock,
+		server  => $server,
+		watcher => undef,
+	}, $class;
+
+	$self->{watcher} = Event->io (
+		fd => $sock,
+		poll => 'r',
+		nice => NICE,
+		cb => [ $self, 'input' ],
+		desc => "log reader $cid"
+	);
+
+	$self->log (2, "Got logger connection from $ip:$port. Connection ID is $cid");
+	
+	return $self;
+}
+
+sub disconnect {
+	my $self = shift;
+
+	$self->watcher->cancel;
+	close $self->sock;
+
+	$self->server->set_log_clients_connected ( $self->server->log_clients_connected - 1 );
+	delete $self->server->logging_clients->{$self->cid};
+
+	$self->log(2, "Log client disconnected");
+
+	1;
+}
+
+sub log {
+	my $self = shift;
+
+	my ($level, $msg);
+	if ( @_ == 2 ) {
+		($level, $msg) = @_;
+	} else {
+		($msg) = @_;
+		$level = 1;
+	}
+
+	$msg = "lcid=".$self->cid.": $msg";
+	
+	return $self->server->log ($level, $msg);
+}
+
+sub input {
+	my $self = shift;
+
+	my $sock = $self->sock;
+	$self->disconnect if eof($self->sock);
+	<$sock>;
+	
+	1;
+}
+
+sub print {
+	my $self = shift;
+	my ($msg) = @_;
+
+	my $sock = $self->sock;
+	print $sock $msg;
+	
+	1;
 }
 
 1;

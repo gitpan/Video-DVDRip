@@ -1,8 +1,8 @@
-# $Id: DVDRip.pm,v 1.30 2002/01/19 11:14:47 joern Exp $
+# $Id: DVDRip.pm,v 1.43 2002/03/03 15:08:20 joern Exp $
 
 package Video::DVDRip;
 
-$VERSION = "0.30";
+$VERSION = "0.34";
 
 use Carp;
 use FileHandle;
@@ -37,7 +37,7 @@ sub init {
 	my $fh = FileHandle->new;
 	open ($fh, "transcode -h 2>&1 |") or croak "can't fork transcode -h";
 	my $ver = <$fh>;
-	close $fh or croak "can't execute transcode -h";
+	close $fh;
 
 	$ver =~ m/v(\d+)\.(\d+)\.(\d+)/;
 	
@@ -106,7 +106,12 @@ Gtk+ version 1.2 or higher. I tested dvd::rip with Version Perl Gtk 0.7008.
 
 You can find the Gtk module on CPAN, e.g.:
 
-  http://www.perl.com/CPAN/modules/by-module/Gtk/
+  http://www.perl.org/CPAN/modules/by-module/Gtk/
+
+For cluster mode you need the Event and the Storable module:
+
+  http://www.perl.org/CPAN/modules/by-module/Event/
+  http://www.perl.org/CPAN/modules/by-module/Storable/
 
 B<xine>
 
@@ -119,16 +124,16 @@ mplayer, too, in upcoming versions.
 You can download dvd::rip from any CPAN mirror. You will
 find it in the following directory:
 
-  http://www.perl.com/CPAN/modules/by-authors/id/J/JR/JRED/
+  http://www.perl.org/CPAN/modules/by-authors/id/J/JR/JRED/
 
 I recommend downloading from a mirror, which are listed here
 
-  http://www.perl.com/CPAN/SITES.html
+  http://www.perl.org/CPAN/SITES.html
 
 You'll also find recent information, some screenshots and documentation
-on my homepage:
+on the dvd::rip homepage:
 
-  http://www.netcologne.de/~nc-joernre/
+  http://www.exit1.org/dvdrip/
 
 =head1 INSTALLATION
 
