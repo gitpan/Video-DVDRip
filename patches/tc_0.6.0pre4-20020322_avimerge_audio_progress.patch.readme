@@ -1,5 +1,0 @@
-Apply this patch to tools/avimerge.c of transcode-0.6.0pre4-20020322
-and transcode-0.6.0pre4-20020324:
-
-patch avimerge.c < tc_0.6.0pre4-20020322_avimerge_audio_progress.patch
-

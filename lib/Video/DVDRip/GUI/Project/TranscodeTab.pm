@@ -1,4 +1,4 @@
-# $Id: TranscodeTab.pm,v 1.44 2002/05/26 22:18:27 joern Exp $
+# $Id: TranscodeTab.pm,v 1.45 2002/06/15 16:26:48 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -1679,7 +1679,7 @@ sub view_avi {
 		command_tmpl => $self->config('play_file_command'),
 	);
 
-	system ($command." %");
+	system ($command." &");
 }
 
 sub add_to_cluster {

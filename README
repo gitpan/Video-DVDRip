@@ -29,7 +29,7 @@ II.  NOTE
    
 III. INSTALLATION
 
-   This documentation page covers dvd::rip 0.42.
+   This documentation page covers dvd::rip 0.43.
 
    dvd::rip is a Gtk+ based program written in Perl, using the video
    processing tool transcode for the internals. So you first have to
@@ -110,7 +110,7 @@ Installing / Updating dvd::rip itself
    generate the Makefile and execute make:
 
      # as a normal user
-     tar xfz Video-DVDRip-0.42.tar.gz
+     tar xfz Video-DVDRip-0.43.tar.gz
      cd Video-DVDRip-x.xx
      perl Makefile.PL
      make
@@ -183,13 +183,13 @@ fping and pstree
 
 URL References
 
-   1. file://localhost/dvdrip/doc/install.cipp
-   2. file://localhost/dvdrip/doc/install.cipp?print=1
+   1. http://www.exit1.org/dvdrip/doc/install.cipp
+   2. http://www.exit1.org/dvdrip/doc/install.cipp?print=1
    3. http://www.theorie.physik.uni-goettingen.de/~ostreich/transcode/
    4. http://www.imagemagick.org/
    5. http://www.perl.org/CPAN/modules/by-module/Gtk/
    6. http://xine.sourceforge.net/
-   7. file://localhost/dvdrip/download.cipp
+   7. http://www.exit1.org/dvdrip/download.cipp
    8. http://www.perl.org/CPAN/modules/by-module/Storable/
    9. http://www.perl.org/CPAN/modules/by-module/Event/
   10. http://www.fping.com/
@@ -201,7 +201,7 @@ IV.  DOWNLOAD
 
    Local download of the latest stable release:
 
-     [3]Video-DVDRip-0.42.tar.gz
+     [3]Video-DVDRip-0.43.tar.gz
 
    CPAN download directory:
 
@@ -254,14 +254,14 @@ Anonymous CVS access
 
 URL References
 
-   1. file://localhost/dvdrip/download.cipp
-   2. file://localhost/dvdrip/download.cipp?print=1
-   3. file://localhost/dvdrip/dist/Video-DVDRip-0.42.tar.gz
+   1. http://www.exit1.org/dvdrip/download.cipp
+   2. http://www.exit1.org/dvdrip/download.cipp?print=1
+   3. http://www.exit1.org/dvdrip/dist/Video-DVDRip-0.43.tar.gz
    4. http://www.perl.org/CPAN/modules/by-authors/id/J/JR/JRED/
    5. http://www.perl.org/CPAN/SITES.html
-   6. file://localhost/dvdrip/dist/
-   7. file://localhost/dvdrip/dist/pre/
-   8. file://localhost/dvdrip/contrib/
+   6. http://www.exit1.org/dvdrip/dist/
+   7. http://www.exit1.org/dvdrip/dist/pre/
+   8. http://www.exit1.org/dvdrip/contrib/
    9. http://marillat.free.fr/
 
 V.   MAILING LIST
@@ -287,8 +287,8 @@ V.   MAILING LIST
 
 URL References
 
-   1. file://localhost/dvdrip/list.cipp
-   2. file://localhost/dvdrip/list.cipp?print=1
+   1. http://www.exit1.org/dvdrip/list.cipp
+   2. http://www.exit1.org/dvdrip/list.cipp?print=1
    3. http://lists.exit1.org/mailman/listinfo/dvdrip-users
    4. http://lists.exit1.org/pipermail/dvdrip-users/
    5. http://www.theorie.physik.uni-goettingen.de/mailman/listinfo/transcode-users
@@ -321,25 +321,26 @@ VI.  COPYRIGHT / CONTACT
 
 URL References
 
-   1. file://localhost/dvdrip/copyright.cipp
-   2. file://localhost/dvdrip/copyright.cipp?print=1
+   1. http://www.exit1.org/dvdrip/copyright.cipp
+   2. http://www.exit1.org/dvdrip/copyright.cipp?print=1
    3. mailto:joern@zyn.de?subject=dvd::rip
    4. http://lists.exit1.org/mailman/listinfo/dvdrip-users
 
 VII. CHANGES
-   $Id: Changes,v 1.86 2002/06/09 10:01:10 joern Exp $
+   $Id: Changes,v 1.87 2002/06/15 16:34:11 joern Exp $
 
    Revision history for dvd::rip
 
-   0.42 Sun Jun 09 2002, joern
+   0.43 Sat Jun 15 2002, joern
 	Bugfixes:
-	- Clip&Zoom: the autoadjust HQ presets didn't work for
-	  NTSC movies, and also the new "Calc Width/Height" feature
-	  which uses interally the HQ resizing algorithm. Thanks
-	  to Torsten Howard for his bug report
-	- also some of the old static presets didn't work with NTSC.
-	  I decided to remove them completely, because they're not
-	  needed anymore since we have the auto-adjusting presets
-	  and the "Calc Width/Height" feature. They were confusing
-	  and made the preset list unnecessary long.
+	- transcode-0.6.0pre6-0.20020608 changed the frame grabbing
+	  output filename, so dvd::rip's frame grabbing didn't work
+	  with this and newer releases. dvd::rip now uses a wildcard
+	  for the filename, so it should work with older and actual
+	  releases as well. Thanks for the numerous reports of this
+	  "bug" (too many to list them all here ;)
+	- fixed a typo in the AVI file viewing command, which prevents
+	  backgrounding of the process.
+	- added the prerequisite for Gtk::Gdk::Pixbuf to Makefile.PL,
+	  for automatic dependency resolution with CPAN or CPANPLUS.
 

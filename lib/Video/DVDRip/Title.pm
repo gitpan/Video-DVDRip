@@ -1,4 +1,4 @@
-# $Id: Title.pm,v 1.78 2002/06/09 10:00:44 joern Exp $
+# $Id: Title.pm,v 1.79 2002/06/15 16:26:30 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -1816,10 +1816,10 @@ sub get_convert_snapshot_command {
 	return	"mkdir -m 0775 -p $dirname; ".
 		"convert".
 		" -size ".$self->width."x".$self->height.
-		" $tmp_dir/snapshot00000.ppm $filename;".
+		" $tmp_dir/snapshot*.ppm $filename;".
 		"convert".
 		" -size ".$self->width."x".$self->height.
-		" $tmp_dir/snapshot00000.ppm gray:$raw_filename;".
+		" $tmp_dir/snapshot*.ppm gray:$raw_filename;".
 		" rm -r $tmp_dir";
 
 }
