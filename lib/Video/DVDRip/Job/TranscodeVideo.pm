@@ -1,4 +1,4 @@
-# $Id: TranscodeVideo.pm,v 1.6 2002/10/15 21:16:22 joern Exp $
+# $Id: TranscodeVideo.pm,v 1.6.2.1 2002/11/24 10:07:57 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -127,8 +127,8 @@ sub parse_output {
 		$self->set_progress_max($1);
 		$self->set_progress_start_time(time);
 
-	} elsif ( $line =~ /\[\d{6}-(\d+)\]/ ) {
-		$self->set_progress_cnt($1);
+	} elsif ( $line =~ /\[(\d{6}-)?(\d+)\]/ ) {
+		$self->set_progress_cnt($2);
 	}
 
 	$self->set_operation_successful ( 1 )

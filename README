@@ -124,7 +124,7 @@ III. DOCUMENTATION
 
    Local download of the latest stable release:
 
-     [38]Video-DVDRip-0.48.1.tar.gz
+     [38]Video-DVDRip-0.48.2.tar.gz
 
    CPAN download directory: ([39]list of mirrors)
 
@@ -301,7 +301,7 @@ III. DOCUMENTATION
    generate the Makefile and execute make:
 
      # as a normal user
-     tar xfz Video-DVDRip-0.48.1.tar.gz
+     tar xfz Video-DVDRip-0.48.2.tar.gz
      cd Video-DVDRip-x.xx
      perl Makefile.PL
      make
@@ -355,65 +355,65 @@ URL References
   15. http://www.exit1.org/tmp/install.cipp#require
   16. http://www.exit1.org/tmp/install.cipp#install_dvdrip
   17. http://www.exit1.org/tmp/install.cipp#update_dvdrip
-  18. http://www.exit1.org/tmp/genreadme1041.html#top
+  18. http://www.exit1.org/tmp/genreadme20504.html#top
   19. http://www.exit1.org/tmp/index.cipp
-  20. http://www.exit1.org/tmp/genreadme1041.html#top
-  21. http://www.exit1.org/tmp/genreadme1041.html#top
+  20. http://www.exit1.org/tmp/genreadme20504.html#top
+  21. http://www.exit1.org/tmp/genreadme20504.html#top
   22. http://marillat.free.fr/
-  23. http://www.exit1.org/tmp/genreadme1041.html#top
+  23. http://www.exit1.org/tmp/genreadme20504.html#top
   24. http://www.exit1.org/dvdrip/contrib/suse/
   25. http://www6.informatik.uni-erlangen.de/~rainer/rpms/
-  26. http://www.exit1.org/tmp/genreadme1041.html#top
+  26. http://www.exit1.org/tmp/genreadme20504.html#top
   27. http://plf.zarb.org/
-  28. http://www.exit1.org/tmp/genreadme1041.html#top
+  28. http://www.exit1.org/tmp/genreadme20504.html#top
   29. http://www.exit1.org/dvdrip/contrib/redhat/
-  30. http://www.exit1.org/tmp/genreadme1041.html#top
+  30. http://www.exit1.org/tmp/genreadme20504.html#top
   31. http://messlab.sourceforge.net/
-  32. http://www.exit1.org/tmp/genreadme1041.html#top
+  32. http://www.exit1.org/tmp/genreadme20504.html#top
   33. http://www.gentoo.org/packages/media-video/dvdrip.html
-  34. http://www.exit1.org/tmp/genreadme1041.html#top
+  34. http://www.exit1.org/tmp/genreadme20504.html#top
   35. http://www.exit1.org/tmp/index.cipp
-  36. http://www.exit1.org/tmp/genreadme1041.html#top
-  37. http://www.exit1.org/tmp/genreadme1041.html#top
-  38. http://www.exit1.org/dvdrip/dist/Video-DVDRip-0.48.1.tar.gz
+  36. http://www.exit1.org/tmp/genreadme20504.html#top
+  37. http://www.exit1.org/tmp/genreadme20504.html#top
+  38. http://www.exit1.org/dvdrip/dist/Video-DVDRip-0.48.2.tar.gz
   39. http://www.cpan.org/CPAN/SITES.html
   40. http://www.cpan.org/CPAN/modules/by-authors/id/J/JR/JRED/
   41. http://www.exit1.org/dvdrip/dist/
   42. http://www.exit1.org/dvdrip/dist/pre/
-  43. http://www.exit1.org/tmp/genreadme1041.html#top
-  44. http://www.exit1.org/tmp/genreadme1041.html#top
+  43. http://www.exit1.org/tmp/genreadme20504.html#top
+  44. http://www.exit1.org/tmp/genreadme20504.html#top
   45. http://www.exit1.org/tmp/index.cipp
-  46. http://www.exit1.org/tmp/genreadme1041.html#top
-  47. http://www.exit1.org/tmp/genreadme1041.html#top
-  48. http://www.exit1.org/tmp/genreadme1041.html#top
+  46. http://www.exit1.org/tmp/genreadme20504.html#top
+  47. http://www.exit1.org/tmp/genreadme20504.html#top
+  48. http://www.exit1.org/tmp/genreadme20504.html#top
   49. http://www.theorie.physik.uni-goettingen.de/~ostreich/transcode/
   50. http://www.exit1.org/tmp/install.cipp#binary_download
-  51. http://www.exit1.org/tmp/genreadme1041.html#top
+  51. http://www.exit1.org/tmp/genreadme20504.html#top
   52. http://www.imagemagick.org/
-  53. http://www.exit1.org/tmp/genreadme1041.html#top
+  53. http://www.exit1.org/tmp/genreadme20504.html#top
   54. http://www.bunkus.org/videotools/ogmtools/index.html
-  55. http://www.exit1.org/tmp/genreadme1041.html#top
+  55. http://www.exit1.org/tmp/genreadme20504.html#top
   56. http://subtitleripper.sourceforge.net/
-  57. http://www.exit1.org/tmp/genreadme1041.html#top
+  57. http://www.exit1.org/tmp/genreadme20504.html#top
   58. http://www.perl.org/CPAN/modules/by-module/Gtk/
-  59. http://www.exit1.org/tmp/genreadme1041.html#top
+  59. http://www.exit1.org/tmp/genreadme20504.html#top
   60. http://xine.sourceforge.net/
   61. http://www.mplayerhq.hu/
-  62. http://www.exit1.org/tmp/genreadme1041.html#top
+  62. http://www.exit1.org/tmp/genreadme20504.html#top
   63. http://www.exit1.org/tmp/gui-gui_burn.cipp
   64. http://www.fokus.gmd.de/research/cc/glone/employees/joerg.schilling/private/mkisofs.html
   65. http://www.fokus.gmd.de/research/cc/glone/employees/joerg.schilling/private/cdrecord.html
   66. http://www.vcdimager.org/
   67. http://cdrdao.sourceforge.net/
-  68. http://www.exit1.org/tmp/genreadme1041.html#top
-  69. http://www.exit1.org/tmp/genreadme1041.html#top
+  68. http://www.exit1.org/tmp/genreadme20504.html#top
+  69. http://www.exit1.org/tmp/genreadme20504.html#top
   70. http://www.perl.org/CPAN/modules/by-module/Storable/
   71. http://www.perl.org/CPAN/modules/by-module/Event/
-  72. http://www.exit1.org/tmp/genreadme1041.html#top
+  72. http://www.exit1.org/tmp/genreadme20504.html#top
   73. http://www.fping.com/
-  74. http://www.exit1.org/tmp/genreadme1041.html#top
+  74. http://www.exit1.org/tmp/genreadme20504.html#top
   75. http://www.exit1.org/tmp/install.cipp#source_download
-  76. http://www.exit1.org/tmp/genreadme1041.html#top
+  76. http://www.exit1.org/tmp/genreadme20504.html#top
 
 IV.  
 URL References
@@ -495,36 +495,14 @@ URL References
    6. http://lists.exit1.org/mailman/listinfo/dvdrip-users
 
 VII. CHANGES
-   $Id: Changes,v 1.122.2.1 2002/11/23 13:46:00 joern Exp $
+   $Id: Changes,v 1.122.2.2 2002/11/24 10:08:25 joern Exp $
 
    Revision history for dvd::rip 0.47 and newer. See Changes.0.46
    for older releases.
 
-   0.48.1 Sat 23 Nov 2002, joern
-	Note:
-	- transcode 0.6.2 was released on 22. November. dvd::rip
-	  works with all 0.6 releases, but 0.6.2 is recommended.
-	  dvd::rip disables some features for smaller versions.
-	
-	Features:
-	- Added 64 kbit/s audio bitrate preset entry. Suggested by
-	  Miguel J. Jimenez <cactus_espinado AT yahoo.es>
-	- ffmpeg video codec setting adjusted to the new ffmpeg
-	  interface of transcode 0.6.2. Thanks for the hint to
-	  Stefano <stefano AT symbola.it>
-	- subtitleripper version is now checked, a correspondent
-	  note is printed, if a version smaller than 0.3 is detected.
-	  Arne Driescher build a transcode independent tarball
-	  of this release, which you can get from Sourceforge:
-	  http://sourceforge.net/projects/subtitleripper
-
-	Bugfixes:
-	- Burning tab: label information followed file selection only
-	  on the GUI, but old values were used internally.
-	- IFO file copying didn't work for DVD image projects. Thanks
-	  for the report to Arne Driescher.
-	- thranduil <thranduil AT free.fr> reported that dvd::rip's
-	  vcdimager command works only with long options. I can't
-	  reproduce this, but I switched over to the long options,
-	  just to be sure.
+   0.48.2 Sun 24 Nov 2002, joern
+	Bugfix:
+	- transcode 0.6.2 changed its progress output when transcoding
+	  frames ranges. dvd::rip didn't show a valid progress bar
+	  due to that. Thanks for the report to Florin Andrei.
 
