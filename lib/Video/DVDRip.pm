@@ -1,8 +1,8 @@
-# $Id: DVDRip.pm,v 1.6 2001/11/29 20:51:15 joern Exp $
+# $Id: DVDRip.pm,v 1.8 2001/12/01 15:40:16 joern Exp $
 
 package Video::DVDRip;
 
-$VERSION = "0.20";
+$VERSION = "0.21";
 
 __END__
 
@@ -37,7 +37,7 @@ which can be obtained here:
 
   http://www.theorie.physik.uni-goettingen.de/~ostreich/transcode/
 
-As of this writing, transcode 0.5.0 is the stable release
+As of this writing, transcode 0.5.1 is the stable release
 dvd::rip is tested with. dvd::rip expects all transcode binaries
 to be found in the standard search PATH.
 

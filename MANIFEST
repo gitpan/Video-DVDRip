@@ -22,6 +22,7 @@ lib/Video/DVDRip/Project.pm
 lib/Video/DVDRip/Title.pm
 lib/Video/DVDRip/Config.pm
 tools/genreadme
+tools/add_changes
 Changes
 README
 TODO

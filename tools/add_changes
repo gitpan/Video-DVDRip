@@ -1,0 +1,23 @@
+#!/usr/local/bin/perl
+
+use strict;
+
+open (INDEX,"htdocs/index.html") or die "can't read htdocs/index.html";
+my $index = join ('',<INDEX>);
+close INDEX;
+
+my ($old_changes) = ( $index =~ /<\!-- changes -->(.*?)<\!-- changes -->/s );
+
+open (CHANGES, "Changes") or die "can't read Changes";
+<CHANGES>;<CHANGES>;<CHANGES>;
+my $changes = join ('',<CHANGES>);
+close CHANGES;
+
+$changes =~ s/\s+$/\n/;
+
+if ( $changes ne $old_changes ) {
+	$index =~ s/<\!-- changes -->.*?<\!-- changes -->/<!-- changes -->$changes<!-- changes -->/s;
+	open (INDEX, ">htdocs/index.html") or die "can't write htdocs/index.html";
+	print INDEX $index;
+	close INDEX;
+}

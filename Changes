@@ -1,6 +1,12 @@
-$Id: Changes,v 1.1 2001/11/26 22:34:30 joern Exp $
+$Id: Changes,v 1.3 2001/12/01 15:40:30 joern Exp $
 
 Revision history for Perl extension Video::DVDRip
+
+0.21  Sat Dec 01 2001, joern
+	- fixed color problem with snapshot images
+	- transcode 0.5.1 supports 4GB AVI files, so max.
+	  filesize for the bitrate suggestion is now 4000 MB
+	  (was 2000 MB with transcode 0.5.0)
 
 0.20  Tue Nov 27 2001, joern
 	- First public release. Should be usable but is not tested

@@ -1,4 +1,4 @@
-# $Id: Title.pm,v 1.23 2001/11/25 12:27:01 joern Exp $
+# $Id: Title.pm,v 1.26 2001/12/01 15:36:31 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -635,7 +635,7 @@ sub suggest_video_bitrate {
 	
 	my $target_size = $self->tc_target_size;
 
-	$target_size = 2000 if $target_size > 2000;
+	$target_size = 4000 if $target_size > 4000;
 
 	my $frames        = $self->frames;
 	my $fps           = $self->frame_rate;
@@ -890,9 +890,11 @@ sub get_take_snapshot_command {
 	       "mkdir $tmp_dir; ".
 	       "cd $tmp_dir; ".
 	       "transcode".
-	       " -i ".$self->project->vob_dir."/$nr".
+	       " -z -k -i ".$self->project->vob_dir."/$nr".
 	       " -o snapshot".
 	       " -x vob -y ppm -c $frame-".($frame+1);
+
+	print $command,"\n";
 
 	return $command;
 }
@@ -928,7 +930,6 @@ sub convert_snapshot {
 		"mkdir -p $dirname; ".
 		"convert".
 		" -size ".$self->width."x".$self->height.
-		" -flip ".
 		" $tmp_dir/snapshot00000.ppm $filename;".
 		" rm -r $tmp_dir";
 
