@@ -1,721 +1,281 @@
-NAME
-    Video::DVDRip - GUI for copying DVDs, based on an open Low Level API
-
-DESCRIPTION
-    This Perl module consists currently of two major components:
-
-      1. A low level OO style API for ripping and transcoding
-         DVD video, which is based on Thomas Oestreichs program
-         transcode, a Linux Video Stream Processing Tool.
-         This API is currently well undocumented.
-
-      2. A Gtk+ based Perl program called 'dvd::rip' which provides
-         a nice GUI to control all necessary steps from ripping,
-         adjusting all parameters and transcoding the video to
-         the format you desire.
-
-    The distribution name is derived from the Perl namespace it occupies:
-    Video::DVDRip. Although the DVD Ripper GUI is called dvd::rip, because
-    it's shorter and easier to pronounce (if you omit the colons... ;)
-
-PREREQUISITES
-    transcode
-
-    dvd::rip delegates all the low level DVD handling to transcode, which
-    can be obtained here:
-
-      http://www.theorie.physik.uni-goettingen.de/~ostreich/transcode/
-
-    dvd::rip expects all transcode binaries to be found in the standard
-    search PATH.
-
-    Image Magick
-
-    For image processing dvd::rip uses the widely distributed software
-    package Image Magick, at least the programs identify and convert should
-    be installed on your system. All versions above version 4 should work
-    (actually tested with 5.3.1). dvd::rip does not use Perl Magick.
-
-    Perl Modules
-
-    For its GUI component dvd::rip needs the Perl Gtk module, which presumes
-    Gtk+ version 1.2 or higher. I tested dvd::rip with Version Perl Gtk
-    0.7008.
-
-    You can find the Gtk module on CPAN, e.g.:
-
-      http://www.perl.org/CPAN/modules/by-module/Gtk/
-
-    For cluster mode you need the Event and the Storable module:
-
-      http://www.perl.org/CPAN/modules/by-module/Event/
-      http://www.perl.org/CPAN/modules/by-module/Storable/
-
-    xine
-
-    If you have the movie player xine installed, you can preview selected
-    DVD titles with the appropriate audio channels. Maybe I'll support
-    mplayer, too, in upcoming versions.
-
-DOWNLOADING
-    You can download dvd::rip from any CPAN mirror. You will find it in the
-    following directory:
-
-      http://www.perl.org/CPAN/modules/by-authors/id/J/JR/JRED/
-
-    I recommend downloading from a mirror, which are listed here
-
-      http://www.perl.org/CPAN/SITES.html
-
-    You'll also find recent information, some screenshots and documentation
-    on the dvd::rip homepage:
-
-      http://www.exit1.org/dvdrip/
-
-INSTALLATION
-    First install all packages listed in the PREREQUISITES section.
-
-    Then extract the .tar.gz file, change into the created directory and
-    generate the Makefile and execute make:
-
-      perl Makefile.PL
-      make
-
-    Among other things this builds the binary program 'splitpipe', which
-    uses dvd::rip for ripping and scanning the DVD in the same run.
-
-    Now it's up to you to type
-
-      make install
-  
-    which installs all the Perl modules in your Perl library path, and the
-    two executables
-
-      dvdrip
-      splitpipe
-
-    in your Perl bin directory. Otherwise you can use dvd::rip right here
-    and now by executing the 'dvdrip' program from the build directory.
-
-BASE CONFIGURATION / PREFERENCES
-    On first startup of dvd::rip you should check the global preferences in
-    the Edit menu. Enter your DVD configuration and data directory here. The
-    defaults will most likely not work on your system.
-
-    These settings are stored in your home directory:
-
-      ~/.dvdriprc
-
-    Remove this file for falling back to the defaults.
-
-NOW HAVE FUN
-    Create a new project by choosing the appropriate entry of the main menu.
-    The GUI should be more or less self-explanatory. Please check my
-    homepage for more details on using dvd::rip.
-
-BUG REPORTS / CONTRIBUTING
-    If you find bugs or have suggestions which make dvd::rip a better tool:
-    don't hesitate to send me emails (see AUTHOR section below).
-
-    If you find a bug which crashes dvd::rip, please add the following
-    information to your report:
-
-      1. information about your Linux installation, which may be interesting
-         (Kernel version, Distro version, X11 Version)
-
-      2. information about your Perl installation. Simply send me
-         the output of the "perl -V" command.
-
-      3. if possible a description how the bug can be reproduced.
-
-    Patches are welcome. I prefer unified context diffs created this way:
-
-      diff -urN Video-DVDRip-0.21 Video-DVDRip-0.21.patched
-
-    where Video-DVDRip-0.21 is the root directory of the original
-    distribution and Video-DVDRip-0.21.patched your modified version.
-
-    If you encounter problems ripping specific DVDs, this is probably a
-    transcode problem. Maybe you want to report this directly to Thomas
-    Östreich. If you're not sure about this, report the problem to me and
-    I'll see what I can do for you.
-
-AUTHOR
-    Joern Reder <joern@zyn.de>
-
-    You can contact me by email. Please place the word "dvd::rip" everywhere
-    in the subject, in addition to your real topic, because this helps me
-    classifying your email correctly. Thanks.
-
-    I'm native german speaker, so you can send your mails in german, if you
-    want. The others have to accept my rough english ;)
-
-COPYRIGHT
-    Copyright (C) 2001-2002 by Joern Reder, All Rights Reserved.
-
-    This library is free software; you can redistribute it and/or modify it
-    under the same terms as Perl itself.
-
-SEE ALSO
-    perl(1).
-
-CHANGES
-    $Id: Changes,v 1.64 2002/03/17 18:55:24 joern Exp $
-
-    Revision history for Perl extension Video::DVDRip
-
-    0.37 Sun Mar 17 2002, joern
-	Note:
-	- first finish all Cluster Mode projects before updating.
-	  Job workflow and file system layout did change.
-	- creating target AVI files >2GB does not work in Cluster
-	  Mode due to problems with transcode's avimerge program.
-	  Maybe this doesn't work on my system only, so if anyone
-	  has success building larger files, please drop me a note.
-
-	Features:
-	- Cluster Mode:
-	  - Now the overall runtime for a project is printed when 
-	    it's finished.
-	  - executed commands are now logged already at the default
-	    log level 2
-	  - due to on error aborted jobs doesn't stop the node
-	    anymore. If you stop a node the corresponding job doesn't
-	    get the 'aborted' state, instead it's set to 'waiting'.
-	    This way one aborted job doesn't effect the whole process
-	    by blocking the corresponding node.
-
-	Bugfixes:
-	- Cluster Mode:
-	  - was still broken, if a title consists of more than one
-	    PSU. Now the whole internal workflow changed. Audio
-	    transcoding is done for the whole movie, not per PSU.
-	    There is no merge per PSU anymore. All chunks are merged
-	    into one AVI, before adding the audio.
-	  - one side effect of this change is, that it's not possible
-	    to select which PSUs should be processed. The corresponding
-	    selection list disappeared from the Edit Cluster Project
-	    dialog. All PSUs are always processed from now, as in
-	    standard mode.
-	  - scheduler: local jobs of other projects with lower priority
-	    were preferred instead of finishing the actual project first.
-	  - fps and ETA of transcode video/audio jobs are now more exact,
-	    particularly at the beginning of the job.
-
-    0.36 Thu Mar 14 2002, joern
-	Bugfixes:
-	- Cluster Mode:
-	  - audio merging didn't work if the movie had more
-	    than one PSU, because the target directory wasn't
-	    created in that case. Thanks to Sebastian Beneke
-	    <sebastian AT beneke-it.de> for his bug report.
-
-    0.35 Wed Mar 13 2002, joern
-	Features:
-	- Cluster mode:
-	  - added test procedure which checks if a node is
-	    configured correctly: ssh connection, r/w NFS access
-	    and transcode version match are checked. Currently
-	    this works by comparing the output of a test script
-	    executed on the node and the machine where the dvd::rip
-	    GUI runs on. You can execute the test procedure
-	    from the "Edit Node" window.
-	  - the "audio processing" job is now splitted into two
-	    jobs: audio transcoding and a/v multiplexing. This
-	    enables running the audio transcoding in parallel with
-	    other jobs, e.g. video transcoding. Finally the audio
-	    and video chunks have to be multiplexed, what is
-	    single threaded again, but much faster than the old
-	    audio processing job, which blocks the project nearly
-	    at the end for a longer time, what was really
-	    frustrating ;). Thanks to Rainer Lay for his idea.
-	  - minimum chunk count is now (online nodes + 1) instead
-	    of 2.
-	  - you can start dvdrip with option -c to open the
-	    cluster control window without opening a main window
-
-	Bugfixes:
-	- audio bitrate was always set to AC3 passthrough bitrate
-	  when a project was opened from file
-	- Cluster mode:
-	  - in rare cases and when there was heavy traffic on the
-	    network, the Cluster Control Daemon erroneously
-	    determined that a node is offline and aborted the
-	    current job. Now the offline state is checked twice,
-	    so this shouldn't happen anymore.
-
-    0.34 Sun Mar 03 2002, joern
-	Note:
-	- Cluster mode: you need the pstree command on the cluster
-	  control computer from now
-
-	Features:
-	- Cluster mode:
-	  - now you can reset a single job, if something went wrong
-	    with it, so you don't have to start the whole project
-	    again. All dependent jobs are reset automatically.
-	    Thanks to Sloan Poe for his suggestion.
-	  - cluster mode scheduler optimization regarding the
-	    delegation of IO intensive jobs preferably to nodes
-	    with local resp. fast file system access. In earlier
-	    versions a local node could be blocked too early by
-	    a non-local job, so local jobs later had to be
-	    delegated to non-local nodes. The scheduler now
-	    tries delegating local jobs to local nodes first,
-	    and then normal jobs to idle nodes, if there are any.
-	  - you can optionally let dvd::rip delete the VOBs
-	    after finishing, making bigger project queues possible,
-	    even with little harddisk space (but is risky, if
-	    something goes wrong).
-	- AC3 audio passthrough support. If you're upgrading and
-	  you have an existent project, you need to rip the title
-	  again, because the necessary probing is done directly
-	  after ripping. There is no restriction for new projects.
-	- Currently it's not possible to use AC3 passthrough in
-	  cluster mode, because I hadn't the time to test it.
-	- the layout of the Transcode Tab changed slightly, to get
-	  space for the AC3 radio buttons.
-	- all directories are now created with mode 0775, to
-	  prevent file access problems in cluster mode, if
-	  the user ids of all nodes doesn't match. Suggested
-	  by Sloan Poe.
-	- range transcoding: default for the start value is 0.
-	  default for end value is number of frames. Until now
-	  you had to fill both values to get a range transcoding.
-	  Suggested by Douglas Bollinger <dcb AT 321.net>.
-
-	Bugfixes:
-	- Cluster mode:
-	  - on some systems stopping a node didn't work (dvd::rip
-	    hung). Now the child process is killed explicitely and
-	    this should work on any system. You need 'pstree' on
-	    the cluster control computer from now. Thanks to
-	    Sloan Poe, who helped me debugging this problem.
-	  - in multipass mode dvd::rip tried moving the AVI file
-	    to its final destination after the first pass. This
-	    threw an error message, but had no other effect.
-	    Anyway it was useless and confusing.
-	  - switching off avisplit of a just added project didn't work
-	- removed DVD mount point from preferences, because this
-	  isn't needed anymore
-
-    0.33 Tue Feb 19 2002, joern
-	Bugfixes:
-	- The node name/hostname feature didn't work. The cluster
-	  control daemon always tried to fping the node name instead
-	  of the hostname. Thanks to Rainer Lay for the bug report.
-
-    0.32 Mon Feb 18 2002, joern
-	Features:
-	- (one feature so this isn't only a bugfix release ;)
-	  You can enable a transcoding preview window. You need
-	  the filter_preview transcode plugin, which is build
-	  automatically if you have libdv installed on your system.
-	  Also your X Server must have XV support.
-	  Really nice feature. Useless, but fancy ;)
-	  Warning: closing the preview window will kill the
-	  transcode process.
-
-	Bugfixes:
-	- Some cluster jobs were aborted due to timeout accidentally.
-	  Because there occur some really strange problems with
-	  the output of avimerge, I disabled the timeout completely.
-	  This shouldn't matter, because it was added to prevent
-	  hanging ssh sessions which prompt for a password. This
-	  case is catched anyway not using a timeout, so everything
-	  should work better this way. Thanks for the reports to
-	  Andrew Yantis and Rainer Lay.
-	- project progress didn't count aborted jobs. They are now
-	  added to the waiting value. Thanks to Rainer again for
-	  this one.
-	- nice -n made problems with tcsh. Using /usr/bin/nice
-	  instead. Guess who reported this one? Yes. Thanks Rainer ;)
-	- no progress was shown on avisplit due to a bug in the
-	  avisplit output parsing regex.
-
-    0.31 Sun Feb 17 2002, joern
-	Features:
-	- You can provide additional transcode options on the
-	  Transcode Tab. These options are added to the
-	  internal transcode call, resp. they override corresponding
-	  options already computed by dvd::rip. This is for experts
-	  who want to use special transcode features not currently
-	  officially supported by dvd::rip (or to fix dvd::rip bugs
-	  which are not fixed yet ;).
-	- adjusting the nice level of the transcode process per
-	  project (also used in cluster mode) on the Transcode Tab.
-	  Suggested by Hrvoje Husic.
-	- Cluster Mode:
-	  - error handling for remotely executed commands. The last
-	    lines received from the command are logged, so you can
-	    see what's going wrong. Also the corresponding node will
-	    be aborted. You have to start it again, otherwise no jobs
-	    will be scheduled to it. This prevents infinite job
-	    execution on a false configured node.
-	  - internal node name and hostname of the node are now
-	    distinguished (useful to address multi processor machines
-	    as multiple nodes). Suggested by Rainer Lay.
-	  - additional transcode options per node (samy funcionality as
-	    described for non cluster mode above). One good example
-	    for this is increasing transcode threads if you have a multi-
-	    processor node (e.g. -u 4,2). Suggested by Peter Lohmann.
-
-	Bugfixes:
-	- cluster daemon hung if ssh prompted for a password.
-	- made TOC list wider so content should fit better
-	
-    0.31_05 Tue Feb 13 2002, joern
-	Bugfixes:
-	- All regarding the cluster mode and reported by
-	  Rainer Lay <Rainer.Lay AT informatik.uni-erlangen.de>
-          - command execution via the hardwired 'ssh -CP' command
-	    made problems, at least with OpenSSH. You now can
-	    configure the ssh command per Node in the Edit Node
-	    window. Default is 'ssh -C' which should work on most
-	    systems.
-	  - many commands had a construct "test dir || mkdir -p dir",
-	    where the "test" command is a nop, because "mkdir -p"
-	    doesn't fail, if the directory exists. Removed the "test"
-	    command.
-
-    0.31_04 Tue Feb 12 2002, joern
-	Features:
-	- Added a job list to the cluster mode, accompanied by
-	  rewriting some internals. This was necessary to get rid
-	  of the PSU problem without messing up the internal
-	  cluster workflow. The advantage is, now you can exactly
-	  see what steps have to be done.
-
-	Bugfixes:
-	- cluster mode now supports titles encoded in more than
-	  one program stream unit. Thanks to Thomas Östreich for
-	  his help.
-	- Net::Ping was loaded in cluster mode, but is not
-	  required anymore.
-	- Hrvoje Husic told me, that 760 MB seems to be the maximum
-	  to burn on an 800 MB medium, so I corrected the
-	  corresponding disc popup entry.
-	- Layout of the Transcode Tab was somewhat messed up, at
-	  least with the default Gtk theme. I shrinked the buttons
-	  so now everything should fit. Thanks to Torsten Howard 
-	  <torsten AT inetw.net> for reporting this "buglet"
-	  (his word ;)
-
-    0.31_03 Sat Feb 09 2002, joern
-	Note:
-	- Cluster mode is currently useless for titles with more
-	  than one program stream unit (that means: many DVDs
-	  are affected). I'm working on this issue, resp. am
-	  in contact with Thomas Östreich to check, whether
-	  transcode or dvd::rip should fix this.
-	- WARNING: first finish all your cluster projects before
-	  upgrading to this version, because cluster file names
-	  changed.
-
-	Features:
-	- Cluster Mode
-	  - multipass encoding now supported
-	  - show ETA for transcoding and audio processing states
-	  - optional avisplit and cleanup after transcoding. you
-	    can edit these project properties in the Cluster Control
-	    window
-	  - cluster control daemon can be shut down from the GUI
-	- multipass encoding: omit audio on first pass,
-	  thanks to Norbert Preining for his hint.
-	- better NTSC Support, suggested by Norbert Preining
-	  - set frame rate by default to 23.976, but user can
-	    overwrite it
-	  - set transcode options: -g 720x480 -M 2
-	- disc popup now has an entry for 800 MB discs,
-	  thanks to Hrvoje Husic <husic AT zyn.de> for his hint.
-
-	Bugfixes:
-	- Cluster Mode
-	  - adding a node with an existent name crashed the
-	    cluster control daemon
-	  - dvd::rip GUI now handles cluster daemon exits cleanly
-	  - View AVI works now for cluster transcoded titles
-	  - adding chapter mode titles to the cluster is
-	    prevented now
-	  - project removal threw an exception, sometimes
-	  - no volume rescaling was done
-	  - daemon crashed if a log client sent something
-	- Storable module was required, even when no cluster
-	  stuff was activated. Thanks to Timothy Harris
-	  <tim AT pongle.net> and Torsten Howard <torsten
-	  AT inetw.net> for their bug reports.
-
-    0.31_02 Mon Feb 04 2002, joern
-	Bugfixes:
-	- sometimes dvd::rip stopped transcoding too short.
-	  This release should fix this problem. Thanks to
-	  Doug Shea for his bug report and
-	  <ulmo AT garozzo.franken.de> for the hint, which
-	  led me to the solution (omitting the transcode
-	  -c 0-n parameter).
-
-    0.31_01 Sun Feb 03 2002, joern
-	Features:
-	- all generated files and directories now have names
-	  with correct alphanumerical order. Thanks to Doug Shea
-	  <doug_shea AT alumni.ucsd.edu> for his patch.
-
-	  WARNING: First finish all projects before upgrading
-		   to this version, because dvd::rip 0.31_01
-		   will badly fail finding files generated with
-		   previous versions!!!
-
-	- this is the first public pre-release with cluster
-	  transcoding support. Please refer to the dvd::rip
-	  homepage for documentation about this.
-	- omit '-J skip="0-2"' in chapter mode if transcode
-	  version >= 0.6 is detected. Thanks for the hint go
-	  to Norbert Preining and Ron Smits <rons AT ronsmits.com>.
-
-
-	Bugfixes:
-	- opened project was not closed, if you opened it via
-	  command line option and opened a new project via
-	  menu
-
-    0.30 Sat Jan 19 2002, joern
-	Features:
-	- Christian Lambert sent me an enhanced version of my
-	  fast resize calculator kspread file.
-
-	Bugfixes:
-	- creating a new project failed with an exception,
-	  thanks to Christian Lambert for his bug report.
-	- splitpipe did not work correctly if you use transcode
-	  0.5.x, thanks to Marc Wäckerlin <mrw AT atheismus.ch>
-	  for his bug report.
-	- opening the "Show transcode commands" window without
-	  an opened project threw an exception.
-
-    0.30_01 Sat Jan 12 2002, joern
-	Quick pre-release, because I like this feature so much ;)
-
-	Features:
-	- added fast frame grabbing using the vob navigation
-	  information created by 'tcdemux -W' for transcode
-	  >= 0.6.0pre. Frame grabbing now needs a constant
-	  amount of time (2-3 seconds on my A1000 workstation),
-	  regardless of the frame number, you entered.
-	  transcode 0.5.x is still supported, using the -c
-	  option, which is slow because it decodes all precedent
-	  frames. Thanks to Thomas Östreich, who helped me
-	  demystifying the navigation logfile ;)
-
-    0.29 Thu Jan 10 2002, joern
-	Features:
-	- transcode version is detected on startup, so different
-	  behaviour for different transcode versions is possible.
-	- preparing for cluster mode: dvd::rip already creates
-	  the neccessary vob navigation logging data.
-
-	Bugfixes:
-	- ripping progress bar enabled for transcode >= 0.6.0
-	  (you *must* use at least transcode-0.6.0pre2-20020107.
-	  Older 0.6.0 pre-releases will cause dvd::rip to fail
-	  badly or just freezing it). dvd::rip uses the new -W
-	  switch of tcdemux to get the progress in the ripping 
-	  stage. This gives even enough information to calculate
-	  fps. Coooool... ;)
-	- You can use dvd::rip with transcode 0.5.x (x>=3),
-	  but the ripping progress bar will be disabled.
-
-    0.29_01 Sun Jan 07 2002, joern
-	Bugfixes:
-	- DVD TOC reading completely reorganized. Should work now
-	  more reliable with all DVDs. Due to this there is currently
-	  no progress bar for ripping available.
-	- DVD TOC missed scrollbars
-	- transcode progress bar did not work with transcode 0.6pre
-
-    0.28 Fri Jan 04 2002, joern
-	Features:
-	- I added a contrib directory to the distribution, currently
-	  containing a KSpread file which helps calculating fast resize
-	  values. I'm planning to integrate a native and quite more usable
-	  version of this sheet into dvd::rip, but maybe this helps someone
-	  while this feature is not finished. On the other hand the
-	  presets are working well for most DVDs, so this is currently
-	  a nice to have feature for me.
-
-	Bugfixes:
-	- avisplit progress bar missed percentage and ETA.
-	- fast resize option did not always complain about illegal
-	  values, thanks to Christian Lambert <clambert AT csd.sgi.com>
-	  for the bug report.
-
-    0.28_03 Thu Jan 03 2002, joern
-	Features:
-	- Full viewing angle support, requested by Certron DiSoni
-	  <certron_80 AT yahoo.com>. You can select the viewing
-	  channel after reading the TOC. Only the selected angle
-	  will be ripped from the DVD. This way I was able to rip
-	  german Star Wars Episode I, with the german intro.
-
-	Bugfixes:
-	- transcode progress bar missed percentage and ETA.
-
-    0.28_02 Thu Jan 03 2002, joern
-	Again a pre-release due to major changes in the progress module
-	and chapter mode code. Please test it. Thanks.
-
-	Features:
-	- enhanced chapter mode suggested by Tim Currie <jtcurrie AT
-	  mediaone.net>: dvd::rip now shows a multi selection list
-	  of avaiable chapters per title. Now you can decide which
-	  chapters should be ripped and transcoded. Currently no progress
-	  bar is shown in the chapter selection mode, only the elapsed
-	  time will be printed. Also avisplit is currently not available
-	  in chapter mode. I'm not shure, if transcode reports the correct
-	  number of chapters. Often the higher chapters are empty or
-	  at least *very* short.
-	- major code cleanup in the progress bar module. Among other things
-	  a Gtk input handler is used instead of a Gtk idle function.
-	  This way the GUI responses much better. Also all calculations
-	  (elapsed time, ETA, fps) are done by dvd::rip now and available
-	  for all tasks.
-
-	Bugfixes:
-	- fixed chapter mode transcoding progress bar / logging problem
-	- dvd::rip failed if the project path was not absolute. Thanks to
-	  George Farris <george AT gmsys.com> for the report.
-
-    0.28_01 Fri Dec 28 2001, joern
-	This is a pre release for testing the new Chapter Mode feature.
-	Please use this version only, if you're interested in this feature
-	or if you want to test it in general. Also non-Chapter-Mode ripping
-	may be affected or buggy.
-
-	Features:
-	- Chapter Mode, suggested by Norbert Preining.
-	  You have to enable this on the RIP Title Tab before ripping,
-	  because each chapter will be ripped into a separate directory.
-	  Transcoding in chapter mode will lead to one AVI file for
-	  each chapter. The progress bar guesses sometimes wrong, but the
-	  result should be Ok. Splitting in Chapter Mode is not supported
-	  and makes no sense in general.
-	- removed the tcprobe-random-title-permutation workaround,
-	  because this tcprobe bug is fixed in transcode 0.5.3
-
-	Bugfixes:
-	- dvd::rip didn't work with transcode 0.5.3 due to changes
-	  of tcprobe output. Thanks to Thomas Speck <thomas-speck
-	  AT gmx.de> for his bug report. This release has a workaround
-	  fixing this problem. Another solution is to patch transcode
-	  0.5.3 with a patch published by Thomas Östreich on his
-	  transcode homepage.
-
-    0.27 Tue Dec 18 2001, joern
-	Bugfix:
-	- this release fixes only a minor bug in the debugging window
-	  and log file output. The snapshot command missed the
-	  frame number, so the -c option was malformed.
-
-    0.26 Sun Dec 16 2001, joern
-	Bugfix:
-	- tar.gz distribution was incomplete. Updated MANIFEST.
-
-    0.25 Sat Dec 15 2001, joern
-	Features:
-	- create logfile of all processes, display it in a separate
-	  logging tab
-	- renamed "Snapshot Directory" to "Temp Directory", because
-	  it's used not only for the snapshot images. DivX4 analyze logs
-	  and the dvd::rip log are also stored here.
-
-	Bugfixes:
-	- "transcode & split" did not work
-	- spaces in project name not allowed, thanks to
-	  Matthias Rieber <matthias AT lsoe.uni-karlsruhe.de>
-	  for the bug report. dvd::rip did not work correctly
-	  with spaces in the project name. Checking of other
-	  user supplied values is still on my TODO list.
-
-    0.24 Thu Dec 13 2001, joern
-	Just a major release, no changes since pre-release.
-
-    0.24_02  Tue Dec 11 2001, joern
-	Features:
-	- You can open a debugging window, which shows all transcode
-	  commands executed by dvd::rip by pressing Ctrl+T or selecting the
-	  "Debug/Show Transcode Commands..." menu item. Thanks to
-	  Norbert Preining for his suggestion. This should help finding
-	  bugs in dvd::rip, where wrong transcode options are genereated,
-	  or something similar.
-	- modified 16:9 anamorph fast resizing Preset: added 2nd Clipping
-	  to get rid of 4 black top and bottom lines
-	- Added a transcode title number field to the rip tab. This way
-	  you can workaround the transcode/libdvdread bug which results
-	  to wrong assigned titles. Please use this with care and only
-	  if you know, what you do. This fields changes only the title
-	  number passed to all transcode commands. The dvd::rip filenames
-	  will be named with the orignally (maybe wrong) scanned title nr.
-	  Thanks to Bjoern Buerger <b.buerger AT tu-bs.de> for his
-	  suggestion.
-
-	Bugfixes:
-	- Preset "16:9 Anam. Enc., No Letterbox, Fast Resize" did not
-	  switch fast resizing on
-	- Fast Resizing: 32 pixel boundary must be given only for
-	  axes which are resized. Thanks to Norbert Preining for
-	  his patch.
-	- dvd::rip now checks, whether VOB files are already ripped,
-	  even if the project file says, they're not (e.g. if you
-	  forget to save after ripping, restart dvd::rip and create
-	  a new project for this DVD). Thanks to Norbert Preining
-	  for the hint.
-	- dvd::rip now checks if the needed programs (transcode,
-	  ImageMagick etc.) are installed and complains if not.
-	  Thanks to Michal Szymanski <msz AT astrouw.edu.pl> for his
-	  bugreport.
-
-    0.23  Sun Dec 09 2001, joern
-	Bugfixes:
-	- fast resizing: 32 pixel boundary check ommited checking the
-	  clip1 size
-	- transcode progress label did always show the "split afterwards"
-	  message, even if started without splitting.
-
-    0.22  Sun Dec 09 2001, joern
-	Features:
-	- Support of the fast resizing algorithm of transcode
-	  (transcode-0.5.2-20011206 is recommended because of
-	  a bug in the horizontal fast resize code in earlier
-	  versions). Fast resizing presumes 32 pixel boundaries.
-	  If you break with this rule, you'll get an error window
-	  on transcoding. I'm planning a wizard which helps
-	  calculating the correct values, because this can be a
-	  brain squeezing task ;)
-	- Added two new Presets for anamorph transcoding using the
-	  fast resizing algorithm. They should bypass the time,
-	  until the fast resizing wizard is finished.
-	- Support of multipass DivX encoding.
-	- Added a button to the Transcode tab for viewing the
-	  transcoded non-splitted AVI file.
-	- transcode progress label shows, whether started with or
-	  without splitting
-
-	Bugfixes:
-	- applied Perl 5.005 patch supplied by Norbert
-	  Preining <preining AT logic.at>. Thanks.
-	- DVD read-toc code always tried a mount, even if the
-	  DVD was already mounted. This could confuse systems
-	  using automounter.
-
-    0.21  Sat Dec 01 2001, joern
-	Features:
-	- transcode 0.5.1 supports 4GB AVI files, so max.
-	  filesize for the bitrate suggestion is now 4000 MB
-	  (was 2000 MB with transcode 0.5.0)
-
-	Bugfixes:
-	- fixed color problem with snapshot images
-
-    0.20  Tue Nov 27 2001, joern
-	- First public release. Should be usable but is not tested
-	  with thousands of DVDs.
+I.   ABOUT
+
+   dvd::rip is a Perl Gtk+ based DVD copy program build on top of a low
+   level DVD Ripping API, which uses the Linux Video Stream Processing
+   Tool transcode, written by Thomas Oestreich.
+   
+   It simplifies the whole process of making copies of your DVDs using a
+   straightforward 4 step strategy:
+   
+    1. Specify file system storage locations.
+    2. Read TOC from DVD, select a title and rip it.
+    3. Adjust clipping and zooming parameters.
+    4. Set transcode options and go!
+       
+   Also dvd::rip also has a powerful cluster mode which will use all your
+   hardware to increase transcode performance by parallel encoding.
+   
+II.  NOTE
+
+   This README is automatically generated from the same sources which
+   are used for the dvd::rip homepage. You'll allways get the latest
+   news and information from the homepage.
+   
+     http://www.exit1.org/dvdrip/
+   
+   Also the homepage contains an extensive user documentation for
+   standard and cluster mode, with screenshots, diagrams and more.
+   This README covers only the installation not the usage of dvd::rip.
+   
+III. INSTALLATION
+
+   dvd::rip itself is a Gtk+ based program written in Perl, using the
+   video processing tool transcode for the internals. So you first have
+   to comply some prerequisites before installing dvd::rip.
+   
+transcode
+
+   dvd::rip delegates all the low level DVD handling to transcode, which
+   can be obtained here:
+   
+     [3]http://www.theorie.physik.uni-goettingen.de/~ostreich/transcode/
+     
+   dvd::rip expects all transcode binaries to be found in the standard
+   search PATH.
+   
+   Note:
+   If you want to use the dvd::rip cluster mode you must install at least
+   transcode version 0.6.0pre4.
+   
+Image Magick
+
+   For image processing dvd::rip uses the widely distributed software
+   package Image Magick, at least the programs identify and convert
+   should be installed on your system. All versions above version 4
+   should work (actually tested with 5.3.1). dvd::rip does not use Perl
+   Magick.
+   
+   If your Linux distribution does not ship Image Magick, you can find it
+   here:
+   
+     [4]http://www.imagemagick.org/
+     
+   dvd::rip expects the Image Magick binaries to be found in the standard
+   search PATH.
+   
+Perl Gtk Module
+
+   For its GUI component dvd::rip needs the Perl Gtk module, which
+   presumes Gtk+ version 1.2 or higher. I tested dvd::rip with Perl Gtk
+   0.7008.
+   
+   You can find the Gtk module on CPAN, e.g.:
+   
+     [5]http://www.perl.org/CPAN/modules/by-module/Gtk/
+     
+   Note:
+   Perl Gtk detects your installed Gtk libs and build sub components only
+   if the correspondent Gtk library was found.
+   
+   dvd::rip needs the Gtk::Gdk::Pixbuf component which needs gdk-pixbuf
+   to be installed on your system. So first make sure, that gdk-pixbuf is
+   installed. Then install Perl Gtk and everything should work as
+   expected.
+   
+xine Video Player with d4d plugin
+
+   If you have the movie player xine with the d4d plugin installed, you
+   can preview selected DVD titles with the appropriate audio channels.
+   Maybe I'll support mplayer, too, in upcoming versions.
+   
+   You can download xine here:
+   
+     [6]http://xine.sourceforge.net/
+     
+   dvd::rip expects the xine binary to be found in the standard search
+   PATH.
+   
+Installing / Updating dvd::rip itself
+
+   This is quite easy, if you have managed installing the packages
+   mentioned above... ;)
+   
+   [7]Download the .tar.gz archive of the dvd::rip version you want to
+   install. Then extract the file, change into the created directory,
+   generate the Makefile and execute make:
+   
+     tar xfz Video-DVDRip-0.38.tar.gz
+     cd Video-DVDRip-x.xx
+     perl Makefile.PL
+     make
+     make test
+
+   If the "make test" reported no errors, you can install the files into
+   your Perl library path. Maybe you must be root to do this:
+   
+     make install
+
+   You can ommit the "make install" step. But then you can execute the
+   'dvdrip' binary only from the build directory, otherwise dvd::rip
+   can't find its files.
+   
+   Read the Changes file
+   
+   I strongly suggest you reading at least the latest change log entry of
+   the Changes file, resp. all entries of the versions you probably
+   skipped in case of an update. It contains important release notes,
+   e.g. about compatibility issues, and all relevant changes from release
+   to release.
+   
+Additional steps for cluster mode
+
+   First ensure that you're using transcode version 0.6.0pre4-20020322 or
+   better, because cluster mode doesn't work with earlier versions.
+   
+Perl modules
+
+   Additionally you need the Storable and the Event Perl modules. You can
+   find them on CPAN, e.g.:
+   
+     [8]http://www.perl.org/CPAN/modules/by-module/Storable/
+     [9]http://www.perl.org/CPAN/modules/by-module/Event/
+     
+fping and pstree
+
+   The dvd::rip cluster control daemon uses fping to check if nodes are
+   online and pstree to get information about specific child processes.
+   Both tools should be shipped with your Linux distribution (fping
+   sometimes isn't, but you can get it here: [10]http://www.fping.com/)
+   
+   dvd::rip expects fping to be installed set-uid root (because you
+   hopefully don't run dvd::rip as root ;), which is not the default for
+   most distributions. Please set the set-uid flag by typing this command
+   as root:
+   
+     chmod u+s /usr/sbin/fping
+
+   If fping is installed in another location, set a symlink to
+   /usr/sbin/fping, because dvd::rip expects it there.
+   
+   Note: These steps are necessary only on the computer, where the
+   cluster control daemon runs. All slave nodes of a dvd::rip cluster
+   only need transcode installed, dvd::rip or any packages mentioned here
+   aren't needed there.
+
+URL References
+
+   1. file://localhost/dvdrip/doc/install.cipp
+   2. file://localhost/dvdrip/doc/install.cipp?print=1
+   3. http://www.theorie.physik.uni-goettingen.de/~ostreich/transcode/
+   4. http://www.imagemagick.org/
+   5. http://www.perl.org/CPAN/modules/by-module/Gtk/
+   6. http://xine.sourceforge.net/
+   7. file://localhost/dvdrip/download.cipp
+   8. http://www.perl.org/CPAN/modules/by-module/Storable/
+   9. http://www.perl.org/CPAN/modules/by-module/Event/
+  10. http://www.fping.com/
+
+IV.  DOWNLOAD
+
+   You can download dvd::rip from this server or all stable releases from
+   any CPAN mirror.
+   
+   Local download of the latest stable release:
+   
+     [3]Video-DVDRip-0.38.tar.gz
+     
+   CPAN download directory:
+   
+     [4]http://www.perl.org/CPAN/modules/by-authors/id/J/JR/JRED/
+     
+   Here you can get a list of CPAN mirrors:
+   
+     [5]http://www.perl.org/CPAN/SITES.html
+     
+   You can download older versions from here:
+   
+     [6]http://www.exit1.org/dvdrip/dist/
+     
+User contributed downloads
+
+   Currently I do not provide RPM archives myself, but other dvd::rip
+   users are so kind to build some. You'll find them in my contribution
+   directory, beside other interesting donated stuff:
+   
+     [7]http://www.exit1.org/dvdrip/contrib/
+     
+   Please understand that I can't offer any support for these files.
+
+URL References
+
+   1. file://localhost/dvdrip/download.cipp
+   2. file://localhost/dvdrip/download.cipp?print=1
+   3. file://localhost/dvdrip/dist/Video-DVDRip-0.38.tar.gz
+   4. http://www.perl.org/CPAN/modules/by-authors/id/J/JR/JRED/
+   5. http://www.perl.org/CPAN/SITES.html
+   6. file://localhost/dvdrip/dist/
+   7. file://localhost/dvdrip/contrib/
+
+V.   MAILING LIST
+
+   If you want to discuss usage, problems and suggestions with other
+   dvd::rip users, you should subscribe to the dvdrip-users mailing list.
+   Note: this is a closed mailing list to prevent members from getting
+   flooded by spam. So you have to subscribe before posting. This list is
+   low traffic and announces, patches etc. will be posted here, too.
+   
+   The language of the mailing list is english, although the author and
+   many users and contributors are germans (or at least speak german ;).
+   
+     * [3]Mailing list subscription
+     * [4]Mailing list archive
+       
+   Because dvd::rip is highly transcode related, I suggest subscribing to
+   the [5]transcode-user mailing list, too.
+
+URL References
+
+   1. file://localhost/dvdrip/list.cipp
+   2. file://localhost/dvdrip/list.cipp?print=1
+   3. http://lists.exit1.org/mailman/listinfo/dvdrip-users
+   4. http://lists.exit1.org/pipermail/dvdrip-users/
+   5. http://www.theorie.physik.uni-goettingen.de/mailman/listinfo/transcode-users
+
+VI.  COPYRIGHT / CONTACT
+
+   Copyright (C) 2001-2002 by Jörn Reder, All Rights Reserved.
+   
+   dvd::rip is free software; you can redistribute it and/or modify it
+   under the same terms as Perl itself.
+   
+   You can contact me by mail: [3]joern@zyn.de. Please place the word
+   "dvd::rip" everywhere in the subject, in addition to your real topic,
+   because this helps me classifying your email correctly. Thanks.
+   
+   If users send me suggestions and bug reports I usually add them with
+   their name and email address to the Changes or TODO file. If you are
+   concerned about privacy, then please tell me that you don't want to be
+   listed and I omit that. I fully understand if privacy matters for you.
+   
+   I'm native german speaker, so you can send your mails in german, if
+   you want. The others have to accept my rough english ;)
+   
+   And: consider subscription and posting to the [4]dvdrip-users mailing
+   list list.
+
+URL References
+
+   1. file://localhost/dvdrip/copyright.cipp
+   2. file://localhost/dvdrip/copyright.cipp?print=1
+   3. mailto:joern@zyn.de?subject=dvd::rip
+   4. http://lists.exit1.org/mailman/listinfo/dvdrip-users
+
+VII. CHANGES
+   $Id: Changes,v 1.72 2002/03/31 08:32:52 joern Exp $
+
+   Revision history for dvd::rip
+
+   0.38 easter-egg Sun Mar 31 2002, joern
+	No changes since last pre-release, except for a graphical
+	dvd::rip startup message, which is totally useless but nice ;)
 

@@ -1,6 +1,6 @@
 #!/usr/local/bin/perl
 
-# $Id: dvdrip-master,v 1.16 2002/03/12 14:02:52 joern Exp $
+# $Id: dvdrip-master,v 1.17 2002/03/24 22:54:09 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -14,6 +14,7 @@ package Video::DVDRip;
 use strict;
 use lib 'lib';
 
+use Video::DVDRip;
 use Video::DVDRip::RPC::Server;
 
 main: {
@@ -99,6 +100,8 @@ main: {
 				set_with_cleanup	=> 1,
 				with_vob_remove		=> 1,
 				set_with_vob_remove	=> 1,
+				frames_per_chunk	=> 1,
+				set_frames_per_chunk	=> 1,
 			},
 			'Video::DVDRip::Cluster::PSU' => {
 				nr			=> 1,
@@ -113,8 +116,12 @@ main: {
 	$server->set_log_level ( $log_level );
 
 	# start master thread
-	$server->load_class ( class => 'Video::DVDRip::Cluster::Master' )
-	       ->get_master ( logger => $server );
+	my $master = $server->load_class (
+		class => 'Video::DVDRip::Cluster::Master'
+	);
+
+	$master->check_prerequisites;
+	$master->get_master ( logger => $server );
 
 	# start the object RPC server
 	$server->start;

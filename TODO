@@ -1,54 +1,33 @@
-$Id: TODO,v 1.56 2002/03/17 20:48:20 joern Exp $
+$Id: TODO,v 1.60 2002/03/31 08:10:53 joern Exp $
 
 KNOWN BUGS
-- deactivating audio doesn't work
 - cluster mode
   - cluster control daemon leaks memory
-  - still avimerge progress problems. GUI freezes sometimes
-    but merging does work Ok.
-  - problems with avimerge and very small chunks? (not verified yet)
-- transcode didn't accept YUV mode with odd frame sizes, so
-  dvd::rip shouldn't either
 
 TODO
 - cluster mode:
   - schedule start/end time of a node, suggested by Rainer Lay
   - stop node after current job, suggested by Rainer Lay
-  - checkbox for reducing the bitrate about a few precent to
-    prevent a slightly bigger result, which can happen because
-    the bitrate estimation tends to bigger files on small chunks.
-- documentation
-  - cluster mode ssh issues, inspired by a report from
-    Douglas Bollinger
-- support DVDs with pcm encoded audio
-- check out if pgmfindclip is useful for dvd::rip
-- display a status of the selected title
-  - ripped
-  - preview grabbed
-  - transcoded
 - textfield for arbitrary command execution after transcoding,
   e.g. for system shutdown. Suggested by simbolo <simbolo225@yahoo.com>
-- enable dvd::rip to work on already existent VOB copies
-  in filesystem, suggested by flier <flier AT scrollz.com>
 - enable pausing after 1st pass of a two-pass divx4 encoding,
   suggested by Chris <chris AT axique.de>.
+- enable dvd::rip to work on already existent VOB copies
+  in filesystem
 - don't rip chapters already ripped in chapter selection mode
 - support generating multilanguage AVIs
-- rip multiple titles in batch mode, suggested by Hrvoje Husic
-  <husic AT zyn.de>
-- show div8 exclamation marks only in clip2 stage
-- provide avimerge option in chapter mode
+- rip multiple titles to harddisk in batch mode, suggested by
+  Hrvoje Husic <husic AT zyn.de>
 - check space on filesystem before ripping and transcoding
-- changing sample rate, suggested by Certron DiSoni <certron_80 AT yahoo.com>
-- selection box for supported video codecs, suggested by Certron DiSoni
-- avisplit in chapter mode
+- selection box for supported video codecs, suggested by
+  Certron DiSoni <certron_80 AT yahoo.com>
 - extensive checking of user input. most input is currently
   passed through without examination
-- enable debugging mode by menu
-- calculate and show real aspect ratio of all processing steps,
-  particularly needed for the fast resize option
-- on the fly ripping & transcoding, requested by many users ;)
+- on the fly ripping & transcoding (very low priority)
 - create personal clip&zoom preferences
 - mplayer support
 - VCD and SVCD support (transcode 0.6.x)
+- double check ripped data for correct audio streams
+  (needed in seldom cases for ugly DVDs which lie about
+   the audio streams with tcprobe)
 

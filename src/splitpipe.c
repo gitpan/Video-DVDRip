@@ -1,4 +1,4 @@
-/* $Id: splitpipe.c,v 1.8 2002/01/19 10:48:00 joern Exp $
+/* $Id: splitpipe.c,v 1.9 2002/03/28 21:04:05 joern Exp $
  *
  * Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
  * 
@@ -42,7 +42,7 @@ int main(int argc, char *argv[]) {
 	char*  base_filename;
 	char*  extension;
 	int    ok;
-	char   opt;
+	int    opt;
 	int    use_tcdemux = 0;
 	char*  vob_nav_file;
 	int    opt_cnt;

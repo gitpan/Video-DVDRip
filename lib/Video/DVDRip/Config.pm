@@ -1,4 +1,4 @@
-# $Id: Config.pm,v 1.9 2002/03/02 16:20:04 joern Exp $
+# $Id: Config.pm,v 1.11 2002/03/28 21:02:10 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -85,98 +85,118 @@ my @CONFIG_ORDER = qw (
 
 sub new {
 	my $type = shift;
-
 	my %config_parameter = %CONFIG_PARAMETER;
 	my @config_order     = @CONFIG_ORDER;
 
-	my $self = {
-		config => \%config_parameter,
-		order  => \@config_order,
-		presets => [
+	my @presets = (
+		Video::DVDRip::Preset->new (
+			name => "nopreset",
+			title => "- No Preset -",
+			tc_clip1_top	=> 0,
+			tc_clip1_bottom	=> 0,
+			tc_clip1_left	=> 0,
+			tc_clip1_right	=> 0,
+			tc_zoom_width	=> undef,
+			tc_zoom_height	=> undef,
+			tc_clip2_top	=> 0,
+			tc_clip2_bottom	=> 0,
+			tc_clip2_left	=> 0,
+			tc_clip2_right	=> 0,
+			tc_fast_resize  => 0,
+		),
+		Video::DVDRip::Preset->new (
+			name => "auto_big",
+			title => "Autoadjust, Big Frame, HQ Resize",
+			tc_fast_resize  => 0,
+			auto => 1,
+			frame_size => 'big',
+		),
+		Video::DVDRip::Preset->new (
+			name => "auto_medium",
+			title => "Autoadjust, Medium Frame, HQ Resize",
+			tc_fast_resize  => 0,
+			auto => 1,
+			frame_size => 'medium',
+		),
+		Video::DVDRip::Preset->new (
+			name => "auto_small",
+			title => "Autoadjust, Small Frame, HQ Resize",
+			tc_fast_resize  => 0,
+			auto => 1,
+			frame_size => 'small',
+		),
+	);
+
+	if ( $TC::VERSION >= 600 ) {
+		push @presets, (
 			Video::DVDRip::Preset->new (
-				name => "nopreset",
-				title => "- No Preset -",
-				tc_clip1_top	=> 0,
-				tc_clip1_bottom	=> 0,
-				tc_clip1_left	=> 0,
-				tc_clip1_right	=> 0,
-				tc_zoom_width	=> undef,
-				tc_zoom_height	=> undef,
-				tc_clip2_top	=> 0,
-				tc_clip2_bottom	=> 0,
-				tc_clip2_left	=> 0,
-				tc_clip2_right	=> 0,
-				tc_fast_resize  => 0,
+				name => "auto_big_fast",
+				title => "Autoadjust, Big Frame, Fast Resize",
+				tc_fast_resize  => 1,
+				auto => 1,
+				frame_size => 'big',
 			),
 			Video::DVDRip::Preset->new (
-				name => "169anamorph",
-				title => "16:9 Anamorph Encoding, No Letterbox",
-				tc_clip1_top	=> 0,
-				tc_clip1_bottom	=> 0,
-				tc_clip1_left	=> 0,
-				tc_clip1_right	=> 0,
-				tc_zoom_width	=> 768,
-				tc_zoom_height	=> 432,
-				tc_clip2_top	=> 0,
-				tc_clip2_bottom	=> 0,
-				tc_clip2_left	=> 0,
-				tc_clip2_right	=> 0,
-				tc_fast_resize  => 0,
+				name => "auto_medium_fast",
+				title => "Autoadjust, Medium Frame, Fast Resize",
+				tc_fast_resize  => 1,
+				auto => 1,
+				frame_size => 'medium',
 			),
 			Video::DVDRip::Preset->new (
-				name => "169anamorph_letter",
-				title => "16:9 Anamorph Encoding, With Letterbox",
-				tc_clip1_top	=> 0,
-				tc_clip1_bottom	=> 0,
-				tc_clip1_left	=> 0,
-				tc_clip1_right	=> 0,
-				tc_zoom_width	=> 768,
-				tc_zoom_height	=> 432,
-				tc_clip2_top	=> 56,
-				tc_clip2_bottom	=> 56,
-				tc_clip2_left	=> 64,
-				tc_clip2_right	=> 64,
-				tc_fast_resize  => 0,
+				name => "auto_small_fast",
+				title => "Autoadjust, Small Frame, Fast Resize",
+				tc_fast_resize  => 1,
+				auto => 1,
+				frame_size => 'small',
 			),
-			Video::DVDRip::Preset->new (
-				name => "43nothing",
-				title => "4:3 No Zoom, No Clipping",
-				tc_clip1_top	=> 0,
-				tc_clip1_bottom	=> 0,
-				tc_clip1_left	=> 0,
-				tc_clip1_right	=> 0,
-				tc_zoom_width	=> undef,
-				tc_zoom_height	=> undef,
-				tc_clip2_top	=> 0,
-				tc_clip2_bottom	=> 0,
-				tc_clip2_left	=> 0,
-				tc_clip2_right	=> 0,
-				tc_fast_resize  => 0,
-			),
-			Video::DVDRip::Preset->new (
-				name => "43letter_clip",
-				title => "4:3 Letterbox, With Clipping",
-				tc_clip1_top	=> 80,
-				tc_clip1_bottom	=> 80,
-				tc_clip1_left	=> 16,
-				tc_clip1_right	=> 16,
-				tc_zoom_width	=> undef,
-				tc_zoom_height	=> undef,
-				tc_clip2_top	=> 0,
-				tc_clip2_bottom	=> 0,
-				tc_clip2_left	=> 0,
-				tc_clip2_right	=> 0,
-				tc_fast_resize  => 0,
-			),
+		);
+	}
+	
+	push @presets, (
+		Video::DVDRip::Preset->new (
+			name => "169anamorph",
+			title => "16:9 No Letterbox, HQ Resize",
+			tc_clip1_top	=> 0,
+			tc_clip1_bottom	=> 0,
+			tc_clip1_left	=> 0,
+			tc_clip1_right	=> 0,
+			tc_zoom_width	=> 768,
+			tc_zoom_height	=> 432,
+			tc_clip2_top	=> 0,
+			tc_clip2_bottom	=> 0,
+			tc_clip2_left	=> 0,
+			tc_clip2_right	=> 0,
+			tc_fast_resize  => 0,
+		),
+		Video::DVDRip::Preset->new (
+			name => "169anamorph_letter",
+			title => "16:9 With Letterbox, HQ Resize",
+			tc_clip1_top	=> 0,
+			tc_clip1_bottom	=> 0,
+			tc_clip1_left	=> 0,
+			tc_clip1_right	=> 0,
+			tc_zoom_width	=> 768,
+			tc_zoom_height	=> 432,
+			tc_clip2_top	=> 56,
+			tc_clip2_bottom	=> 56,
+			tc_clip2_left	=> 64,
+			tc_clip2_right	=> 64,
+			tc_fast_resize  => 0,
+		),
+	);
+	
+	if ( $TC::VERSION >= 600 ) {
+		push @presets, (
 			Video::DVDRip::Preset->new (
 				name => "169anamorph_fast",
-				title => "16:9 Anam. Enc., No Letterbox, Fast Resize",
-				tc_clip1_top	=> 0,
-				tc_clip1_bottom	=> 0,
-				tc_clip1_left	=> 8,
-				tc_clip1_right	=> 8,
-				tc_zoom_width	=> 704,
-				tc_zoom_height	=> 416,
+				title => "16:9 No Letterbox, Fast Resize",
+				tc_clip1_top	=> 4,
+				tc_clip1_bottom	=> 4,
+				tc_clip1_left	=> 0,
+				tc_clip1_right	=> 0,
+				tc_zoom_width	=> 720,
+				tc_zoom_height	=> 400,
 				tc_clip2_top	=> 0,
 				tc_clip2_bottom	=> 0,
 				tc_clip2_left	=> 0,
@@ -185,20 +205,160 @@ sub new {
 			),
 			Video::DVDRip::Preset->new (
 				name => "169anamorph_letter_fast",
-				title => "16:9 Anam. Enc., Letterbox, Fast Resize",
+				title => "16:9 Letterbox, Fast Resize",
+				tc_clip1_top	=> 60,
+				tc_clip1_bottom	=> 60,
+				tc_clip1_left	=> 40,
+				tc_clip1_right	=> 40,
+				tc_zoom_width	=> 640,
+				tc_zoom_height	=> 320,
+				tc_clip2_top	=> 0,
+				tc_clip2_bottom	=> 0,
+				tc_clip2_left	=> 0,
+				tc_clip2_right	=> 0,
+				tc_fast_resize  => 1,
+			),
+		);
+	} else {
+		push @presets, (
+			Video::DVDRip::Preset->new (
+				name => "169anamorph_fast",
+				title => "16:9 No Letterbox, Fast Resize",
+				tc_clip1_top	=> 8,
+				tc_clip1_bottom	=> 8,
+				tc_clip1_left	=> 8,
+				tc_clip1_right	=> 8,
+				tc_zoom_width	=> 704,
+				tc_zoom_height	=> 400,
+				tc_clip2_top	=> 0,
+				tc_clip2_bottom	=> 0,
+				tc_clip2_left	=> 0,
+				tc_clip2_right	=> 0,
+				tc_fast_resize  => 1,
+			),
+			Video::DVDRip::Preset->new (
+				name => "169anamorph_letter_fast",
+				title => "16:9 Letterbox, Fast Resize",
 				tc_clip1_top	=> 64,
 				tc_clip1_bottom	=> 64,
 				tc_clip1_left	=> 40,
 				tc_clip1_right	=> 40,
 				tc_zoom_width	=> 640,
 				tc_zoom_height	=> 320,
+				tc_clip2_top	=> 0,
+				tc_clip2_bottom	=> 0,
+				tc_clip2_left	=> 0,
+				tc_clip2_right	=> 0,
+				tc_fast_resize  => 1,
+			),
+		);
+	}
+	
+	push @presets, (
+		Video::DVDRip::Preset->new (
+			name => "43nothing",
+			title => "4:3 No Letterbox, HQ Resize",
+			tc_clip1_top	=> 0,
+			tc_clip1_bottom	=> 0,
+			tc_clip1_left	=> 0,
+			tc_clip1_right	=> 0,
+			tc_zoom_width	=> 720,
+			tc_zoom_height	=> 544,
+			tc_clip2_top	=> 0,
+			tc_clip2_bottom	=> 0,
+			tc_clip2_left	=> 0,
+			tc_clip2_right	=> 0,
+			tc_fast_resize  => 0,
+		),
+		Video::DVDRip::Preset->new (
+			name => "43letter_clip",
+			title => "4:3 Letterbox, HQ Resize",
+			tc_clip1_top	=> 80,
+			tc_clip1_bottom	=> 80,
+			tc_clip1_left	=> 16,
+			tc_clip1_right	=> 16,
+			tc_zoom_width	=> 688,
+			tc_zoom_height	=> 392,
+			tc_clip2_top	=> 4,
+			tc_clip2_bottom	=> 4,
+			tc_clip2_left	=> 0,
+			tc_clip2_right	=> 0,
+			tc_fast_resize  => 0,
+		),
+	);
+
+	if ( $TC::VERSION >= 600 ) {
+		push @presets, (
+			Video::DVDRip::Preset->new (
+				name => "43nothing_fast",
+				title => "4:3 No Letterbox, Fast Resize",
+				tc_clip1_top	=> 0,
+				tc_clip1_bottom	=> 0,
+				tc_clip1_left	=> 0,
+				tc_clip1_right	=> 0,
+				tc_zoom_width	=> 720,
+				tc_zoom_height	=> 536,
 				tc_clip2_top	=> 4,
 				tc_clip2_bottom	=> 4,
 				tc_clip2_left	=> 0,
 				tc_clip2_right	=> 0,
 				tc_fast_resize  => 1,
 			),
-		],
+			Video::DVDRip::Preset->new (
+				name => "43letter_clip_fast",
+				title => "4:3 Letterbox, Fast Resize",
+				tc_clip1_top	=> 80,
+				tc_clip1_bottom	=> 80,
+				tc_clip1_left	=> 16,
+				tc_clip1_right	=> 16,
+				tc_zoom_width	=> 688,
+				tc_zoom_height	=> 392,
+				tc_clip2_top	=> 4,
+				tc_clip2_bottom	=> 4,
+				tc_clip2_left	=> 0,
+				tc_clip2_right	=> 0,
+				tc_fast_resize  => 1,
+			),
+		);
+	} else {
+		push @presets, (
+			Video::DVDRip::Preset->new (
+				name => "43nothing_fast",
+				title => "4:3 No Letterbox, Fast Resize",
+				tc_clip1_top	=> 0,
+				tc_clip1_bottom	=> 0,
+				tc_clip1_left	=> 8,
+				tc_clip1_right	=> 8,
+				tc_zoom_width	=> 704,
+				tc_zoom_height	=> 544,
+				tc_clip2_top	=> 0,
+				tc_clip2_bottom	=> 0,
+				tc_clip2_left	=> 0,
+				tc_clip2_right	=> 0,
+				tc_fast_resize  => 1,
+			),
+			Video::DVDRip::Preset->new (
+				name => "43letter_clip_fast",
+				title => "4:3 Letterbox, Fast Resize",
+				tc_clip1_top	=> 80,
+				tc_clip1_bottom	=> 80,
+				tc_clip1_left	=> 16,
+				tc_clip1_right	=> 16,
+				tc_zoom_width	=> 688,
+				tc_zoom_height	=> 384,
+				tc_clip2_top	=> 0,
+				tc_clip2_bottom	=> 0,
+				tc_clip2_left	=> 0,
+				tc_clip2_right	=> 0,
+				tc_fast_resize  => 1,
+			),
+		);
+	}
+
+	my $self = {
+		config => \%config_parameter,
+		order  => \@config_order,
+		presets => \@presets,
 	};
 	
 	return bless $self, $type;
@@ -251,7 +411,7 @@ sub save {
 	my $fh = FileHandle->new;
 
 	open ($fh, "> $filename") or confess "can't write $filename";
-	print $fh q{# $Id: Config.pm,v 1.9 2002/03/02 16:20:04 joern Exp $},"\n";
+	print $fh q{# $Id: Config.pm,v 1.11 2002/03/28 21:02:10 joern Exp $},"\n";
 	print $fh "# This file was generated by Video::DVDRip Version $Video::DVDRip::VERSION\n\n";
 
 	print $fh ${$data_sref};

@@ -1,0 +1,19 @@
+325c325,328
+<   
+---
+>   offset = 0;
+> 
+>   printf ("file %02d %s\n", ++cc, infile);
+> 
+386a390,393
+> 
+>     // progress
+>     fprintf(stderr, "[%s] (%06ld-%06ld)\r", outfile, offset, offset + n);
+> 
+388a396,397
+>   fprintf(stderr,"\n");
+>   
+470c479
+<       fprintf(stderr, "[%s] (000000-%06ld)\r", outfile, n);
+---
+>       fprintf(stderr, "[%s] (%06ld-%06ld)\r", outfile, offset, offset + n);

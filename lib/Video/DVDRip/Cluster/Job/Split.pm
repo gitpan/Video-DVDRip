@@ -1,4 +1,4 @@
-# $Id: Split.pm,v 1.3 2002/02/18 23:03:54 joern Exp $
+# $Id: Split.pm,v 1.4 2002/03/30 11:19:36 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -36,7 +36,7 @@ sub start {
 		command      => $command,
 		cb_line_read => sub {
 			my ($line) = @_;
-			if ( $line =~ /\d+-(\d+)/ ) {
+			if ( $line =~ /\(\d+-(\d+)\)/ ) {
 				$self->set_progress_frames ($1);
 			} elsif ( $line =~ /DVDRIP_SUCCESS/ ) {
 				$successful_finished = 1;

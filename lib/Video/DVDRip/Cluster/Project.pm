@@ -1,4 +1,4 @@
-# $Id: Project.pm,v 1.22 2002/03/17 18:54:20 joern Exp $
+# $Id: Project.pm,v 1.23 2002/03/24 22:52:28 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -163,6 +163,7 @@ sub new {
 	# initialize project title parameters
 	$project->title->set_with_avisplit(1);
 	$project->title->set_with_cleanup(1);
+	$project->title->set_frames_per_chunk(10000);
 	
 	# make a job plan
 	$project->create_job_plan;
@@ -194,12 +195,14 @@ sub create_job_plan {
 	$job->set_prefer_local_access (1);
 	$audio_job = $job;
 
+	my $frames_per_chunk = $title->frames_per_chunk || 10000;
+
 	# then we have to do some work per psu
 	foreach my $psu ( @{$title->program_stream_units} ) {
 		next if not $psu->selected;
 
 		# calculate chunk cnt of this psu
-		my $chunk_cnt = int($psu->frames / 10000);
+		my $chunk_cnt = int($psu->frames / $frames_per_chunk);
 		my $nodes_cnt =
 			Video::DVDRip::Cluster::Master->get_master
 						      ->get_online_nodes_cnt + 1;
@@ -232,6 +235,7 @@ sub create_job_plan {
 		}
 	}
 
+if ( 0 ) {
 	# video has to be merged
 	$job = Video::DVDRip::Cluster::Job::MergeChunks->new ( nr => $nr++ );
 	push @jobs, $job;
@@ -247,7 +251,16 @@ sub create_job_plan {
 	$job->set_prefer_local_access (1);
 	$job->set_depends_on_jobs ( [ $last_job ] );
 	$last_job = $job;
-	
+}
+
+	# audio and video has to be merged
+	$job = Video::DVDRip::Cluster::Job::MergeAudio->new ( nr => $nr++ );
+	push @jobs, $job;
+	$job->set_project ($self);
+	$job->set_prefer_local_access (1);
+	$job->set_depends_on_jobs ( [ $audio_job, @depend_merge_video ] );
+	$last_job = $job;
+
 	# finally split the AVI if requested
 	if ( $title->with_avisplit ) {
 		$job = Video::DVDRip::Cluster::Job::Split->new ( nr => $nr++ );
@@ -558,6 +571,8 @@ sub reset_job {
 	$self->determine_state;
 
 	$self->save;
+
+	Video::DVDRip::Cluster::Master->get_master->job_control;
 
 	1;	
 }

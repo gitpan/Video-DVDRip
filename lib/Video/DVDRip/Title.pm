@@ -1,4 +1,4 @@
-# $Id: Title.pm,v 1.62 2002/03/03 22:02:00 joern Exp $
+# $Id: Title.pm,v 1.66 2002/03/29 16:53:13 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -41,18 +41,21 @@ sub audio_tracks		{ shift->probe_result->audio_tracks	}
 sub chapters			{ shift->probe_result->chapters		}
 sub viewing_angles		{ shift->probe_result->viewing_angles	}
 
-sub volume_rescale		{ shift->scan_result->volume_rescale	}
-
 sub nr				{ shift->{nr}				}
 sub size			{ shift->{size}				}
 sub audio_channel		{ shift->{audio_channel}		}
 sub scan_result			{ shift->{scan_result}			}
 sub probe_result		{ shift->{probe_result}			}
 sub preset			{ shift->{preset}			}
+sub last_applied_preset		{ shift->{last_applied_preset}		}
 sub preview_frame_nr		{ shift->{preview_frame_nr}		}
 sub files			{ shift->{files}			}
 sub actual_chapter		{ shift->{actual_chapter}		}
 sub program_stream_units	{ shift->{program_stream_units}		}
+sub bbox_min_x			{ shift->{bbox_min_x}			}
+sub bbox_min_y			{ shift->{bbox_min_y}			}
+sub bbox_max_x			{ shift->{bbox_max_x}			}
+sub bbox_max_y			{ shift->{bbox_max_y}			}
 
 sub set_nr			{ shift->{nr}			= $_[1] }
 sub set_size			{ shift->{size}			= $_[1] }
@@ -60,9 +63,14 @@ sub set_audio_channel		{ shift->{audio_channel}	= $_[1] }
 sub set_scan_result		{ shift->{scan_result}		= $_[1] }
 sub set_probe_result		{ shift->{probe_result}		= $_[1] }
 sub set_preset			{ shift->{preset}		= $_[1] }
+sub set_last_applied_preset	{ shift->{last_applied_preset}	= $_[1]	}
 sub set_preview_frame_nr	{ shift->{preview_frame_nr}	= $_[1] }
 sub set_actual_chapter		{ shift->{actual_chapter}	= $_[1] }
 sub set_program_stream_units	{ shift->{program_stream_units}	= $_[1] }
+sub set_bbox_min_x		{ shift->{bbox_min_x}		= $_[1]	}
+sub set_bbox_min_y		{ shift->{bbox_min_y}		= $_[1]	}
+sub set_bbox_max_x		{ shift->{bbox_max_x}		= $_[1]	}
+sub set_bbox_max_y		{ shift->{bbox_max_y}		= $_[1]	}
 
 #------------------------------------------------------------------------
 # These attributes must be specified by the user and are
@@ -90,7 +98,7 @@ sub tc_audio_codec		{ shift->{tc_audio_codec}		}
 sub tc_video_bitrate		{ shift->{tc_video_bitrate}      	}
 sub tc_audio_bitrate		{ shift->{tc_audio_bitrate}      	}
 sub tc_video_framerate		{ shift->{tc_video_framerate}      	}
-sub tc_volume_rescale		{ shift->{tc_volume_rescale}      	}
+
 sub tc_target_size		{ shift->{tc_target_size}		}
 sub tc_disc_cnt 	    	{ shift->{tc_disc_cnt}			}
 sub tc_disc_size	    	{ shift->{tc_disc_size}			}
@@ -127,7 +135,7 @@ sub set_tc_audio_codec		{ shift->{tc_audio_codec}	= $_[1]	}
 sub set_tc_video_bitrate	{ shift->{tc_video_bitrate}  	= $_[1]	}
 sub set_tc_audio_bitrate	{ shift->{tc_audio_bitrate} 	= $_[1]	}
 sub set_tc_video_framerate	{ shift->{tc_video_framerate} 	= $_[1]	}
-sub set_tc_volume_rescale	{ shift->{tc_volume_rescale}   	= $_[1]	}
+
 sub set_tc_target_size		{ shift->{tc_target_size}    	= $_[1]	}
 sub set_tc_disc_cnt		{ shift->{tc_disc_cnt}    	= $_[1]	}
 sub set_tc_disc_size		{ shift->{tc_disc_size}    	= $_[1]	}
@@ -142,6 +150,21 @@ sub set_tc_options		{ shift->{tc_options}		= $_[1] }
 sub set_tc_nice			{ shift->{tc_nice}		= $_[1] }
 sub set_tc_preview		{ shift->{tc_preview}		= $_[1] }
 sub set_tc_ac3_passthrough	{ shift->{tc_ac3_passthrough}	= $_[1] }
+
+sub tc_volume_rescale {
+	my $self = shift;
+	return $self->audio_tracks
+		    ->[$self->audio_channel]
+		    ->{tc_volume_rescale};
+}
+
+sub set_tc_volume_rescale {
+	my $self = shift;
+	my ($value) = @_;
+	$self->audio_tracks
+	     ->[$self->audio_channel]
+	     ->{tc_volume_rescale} = $value;
+}
 
 sub vob_dir {
 	my $self = shift; $self->trace_in;
@@ -293,6 +316,16 @@ sub apply_preset {
 	my %par = @_;
 	my ($preset) = @par{'preset'};
 	
+	$self->set_last_applied_preset ( $preset->name );
+	
+	if ( $preset->auto ) {
+		$self->auto_adjust_clip_zoom (
+			frame_size  => $preset->frame_size,
+			fast_resize => $preset->tc_fast_resize,
+		);
+		return 1;
+	}
+	
 	my $attributes = $preset->attributes;
 	my $set_method;
 	foreach my $attr ( @{$attributes} ) {
@@ -372,6 +405,265 @@ sub calc_program_stream_units {
 	$self->log ("Program stream units calculated");
 
 	1;
+}
+
+sub auto_adjust_clip_zoom {
+	my $self = shift;
+	my %par = @_;
+	my  ($frame_size, $fast_resize) =	# frame_size  = 'big' or 'small'
+	@par{'frame_size','fast_resize'};	# fast_resize = 1 or 0
+
+	croak "invalid parameter for frame_size ('$frame_size')"
+		if not $frame_size =~ /^(big|medium|small)$/;
+
+	# frame geometry
+	my $width      = $self->width;
+	my $height     = $self->height;
+
+	# bounding box
+	my $min_x  = $self->bbox_min_x;
+	my $min_y  = $self->bbox_min_y;
+	my $max_x  = $self->bbox_max_x;
+	my $max_y  = $self->bbox_max_y;
+
+	# aspect ratio
+	my $aspect_ratio = $self->aspect_ratio;	# 4:3 or 16:9
+
+	my ($clip1_top, $clip1_bottom, $clip1_left, $clip1_right) = (0, 0, 0, 0);
+	my ($clip2_top, $clip2_bottom, $clip2_left, $clip2_right) = (0, 0, 0, 0);
+	my ($zoom_width, $zoom_height) = (undef, undef);
+
+	# width and height of clip area
+	my $bb_width  = ($max_x - $min_x) + 1;
+	my $bb_height = ($max_y - $min_y) + 1;
+
+	# The suggestion depends on $frame_size and $fast_resize
+	if ( not $fast_resize ) {
+		# we predefine clip1
+		$clip1_top    = $min_y;
+		$clip1_bottom = $height - $max_y;
+		$clip1_left   = $min_x;
+		$clip1_right  = $width - $max_x;
+
+		if ( $aspect_ratio eq '4:3' ) {
+			# resizing to correct aspect ratio
+			# (increase width with factor 1.3333333 / 1.25
+			#  which is exactly 1024 / 720)
+			$zoom_width   = $bb_width * 4/3 / 1.25;
+			$zoom_height  = $bb_height;
+		} else {
+			# resizing to correct aspect ratio
+			# (increase width with factor 1.777777 / 1.25
+			#  which is exactly 1024 / 720)
+			$zoom_width   = $bb_width * 1024 / 720;
+			$zoom_height  = $bb_height;
+		}
+		
+		if ( $frame_size eq 'big' ) {
+			# do not reduce
+			$zoom_width  = int ($zoom_width);
+			$zoom_height = int ($zoom_height);
+
+		} elsif ( $frame_size eq 'medium' ) {
+			# reduce 1/4
+			$zoom_width  = int( $zoom_width  * 0.75 );
+			$zoom_height = int( $zoom_height * 0.75 );
+		} else {
+			# reduce 1/2
+			$zoom_width  = int( $zoom_width  * 0.5 );
+			$zoom_height = int( $zoom_height * 0.5 );
+		}
+
+		# odd values are bad for 2nd clipping
+		++$zoom_height if $zoom_height % 2;
+		++$zoom_width  if $zoom_width % 2;
+
+		# finally use 2nd clipping to get width/height
+		# divisible by 16
+		my $rest;
+		if ( $rest = $zoom_width % 16 ) {
+			if ( $rest % 2 == 0 ) {
+				$clip2_left = $clip2_right = $rest / 2;
+			} else {
+				$clip2_left  = $rest / 2 - 0.5;
+				$clip2_right = $rest / 2 + 0.5;
+			}
+		}
+		if ( $rest = $zoom_height % 16 ) {
+			if ( $rest % 2 == 0 ) {
+				$clip2_top = $clip2_bottom = $rest / 2;
+			} else {
+				$clip2_top    = $rest / 2 - 0.5;
+				$clip2_bottom = $rest / 2 + 0.5;
+			}
+		}
+
+	} else {
+		# first we preset good values for resizing / aspect ratio
+		# After that we apply the cropping to 2nd clip, taking
+		# resize ration in account
+		
+		my %presets = (
+			"16:9" => {
+				"big" => {
+					clip1_left   => 0,
+					clip1_right  => 0,
+					clip1_top    => 0,
+					clip1_bottom => 0,
+					zoom_width   => 720,
+					zoom_height  => 408,
+				},
+				"medium" => {
+					clip1_left   => 0,
+					clip1_right  => 0,
+					clip1_top    => 0,
+					clip1_bottom => 0,
+					zoom_width   => 640,
+					zoom_height  => 360,
+				},
+				"small" => {
+					clip1_left   => 0,
+					clip1_right  => 0,
+					clip1_top    => 0,
+					clip1_bottom => 0,
+					zoom_width   => 512,
+					zoom_height  => 288,
+				},
+			},
+			"4:3"  => {
+				"big" => {
+					clip1_left   => 8,
+					clip1_right  => 8,
+					clip1_top    => 0,
+					clip1_bottom => 0,
+					zoom_width   => 704,
+					zoom_height  => 544,
+				},
+				"medium" => {
+					clip1_left   => 8,
+					clip1_right  => 8,
+					clip1_top    => 0,
+					clip1_bottom => 0,
+					zoom_width   => 528,
+					zoom_height  => 408,
+				},
+				"small" => {
+					clip1_left   => 8,
+					clip1_right  => 8,
+					clip1_top    => 0,
+					clip1_bottom => 0,
+					zoom_width   => 352,
+					zoom_height  => 272,
+				},
+			},
+		);
+
+		my $preset = $presets{$aspect_ratio}->{$frame_size};
+
+		($clip1_top, $clip1_bottom, $clip1_left, $clip1_right,
+		 $zoom_width, $zoom_height) = @$preset{
+		 'clip1_top','clip1_bottom','clip1_left','clip1_right',
+		 'zoom_width','zoom_height'};
+		
+		my $resize_width_ratio  = ($width-$clip1_left-$clip1_left)/$zoom_width;
+		my $resize_height_ratio = ($height-$clip1_top-$clip1_bottom)/$zoom_height;
+
+		$clip2_left   = ($min_x - $clip1_left) / $resize_width_ratio;
+		$clip2_left   = 0 if $clip2_left < 0;
+		$clip2_left   = 1+int($clip2_left) if int($clip2_left) != $clip2_left;
+		$clip2_right  = ($width - $max_x-1 - $clip1_right) / $resize_width_ratio;
+		$clip2_right  = 0 if $clip2_right < 0;
+		$clip2_right  = 1+int($clip2_right) if int($clip2_right) != $clip2_right;
+		$clip2_top    = ($min_y - $clip1_top) / $resize_height_ratio;
+		$clip2_top    = 0 if $clip2_top < 0;
+		$clip2_top    = 1+int($clip2_top) if int($clip2_top) != $clip2_top;
+		$clip2_bottom = ($height - $max_y-1 - $clip1_bottom) / $resize_height_ratio;
+		$clip2_bottom = 0 if $clip2_bottom < 0;
+		$clip2_bottom = 1+int($clip2_bottom) if int($clip2_bottom) != $clip2_bottom;
+
+		my $final_width  = $zoom_width  - $clip2_left - $clip2_right;
+		my $final_height = $zoom_height - $clip2_top  - $clip2_bottom;
+
+		# finally use 2nd clipping to get width/height
+		# dividable by 16
+		my $rest;
+		if ( $rest = $final_width % 16 ) {
+			if ( $rest % 2 == 0 ) {
+				$clip2_left  += $rest / 2;
+				$clip2_right += $rest / 2;
+			} else {
+				$clip2_left  += $rest / 2 - 0.5;
+				$clip2_right += $rest / 2 + 0.5;
+			}
+		}
+		if ( $rest = $final_height % 16 ) {
+			if ( $rest % 2 == 0 ) {
+				$clip2_top    += $rest / 2;
+				$clip2_bottom += $rest / 2;
+			} else {
+				$clip2_top    += $rest / 2 - 0.5;
+				$clip2_bottom += $rest / 2 + 0.5;
+			}
+		}
+
+	}
+
+	# height clipping must not be odd
+	if ( $clip2_top % 2 and $clip2_bottom > $clip2_top ) {
+		++$clip2_top;
+		--$clip2_bottom;
+	} elsif ( $clip2_top % 2 and $clip2_bottom < $clip2_top ) {
+		--$clip2_top;
+		++$clip2_bottom;
+	}
+
+	($zoom_width, $zoom_height) = (undef,undef)
+		if $zoom_width  == ($width  - $clip1_left - $clip2_left) and
+		   $zoom_height == ($height - $clip1_top  - $clip2_bottom);
+
+	$self->set_tc_clip1_left   ( $clip1_left );
+	$self->set_tc_clip1_right  ( $clip1_right );
+	$self->set_tc_clip1_top    ( $clip1_top );
+	$self->set_tc_clip1_bottom ( $clip1_bottom );
+	$self->set_tc_clip2_left   ( $clip2_left );
+	$self->set_tc_clip2_right  ( $clip2_right );
+	$self->set_tc_clip2_top    ( $clip2_top );
+	$self->set_tc_clip2_bottom ( $clip2_bottom );
+	$self->set_tc_zoom_width   ( $zoom_width );
+	$self->set_tc_zoom_height  ( $zoom_height );
+	$self->set_tc_fast_resize  ( $fast_resize );
+
+	1;
+}
+
+sub get_effective_ratio {
+	my $self = shift;
+	my %par = @_;
+	my ($type) = @par{'type'};	# clip1, zoom, clip2
+	
+	my $width        = $self->width;
+	my $height       = $self->height;
+	my $clip1_ratio  = $width/$height;
+
+	return ($width, $height, $clip1_ratio) if $type eq 'clip1';
+
+	my $from_width  = $width-$self->tc_clip1_left-$self->tc_clip1_right;
+	my $from_height = $height-$self->tc_clip1_top-$self->tc_clip1_bottom;
+	my $zoom_width  = $self->tc_zoom_width  || $width;
+	my $zoom_height = $self->tc_zoom_height || $height;
+	my $zoom_ratio = ($zoom_width/$zoom_height) * ($width/$height) / ($from_width/$from_height);
+
+	return ($zoom_width, $zoom_height, $zoom_ratio) if $type eq 'zoom';
+
+	my $clip2_width  = $zoom_width  - $self->tc_clip2_left - $self->tc_clip2_right;
+	my $clip2_height = $zoom_height - $self->tc_clip2_top  - $self->tc_clip2_bottom;
+
+	return ($clip2_width, $clip2_height, $zoom_ratio);
+
+
+#	return ($self->aspect_ratio eq '16:9' ? 16/9 : 4/3)
+#		if $from_width == 0 or $from_height == 0;
+
 }
 
 #---------------------------------------------------------------------
@@ -562,18 +854,15 @@ sub analyze_scan_output {
 
 	$output =~ s/^.*?--splitpipe-finished--\n//s;
 
-	$self->set_scan_result (
-		Video::DVDRip::Scan->analyze (
-			scan_output => $output,
-		)
-
+	my $scan_result = Video::DVDRip::Scan->analyze (
+		scan_output => $output,
 	);
 
-	if ( $self->tc_use_chapter_mode ) {
-		$self->set_tc_volume_rescale ( undef );
-	} else {
-		$self->set_tc_volume_rescale ( $self->volume_rescale );
-	}
+	$self->audio_tracks
+	     ->[$self->audio_channel]
+	     ->{scan_result} = $scan_result;
+
+	$self->set_tc_volume_rescale ( $scan_result->volume_rescale );
 
 	1;
 }
@@ -738,15 +1027,14 @@ sub probe_async_stop {
 	my %par = @_;
 	my ($fh, $output) = @par{'fh','output'};
 
-	$output = "\n\nOutput was:\n\n$output" if $output;
-
 	my $message =   "Error executing:\n\n".
 			$self->get_probe_command.
+			"\n\nOutput was:\n\n".
 			$output;
 
 	close $fh;
 	croak ($message) if $?;
-	
+
 	$self->analyze_probe_output (
 		output => $output
 	);
@@ -759,17 +1047,15 @@ sub analyze_probe_output {
 	my %par = @_;
 	my ($output) = @par{'output'};
 
+
+
 	$self->set_probe_result (
 		Video::DVDRip::Probe->analyze (
 			probe_output => $output,
 		)
 	);
 
-	if ( @{$self->probe_result->audio_tracks} ) {
-		$self->set_audio_channel(0);
-	} else {
-		$self->set_audio_channel(-1);
-	}
+	$self->set_audio_channel(0);
 
 	1;
 }
@@ -832,13 +1118,14 @@ sub suggest_transcode_options {
 		$self->video_mode eq 'pal' ? 25 : 23.976
 	);
 	$self->suggest_video_bitrate;
+	$self->set_preset ( "auto_medium_fast" );
 
 	1;
 }
 
 sub suggest_video_bitrate {
 	my $self = shift;
-	
+		
 	my $target_size = $self->tc_target_size;
 
 	$target_size = 4000 if $target_size > 4000;
@@ -868,6 +1155,9 @@ sub get_transcode_command {
 	my $nr       = $self->nr;
 	my $avi_file = $self->avi_file;
 
+	my $audio_info = $self->audio_tracks
+			      ->[$self->audio_channel];
+
 	my $nice;
 	$nice = "/usr/bin/nice -n ".$self->tc_nice." "
 		if $self->tc_nice =~ /\S/;
@@ -896,19 +1186,18 @@ sub get_transcode_command {
 		if $self->tc_audio_codec ne '';
 	$command .= " -F ".$self->tc_video_af6_codec
 		if $self->tc_video_af6_codec ne '';
+	$command .= " -d" if $audio_info->{type} eq 'lpcm';
 
 	$command .= " -b ".$self->tc_audio_bitrate
 		if $self->tc_audio_bitrate ne '';
 
 	if ( $self->tc_ac3_passthrough ) {
 		$command .=
-			" -A -N ".
-			$self->audio_tracks
-			     ->[$self->audio_channel]
-			     ->{tc_option_n};
+			" -A -N ".$audio_info->{tc_option_n};
 	} else {
-		$command .= " -s ".$self->tc_volume_rescale
-			if $self->tc_volume_rescale ne '';
+		$command .= " -s ".$audio_info->{tc_volume_rescale}
+			if $audio_info->{tc_volume_rescale} != 0 and 
+			   $audio_info->{type} ne 'lpcm';
 	}
 
 	$command .= " -V "
@@ -949,11 +1238,14 @@ sub get_transcode_command {
 			if $zoom =~ /^\d+x\d+$/;
 
 	} else {
+
+		my $multiple_of = $TC::VERSION < 600 ? 32 : 8;
+
 		my ($width_n, $height_n, $err_div32, $err_shrink_expand) =
 			$self->get_fast_resize_options;
 
 		if ( $err_div32 ) {
-			croak "When using fast resize: Clip1 and Zoom size must be divsible by 32";
+			croak "When using fast resize: Clip1 and Zoom size must be divisible by $multiple_of";
 		}
 
 		if ( $err_shrink_expand ) {
@@ -963,10 +1255,12 @@ sub get_transcode_command {
 		if ( $width_n * $height_n >= 0 ) {
 			if ( $width_n > 0 or $height_n > 0 ) {
 				$command .= " -X $height_n,$width_n";
+				$command .= ",$multiple_of" if $multiple_of != 32;
 			} else {
 				$width_n  = abs($width_n);
 				$height_n = abs($height_n);
 				$command .= " -B $height_n,$width_n";
+				$command .= ",$multiple_of" if $multiple_of != 32;
 			}
 		}
 	}
@@ -1002,6 +1296,8 @@ sub get_transcode_command {
 sub get_fast_resize_options {
 	my $self = shift;
 
+	my $multiple_of = $TC::VERSION < 600 ? 32 : 8;
+
 	my $width = $self->width - $self->tc_clip1_left
 				 - $self->tc_clip1_right;
 	my $height = $self->height - $self->tc_clip1_top
@@ -1010,16 +1306,16 @@ sub get_fast_resize_options {
 	my $zoom_width  = $self->tc_zoom_width;
 	my $zoom_height = $self->tc_zoom_height;
 
-	my $width_n  = ($zoom_width  - $width)  / 32;
-	my $height_n = ($zoom_height - $height) / 32;
+	my $width_n  = ($zoom_width  - $width)  / $multiple_of;
+	my $height_n = ($zoom_height - $height) / $multiple_of;
 
 	my ($err_div32, $err_shrink_expand);
 
-	$self->print_debug("width_n=$width_n width=$width width \% 32 = ", $width % 32);
-	$self->print_debug("height_n=$height_n height=$height height \% 32 = ", $height % 32);
+	$self->print_debug("width_n=$width_n width=$width width \% $multiple_of = ", $width % $multiple_of);
+	$self->print_debug("height_n=$height_n height=$height height \% $multiple_of = ", $height % $multiple_of);
 
-	if ( ($width_n != 0 and ( $zoom_width % 32 != 0 or $width % 32 != 0) ) or
-	     ($height_n != 0 and ( $zoom_height % 32 != 0 or $height % 32 != 0 ) ) ) {
+	if ( ($width_n != 0 and ( $zoom_width % $multiple_of != 0 or $width % $multiple_of != 0) ) or
+	     ($height_n != 0 and ( $zoom_height % $multiple_of != 0 or $height % $multiple_of != 0 ) ) ) {
 		$err_div32 = 1;
 	}
 
@@ -1179,8 +1475,11 @@ sub split_async_stop {
 # Methods for taking Snapshots
 #---------------------------------------------------------------------
 
-sub snapshot_filename	   { shift->{snapshot_filename}  	 }
-sub set_snapshot_filename  { shift->{snapshot_filename}  = $_[1] }
+sub snapshot_filename	  	{ shift->{snapshot_filename}  	 	}
+sub set_snapshot_filename  	{ shift->{snapshot_filename}  = $_[1] 	}
+
+sub raw_snapshot_filename	{ shift->{raw_snapshot_filename}   	}
+sub set_raw_snapshot_filename	{ shift->{raw_snapshot_filename} = $_[1]}
 
 sub get_frame_grab_options {
 	my $self = shift;
@@ -1278,20 +1577,28 @@ sub get_convert_snapshot_command {
 	my ($filename) = @par{'filename'};
 
 	my $tmp_dir = "/tmp/dvdrip$$.ppm";
-
 	my $dirname = dirname ($filename);
+
+	my $raw_filename = $self->raw_snapshot_filename;
 
 	return	"mkdir -m 0775 -p $dirname; ".
 		"convert".
 		" -size ".$self->width."x".$self->height.
 		" $tmp_dir/snapshot00000.ppm $filename;".
+		"convert".
+		" -size ".$self->width."x".$self->height.
+		" $tmp_dir/snapshot00000.ppm gray:$raw_filename;".
 		" rm -r $tmp_dir";
 
 }
+
 sub convert_snapshot {
 	my $self = shift; $self->trace_in;
 	my %par = @_;
 	my ($filename) = @par{'filename'};
+
+	unlink $filename;
+	unlink $self->raw_snapshot_filename;
 
 	my $command = $self->get_convert_snapshot_command (
 		filename => $filename
@@ -1300,6 +1607,12 @@ sub convert_snapshot {
 	$self->system (
 		command => $command
 	);
+
+	if ( not -f $filename or not -f $self->raw_snapshot_filename ) {
+		croak "msg: Can't grab preview frame!\nPress Cancel and try a smaller frame number."
+	}
+
+	$self->calc_snapshot_bounding_box;
 
 	1;
 }
@@ -1331,6 +1644,8 @@ sub take_snapshot_async_start {
 	@par{'frame','filename'};
 	
 	$self->set_snapshot_filename ($filename);
+	$filename =~ s/\.[^.]+$//;
+	$self->set_raw_snapshot_filename ($filename.".raw");
 
 	return $self->popen (
 		command => $self->get_take_snapshot_command (
@@ -1360,6 +1675,77 @@ sub take_snapshot_async_stop {
 	);
 
 	$self->set_snapshot_filename(undef);
+
+	1;
+}
+
+sub calc_snapshot_bounding_box {
+	my $self = shift;
+
+	my $filename = $self->raw_snapshot_filename;
+
+        open (IN, $filename)
+                or die "can't read '$filename'";
+        my $blob = "";
+        while (<IN>) {
+                $blob .= $_;
+        }
+        close IN;
+
+        my ($min_x, $min_y, $max_x, $max_y, $x, $y);
+	my $width  = $min_x = $self->width;
+	my $height = $min_y = $self->height;
+	my $thres  = 12;
+
+	# search min_y
+        for ($x = 0; $x < $width; ++$x) {
+		for ($y = 0; $y < $height; ++$y) {
+                        if ( unpack("C", substr($blob, $y*$width+$x, 1)) > $thres ) {
+                                $min_y = $y if $y < $min_y;
+				last;
+                        }
+                }
+        }
+
+	# search max_y
+        for ($x = 0; $x < $width; ++$x) {
+		for ($y = $height-1; $y >= 0; --$y) {
+                        if ( unpack("C", substr($blob, $y*$width+$x, 1)) > $thres ) {
+                                $max_y = $y if $y > $max_y;
+				last;
+                        }
+                }
+        }
+
+	# search min_x
+	for ($y = 0; $y < $height; ++$y) {
+	        for ($x = 0; $x < $width; ++$x) {
+# print "x=$x y=$y min_x=$min_x c=".unpack("C", substr($blob, $y*$width+$x, 1)),"\n";
+                        if ( unpack("C", substr($blob, $y*$width+$x, 1)) > $thres ) {
+                                $min_x = $x if $x < $min_x;
+				last;
+                        }
+                }
+        }
+
+	# search max_y
+	for ($y = 0; $y < $height; ++$y) {
+	        for ($x = $width-1; $x >= 0; --$x) {
+                        if ( unpack("C", substr($blob, $y*$width+$x, 1)) > $thres ) {
+                                $max_x = $x if $x > $max_x;
+				last;
+                        }
+                }
+        }
+
+	# height clipping must not be odd
+	--$min_y if $min_y % 2;
+	++$max_y if $max_y % 2;
+
+	$self->set_bbox_min_x ($min_x);
+	$self->set_bbox_min_y ($min_y);
+	$self->set_bbox_max_x ($max_x);
+	$self->set_bbox_max_y ($max_y);
 
 	1;
 }
@@ -1480,7 +1866,5 @@ sub get_remove_vobs_command {
 	
 	return $command;
 }
-	
-
 
 1;

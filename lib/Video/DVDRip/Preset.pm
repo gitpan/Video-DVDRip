@@ -1,4 +1,4 @@
-# $Id: Preset.pm,v 1.3 2002/01/03 17:40:00 joern Exp $
+# $Id: Preset.pm,v 1.4 2002/03/24 22:54:09 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -16,6 +16,9 @@ use Carp;
 
 sub name			{ shift->{name}				}
 sub title			{ shift->{title}			}
+sub auto			{ shift->{auto}				}
+sub frame_size			{ shift->{frame_size}			}
+
 sub tc_clip1_top		{ shift->{tc_clip1_top}			}
 sub tc_clip1_bottom		{ shift->{tc_clip1_bottom}		}
 sub tc_clip1_left		{ shift->{tc_clip1_left}		}
@@ -30,6 +33,8 @@ sub tc_fast_resize		{ shift->{tc_fast_resize}		}
 
 sub set_name			{ shift->{name}			= $_[1]	}
 sub set_title			{ shift->{title}		= $_[1]	}
+sub set_auto			{ shift->{auto}			= $_[1]	}
+sub set_frame_size		{ shift->{frame_size}		= $_[1]	}
 sub set_tc_clip1_top		{ shift->{tc_clip1_top}		= $_[1]	}
 sub set_tc_clip1_bottom		{ shift->{tc_clip1_bottom}	= $_[1]	}
 sub set_tc_clip1_left		{ shift->{tc_clip1_left}	= $_[1]	}
@@ -51,10 +56,14 @@ sub new {
 	@par{'tc_clip1_top','tc_clip1_bottom','tc_clip1_left','tc_clip1_right'};
 	my  ($tc_clip2_top, $tc_clip2_bottom, $tc_clip2_left, $tc_clip2_right) =
 	@par{'tc_clip2_top','tc_clip2_bottom','tc_clip2_left','tc_clip2_right'};
+	my  ($auto, $frame_size) =
+	@par {'auto','frame_size'};
 
 	my $self = {
 		name		=> $name,
 		title		=> $title,
+		auto		=> $auto,
+		frame_size	=> $frame_size,
 		tc_clip1_top	=> $tc_clip1_top,
 		tc_clip1_bottom	=> $tc_clip1_bottom,
 		tc_clip1_left	=> $tc_clip1_left,

@@ -1,4 +1,4 @@
-# $Id: Main.pm,v 1.33 2002/03/13 18:09:42 joern Exp $
+# $Id: Main.pm,v 1.35 2002/03/31 08:10:54 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -15,6 +15,7 @@ use Video::DVDRip;
 use Video::DVDRip::Project;
 use Video::DVDRip::GUI::Project;
 use Video::DVDRip::GUI::Config;
+use Video::DVDRip::GUI::ImageClip;
 
 use strict;
 use Data::Dumper;
@@ -46,14 +47,6 @@ sub start {
 
 	$self->build if not $open_cluster_control;
 
-	eval {
-		Video::DVDRip->init;
-	};
-	if ( $@ ) {
-		my $msg = $self->stripped_exception;
-		$self->message_window ( message => $msg );
-	}
-
 	if ( $filename ) {
 		$self->open_project_file (
 			filename => $filename
@@ -67,7 +60,7 @@ sub start {
 
 	while ( 1 ) {
 		eval { Gtk->main };
-		if ( $@ =~ /^msg:\s*(.*)\s+at.*?line\s+\d+/ ) {
+		if ( $@ =~ /^msg:\s*(.*)\s+at.*?line\s+\d+/s ) {
 			$self->message_window (
 				message => $1,
 			);
@@ -98,7 +91,7 @@ sub build {
 
 	$win->add ($box);
 	$box->pack_start ($menubar, 0, 1, 0);
-	$box->pack_start ($greetings, 1, 1, 0);
+	$box->pack_start ($greetings, 1, 0, 0);
 
 	$self->set_gtk_greetings ($greetings);
 
@@ -115,7 +108,15 @@ sub build {
 sub create_greetings {
 	my $self = shift;
 	
-	my $text = <<__EOT;
+	my $splash_file;
+	foreach my $INC ( @INC ) {
+		$splash_file = "$INC/Video/DVDRip/splash.png";
+		last if -f $splash_file;
+		$splash_file = "";
+	}
+
+	if ( not $splash_file ) {
+		my $text = <<__EOT;
 dvd::rip - A full featured DVD Ripper GUI for Linux
 
 Version $Video::DVDRip::VERSION
@@ -128,10 +129,29 @@ dvd::rip is free software; you can redistribute it
 and/or modify it under the same terms as Perl itself.
 
 __EOT
-	my $label = Gtk::Label->new ($text);
-	$label->show;
+		my $label = Gtk::Label->new ($text);
+		$label->show;
 
-	return $label;
+		return $label;
+	}
+
+	my $image = Video::DVDRip::GUI::ImageClip->new (
+		gtk_window => $self->widget,
+		width      => 400,
+		height     => 300,
+		thumbnail  => 1,
+		no_clip    => 1,
+	);
+	$image->load_image (
+		filename => $splash_file
+	);
+	$image->draw;
+
+	my $hbox = Gtk::HBox->new (1, 0);
+	$hbox->show;
+	$hbox->pack_start ($image->widget, 1, 0, 0);
+
+	return $hbox;
 }
 
 sub create_window {

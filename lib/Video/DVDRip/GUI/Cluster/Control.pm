@@ -1,4 +1,4 @@
-# $Id: Control.pm,v 1.18 2002/03/13 18:09:18 joern Exp $
+# $Id: Control.pm,v 1.19 2002/03/24 22:53:35 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -333,9 +333,9 @@ sub connect_master {
 		
 		# give up, if we still have no connection
 		if ( not $rpc_server ) {
-			$self->message_window (
-				message => "Can't start local master daemon on port $port."
-			);
+			croak "msg:\nCan't start local master daemon on port $port.\n".
+			      "Execute the dvdrip-master program by hand to\n".
+			      "see why it doesn't run.";
 			return;
 		}
 	}

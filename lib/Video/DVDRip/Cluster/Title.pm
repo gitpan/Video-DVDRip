@@ -1,4 +1,4 @@
-# $Id: Title.pm,v 1.21 2002/03/17 18:54:54 joern Exp $
+# $Id: Title.pm,v 1.22 2002/03/24 22:52:55 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -27,6 +27,9 @@ sub set_with_cleanup		{ shift->{with_cleanup} 	= $_[1] }
 
 sub with_vob_remove		{ shift->{with_vob_remove} 		}
 sub set_with_vob_remove		{ shift->{with_vob_remove} 	= $_[1] }
+
+sub frames_per_chunk		{ shift->{frames_per_chunk}		}
+sub set_frames_per_chunk	{ shift->{frames_per_chunk} 	= $_[1] }
 
 sub create_vob_dir {
 	my $self = shift;
@@ -239,6 +242,34 @@ sub get_merge_chunks_command {
 }
 
 sub get_merge_audio_command {
+	my $self = shift;
+	
+	my $job = $self->project->assigned_job or croak "No job assigned";
+
+	my $target_avi_file        = $self->target_avi_file;
+	my $target_avi_dir         = dirname ( $target_avi_file );
+	my $audio_avi_file         = $self->audio_avi_file;
+
+	my $chunks_mask = sprintf (
+		"%s/%03d/chunks-psu-??/*",
+		$self->project->final_avi_dir,
+		$self->nr
+	);
+
+	my $command =
+		"mkdir -m 0775 -p '$target_avi_dir' && ".
+		"avimerge -i $chunks_mask".
+		" -o $target_avi_file ".
+		" -p $audio_avi_file ".
+		" && echo DVDRIP_SUCCESS";
+
+	$command .= " && rm $chunks_mask '$audio_avi_file'"
+		if $self->with_cleanup;
+
+	return $command;
+}
+
+sub get_merge_audio_command_NO_VIDEO_MERGE {
 	my $self = shift;
 	
 	my $job = $self->project->assigned_job or croak "No job assigned";

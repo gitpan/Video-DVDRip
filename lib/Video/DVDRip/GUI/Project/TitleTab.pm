@@ -1,4 +1,4 @@
-# $Id: TitleTab.pm,v 1.27 2002/03/03 21:26:29 joern Exp $
+# $Id: TitleTab.pm,v 1.30 2002/03/29 16:52:53 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -245,6 +245,15 @@ sub cb_select_title {
 	my $nr = $self->clist_row2title_nr->{$row};
 	$self->project->set_selected_title_nr ($nr);
 	$self->set_selected_title($self->project->content->titles->{$nr});
+
+#	warn "remove me!!!";
+#	my $title = $self->selected_title;
+#	if ( $title ) {
+#		$title->analyze_probe_output (
+#			output => $title->probe_result->probe_output,
+#		);
+#		$title->probe_audio;
+#	}
 	
 	$self->fill_with_values;
 	
@@ -264,25 +273,22 @@ sub init_audio_popup {
 	$audio_popup_menu->show;
 	$audio_popup->set_menu($audio_popup_menu);
 
-	my $item = Gtk::MenuItem->new ("No Audio");
-	$item->show;
-	$item->signal_connect ("select", sub {
-		$title->set_audio_channel(-1);
-		$self->init_title_labels;
-	} );
-	$audio_popup_menu->append($item);
-
+	my $item;
 	my $i = 0;
 	foreach my $audio ( @{$title->audio_tracks} ) {
+		my $sample_rate = $audio->{sample_rate};
+		$sample_rate = "48kHz"   if $sample_rate == 48000;
+		$sample_rate = "41.1kHz" if $sample_rate == 44100;
 		$item = Gtk::MenuItem->new (
 			"$i: $audio->{lang} $audio->{type} ".
-			"$audio->{sample_rate} $audio->{channels}Ch"
+			"$sample_rate $audio->{channels}Ch"
 		);
 		$item->show;
 		$item->signal_connect (
 			"select", sub {
 				$_[1]->set_audio_channel($_[2]);
 				$self->init_title_labels;
+				$self->init_transcode_values;
 			},
 			$title, $i
 		);
@@ -290,7 +296,7 @@ sub init_audio_popup {
 		++$i;
 	}
 
-	$audio_popup->set_history($title->audio_channel+1);
+	$audio_popup->set_history($title->audio_channel);
 
 	# viewing angle popup
 
@@ -439,6 +445,7 @@ sub read_dvd_toc {
 		my %par = @_;
 		my ($progress, $output) = @par{'progress','output'};
 
+# print "---gotoutput:$output\n---end-of-gotoutput\n\n";
 		eval {
 			$titles->[$step]->probe_async_stop (
 				fh     => $progress->fh,

@@ -1,7 +1,9 @@
-# $Id: Makefile,v 1.6 2001/11/26 22:34:31 joern Exp $
+# $Id: Makefile,v 1.8 2002/03/31 08:10:54 joern Exp $
+
+all:	splitpipe
 
 splitpipe:	splitpipe.c
 	cc -o splitpipe splitpipe.c && mv splitpipe ..
 
 clean:
-	rm -f splitpipe ../bin/splitpipe
+	rm -f splitpipe ../splitpipe

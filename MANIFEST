@@ -1,4 +1,3 @@
-
 TODO
 README
 MANIFEST
@@ -8,6 +7,7 @@ test.pl
 dvdrip
 dvdrip-master
 lib/Video/DVDRip.pm
+lib/Video/DVDRip/splash.png
 lib/Video/DVDRip/GUI/Base.pm
 lib/Video/DVDRip/GUI/Progress.pm
 lib/Video/DVDRip/GUI/Project/StorageTab.pm
@@ -53,6 +53,8 @@ lib/Video/DVDRip/Project.pm
 lib/Video/DVDRip/PSU.pm
 lib/Video/DVDRip/Title.pm
 lib/Video/DVDRip/Config.pm
+patches/tc_0.6.0pre4-20020322_avimerge_audio_progress.patch
+patches/tc_0.6.0pre4-20020322_avimerge_audio_progress.patch.readme
 src/splitpipe.c
 src/Makefile
 contrib/fast_resize.gnumeric

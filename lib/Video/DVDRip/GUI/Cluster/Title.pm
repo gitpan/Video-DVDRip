@@ -1,4 +1,4 @@
-# $Id: Title.pm,v 1.5 2002/03/17 18:55:11 joern Exp $
+# $Id: Title.pm,v 1.6 2002/03/24 22:53:55 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -47,10 +47,11 @@ sub new {
 	}
 
 	$self->set_title_data ({
-		with_avisplit   => $title->with_avisplit,
-		with_cleanup    => $title->with_cleanup,
-		with_vob_remove => $title->with_vob_remove,
-		selected_psu    => \%selected_psu,
+		with_avisplit    => $title->with_avisplit,
+		with_cleanup     => $title->with_cleanup,
+		with_vob_remove  => $title->with_vob_remove,
+		selected_psu     => \%selected_psu,
+		frames_per_chunk => $title->frames_per_chunk,
 	});
 
 	return $self;
@@ -96,7 +97,16 @@ sub build {
 			type => "string",
 			value => $title->project->label,
 			readonly => 1,
-			
+		},
+		{
+			label => "Number of frames per chunk",
+			type => "text",
+			value => $title->frames_per_chunk,
+			onchange => sub {
+				$title_data->{frames_per_chunk} = $_[0]->get_text;
+			},
+			width => 80,
+			readonly => ($title->project->state ne 'not scheduled'),
 		},
 		{
 			label => "Do avisplit after transcoding?",

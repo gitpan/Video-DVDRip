@@ -1,4 +1,4 @@
-# $Id: Progress.pm,v 1.15 2002/01/30 22:46:33 joern Exp $
+# $Id: Progress.pm,v 1.16 2002/03/24 22:54:09 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -191,17 +191,21 @@ sub progress {
 		$buffer .= $tmp;
 	}
 
+# print "buffer=---$buffer---eob\n\n";
+
 	# store output
 	if ( $self->need_output or length($self->{output}) < 16384 ) {
 		$self->{output} .= $buffer;
 	}
+
+# print "output=---$self->{output}---outputend\n\n";
 
 	# are we finished?
 	if ( $! != EAGAIN ) {
 		my $close_callback = $self->close_callback;
 		my $rc = &$close_callback (
 			progress => $self,
-			output   => $self->{output}.$buffer
+			output   => $self->{output}
 		);
 
 		if ( $rc eq 'finished' ) {

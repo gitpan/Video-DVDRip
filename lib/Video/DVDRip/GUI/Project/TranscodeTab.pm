@@ -1,4 +1,4 @@
-# $Id: TranscodeTab.pm,v 1.35 2002/03/13 18:10:43 joern Exp $
+# $Id: TranscodeTab.pm,v 1.36 2002/03/29 16:18:28 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -180,6 +180,8 @@ sub create_transcode_tab {
 	$hbox->pack_start($label, 0, 1, 0);
 	$table->attach_defaults ($hbox, 0, 1, $row, $row+1);
 
+	$self->transcode_widgets->{tc_ac3_passthrough_hbox1} = $hbox;
+
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
 	my $radio_yes = Gtk::RadioButton->new ("Yes");
@@ -188,6 +190,8 @@ sub create_transcode_tab {
 	my $radio_no = Gtk::RadioButton->new ("No", $radio_yes);
 	$radio_no->show;
 	$hbox->pack_start($radio_no, 0, 1, 0);
+
+	$self->transcode_widgets->{tc_ac3_passthrough_hbox2} = $hbox;
 	
 	$table->attach_defaults ($hbox, 1, 2, $row, $row+1);
 
@@ -393,7 +397,7 @@ sub create_transcode_tab {
 
 	# Suggest Bitrates
 	++$row;
-	$button = Gtk::Button->new_with_label ("Suggest Bitrates");
+	$button = Gtk::Button->new_with_label ("Suggest V-Bitrate");
 	$button->show;
 	$button->signal_connect ("clicked", sub { $self->suggest_bitrates } );
 	$table->attach_defaults ($button, 0, 1, $row, $row+1);
@@ -805,6 +809,13 @@ sub init_transcode_values {
 
 	$widgets->{tc_preview_checkbox}->set_active ( $preview );
 
+	if ( $title->audio_tracks->[$title->audio_channel]->{type} eq 'ac3' ) {
+		$widgets->{tc_ac3_passthrough_hbox1}->show;
+		$widgets->{tc_ac3_passthrough_hbox2}->show;
+	} else {
+		$widgets->{tc_ac3_passthrough_hbox1}->hide;
+		$widgets->{tc_ac3_passthrough_hbox2}->hide;
+	}
 	$self->update_storage_labels;
 
 	$self->set_in_transcode_init(0);
@@ -847,9 +858,7 @@ sub suggest_bitrates {
 
 	my $target_size = $title->tc_target_size;
 
-	if ( not $title->tc_ac3_passthrough ) {
-		$title->set_tc_audio_bitrate(128);
-	} else {
+	if ( $title->tc_ac3_passthrough ) {
 		$title->set_tc_audio_bitrate(
 			$title->audio_tracks
 			      ->[$title->audio_channel]

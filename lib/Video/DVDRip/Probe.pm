@@ -1,4 +1,4 @@
-# $Id: Probe.pm,v 1.11 2002/03/03 21:26:47 joern Exp $
+# $Id: Probe.pm,v 1.12 2002/03/29 16:18:54 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -14,35 +14,37 @@ use base Video::DVDRip::Base;
 use Carp;
 use strict;
 
-sub width		{ shift->{width}	    	}
-sub height		{ shift->{height}	    	}
-sub aspect_ratio	{ shift->{aspect_ratio}	    	}
-sub video_mode		{ shift->{video_mode}	    	}
-sub letterboxed		{ shift->{letterboxed}	    	}
-sub frames		{ shift->{frames}		}
-sub runtime		{ shift->{runtime}		}
-sub frame_rate		{ shift->{frame_rate}		}
-sub audio_size		{ shift->{audio_size}		}
-sub bitrates		{ shift->{bitrates}		}	# href
-sub audio_tracks	{ shift->{audio_tracks}		}	# lref
-sub probe_output	{ shift->{probe_output}	    	}
-sub chapters		{ shift->{chapters}	    	}
-sub viewing_angles	{ shift->{viewing_angles}	}
+sub width			{ shift->{width}	    		}
+sub height			{ shift->{height}	    		}
+sub aspect_ratio		{ shift->{aspect_ratio}	    		}
+sub video_mode			{ shift->{video_mode}	    		}
+sub letterboxed			{ shift->{letterboxed}	    		}
+sub frames			{ shift->{frames}			}
+sub runtime			{ shift->{runtime}			}
+sub frame_rate			{ shift->{frame_rate}			}
+sub audio_size			{ shift->{audio_size}			}
+sub bitrates			{ shift->{bitrates}			}	# href
+sub audio_tracks		{ shift->{audio_tracks}			}	# lref
+sub probe_output		{ shift->{probe_output}	    		}
+sub audio_probe_output		{ shift->{audio_probe_output}  		}
+sub chapters			{ shift->{chapters}	    		}
+sub viewing_angles		{ shift->{viewing_angles}		}
 
-sub set_width		{ shift->{width}	= $_[1]	}
-sub set_height		{ shift->{height}	= $_[1]	}
-sub set_aspect_ratio	{ shift->{aspect_ratio}	= $_[1]	}
-sub set_video_mode	{ shift->{video_mode}	= $_[1]	}
-sub set_letterboxed	{ shift->{letterboxed}	= $_[1]	}
-sub set_frames		{ shift->{frames}	= $_[1] }
-sub set_runtime		{ shift->{runtime}	= $_[1] }
-sub set_frame_rate	{ shift->{frame_rate}	= $_[1] }
-sub set_audio_size	{ shift->{audio_size}	= $_[1] }
-sub set_bitrates	{ shift->{bitrates}	= $_[1] }
-sub set_audio_tracks	{ shift->{audio_tracks}	= $_[1] }
-sub set_probe_output	{ shift->{probe_output}	= $_[1]	}
-sub set_chapters	{ shift->{chapters}	= $_[1]	}
-sub set_viewing_angles	{ shift->{viewing_angles}=$_[1]	}
+sub set_width			{ shift->{width}		= $_[1]	}
+sub set_height			{ shift->{height}		= $_[1]	}
+sub set_aspect_ratio		{ shift->{aspect_ratio}		= $_[1]	}
+sub set_video_mode		{ shift->{video_mode}		= $_[1]	}
+sub set_letterboxed		{ shift->{letterboxed}		= $_[1]	}
+sub set_frames			{ shift->{frames}		= $_[1] }
+sub set_runtime			{ shift->{runtime}		= $_[1] }
+sub set_frame_rate		{ shift->{frame_rate}		= $_[1] }
+sub set_audio_size		{ shift->{audio_size}		= $_[1] }
+sub set_bitrates		{ shift->{bitrates}		= $_[1] }
+sub set_audio_tracks		{ shift->{audio_tracks}		= $_[1] }
+sub set_probe_output		{ shift->{probe_output}		= $_[1]	}
+sub set_audio_probe_output	{ shift->{audio_probe_output}	= $_[1]	}
+sub set_chapters		{ shift->{chapters}		= $_[1]	}
+sub set_viewing_angles		{ shift->{viewing_angles}	= $_[1]	}
 
 sub analyze {
 	my $class = shift;
@@ -86,15 +88,16 @@ sub analyze {
 				sample_width => $3,
 				bitrate      => undef,	# later set by analyze_audio
 				tc_option_n  => undef,	# later set by analyze_audio
+				scan_result  => undef,  # later set by Title->scan
 			};
 		}
 	}
 
 	my $i = 0;
-	while ( $probe_output =~ /dvd_reader.c.*?ac3\s+(\w+).*?(\d+)Ch/g ) {
-		$audio_tracks[$i]->{type}     = "AC3";
-		$audio_tracks[$i]->{lang}     = $1;
-		$audio_tracks[$i]->{channels} = $2;
+	while ( $probe_output =~ /\(dvd_reader.c\)\s+([^\s]+)\s+(\w+).*?(\d+)Ch/g ) {
+		$audio_tracks[$i]->{type}     = $1;
+		$audio_tracks[$i]->{lang}     = $2;
+		$audio_tracks[$i]->{channels} = $3;
 		++$i;
 	}
 
@@ -122,6 +125,8 @@ sub analyze_audio {
 	my $self = shift;
 	my %par = @_;
 	my ($probe_output) = @par{'probe_output'};
+	
+	$self->set_audio_probe_output ( $probe_output );
 	
 	my @lines = split (/\n/, $probe_output);
 	

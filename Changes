@@ -1,6 +1,103 @@
-$Id: Changes,v 1.64 2002/03/17 18:55:24 joern Exp $
+$Id: Changes,v 1.72 2002/03/31 08:32:52 joern Exp $
 
-Revision history for Perl extension Video::DVDRip
+Revision history for dvd::rip
+
+0.38 easter-egg Sun Mar 31 2002, joern
+	No changes since last pre-release, except for a graphical
+	dvd::rip startup message, which is totally useless but nice ;)
+
+0.38_03 Fri Mar 29 2002, joern
+	Note:
+	- the project file format has changed. For existent projects:
+	  note the volume rescale value before upgrading and set
+	  it by hand afterwards.
+
+	Features:
+	- lpcm encoded audio is supported, no passthrough but mp3
+	  encoding.
+	- changed "Suggest Bitrates" button to "Suggest V-Bitrate".
+	  Audio bitrate is untouched so you can enter your favourite
+	  audio bitrate and press the button to get the corresponding
+	  video bitrate for your target size selection.
+
+	Bugfixes:
+	- all presets produce now height clippings with even values. Odd
+	  values result in artefacts if "Use YUV Internal" is activated,
+	  which is always recommended because it's faster.
+	- transcoding without audio didn't work. I did not really fix
+	  this bug, because I decided that deactivating audio makes
+	  no sense anyway, so the "bugfix" was simply removing the
+	  feature ;)
+	- cluster mode merging and split progress did not work
+
+0.38_02 Thu Mar 28 2002, joern
+	Features:
+	- Frame ratios, width and height are now updated immediately
+	  when you change values in the Clip & Zoom text fields.
+	- I adjusted the "Autoadjust HQ Resize" presets. Big is now
+	  the whole frame (with correct aspect ratio), medium 75%
+	  and small 50% of the frame. (was: 75%, 62.5%, 50%).
+	- auto adjusting and all presets now produce final frame sizes
+	  which are divisible by 16, because at least the divx4 codec
+	  produces strange color artefacts if this rule is violated
+	  (Thanks to Christoph Lampert for his hint about this, which
+	  saved me much debugging time)
+	- you see exclamation marks behind sizes of the final image,
+	  which are not divisble by 16
+
+	Bugfixes:
+	- splitpipe.c did not compile on PPC architectures. Thanks to
+	  Martin Hill <mhill AT alumni.uwaterloo.ca> for his patch.
+
+0.38_01 Sun Mar 24 2002, joern
+	Note:
+	- from now on you need at least transcode-0.6.0pre4-20020322
+	  for Cluster Mode
+	- this is a pre-release because the new auto adjust feature
+	  needs some testing. Also you currently must patch transcode's
+	  avimerge program for getting proper progress information in
+	  Cluster Mode for audio merge (details below).
+	
+	Features:
+	- with transcode version 0.6.0pre4 dvd::rip supports the
+	  new fast resize mode which can be used with multiple
+	  of 8 frame sizes. All fast resize presets use this
+	  if possible for hitting the aspect ration more exactly.
+	- new "Autoadjust Presets" with big, medium and small target
+	  frame sizes, with or without fast resize option. Everything
+	  is detected automatically: letterbox/black bars, aspect
+	  ratio etc. The fast resize presets are only available with
+	  transcode 0.6.0pre4.
+	- now the *real* aspect ratio is printed under each
+	  preview image after image regeneration. That means clipping
+	  is ignored. "16:9" and "4:3" are printed if the corresponding
+	  ratio occurs. Future releases will display the aspect ratio
+	  in realtime when sizes are changed by hand, not only after
+	  image regeneration.
+	- Cluster Mode:
+	  - no video-merge job anymore, using an actual extension
+	    of transcode which supports this. Video merging is done
+	    with audio multiplexing in one step. This saves time and
+	    disk space.
+	  - now the merge job has progress information, too
+	    (when Thomas applied my avimerge patch.
+	     transcode-0.6.0pre4-20020324 does not contatin it
+	     so you must apply it by hand: see ./patches directory)
+	  - Cluster Control Daemon now checks for prerequisites and
+	    throws appropriate error messages if something is missing
+	    (pstree or suid root fping)
+	  - you now can configure the number of frames per chunk
+	    in the Edit Cluster Project dialog. Default is 10000.
+	    If the performance of your cluster nodes differs much
+	    you can decrease this value to prevent slow nodes from
+	    blocking the whole cluster with transcoding a huge chunk
+	    while the others are idle. Note: decreasing the chunk size
+	    too much makes 2-pass encoding useless, because the
+	    material for analysis becomes too short.
+
+	Bugfixes:
+	- sometimes dvd::rip reported twice as much audio channels
+
 
 0.37 Sun Mar 17 2002, joern
 	Note:

@@ -1,4 +1,4 @@
-# $Id: MergeAudio.pm,v 1.2 2002/03/17 18:52:09 joern Exp $
+# $Id: MergeAudio.pm,v 1.4 2002/03/29 16:52:31 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -35,12 +35,19 @@ sub start {
 	my $command = $title->get_merge_audio_command;
 	$project->set_assigned_job ( undef );
 
+	$self->set_progress_frames_cnt ($title->frames);
+
 	my $successful_finished = 0;
+	my $first = 1;
 	$self->popen (
 		command      => $command,
 		cb_line_read => sub {
 			my ($line) = @_;
-			if ( $line =~ /DVDRIP_SUCCESS/ ) {
+			if ( $line =~ /\(\d+-(\d+)\)/ ) {
+				$self->set_progress_start_time(time) if $first;
+				$self->set_progress_frames ($1);
+				$first = 0;
+			} elsif ( $line =~ /DVDRIP_SUCCESS/ ) {
 				$successful_finished = 1;
 			}
 		},
@@ -56,10 +63,4 @@ sub start {
 	1;
 }
 
-sub calc_progress {
-	my $self = shift;
-
-       return "Runtime: ".$self->progress_runtime;
-}
- 
 1;

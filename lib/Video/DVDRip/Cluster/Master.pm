@@ -1,4 +1,4 @@
-# $Id: Master.pm,v 1.21 2002/03/17 18:53:55 joern Exp $
+# $Id: Master.pm,v 1.22 2002/03/24 22:51:38 joern Exp $
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
 # 
@@ -101,6 +101,33 @@ sub set_node_check_watcher	{ shift->{node_check_watcher}	= $_[1] }
 		return $self;
 	}
 
+}
+
+sub check_prerequisites {
+	my $class = shift;
+	
+	# check for suid root /usr/sbin/fping
+	croak "/usr/sbin/fping missing"
+		if not -f "/usr/sbin/fping";
+	croak "no permission to execute /usr/sbin/fping"
+		if not -x "/usr/sbin/fping";
+
+	my ($mode,$uid) = (stat("/usr/sbin/fping"))[2,4];
+	my $suid = $mode & 04000;
+
+	croak "/usr/sbin/fping is not suid root"
+		if not $suid or $uid != 0;
+
+	# search for pstree
+	my @path = split(":", $ENV{PATH});
+	my $found = 0;
+	foreach my $path ( @path ) {
+		$found = 1, last if -x "$path/pstree";
+	}
+
+	croak "pstree not found in PATH" if not $found;
+
+	1;
 }
 
 sub node_check_unnecessary {

@@ -1,4 +1,4 @@
-# $Id: ClipZoomTab.pm,v 1.17 2002/03/13 18:10:10 joern Exp $
+# $Id: ClipZoomTab.pm,v 1.20 2002/03/29 16:17:09 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -472,6 +472,7 @@ sub create_adjust_tab {
 			my ($widget, $method) = @_;
 			$self->selected_title->$method ( $widget->get_text );
 			$self->update_fast_resize_info;
+			$self->show_preview_labels
 		}, "set_$attr");
 	}
 
@@ -550,7 +551,8 @@ sub update_fast_resize_info {
 			$title->get_fast_resize_options;
 
 		if ( $err_div32 or $err_shrink_expand ) {
-			$info .= "32 boundary! " if $err_div32;
+			my $multiple_of = $TC::VERSION < 600 ? 32 : 8;
+			$info .= "$multiple_of boundary! " if $err_div32;
 			$info .= "shrink-expand!" if $err_shrink_expand;
 			$info =~ s! $!!;
 			$info =~ s! s! / s!;
@@ -621,15 +623,12 @@ sub show_preview_labels {
 
 	my ($width, $height, $warn_width, $warn_height, $text, $ratio);
 	foreach $type ( @types ) {
-		$image = $self->adjust_widgets->{"image_$type"};
-		$width  = $image->image_width;
-		$height = $image->image_height;
-		next if $width == 0 or $height == 0;
-		$ratio  = sprintf ("%2.2f", ($width/$height));
-		$ratio  = "4:3" if $ratio eq '1.33';
-		$ratio  = "16:9" if $ratio eq '1.77';
-		$warn_width = ($width%8) ? "!":"";
-		$warn_height = ($height%8) ? "!":"";
+		($width, $height, $ratio) = $title->get_effective_ratio ( type => $type );
+		$ratio  = sprintf ("%1.2f", $ratio);
+		$ratio  = "4:3"  if $ratio >= 1.32 and $ratio <= 1.34;
+		$ratio  = "16:9" if $ratio >= 1.76 and $ratio <= 1.78;
+		$warn_width  = ($type eq 'clip2' and $width%16) ? "!":"";
+		$warn_height = ($type eq 'clip2' and $height%16) ? "!":"";
 		$text = sprintf ("Size: %d%sx%d%s, Ratio: %s",
 			$width, $warn_width, $height, $warn_height,
 			$ratio
@@ -703,8 +702,15 @@ sub grab_preview_frame {
 
 		$title->take_snapshot_async_stop ( fh => $progress->fh );
 
+		$title->apply_preset ( 
+			preset => $self->config_object->get_preset (
+				name => $title->preset
+			)
+		) if not $title->last_applied_preset;
+
 		$self->make_previews;
 		$self->show_preview_images;
+		$self->init_adjust_values;
 
 		$self->log ("Preview grabbing finished.");
 
@@ -799,13 +805,21 @@ sub open_preview_window {
 			     ->set_text ($value);
 
 			if ( $clip_type =~ /left/ or $clip_type =~ /right/ ) {
-				my $width = $self->adjust_widgets->{"image_$type"}->image_width;
+				my $width = $self->adjust_widgets
+						 ->{"image_$type"}
+						 ->image_width;
 				$width -= $value-$old_value;
-				$self->adjust_widgets->{"image_$type"}->set_image_width($width);
+				$self->adjust_widgets
+				     ->{"image_$type"}
+				     ->set_image_width($width);
 			} else {
-				my $height = $self->adjust_widgets->{"image_$type"}->image_height;
+				my $height = $self->adjust_widgets
+						  ->{"image_$type"}
+						  ->image_height;
 				$height -= $value-$old_value;
-				$self->adjust_widgets->{"image_$type"}->set_image_height($height);
+				$self->adjust_widgets
+				     ->{"image_$type"}
+				     ->set_image_height($height);
 			}
 			$self->show_preview_labels ( type => $type );
 		},
@@ -840,7 +854,13 @@ sub move_clip2_to_clip1 {
 	my $title = $self->selected_title;
 	return 1 if not $title;
 
-	return 1 if $title->tc_fast_resize;
+	if ( $title->tc_fast_resize ) {
+		$self->message_window (
+			message => "This is not possible because\n".
+				   "fast resizing is enabled."
+		);
+		return 1;
+	}
 
 	my $clip1_top    = $title->tc_clip1_top;
 	my $clip1_bottom = $title->tc_clip1_bottom;
@@ -849,9 +869,10 @@ sub move_clip2_to_clip1 {
 
 	if ( $clip1_top or $clip1_bottom or $clip1_left or $clip1_right ) {
 		$self->message_window (
-			message => "2nd clipping parameters can only moved\n".
-				   "to 1st clipping parameters, if 1st clipping\n".
-				   "is not defined."
+			message =>
+				"2nd clipping parameters can only be\n".
+				"moved to 1st clipping parameters, if\n".
+				"1st clipping is not defined."
 		);
 		return 1;
 	}
