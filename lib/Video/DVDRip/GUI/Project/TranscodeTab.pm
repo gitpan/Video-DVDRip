@@ -1,4 +1,4 @@
-# $Id: TranscodeTab.pm,v 1.24 2002/01/04 12:20:26 joern Exp $
+# $Id: TranscodeTab.pm,v 1.25 2002/01/06 23:21:47 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -723,7 +723,7 @@ sub transcode {
 	my $progress_callback = sub {
 		my %par = @_;
 		my ($buffer) = @par{'buffer'};
-		$buffer =~ /\[\d{6}-(\d+)\],\s+(.*?)\[.*?$/;
+		$buffer =~ /\[\d{6}-(\d+)\]/;
 		$frames = $1 if $1;
 		return $sum_frames + $frames;
 	};

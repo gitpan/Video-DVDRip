@@ -1,4 +1,4 @@
-# $Id: Content.pm,v 1.10 2002/01/03 17:40:00 joern Exp $
+# $Id: Content.pm,v 1.11 2002/01/06 13:54:00 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -53,73 +53,43 @@ sub new {
 sub read_title_listing {
 	my $self = shift;
 	
-	my $mount_point = $self->project->mount_point;
+	my $dvd_device = $self->project->dvd_device;
 
-	my $video_ts;
-	my $dvd_mounted = 0;
-
-	# try to find VIDEO_TS folder
-	$video_ts = -d "$mount_point/VIDEO_TS" ?
-		"$mount_point/VIDEO_TS" :
-		"$mount_point/video_ts";
-
-	# Mount DVD if we do not find the video_ts folder.
-	if ( not -d $video_ts ) {
-		$self->system (
-			command   => "mount $mount_point",
-		);
-		$dvd_mounted = 1;
-
-		$video_ts = -d "$mount_point/VIDEO_TS" ?
-			"$mount_point/VIDEO_TS" :
-			"$mount_point/video_ts";
-	}
-
-	# Fatal error if we still can't find the video_ts folder
-	if ( not -d $video_ts ) {
-		croak 	"can't find VIDEO_TS/video_ts folder in ".
-			"directory '$mount_point'";
+	# execute tcprobe to get the number of titles
+	my $output = $self->system (
+		command => "tcprobe -i $dvd_device"
+	);
+	
+	my $title_cnt;
+	($title_cnt) = $output =~ m!DVD\s+title\s+\d+/(\d+)!;
+	
+	# Fatal error if we can't determine the title cnt
+	if ( not $title_cnt ) {
+		croak "Can't determine number of titles.\n".
+		      "Please put the DVD in your drive.\n".
+		      "tcprobe output was:\n$output";
 	}
 	
-	# read directory listing
-	my @files = grep /VTS.*[^0]\.VOB.*$/i, glob ("$video_ts/*");
-
-	# analyze files and create according Title objects
-	my $title;
-	my %titles;
-	my $nr;
-	foreach my $file ( @files ) {
-		$file =~ /(VTS_(\d+)_\d+\.VOB.*$)/i;
-		$nr = 0+$2;
-		$title = $titles{$nr};
-		$title ||= Video::DVDRip::Title->new (
-			nr => $nr,
+	my ($nr, %titles);
+	foreach my $nr ( 1..$title_cnt ) {
+		$titles{$nr} = Video::DVDRip::Title->new (
+			nr      => $nr,
 			project => $self->project
 		);
-		$titles{$nr} ||= $title;
-		$title->add_vob ( file => $file );
 	}
 
-	# story Title objects
+	# store Title objects
 	$self->set_titles (\%titles);
-	
-	# if we mounted the DVD, we umount it here
-	# (as it was before)
-	if ( $dvd_mounted ) {
-		$self->system (
-			command => "umount $mount_point",
-		);
-	}
 	
 	1;
 }
 
-sub get_titles_by_size {
+sub get_titles_by_nr {
 	my $self = shift;
 	
 	$self->read_title_listing if not $self->titles;
 
-	my @titles = sort { $b->size <=> $a->size } values %{$self->titles};
+	my @titles = sort { $a->nr <=> $b->nr } values %{$self->titles};
 
 	return \@titles;
 }

@@ -1,4 +1,4 @@
-# $Id: Main.pm,v 1.21 2002/01/03 17:40:01 joern Exp $
+# $Id: Main.pm,v 1.23 2002/01/10 22:21:57 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -45,19 +45,21 @@ sub start {
 
 	$self->build;
 
+	eval {
+		Video::DVDRip->init;
+	};
+	if ( $@ ) {
+		my $msg = $self->stripped_exception;
+		$self->message_window ( message => $msg );
+	}
+
 	if ( $filename ) {
 		$self->open_project_file (
 			filename => $filename
 		);
 	}
 
-	eval {
-		Video::DVDRip::Project->check_installation;
-	};
-	if ( $@ ) {
-		my $msg = $self->stripped_exception;
-		$self->message_window ( message => $msg );
-	}
+	$self->log ("Detected transcode version: ".$TC::VERSION);
 
 	while ( 1 ) {
 		eval { Gtk->main };
@@ -111,7 +113,7 @@ Version $Video::DVDRip::VERSION
 
 Copyright (c) 2001-2002 Joern Reder, All Rights Reserved
 
-http://www.netcologne.de/~nc-joernre/
+http://www.exit1.org/dvdrip/
 
 dvd::rip is free software; you can redistribute it
 and/or modify it under the same terms as Perl itself.

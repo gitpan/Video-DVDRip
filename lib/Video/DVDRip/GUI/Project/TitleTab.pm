@@ -1,4 +1,4 @@
-# $Id: TitleTab.pm,v 1.20 2002/01/03 17:40:01 joern Exp $
+# $Id: TitleTab.pm,v 1.23 2002/01/10 22:22:21 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -56,7 +56,7 @@ sub create_title_tab {
 	$vbox->pack_start ( $frame, 0, 1, 0);
 
 	# 2. TOC List / Frame
-	$frame = Gtk::Frame->new ("DVD Table of Contents (ordered by size)");
+	$frame = Gtk::Frame->new ("DVD Table of Contents");
 	$frame->show;
 	$vbox->pack_start ( $frame, 0, 1, 0);
 
@@ -69,17 +69,23 @@ sub create_title_tab {
 	$list_vbox->show;
 	$hbox->pack_start ( $list_vbox, 0, 1, 0);
 
+	my $sw = new Gtk::ScrolledWindow( undef, undef );
+	$sw->show;
+	$sw->set_policy( 'automatic', 'automatic' );
+
 	my $clist = Gtk::CList->new_with_titles (
-		"Title", "Size (MB)", "Additional Information"
+		"Title", "Technical Information"
 	);
 	$clist->show,
 	$clist->set_usize (400, 300);
 	$clist->set_selection_mode( 'browse' ); 
 	$clist->signal_connect ("select_row", sub { $self->cb_select_title (@_) } );
 
+	$sw->add( $clist );
+
 	$self->rip_title_widgets->{content_clist} = $clist;
 
-	$list_vbox->pack_start ( $clist, 0, 1, 0);
+	$list_vbox->pack_start ( $sw, 0, 1, 0);
 
 	# 3. Audio Selection Popup
 	my $audio_vbox = Gtk::VBox->new;
@@ -155,7 +161,7 @@ sub create_title_tab {
 	$self->rip_title_widgets->{tc_use_chapter_mode_select} = $radio_select;
 
 	# chapter selection list
-	my $sw = new Gtk::ScrolledWindow( undef, undef );
+	$sw = new Gtk::ScrolledWindow( undef, undef );
 	$sw->set_policy( 'automatic', 'automatic' );
 	$sw->set_usize(undef, 156);
 
@@ -417,7 +423,7 @@ sub read_dvd_toc {
 		return;
 	}
 	
-	my $titles = $content->get_titles_by_size;
+	my $titles = $content->get_titles_by_nr;
 	my $step = -1;
 
 	my $open_callback = sub {
@@ -475,6 +481,9 @@ sub read_dvd_toc {
 	$self->comp('progress')->open (
 		label             => "Reading DVD TOC",
 		need_output       => 1,
+		show_eta          => 1,
+		show_percent      => 1,
+		show_fps          => 0,
 		max_value         => scalar(@{$titles}),
 		open_callback     => $open_callback,
 		progress_callback => $progress_callback,
@@ -497,7 +506,7 @@ sub fill_content_list {
 	
 	return if not $self->project->content->titles;
 
-	my $titles = $self->project->content->get_titles_by_size;
+	my $titles = $self->project->content->get_titles_by_nr;
 	
 	$self->clear_content_list;
 	
@@ -526,7 +535,7 @@ sub append_content_list {
 
 	my $row = $self->rip_title_widgets->{content_clist}->append (
 		$title->nr,
-		int($title->size/1024/1024),
+#		int($title->size/1024/1024),
 		$self->get_title_info ( title => $title ),
 	);
 	
@@ -606,21 +615,22 @@ sub rip_title {
 					    "rip_async_start";
 	my $stop_method  = $with_scanning ? "rip_and_scan_async_stop" :
 					    "rip_async_stop";
-	my $window_title = $with_scanning ? "Rip and Scan DVD Title" :
-					    "Rip DVD Title";
-
-	my $max_value = int ($title->size / 1024);
 
 	my $open_callback = sub {
 		return $title->$start_method();
 	};
 
+	my $frames = 0;
 	my $progress_callback = sub {
+		# no progress bar for versions prior 0.6.0(pre)
+		return 1 if $TC::VERSION < 600;
+
+		# otherwise we get the output of "tcdemux -W" here,
+		# where we just need to count lines (one frame per line)
 		my %par = @_;
 		my ($buffer) = @par{'buffer'};
-		$buffer =~ /(\d+)-(\d+)\n[^\n]*$/s;
-		my ($chunk, $bytes) = ($1, $2);
-		return ($chunk-1)*1024*1024 + int($bytes/1024);
+		$frames += $buffer =~ tr/\n/\n/;
+		return $frames;
 	};
 
 	my $close_callback = sub {
@@ -646,10 +656,10 @@ sub rip_title {
 	$self->comp('progress')->open (
 		label             => "Ripping Title #".$title->nr,
 		need_output       => 1,
-		show_percent      => 1,
-		show_eta          => 1,
-		show_fps          => 0,
-		max_value         => $max_value,
+		show_percent      => ($TC::VERSION >= 600),
+		show_eta          => ($TC::VERSION >= 600),
+		show_fps          => ($TC::VERSION >= 600),
+		max_value         => ($TC::VERSION >= 600 ? $title->frames : 1),
 		open_callback     => $open_callback,
 		progress_callback => $progress_callback,
 		cancel_callback   => $cancel_callback,

@@ -1,4 +1,4 @@
-# $Id: Title.pm,v 1.41 2002/01/04 12:20:26 joern Exp $
+# $Id: Title.pm,v 1.42 2002/01/10 22:23:34 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -172,6 +172,24 @@ sub preview_filename {
 		$self->nr."-preview-$type.jpg";
 }
 
+sub vob_nav_file {
+	my $self = shift; $self->trace_in;
+	
+	my $file;
+	if ( $self->tc_use_chapter_mode ) {
+		$file =	$self->project->snap_dir."/".
+			$self->project->name."-".
+			$self->nr."-C".
+			$self->actual_chapter."-nav.log";
+	} else {
+		$file =	$self->project->snap_dir."/".
+			$self->project->name."-".
+			$self->nr."-nav.log";
+	}
+	
+	return $file;
+}
+
 sub new {
 	my $class = shift;
 	my %par = @_;
@@ -282,12 +300,11 @@ sub is_ripped {
 sub get_rip_command {
 	my $self = shift; $self->trace_in;
 
-	$self->project->check_installation;
-
-	my $nr         = $self->tc_title_nr;
-	my $name       = $self->project->name;
-	my $dvd_device = $self->project->dvd_device;
-	my $vob_dir    = $self->vob_dir;
+	my $nr           = $self->tc_title_nr;
+	my $name         = $self->project->name;
+	my $dvd_device   = $self->project->dvd_device;
+	my $vob_dir      = $self->vob_dir;
+	my $vob_nav_file = $self->vob_nav_file;
 
 	if ( not -d $vob_dir ) {
 		mkpath ([ $vob_dir ], 0, 0755)
@@ -299,9 +316,15 @@ sub get_rip_command {
 
 	my $angle = $self->tc_viewing_angle || 1;
 
+	# version 0.6.0pre has tcdemux -W which can be used
+	# for calculating the progress bar and for cluster
+	# transcoding. The splitpipe -f switch enables piping
+	# data through tcdemux.
+	my $f = $TC::VERSION >= 600 ? "-f $vob_nav_file" : "";
+
 	my $command = "rm -f $vob_dir/$name-???.vob;\n".
 	           "tccat -t dvd -T $nr,$chapter,$angle -i $dvd_device ".
-	           "| splitpipe 1024 $vob_dir/$name vob >/dev/null";
+	           "| splitpipe $f 1024 $vob_dir/$name vob >/dev/null";
 
 	return $command;
 }
@@ -360,8 +383,6 @@ sub rip_async_stop {
 
 sub get_scan_command {
 	my $self = shift; $self->trace_in;
-
-	$self->project->check_installation;
 
 	my $vob_dir       = $self->vob_dir;
 	my $audio_channel = $self->audio_channel;
@@ -463,13 +484,12 @@ sub analyze_scan_output {
 sub get_rip_and_scan_command {
 	my $self = shift; $self->trace_in;
 
-	$self->project->check_installation;
-
 	my $nr            = $self->tc_title_nr;
 	my $audio_channel = $self->audio_channel;
 	my $name          = $self->project->name;
 	my $dvd_device    = $self->project->dvd_device;
 	my $vob_dir    	  = $self->vob_dir;
+	my $vob_nav_file  = $self->vob_nav_file;
 
 	if ( not -d $vob_dir ) {
 		mkpath ([ $vob_dir ], 0, 0755)
@@ -481,10 +501,16 @@ sub get_rip_and_scan_command {
 
 	my $angle = $self->tc_viewing_angle || 1;
 
+	# version 0.6.0pre has tcdemux -W which can be used
+	# for calculating the progress bar and for cluster
+	# transcoding. The splitpipe -f switch enables piping
+	# data through tcdemux.
+	my $f = $TC::VERSION >= 600 ? "-f $vob_nav_file" : "";
+
 	my $command =
 	       "rm -f $vob_dir/$name-???.vob;\n".
 	       "tccat -t dvd -T $nr,$chapter,$angle -i $dvd_device ".
-	       "| splitpipe 1024 $vob_dir/$name vob ".
+	       "| splitpipe $f 1024 $vob_dir/$name vob ".
 	       "| tcextract -a $audio_channel -x ac3 -t vob ".
 	       "| tcdecode -x ac3 ".
 	       "| tcscan -x pcm";
@@ -528,7 +554,8 @@ sub rip_and_scan_async_start {
 	my $self = shift; $self->trace_in;
 	
 	return $self->popen (
-		command => $self->get_rip_and_scan_command,
+		command   => $self->get_rip_and_scan_command,
+#		line_mode => 1,
 	);
 }
 
@@ -560,8 +587,6 @@ sub rip_and_scan_async_stop {
 sub get_probe_command {
 	my $self = shift; $self->trace_in;
 	
-	$self->project->check_installation;
-
 	my $nr            = $self->tc_title_nr;
 	my $dvd_device    = $self->project->dvd_device;
 
@@ -700,8 +725,6 @@ sub get_transcode_command {
 	my $self = shift; $self->trace_in;
 	my %par = @_;
 	my ($pass) = @par{'pass'};
-
-	$self->project->check_installation;
 
 	my $nr       = $self->nr;
 	my $avi_file = $self->avi_file;
@@ -891,8 +914,6 @@ sub transcode_async_stop {
 sub get_split_command {
 	my $self = shift; $self->trace_in;
 
-	$self->project->check_installation;
-
 	my $avi_file = $self->avi_file;
 	my $size     = $self->tc_disc_size;
 
@@ -992,8 +1013,6 @@ sub get_take_snapshot_command {
 	my $self = shift; $self->trace_in;
 	my %par = @_;
 	my ($frame) = @par{'frame'};
-
-	$self->project->check_installation;
 
 	my $nr      = $self->nr;
 	my $tmp_dir = "/tmp/dvdrip$$.ppm";

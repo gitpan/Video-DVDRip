@@ -1,8 +1,60 @@
-# $Id: DVDRip.pm,v 1.24 2002/01/04 15:50:27 joern Exp $
+# $Id: DVDRip.pm,v 1.27 2002/01/10 22:36:29 joern Exp $
 
 package Video::DVDRip;
 
-$VERSION = "0.28";
+$VERSION = "0.29";
+
+use Carp;
+use FileHandle;
+
+sub init {
+	my $thing = shift;
+	
+	my @path = split(":", $ENV{PATH});
+	my @programs = qw (
+		rm convert identify
+		transcode tcscan tccat
+		tcextract tcdecode splitpipe
+		
+	);
+	
+	my $missing = "";
+	PROGRAM: foreach my $program ( @programs ) {
+		PATH: foreach my $path ( @path ) {
+			next PROGRAM if -x "$path/$program";
+		}
+		$missing .= "$program, ";
+	}
+	
+	$missing =~ s/, $//;
+	
+	if ( $missing ) {
+		croak 	"Missing the following programs.\n".
+			"Please install them and configure your PATH:\n\n".
+			"$missing\n";
+	}
+
+	my $fh = FileHandle->new;
+	open ($fh, "transcode -h 2>&1 |") or croak "can't fork transcode -h";
+	my $ver = <$fh>;
+	close $fh or croak "can't execute transcode -h";
+
+	$ver =~ m/v(\d+)\.(\d+)\.(\d+)/;
+	
+	# -------------------------
+	# transcode version numbers:
+	# -------------------------
+	# 0.5.3    => 503
+	# 0.6.0    => 600
+	# 1.2.7    => 100207
+	# 99.99.99 => 999999
+	# -------------------------
+
+	$TC::VERSION = $1*10000+$2*100+$3;
+	$TC::VERSION ||= 0;
+
+	1;
+}
 
 __END__
 

@@ -1,4 +1,4 @@
-/* $Id: splitpipe.c,v 1.6 2002/01/03 17:40:02 joern Exp $
+/* $Id: splitpipe.c,v 1.7 2002/01/10 22:24:18 joern Exp $
  *
  * Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
  * 
@@ -16,45 +16,72 @@
 #define BUFSIZE 1024*1024
 
 /* function prototypes */
-void usage (void);
-void split_pipe ( int chunk_size, char* base_filename, char* extension );
-int  open_split_file( int old_fd, int chunk_cnt, char* base_filename, char* extension );
-void write_split_file ( int split_fd, char* buffer, size_t cnt );
+void    usage (void);
+void    fatal ( char* message );
+void    split_pipe ( int chunk_size, char* base_filename, char* extension, int use_tcdemux, char* vob_nav_file );
+int     open_split_file( int old_fd, int chunk_cnt, char* base_filename, char* extension );
+int     open_vob_nav_file ( char* filename );
+void    write_split_file ( int split_fd, char* buffer, size_t cnt );
+FILE*   open_tcdemux_pipe ( char* filename );
 
 /* print usage */
 void usage (void) {
-	printf ("usage: splitpipe size-in-mb base-filename extension\n\n");
+	printf ("usage: splitpipe [-f] size-in-mb base-filename extension\n\n");
+	printf ("       -f   use tcdemux for progress information (transcode 0.6.0)\n");
 	exit(1);
 }
 
+/* report fatal error and exite */
+void fatal ( char* message ) {
+	fprintf (stderr, "Fatal error: %s\n", message);
+	exit(1);
+}
 /* main function */
 int main(int argc, char *argv[]) {
 	int    chunk_size;
 	char*  base_filename;
 	char*  extension;
 	int    ok;
-
-	if ( argc != 4 ) usage();
+	char   opt;
+	int    use_tcdemux = 0;
+	char*  vob_nav_file;
+	int    opt_cnt;
 	
-	ok = sscanf (argv[1], "%d", &chunk_size);
+	opt_cnt = argc;
+
+	while ((opt = getopt(argc, argv, "f:")) != -1) {
+		--opt_cnt;
+		switch (opt) {
+			case 'f' :
+				if ( optarg[0]=='-' ) usage();
+				use_tcdemux  = 1;
+				vob_nav_file = optarg;
+				--opt_cnt;
+				break;
+		}
+	}
+	
+	if ( opt_cnt != 4 ) usage();
+	
+	ok = sscanf (argv[use_tcdemux+2], "%d", &chunk_size);
 	
 	if ( ok != 1 )   usage();
 	
-	base_filename = argv[2];
-	extension     = argv[3];
+	base_filename = argv[use_tcdemux+3];
+	extension     = argv[use_tcdemux+4];
 	
-	split_pipe ( chunk_size, base_filename, extension);
+	split_pipe ( chunk_size, base_filename, extension, use_tcdemux, vob_nav_file );
 	
-	fprintf (stderr, "--splitpipe-finished--\n");
-
 	return 0;
 }
 
 /* split and pipe */
-void split_pipe ( int chunk_size, char* base_filename, char* extension ) {
+void split_pipe ( int chunk_size, char* base_filename, char* extension,
+		  int use_tcdemux, char* vob_nav_file ) {
 	char	buffer[BUFSIZE];
 	int	file_cnt = 1;
 	int	split_fd;
+	FILE*	tcdemux_fd;
 	size_t	bytes_read;
 	size_t	bytes_written = 0;
 	size_t	bytes_this_chunk;
@@ -66,12 +93,19 @@ void split_pipe ( int chunk_size, char* base_filename, char* extension ) {
 		-1, file_cnt, base_filename, extension
 	);
 
+	if ( use_tcdemux )
+		tcdemux_fd = open_tcdemux_pipe( vob_nav_file );
+
 	while ( bytes_read = read (0, buffer, BUFSIZE) ) {
 		/* echo chunk to stdout */
 		write (1, buffer, bytes_read);
-		
-		/* echo progress information to stderr */
-		fprintf (stderr, "%d-%d\n", file_cnt, bytes_written);
+
+		if ( use_tcdemux )
+			/* echo chunk to tcdemux pipe */
+			fwrite (buffer, 1, bytes_read, tcdemux_fd);
+		else
+			/* echo progress information to stderr */
+			fprintf (stderr, "%d-%d\n", file_cnt, bytes_written);
 
 		/* check if we need to open a new file */
 		if ( bytes_written + bytes_read > chunk_size ) {
@@ -95,14 +129,18 @@ void split_pipe ( int chunk_size, char* base_filename, char* extension ) {
 	}
 	
 	close (split_fd);
+	
+	if ( use_tcdemux )
+		pclose (tcdemux_fd);
+
+
+	fprintf (stderr, "--splitpipe-finished--\n");
 }
 
 /* write data to split file */
 void write_split_file ( int split_fd, char* buffer, size_t cnt ) {
-	if ( -1 == write (split_fd, buffer, cnt) ) {
-		fprintf (stderr, "Can't write to split file.\n");
-		exit (1);
-	}
+	if ( -1 == write (split_fd, buffer, cnt) )
+		fatal ("Can't write to split file");
 }
 
 /* open a new split file */
@@ -120,11 +158,38 @@ int open_split_file( int old_fd, int chunk_cnt,
 	sprintf (filename, "%s-%03d.%s", base_filename, chunk_cnt, extension);
 	
 	new_fd = creat (filename, 0644);
-	
+
 	if ( -1 == new_fd ) {
 		fprintf (stderr, "Can't create file %s\n", filename);
-		exit (1);
+		fatal ("aborting");
 	}
-	
+
 	return new_fd;
 }
+
+/* open tcdemux pipe for progress information */
+FILE* open_tcdemux_pipe ( char* filename ) {
+	FILE*	fd;
+	char	command[255];
+
+	sprintf (command, "tcdemux -W 2>/dev/null | tee %s | cat 1>&2", filename);
+
+	if ( (fd = popen(command, "w")) == NULL )
+		fatal ("can't execute tcdemux -W");
+
+	return fd;
+}
+
+/* open file for vob navigation information */
+int open_vob_nav_file ( char* filename ) {
+	int 	fd;
+
+	fd = creat (filename, 0644);
+	if ( -1 == fd ) {
+		fprintf (stderr, "Can't create file %s\n", filename);
+		fatal ("aborting");
+	}
+	
+	return fd;
+}
+

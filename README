@@ -155,16 +155,42 @@ SEE ALSO
     perl(1).
 
 CHANGES
-    $Id: Changes,v 1.21 2002/01/04 15:50:04 joern Exp $
+    $Id: Changes,v 1.26 2002/01/10 22:41:45 joern Exp $
 
     Revision history for Perl extension Video::DVDRip
+
+    0.29 Thu Jan 10 2002, joern
+	Bugfixes:
+	- ripping progress bar enabled for transcode >= 0.6.0
+	  (you *must* use at least transcode-0.6.0pre2-20020107.
+	  Older 0.6.0 pre-releases will cause dvd::rip to fail
+	  badly or just freezing it). dvd::rip uses the new -W
+	  switch of tcdemux to get the progress in the ripping 
+	  stage. This gives even enough information to calculate
+	  fps. Coooool... ;)
+	- You can use dvd::rip with transcode 0.5.x (x>=3),
+	  but the ripping progress bar will be disabled.
+
+	Features:
+	- transcode version is detected on startup, so different
+	  behaviour for different transcode version is possible.
+	- preparing for cluster mode: dvd::rip already creates
+	  the neccessary vob navigation logging data.
+
+    0.29_01 Sun Jan 07 2002, joern
+	Bugfixes:
+	- DVD TOC reading completely reorganized. Should work now
+	  more reliable with all DVDs. Due to this there is currently
+	  no progress bar for ripping available.
+	- DVD TOC missed scrollbars
+	- transcode progress bar did not work with transcode 0.6pre
 
     0.28 Fri Jan 04 2002, joern
 	Features:
 	- I added a contrib directory to the distribution, currently
 	  containing a KSpread file which helps calculating fast resize
 	  values. I'm planning to integrate a native and quite more usable
-	  version of this sheet to dvd::rip, but maybe this helps someone
+	  version of this sheet into dvd::rip, but maybe this helps someone
 	  while this feature is not finished. On the other hand the
 	  presets are working well for most DVDs, so this is currently
 	  a nice to have feature for me.
