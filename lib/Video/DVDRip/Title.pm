@@ -1,4 +1,4 @@
-# $Id: Title.pm,v 1.108.2.3 2002/12/07 08:43:11 joern Exp $
+# $Id: Title.pm,v 1.108.2.4 2002/12/13 22:38:23 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -2643,7 +2643,7 @@ sub get_create_image_command {
 	} else {
 		$command = $self->config('burn_vcdimager_cmd').
 			($cd_type eq 'svcd' ? ' --type=svcd' : ' --type=vcd2').
-			" --iso-volume-label '".uc($self->burn_label)."'".
+			" --iso-volume-label='".uc($self->burn_label)."'".
 			" --info-album-id='".uc($self->burn_abstract." ".$self->burn_number)."'".
 			" --cue-file=$image_file.cue".
 			" --bin-file=$image_file".
@@ -3056,6 +3056,7 @@ sub get_create_vobsub_command {
 	}
 
 	my $command =
+		"mkdir -p $avi_dir && ".
 		"cp $ifo_file $avi_dir/$vobsub_ifo_file && ".
 		"cd $avi_dir && ".
 		"chmod 644 $vobsub_ifo_file && ".

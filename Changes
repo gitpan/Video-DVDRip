@@ -1,8 +1,17 @@
-$Id: Changes,v 1.122.2.6 2002/12/07 08:43:10 joern Exp $
+$Id: Changes,v 1.122.2.7 2002/12/13 22:38:31 joern Exp $
 
 Revision history and release notes for dvd::rip.
 
-0.48.5 Fri 7 Dec 2002, joern
+0.48.6 Fri 13 Dec 2002, joern
+	Bugfixes:
+	- Fixed a typo in the vcdimager command (which didn't affect
+	  proper operation on my system, but it was anyway a typo ;)
+	  Thanks for report and fix to Tom Vijlbrief <tom.vijlbrief
+	  AT ision.nl>
+	- Using "Create vobsub now" threw an exception due to a missing
+	  avi directory. Thanks to Eckehardt Luhm <bselu AT web.de>.
+
+0.48.5 Sat 7 Dec 2002, joern
 	Bugfix:
 	- 0.48.3 introduced a bug which prevents multiple audio
 	  tracks with OGG/Vorbis. Thanks to Lethal Weapon for
@@ -24,7 +33,7 @@ Revision history and release notes for dvd::rip.
 	  reported to the Perl developers and hopefully fixed
 	  soon, so dvd::rip can drop this workaround somedays).
 
-	Bugfix:
+	Bugfixes:
 	- Adding additional audio tracks didn't work for DVD image
 	  and on-the-fly transcoding. Reported by Matthias Hennemann
 	  <Matthias.Hennemann AT Organik.Uni-Erlangen.DE>
@@ -76,11 +85,11 @@ Revision history and release notes for dvd::rip.
 	- transcode 0.6.2.20021114 is the recommended version for
 	  this release. 0.6.0 and 0.6.1 still work, but dvd::rip
 	  lacks features with them, e.g. subtitle support.
-	- From 0.47.06 on dvd::rip needs to know the mount point of your
+	- From 0.47.6 on dvd::rip needs to know the mount point of your
 	  DVD device. So open the preferences dialog and enter your
 	  mount point there. Also the DVD must be mountable by the
 	  user who executes dvd::rip.
-	- File format changed slightly with 0.47.02, but is backward
+	- File format changed slightly with 0.47.2, but is backward
 	  compatible. dvd::rip prints a short message when converting
 	  an older file to the new format.
 	- Version numbering changes with this release. It follows

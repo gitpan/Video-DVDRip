@@ -126,7 +126,7 @@ III. DOCUMENTATION
 
    Local download of the latest stable release:
 
-     [39]Video-DVDRip-0.48.5.tar.gz
+     [39]Video-DVDRip-0.48.6.tar.gz
 
    CPAN download directory: ([40]list of mirrors)
 
@@ -139,20 +139,40 @@ III. DOCUMENTATION
 
 [44]1.2.2 CVS access
 
-   Note: this is mainly intended for developers. This CVS repository is
-   only a read only mirror of my main repository. It's updated manually
-   when I publish releases or pre-releases, so there is no advantage for
-   normal users compared to downloading the tar balls (besides making it
-   easier using "cvs update" ;)
+   This is mainly intended for developers. This CVS repository is only a
+   read only mirror of my main repository. It's updated manually when I
+   publish releases or pre-releases, so there is no advantage for normal
+   users compared to downloading the tar balls (besides making it easier
+   using "cvs update" ;)
 
-   Root                            Module
-   :pserver:cvs@cvs.exit1.org:/cvs dvdrip
+   Since development of dvd::rip is divided into two branches, you get
+   the current (unstable) version, if you don't specifiy a release tag.
+   If you want to access a stable version, add -r rel-MAJOR-MINOR-PATCH
+   to your cvs checkout command (example: for 0.48.5 this is -r
+   rel-0-48-5). All subsequent updates will stay on this branch (here:
+   0.48). The easiest way of switching to another branch, is creating a
+   new checkout using the corresponding release tag.
 
-[45]1.3 Install from source
+   Root                            Module Unstable tag Stable tag
+   :pserver:cvs@cvs.exit1.org:/cvs dvdrip none         rel-MAJOR-MINOR-PATCH
 
-   [ [46]Content ] [ [47]Top ]
+[45]1.2.2.1 CVS examples
 
-[48]1.3.1 Requirements
+   Checkout a stable/bugfix version (here 0.48.5) with:
+          cvs -z9 -d :pserver:cvs@cvs.exit1.org:/cvs checkout -r
+          rel-0-48-5 dvdrip
+
+   Checkout the current development version with:
+          cvs -z9 -d :pserver:cvs@cvs.exit1.org:/cvs checkout dvdrip
+
+   Update a checkout - created using one of the commands above - with:
+          cd dvdrip; cvs -z9 update
+
+[46]1.3 Install from source
+
+   [ [47]Content ] [ [48]Top ]
+
+[49]1.3.1 Requirements
 
    dvd::rip is a Gtk+ based program written in Perl, using the video
    processing tool transcode for the internals. So you first have to
@@ -161,12 +181,12 @@ III. DOCUMENTATION
    dvd::rip expects all command line tools mentioned here to be found in
    the standard search PATH.
 
-[49]1.3.1.1 transcode
+[50]1.3.1.1 transcode
 
    dvd::rip delegates all the low level DVD handling to transcode, which
    can be obtained here:
 
-     [50]http://www.theorie.physik.uni-goettingen.de/~ostreich/transcode
+     [51]http://www.theorie.physik.uni-goettingen.de/~ostreich/transcode
      /
 
    Version 0.6.1 is recommended, but 0.6.0 should work, too.
@@ -177,9 +197,9 @@ III. DOCUMENTATION
 
    Note: For almost any Linux distribution exist binary transcode
    packages. Compiling transcode isn't an easy task, so you should try
-   binary packages first. Refer to the [51]binaries section for details.
+   binary packages first. Refer to the [52]binaries section for details.
 
-[52]1.3.1.2 Image Magick
+[53]1.3.1.2 Image Magick
 
    For image processing dvd::rip uses the widely distributed software
    package Image Magick, at least the programs identify and convert
@@ -190,28 +210,28 @@ III. DOCUMENTATION
    If your Linux distribution does not ship Image Magick, you can find it
    here:
 
-     [53]http://www.imagemagick.org/
+     [54]http://www.imagemagick.org/
 
-[54]1.3.1.3 ogmtools
+[55]1.3.1.3 ogmtools
 
    dvd::rip has support for generating audio / video ogg streams (often
    known as OGM streams). You need a recent version of ogmtools for that
    to work:
 
-     [55]http://www.bunkus.org/videotools/ogmtools/index.html
+     [56]http://www.bunkus.org/videotools/ogmtools/index.html
 
    dvd::rip expects version 0.954 or higher.
 
-[56]1.3.1.4 subtitleripper
+[57]1.3.1.4 subtitleripper
 
    To get subtitles with dvd::rip you need a recent version of the
    subtitleripper package. It's shipped with transcode in the
    contrib/subrip directory. You can use this version for transcode >=
    0.6.2.20021017. Otherwise fetch it from the subtitleripper homepage:
 
-     [57]http://sourceforge.net/projects/subtitleripper
+     [58]http://sourceforge.net/projects/subtitleripper
 
-[58]1.3.1.5 Perl Gtk Module
+[59]1.3.1.5 Perl Gtk Module
 
    For its GUI component dvd::rip needs the Perl Gtk module, which
    presumes Gtk+ version 1.2 or higher. I tested dvd::rip with Perl Gtk
@@ -219,7 +239,7 @@ III. DOCUMENTATION
 
    You can find the Gtk module on CPAN, e.g.:
 
-     [59]http://www.perl.org/CPAN/modules/by-module/Gtk/
+     [60]http://www.perl.org/CPAN/modules/by-module/Gtk/
 
    Note:
    Perl Gtk detects your installed Gtk libs and build sub components only
@@ -230,7 +250,7 @@ III. DOCUMENTATION
    installed. Then install Perl Gtk and everything should work as
    expected.
 
-[60]1.3.1.6 mplayer and/or xine (with a DVD plugin)
+[61]1.3.1.6 mplayer and/or xine (with a DVD plugin)
 
    If you have mplayer or xine (with the d4d or dvdnav plugin) installed,
    you can preview selected DVD titles/chapters with the appropriate
@@ -238,39 +258,39 @@ III. DOCUMENTATION
 
    You can download xine and mplayer from here:
 
-     [61]http://xine.sourceforge.net/
-     [62]http://www.mplayerhq.hu/
+     [62]http://xine.sourceforge.net/
+     [63]http://www.mplayerhq.hu/
 
-[63]1.3.1.7 CD burning tools
+[64]1.3.1.7 CD burning tools
 
-   If you want to use dvd::rip's [64]CD burning module, you must have the
+   If you want to use dvd::rip's [65]CD burning module, you must have the
    following tools installed (in brackets the versions I use, maybe older
    versions work, too, but I recommend these):
 
-     [65]mkisofs (1.15a34)
-     [66]cdrecord (0.7.12)
-     [67]vcdimager (0.7.12)
-     [68]cdrdao (1.1.7)
+     [66]mkisofs (1.15a34)
+     [67]cdrecord (0.7.12)
+     [68]vcdimager (0.7.12)
+     [69]cdrdao (1.1.7)
 
-[69]1.3.1.8 Additional requirements for cluster mode
+[70]1.3.1.8 Additional requirements for cluster mode
 
    Some additional Perl modules and command line tools are needed for the
    cluster mode.
 
-[70]1.3.1.9 Perl modules
+[71]1.3.1.9 Perl modules
 
    Cluster mode needs the Storable and Event Perl modules. Check if your
    distribution ships them already. If not, you can find them on CPAN:
 
-     [71]http://www.perl.org/CPAN/modules/by-module/Storable/
-     [72]http://www.perl.org/CPAN/modules/by-module/Event/
+     [72]http://www.perl.org/CPAN/modules/by-module/Storable/
+     [73]http://www.perl.org/CPAN/modules/by-module/Event/
 
-[73]1.3.1.10 fping and pstree
+[74]1.3.1.10 fping and pstree
 
    The dvd::rip cluster control daemon uses fping to check if nodes are
    online and pstree to get information about specific child processes.
    Both tools should be shipped with your Linux distribution (fping
-   sometimes isn't, but you can get it here: [74]http://www.fping.com/).
+   sometimes isn't, but you can get it here: [75]http://www.fping.com/).
 
    Note: Matthias Riese told me that there are IPv6 fping packages which
    don't support IPv4, what's most likely not what you want, so pay
@@ -292,17 +312,17 @@ III. DOCUMENTATION
    only need transcode installed, dvd::rip or any packages mentioned here
    aren't needed there.
 
-[75]1.3.2 Install dvd::rip
+[76]1.3.2 Install dvd::rip
 
    This is quite easy, if you have managed installing the packages
    mentioned above... ;)
 
-   [76]Download the .tar.gz archive of the dvd::rip version you want to
+   [77]Download the .tar.gz archive of the dvd::rip version you want to
    install. Then extract the file, change into the created directory,
    generate the Makefile and execute make:
 
      # as a normal user
-     tar xfz Video-DVDRip-0.48.5.tar.gz
+     tar xfz Video-DVDRip-0.48.6.tar.gz
      cd Video-DVDRip-x.xx
      perl Makefile.PL
      make
@@ -319,7 +339,7 @@ III. DOCUMENTATION
    'dvdrip' binary only from the build directory, otherwise dvd::rip
    can't find its files.
 
-[77]1.3.3 Update dvd::rip
+[78]1.3.3 Update dvd::rip
 
    Updating is just like installing. The only thing you should be aware
    of is switching the underlying Perl version. This way you easily can
@@ -336,13 +356,13 @@ III. DOCUMENTATION
    e.g. about compatibility issues, and all relevant changes from release
    to release.
 
-[78]1.4 Download this documentation
+[79]1.4 Download this documentation
 
-   [ [79]Content ] [ [80]Top ]
+   [ [80]Content ] [ [81]Top ]
 
    You can download a static HTML version of this documentation:
 
-     [81]http://www.exit1.org/dvdrip/dist/dvdrip-doc-html.tar.bz2
+     [82]http://www.exit1.org/dvdrip/dist/dvdrip-doc-html.tar.bz2
      _________________________________________________________________
 
 URL References
@@ -365,69 +385,70 @@ URL References
   16. http://www.exit1.org/tmp/install.cipp#install_dvdrip
   17. http://www.exit1.org/tmp/install.cipp#update_dvdrip
   18. http://www.exit1.org/tmp/install.cipp#docs_download
-  19. http://www.exit1.org/tmp/genreadme19892.html#top
+  19. http://www.exit1.org/tmp/genreadme10118.html#top
   20. http://www.exit1.org/tmp/index.cipp
-  21. http://www.exit1.org/tmp/genreadme19892.html#top
-  22. http://www.exit1.org/tmp/genreadme19892.html#top
+  21. http://www.exit1.org/tmp/genreadme10118.html#top
+  22. http://www.exit1.org/tmp/genreadme10118.html#top
   23. http://marillat.free.fr/
-  24. http://www.exit1.org/tmp/genreadme19892.html#top
+  24. http://www.exit1.org/tmp/genreadme10118.html#top
   25. http://www.exit1.org/dvdrip/contrib/suse/
   26. http://www6.informatik.uni-erlangen.de/~rainer/rpms/
-  27. http://www.exit1.org/tmp/genreadme19892.html#top
+  27. http://www.exit1.org/tmp/genreadme10118.html#top
   28. http://plf.zarb.org/
-  29. http://www.exit1.org/tmp/genreadme19892.html#top
+  29. http://www.exit1.org/tmp/genreadme10118.html#top
   30. http://www.exit1.org/dvdrip/contrib/redhat/
-  31. http://www.exit1.org/tmp/genreadme19892.html#top
+  31. http://www.exit1.org/tmp/genreadme10118.html#top
   32. http://messlab.sourceforge.net/
-  33. http://www.exit1.org/tmp/genreadme19892.html#top
+  33. http://www.exit1.org/tmp/genreadme10118.html#top
   34. http://www.gentoo.org/packages/media-video/dvdrip.html
-  35. http://www.exit1.org/tmp/genreadme19892.html#top
+  35. http://www.exit1.org/tmp/genreadme10118.html#top
   36. http://www.exit1.org/tmp/index.cipp
-  37. http://www.exit1.org/tmp/genreadme19892.html#top
-  38. http://www.exit1.org/tmp/genreadme19892.html#top
-  39. http://www.exit1.org/dvdrip/dist/Video-DVDRip-0.48.5.tar.gz
+  37. http://www.exit1.org/tmp/genreadme10118.html#top
+  38. http://www.exit1.org/tmp/genreadme10118.html#top
+  39. http://www.exit1.org/dvdrip/dist/Video-DVDRip-0.48.6.tar.gz
   40. http://www.cpan.org/CPAN/SITES.html
   41. http://www.cpan.org/CPAN/modules/by-authors/id/J/JR/JRED/
   42. http://www.exit1.org/dvdrip/dist/
   43. http://www.exit1.org/dvdrip/dist/pre/
-  44. http://www.exit1.org/tmp/genreadme19892.html#top
-  45. http://www.exit1.org/tmp/genreadme19892.html#top
-  46. http://www.exit1.org/tmp/index.cipp
-  47. http://www.exit1.org/tmp/genreadme19892.html#top
-  48. http://www.exit1.org/tmp/genreadme19892.html#top
-  49. http://www.exit1.org/tmp/genreadme19892.html#top
-  50. http://www.theorie.physik.uni-goettingen.de/~ostreich/transcode/
-  51. http://www.exit1.org/tmp/install.cipp#binary_download
-  52. http://www.exit1.org/tmp/genreadme19892.html#top
-  53. http://www.imagemagick.org/
-  54. http://www.exit1.org/tmp/genreadme19892.html#top
-  55. http://www.bunkus.org/videotools/ogmtools/index.html
-  56. http://www.exit1.org/tmp/genreadme19892.html#top
-  57. http://sourceforge.net/projects/subtitleripper
-  58. http://www.exit1.org/tmp/genreadme19892.html#top
-  59. http://www.perl.org/CPAN/modules/by-module/Gtk/
-  60. http://www.exit1.org/tmp/genreadme19892.html#top
-  61. http://xine.sourceforge.net/
-  62. http://www.mplayerhq.hu/
-  63. http://www.exit1.org/tmp/genreadme19892.html#top
-  64. http://www.exit1.org/tmp/gui-gui_burn.cipp
-  65. http://www.fokus.gmd.de/research/cc/glone/employees/joerg.schilling/private/mkisofs.html
-  66. http://www.fokus.gmd.de/research/cc/glone/employees/joerg.schilling/private/cdrecord.html
-  67. http://www.vcdimager.org/
-  68. http://cdrdao.sourceforge.net/
-  69. http://www.exit1.org/tmp/genreadme19892.html#top
-  70. http://www.exit1.org/tmp/genreadme19892.html#top
-  71. http://www.perl.org/CPAN/modules/by-module/Storable/
-  72. http://www.perl.org/CPAN/modules/by-module/Event/
-  73. http://www.exit1.org/tmp/genreadme19892.html#top
-  74. http://www.fping.com/
-  75. http://www.exit1.org/tmp/genreadme19892.html#top
-  76. http://www.exit1.org/tmp/install.cipp#source_download
-  77. http://www.exit1.org/tmp/genreadme19892.html#top
-  78. http://www.exit1.org/tmp/genreadme19892.html#top
-  79. http://www.exit1.org/tmp/index.cipp
-  80. http://www.exit1.org/tmp/genreadme19892.html#top
-  81. http://www.exit1.org/dvdrip/dist/dvdrip-doc-html.tar.bz2
+  44. http://www.exit1.org/tmp/genreadme10118.html#top
+  45. http://www.exit1.org/tmp/genreadme10118.html#top
+  46. http://www.exit1.org/tmp/genreadme10118.html#top
+  47. http://www.exit1.org/tmp/index.cipp
+  48. http://www.exit1.org/tmp/genreadme10118.html#top
+  49. http://www.exit1.org/tmp/genreadme10118.html#top
+  50. http://www.exit1.org/tmp/genreadme10118.html#top
+  51. http://www.theorie.physik.uni-goettingen.de/~ostreich/transcode/
+  52. http://www.exit1.org/tmp/install.cipp#binary_download
+  53. http://www.exit1.org/tmp/genreadme10118.html#top
+  54. http://www.imagemagick.org/
+  55. http://www.exit1.org/tmp/genreadme10118.html#top
+  56. http://www.bunkus.org/videotools/ogmtools/index.html
+  57. http://www.exit1.org/tmp/genreadme10118.html#top
+  58. http://sourceforge.net/projects/subtitleripper
+  59. http://www.exit1.org/tmp/genreadme10118.html#top
+  60. http://www.perl.org/CPAN/modules/by-module/Gtk/
+  61. http://www.exit1.org/tmp/genreadme10118.html#top
+  62. http://xine.sourceforge.net/
+  63. http://www.mplayerhq.hu/
+  64. http://www.exit1.org/tmp/genreadme10118.html#top
+  65. http://www.exit1.org/tmp/gui-gui_burn.cipp
+  66. http://www.fokus.gmd.de/research/cc/glone/employees/joerg.schilling/private/mkisofs.html
+  67. http://www.fokus.gmd.de/research/cc/glone/employees/joerg.schilling/private/cdrecord.html
+  68. http://www.vcdimager.org/
+  69. http://cdrdao.sourceforge.net/
+  70. http://www.exit1.org/tmp/genreadme10118.html#top
+  71. http://www.exit1.org/tmp/genreadme10118.html#top
+  72. http://www.perl.org/CPAN/modules/by-module/Storable/
+  73. http://www.perl.org/CPAN/modules/by-module/Event/
+  74. http://www.exit1.org/tmp/genreadme10118.html#top
+  75. http://www.fping.com/
+  76. http://www.exit1.org/tmp/genreadme10118.html#top
+  77. http://www.exit1.org/tmp/install.cipp#source_download
+  78. http://www.exit1.org/tmp/genreadme10118.html#top
+  79. http://www.exit1.org/tmp/genreadme10118.html#top
+  80. http://www.exit1.org/tmp/index.cipp
+  81. http://www.exit1.org/tmp/genreadme10118.html#top
+  82. http://www.exit1.org/dvdrip/dist/dvdrip-doc-html.tar.bz2
 
 IV.  
 URL References
@@ -509,13 +530,16 @@ URL References
    6. http://lists.exit1.org/mailman/listinfo/dvdrip-users
 
 VII. CHANGES
-   $Id: Changes,v 1.122.2.6 2002/12/07 08:43:10 joern Exp $
+   $Id: Changes,v 1.122.2.7 2002/12/13 22:38:31 joern Exp $
 
    Revision history and release notes for dvd::rip.
 
-   0.48.5 Fri 7 Dec 2002, joern
-	Bugfix:
-	- 0.48.3 introduced a bug which prevents multiple audio
-	  tracks with OGG/Vorbis. Thanks to Lethal Weapon for
-	  the report.
+   0.48.6 Fri 13 Dec 2002, joern
+	Bugfixes:
+	- Fixed a typo in the vcdimager command (which didn't affect
+	  proper operation on my system, but it was anyway a typo ;)
+	  Thanks for report and fix to Tom Vijlbrief <tom.vijlbrief
+	  AT ision.nl>
+	- Using "Create vobsub now" threw an exception due to a missing
+	  avi directory. Thanks to Eckehardt Luhm <bselu AT web.de>.
 
