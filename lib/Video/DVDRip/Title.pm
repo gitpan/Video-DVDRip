@@ -1,4 +1,4 @@
-# $Id: Title.pm,v 1.137.2.11 2003/04/01 19:58:59 joern Exp $
+# $Id: Title.pm,v 1.137.2.12 2003/04/26 15:46:08 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -1392,7 +1392,7 @@ sub get_probe_command {
 	my $data_source   = $self->project->rip_data_source;
 
 	my $command =
-		"dr_exec tcprobe -i $data_source -T $nr && ".
+		"dr_exec tcprobe -H 10 -i $data_source -T $nr && ".
 		"echo DVDRIP_SUCCESS; ".
 		"dr_exec dvdxchap -t $nr $data_source 2>/dev/null";
 
@@ -1422,7 +1422,7 @@ sub get_probe_audio_command {
 	my $nr      = $self->tc_title_nr;
 	my $vob_dir = $self->vob_dir;
 
-	return "dr_exec tcprobe -i $vob_dir && echo DVDRIP_SUCCESS";
+	return "dr_exec tcprobe -H 10 -i $vob_dir && echo DVDRIP_SUCCESS";
 }
 
 sub probe_audio {
@@ -1615,7 +1615,7 @@ sub get_transcode_command {
 	$mpeg = "svcd" if $self->tc_video_codec =~ /^SVCD$/;
 	$mpeg = "vcd"  if $self->tc_video_codec =~ /^VCD$/;
 
-	my $command = $nice."dr_exec transcode";
+	my $command = $nice."dr_exec transcode -H 10";
 
 	$command .= " -a $audio_channel" if $audio_channel != -1;
 
@@ -1930,6 +1930,7 @@ sub get_transcode_audio_command {
 	my $command =
 		"mkdir -p $dir && ".
 		"${nice}dr_exec transcode ".
+		" -H 10".
 		" -g 0x0 -u 50".
 		" -a $vob_nr".
 		" -y raw";
@@ -2322,9 +2323,10 @@ sub get_take_snapshot_command {
 	       "mkdir -m 0775 $tmp_dir; ".
 	       "cd $tmp_dir; ".
 	       "dr_exec transcode ".
-	       " -z -k ".
-	       " -o snapshot ".
-	       " -y ppm,null ";
+	       " -H 10".
+	       " -z -k".
+	       " -o snapshot".
+	       " -y ppm,null";
 
 	$command .= " -".$_." ".$source_options->{$_} for keys %{$source_options};
 
@@ -2907,9 +2909,9 @@ sub get_burn_command {
 
 		$command .=
 			" dev=".$self->config('burn_cdrecord_device').
-			" fs=4096k -v".
+			" fs=4096k -v -overburn gracetime=5".
 			" speed=".$self->config('burn_writing_speed').
-			" -eject -pad -ignsize";
+			" -eject -pad -overburn";
 
 		$command .= " -dummy" if $self->config('burn_test_mode');
 
@@ -3361,7 +3363,7 @@ sub get_count_frames_in_files_command {
 		} else {
 			$command .= " && echo 'DVDRIP:AVI:$file' \$(";
 			$command .=
-				" tcprobe -i $file 2>&1 | grep frames= )";
+				" tcprobe -H 10 -i $file 2>&1 | grep frames= )";
 		}
 	}
 
@@ -3381,8 +3383,6 @@ sub has_vobsub_subtitles {
 	
 	return 0;
 }
-
-# transcode -T 1,2 -i /dev/dvd -x null -y null,wav -o test1.wav
 
 sub get_create_wav_command {
 	my $self = shift;

@@ -1,4 +1,4 @@
-# $Id: Node.pm,v 1.25.2.1 2003/02/23 21:39:33 joern Exp $
+# $Id: Node.pm,v 1.25.2.2 2003/04/26 15:43:04 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -199,8 +199,9 @@ sub get_popen_code {
 	my $name     = $self->hostname;
 	my $ssh_cmd  = $self->ssh_cmd  || 'ssh -x';
 
+	$command =~ s/dr_exec//g;
 	$command =~ s/"/\\"/g;
-	$command = qq{$ssh_cmd $username\@$name "$command"};
+	$command = qq{dr_exec $ssh_cmd $username\@$name "$command"};
 	
 	return $command;
 }

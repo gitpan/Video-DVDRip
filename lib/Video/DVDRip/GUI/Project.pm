@@ -1,4 +1,4 @@
-# $Id: Project.pm,v 1.31 2003/01/28 20:19:57 joern Exp $
+# $Id: Project.pm,v 1.31.2.1 2003/04/29 20:23:18 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -53,6 +53,10 @@ sub text_norm_style		{ shift->{text_norm_style}		}
 sub set_text_warn_style		{ shift->{text_warn_style}	= $_[1] }
 sub text_warn_style		{ shift->{text_warn_style}		}
 
+sub gtk_tabs			{ shift->{gtk_tabs}			}
+sub set_gtk_tabs		{ shift->{gtk_tabs}		= $_[1]	}
+
+
 #------------------------------------------------------------------------
 # Build Project GUI
 #------------------------------------------------------------------------
@@ -91,6 +95,16 @@ sub build {
 	my $adjust_tab    = $self->create_adjust_tab;
 	my $logging_tab   = $self->create_logging_tab;
 	my $title_tab     = $self->create_title_tab;
+
+	$self->set_gtk_tabs({});
+
+	$self->gtk_tabs->{burn}      = $burn_tab;
+	$self->gtk_tabs->{subtitle}  = $subtitle_tab;
+	$self->gtk_tabs->{transcode} = $transcode_tab;
+	$self->gtk_tabs->{storage}   = $storage_tab;
+	$self->gtk_tabs->{adjust}    = $adjust_tab;
+	$self->gtk_tabs->{logging}   = $logging_tab;
+	$self->gtk_tabs->{title}     = $title_tab;
 
 	$label = Gtk::Label->new ("Storage");
 	$notebook->append_page ($storage_tab, $label);
@@ -151,18 +165,31 @@ sub build {
 sub fill_with_values {
 	my $self = shift; $self->trace_in;
 
-	$self->set_selected_title(
-		$self->project->content->titles->{$self->project->selected_title_nr}
-	);
+	if ( $self->project->content->titles ) {
+		$self->set_selected_title(
+			$self->project->content->titles->{$self->project->selected_title_nr}
+		);
+		$self->init_title_labels;
+		$self->init_audio_popup;
+		$self->init_chapter_list;
+		$self->init_transcode_values;
+		$self->init_storage_values;
+		$self->init_burn_values;
+		$self->init_subtitle_values;
+		$self->init_adjust_values;
+	}
 
-	$self->init_title_labels;
-	$self->init_audio_popup;
-	$self->init_chapter_list;
-	$self->init_transcode_values;
-	$self->init_storage_values;
-	$self->init_burn_values;
-	$self->init_subtitle_values;
-	$self->init_adjust_values;
+	if ( not $self->selected_title ) {
+		$self->gtk_tabs->{burn}->set_sensitive(0);
+		$self->gtk_tabs->{subtitle}->set_sensitive(0);
+		$self->gtk_tabs->{transcode}->set_sensitive(0);
+		$self->gtk_tabs->{adjust}->set_sensitive(0);
+	} elsif ( $self->gtk_tabs ) {
+		$self->gtk_tabs->{burn}->set_sensitive(1);
+		$self->gtk_tabs->{subtitle}->set_sensitive(1);
+		$self->gtk_tabs->{transcode}->set_sensitive(1);
+		$self->gtk_tabs->{adjust}->set_sensitive(1);
+	}
 
 	1;
 }

@@ -1,4 +1,4 @@
-# $Id: TranscodeTab.pm,v 1.83.2.6 2003/03/31 08:54:10 joern Exp $
+# $Id: TranscodeTab.pm,v 1.83.2.7 2003/04/26 15:44:09 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -537,7 +537,7 @@ sub create_video_bitrate_calc {
 		may_empty      => 0,
 	);
 	$entry->show;
-	$entry->set_popdown_strings (650, 703, 800, 870);
+	$entry->set_popdown_strings (650, 700, 800, 870);
 	$entry->set_usize(60,undef);
 	$hbox->pack_start($entry, 0, 1, 0);
 

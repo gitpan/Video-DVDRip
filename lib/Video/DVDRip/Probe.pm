@@ -1,4 +1,4 @@
-# $Id: Probe.pm,v 1.21 2003/02/08 11:29:21 joern Exp $
+# $Id: Probe.pm,v 1.21.2.1 2003/04/26 15:45:46 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -179,7 +179,8 @@ sub analyze_audio {
 	@par{'probe_output','title'};
 	
 	$title->set_vob_probe_output ( $probe_output );
-	
+
+	#-- probe audio bitrates
 	my @lines = split (/\n/, $probe_output);
 	my $nr;
 	for ( my $i=0; $i < @lines; ++$i ) {
@@ -193,6 +194,11 @@ sub analyze_audio {
 		}
 	}
 	
+	#-- probe frame rate (probing from DVD sometimes reports
+	#-- wrong framerates for NTSC movies, so we'll correct this here)
+	my ($frame_rate)   = $probe_output =~ /frame\s+rate:\s+-f\s+([\d.]+)/;
+	$title->set_frame_rate ( $frame_rate );
+
 	1;
 }
 

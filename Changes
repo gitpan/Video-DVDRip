@@ -1,6 +1,72 @@
-$Id: Changes,v 1.131.2.24 2003/04/01 20:14:56 joern Exp $
+$Id: Changes,v 1.131.2.29 2003/05/01 12:04:10 joern Exp $
 
 Revision history and release notes for dvd::rip.
+
+0.50.12 [stable branch] Thu 1 May 2003, joern
+	Features:
+	- Yet another useless feature ;) You can start the
+	  dvdrip-master cluster control daemon with the -w
+	  option to fire up a webserver (listening on port 8888
+	  by default, can be changed with -W) which delivers
+	  the cluster status as HTML. Based on an inspiriation
+	  by Fabio Russo. Maybe somewhat senseless but much fun
+	  to implement ;)
+
+	Bugfixes:
+	- Removed the LD_ASSUME_KERNEL workaround for RedHat 9.
+	  At least on gentoo dvd::rip didn't start anymore. So
+	  all RH9 users, which suffer from the transcode/NPTL
+	  problem, need to set LD_ASSUME_KERNEL=2.2.5 on their own
+	  before starting dvd::rip. Thanks a lot to Fridtjof Busse
+	  who helped me debugging this issue.
+	- When no title is selected all notebook pages with title
+	  specific settings are disabled now. Some entries threw
+	  exceptions if you enter them with no titles selected.
+	  Thanks for the report to Fabio Russo.
+	- Prefefined mplayer command played all chapters from the
+	  selected chapter on. Now it plays only the one selected
+	  chapter. Thanks for the report to Fabio Russo.
+
+0.50.11 [stable branch] Sat 26 Apr 2003, joern
+	Note:
+	- To all RedHat 9 Users: RedHat's default kernel uses
+	  the new Native Posix Thread Library, which makes problems
+	  with transcode. Setting the environment variable
+	  LD_ASSUME_KERNEL=2.2.5 may workaround this problem (also
+	  installing all RedHat errata). dvd::rip now sets
+	  LD_ASSUME_KERNEL, just to prevent "yet another FAQ" ;)
+	  There are reports, that it doesn't work even with this
+	  variable set. Please keep an eye on the transcode-users
+	  list, if you suffer from this problem. I can't help you - 
+	  don't use RedHat ;)
+
+	Bugfixes:
+	- dvdrip -v reported nothing, in particular not the version
+	  number ;)
+	- Movies with no audio track within the first few MB of the
+	  stream made strange problems. Added -H 10 to the
+	  correspondent transcode commands, which extends the
+	  area of audio probing, so this shouldn't happen anymore.
+	  Thanks for the hint to Tillmann Bitterberg.
+	- Changed 703 MB cd preset to 700 MB. 703 was too tight.
+	  Also added the "-overburn" option to the cdrecord command.
+	- Workaround for a transcode bug: for NTSC movies the frame
+	  rate sometimes isn't detected propery from DVD. Only
+	  probing the VOB's after ripping reports always the correct
+	  frame rate. Thanks for the report to Douglas Bollinger.
+	- Progress bar was messed up when transcoding with PSU Core.
+	  Thanks for the report to Douglas Bollinger.
+	- Cluster mode: the dr_exec program (part of dvd::rip) was
+	  needed on remote nodes, although no dvd::rip software is
+	  installed on them. This is fixed now, no dr_exec necessary
+	  anymore on remote nodes. Thanks for the report to Lethal
+	  Weapon.
+	- Reduced OGG overhead value for video bitrate calculation.
+	  from 1.15% to 0.25% of total stream size, which is an
+	  estimation based on several test rips I made (using xvid,
+	  which has obviously the best vbr control from all existent
+	  mpeg4 codecs). With this value most of my test rip's hit
+	  the target size with a maximum error of 1 MB.
 
 0.50.10 [stable branch] Tue 1 Apr 2003, joern
 	Features:

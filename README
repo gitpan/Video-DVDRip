@@ -137,7 +137,7 @@ deb http://marillat.free.fr/ unstable main
    Local download of the latest stable release: (currently no unstable
    release available)
 
-     Video-DVDRip-0.50.10.tar.gz
+     Video-DVDRip-0.50.12.tar.gz
 
    CPAN download directory: (list of mirrors)
 
@@ -385,7 +385,7 @@ chmod u+s /usr/sbin/fping
    generate the Makefile and execute make:
 
 # as a normal user
-tar xfz Video-DVDRip-0.50.10.tar.gz
+tar xfz Video-DVDRip-0.50.12.tar.gz
 cd Video-DVDRip-x.xx
 perl Makefile.PL
 make
@@ -439,7 +439,7 @@ make install
    otherwise some dvd::rip helper binaries may be taken from another
    place.
 
-tar xvfz Video-DVDRip-0.50.10.tar.gz
+tar xvfz Video-DVDRip-0.50.12.tar.gz
 cd Video-DVDRip-x.xx
 perl Makefile.PL && make
 export PATH=.:$PATH
@@ -544,7 +544,7 @@ Getting help
 
 Reporting bugs and suggestions
 
-   If you're want to send a bug report, patch or feature request, please
+   If you want to send a bug report, patch or feature request, please
    make sure, that you're using the most recent version of dvd::rip (at
    least the latest stable release). Please first check the
    [6]documentation, in particular the [7]FAQ, the [8]ChangeLog and the
@@ -619,32 +619,32 @@ URL References
   13. mailto:?subject=dvd::rip
 
 VI. CHANGES
-   $Id: Changes,v 1.131.2.24 2003/04/01 20:14:56 joern Exp $
+   $Id: Changes,v 1.131.2.29 2003/05/01 12:04:10 joern Exp $
 
    Revision history and release notes for dvd::rip.
 
-   0.50.10 [stable branch] Tue 1 Apr 2003, joern
+   0.50.12 [stable branch] Thu 1 May 2003, joern
 	Features:
-	- If you re-read the TOC you get a warning, that this will
-	  override all settings of the current project.
-	- A warning message appears, if you add a project with frame
-	  range setting to the cluster, because always the full movie
-	  is transcoded in cluster mode.
-	
+	- Yet another useless feature ;) You can start the
+	  dvdrip-master cluster control daemon with the -w
+	  option to fire up a webserver (listening on port 8888
+	  by default, can be changed with -W) which delivers
+	  the cluster status as HTML. Based on an inspiriation
+	  by Fabio Russo. Maybe somewhat senseless but much fun
+	  to implement ;)
+
 	Bugfixes:
-	- GUI doesn't block anymore on first DVD access when reading
-	  TOC. Also the complete tcprobe output is printed, if
-	  something went wrong, which helps solving transcode related
-	  problems.
-	- Extended preferences check of the cdrecord device, which
-	  also may be a device file on Linux 2.5 systems, since
-	  IDE burning support is native here. Thanks for the hint
-	  to Moritz Muehlenhoff <jmm AT informatik.uni-bremen.de>.
-	- Transcoding a frame range in chapter mode didn't
-	  show correct progress information. Reported by Ole Tange.
-	- Viewing a subtitle test transcode movie in chapter
-	  mode didn't work.
-	- A video avi file was generated during the first pass with
-	  ogg quality proccessing. Thanks for the report to Jonathan
-	  Rogers.
+	- Removed the LD_ASSUME_KERNEL workaround for RedHat 9.
+	  At least on gentoo dvd::rip didn't start anymore. So
+	  all RH9 users, which suffer from the transcode/NPTL
+	  problem, need to set LD_ASSUME_KERNEL=2.2.5 on their own
+	  before starting dvd::rip. Thanks a lot to Fridtjof Busse
+	  who helped me debugging this issue.
+	- When no title is selected all notebook pages with title
+	  specific settings are disabled now. Some entries threw
+	  exceptions if you enter them with no titles selected.
+	  Thanks for the report to Fabio Russo.
+	- Prefefined mplayer command played all chapters from the
+	  selected chapter on. Now it plays only the one selected
+	  chapter. Thanks for the report to Fabio Russo.
 

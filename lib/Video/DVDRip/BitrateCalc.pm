@@ -1,4 +1,4 @@
-# $Id: BitrateCalc.pm,v 1.10 2003/02/06 14:58:51 joern Exp $
+# $Id: BitrateCalc.pm,v 1.10.2.1 2003/04/26 15:42:21 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -17,7 +17,7 @@ my $VCD_ADDITION_FACTOR = 2324/2048;
 my $VCD_DISC_OVERHEAD   = 600 * 2324;
 my $AVI_VIDEO_OVERHEAD  = 45;
 my $AVI_AUDIO_OVERHEAD  = 15;
-my $OGG_SIZE_OVERHEAD   = 1.15 / 100;
+my $OGG_SIZE_OVERHEAD   = 0.25 / 100;
 my $VCD_VIDEO_RATE	= 1152;
 my $MAX_SVCD_SUM_RATE	= 2748;
 my $MAX_SVCD_VIDEO_RATE	= 2600;

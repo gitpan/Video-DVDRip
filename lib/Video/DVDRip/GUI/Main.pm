@@ -1,4 +1,4 @@
-# $Id: Main.pm,v 1.62 2003/02/08 10:39:43 joern Exp $
+# $Id: Main.pm,v 1.62.2.1 2003/04/29 20:23:18 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -428,6 +428,8 @@ sub new_project {
 
 	$self->gtk_greetings->hide;
 	$self->gtk_box->pack_start ($project_gui->build, 1, 1, 1);
+
+	$project_gui->fill_with_values;
 	
 	$self->set_project_opened(1);
 	

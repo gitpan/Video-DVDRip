@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# $Id: dvdrip-master,v 1.20.4.2 2003/03/06 21:56:50 joern Exp $
+# $Id: dvdrip-master,v 1.20.4.4 2003/04/29 20:32:16 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -13,6 +13,7 @@ package Video::DVDRip;
 
 use strict;
 use lib 'lib';
+use Getopt::Std;
 
 BEGIN {
 	# That's Perl! The job classes inherit from this class,
@@ -42,8 +43,29 @@ BEGIN {
 use Video::DVDRip;
 use Video::DVDRip::RPC::Server;
 
+my $USAGE = <<__EOU;
+Usage: dvdrip-master [-w [-W port] ] [loglevel]
+
+       loglevel  logs messages to stdout
+                 1 - basic logging, no details
+		 2 - log actual jobs
+		 3 - log all executed commands also
+
+       -w        start webserver service
+       -W port   port for webserver (default: 8888)
+
+__EOU
+
 main: {
+	# get options
+	my %opt;
+	my $opt_ok = getopts ('W:w', \%opt);
 	my $log_level = shift @ARGV || 0;
+
+	print ($USAGE), exit 1 if not $opt_ok or @ARGV;
+
+	my $start_webserver = $opt{w};
+	my $webserver_port  = $opt{W} || 8888;
 
 	# setup master RPC Server with class interface declaration
 	my $server = Video::DVDRip::RPC::Server->new (
@@ -149,6 +171,15 @@ main: {
 
 	$master->check_prerequisites;
 	$master->get_master ( logger => $server )->job_control;
+
+	if ( $start_webserver ) {
+		# start webserver
+		require Video::DVDRip::Cluster::Webserver;
+		my $webserver = Video::DVDRip::Cluster::Webserver->new (
+			port   => $webserver_port,
+			master => $master->get_master,
+		);
+	}
 
 	# start the object RPC server
 	$server->start;

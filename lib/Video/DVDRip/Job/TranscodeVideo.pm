@@ -1,4 +1,4 @@
-# $Id: TranscodeVideo.pm,v 1.10 2003/01/28 20:19:57 joern Exp $
+# $Id: TranscodeVideo.pm,v 1.10.2.1 2003/04/26 15:45:20 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -125,12 +125,16 @@ sub command {
 sub parse_output {
 	my $self = shift; $self->trace_in;
 	my ($line) = @_;
-
-	if ( $line =~ /split.*?mapped.*?-c\s+\d+-(\d+)/ ) {
+	
+	if ( not $self->title->tc_psu_core and 
+	     $line =~ /split.*?mapped.*?-c\s+\d+-(\d+)/ ) {
 		$self->set_progress_max($1);
 		$self->set_progress_start_time(time);
+	}
 
-	} elsif ( $line =~ /\[(\d{6}-)?(\d+)\]/ ) {
+	if ( $line =~ /\[(\d{6}-)?(\d+)\]/ ) {
+		$self->set_progress_start_time(time)
+			if not $self->progress_start_time;
 		$self->set_progress_cnt($2);
 	}
 

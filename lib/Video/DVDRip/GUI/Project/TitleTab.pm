@@ -1,4 +1,4 @@
-# $Id: TitleTab.pm,v 1.56.2.2 2003/03/31 12:59:26 joern Exp $
+# $Id: TitleTab.pm,v 1.56.2.3 2003/04/26 15:43:50 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -922,6 +922,7 @@ sub rip_title {
 			$self->project->backup_copy;
 		}
 
+		$self->fill_content_list; # if another fps was detected from vob
 		$self->rip_title_selection_sensitive(1);
 
 		1;
