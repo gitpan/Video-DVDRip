@@ -1,4 +1,4 @@
-# $Id: Transcode.pm,v 1.4 2002/03/02 16:18:38 joern Exp $
+# $Id: Transcode.pm,v 1.5 2002/03/17 18:53:11 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -61,6 +61,7 @@ sub start {
 			if ( $line =~ /split.*?frames.*?-c\s+\d+-(\d+)/ ) {
 				$self->set_progress_frames_cnt ($1);
 				$frames_cnt = $1;
+				$self->set_progress_start_time(time);
 
 			} elsif ( $line =~ /\[\d{6}-(\d+)\]/ ) {
 				$self->set_progress_frames($1);
@@ -93,19 +94,6 @@ sub commit {
 		$title->frames_finished +
 		$self->progress_frames_cnt
 	);
-
-	# move chunk file to its final destination,
-	# if we finished pass 2 or doesn't use
-	# multipass encoding
-	if ( $self->pass == 2 or not $title->tc_multipass ) {
-		$project->set_assigned_job ( $self );
-		my $command = $title->get_move_avi_command;
-		$command = $self->node->get_popen_code ( command => $command );
-		$project->set_assigned_job ( undef );
-	
-		$self->log ("Moving avi file to its final destination: $command");
-		qx($command);
-	}
 
 	# job is finished
 	$self->set_state ('finished');

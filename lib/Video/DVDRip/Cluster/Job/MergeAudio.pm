@@ -1,4 +1,4 @@
-# $Id: MergeAudio.pm,v 1.1 2002/03/12 14:03:42 joern Exp $
+# $Id: MergeAudio.pm,v 1.2 2002/03/17 18:52:09 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -14,20 +14,14 @@ use base Video::DVDRip::Cluster::Job;
 use Carp;
 use strict;
 
-sub psu				{ shift->{psu}				}
-sub move_final			{ shift->{move_final}			}
-
-sub set_psu			{ shift->{psu}			= $_[1]	}
-sub set_move_final		{ shift->{move_final}		= $_[1]	}
-
 sub type {
-	return "audio merge";
+	return "multiplex video and audio";
 }
 
 sub info {
 	my $self = shift;
 
-	return "merge audio of psu ".$self->psu;
+	return "multiplex video and audio";
 }
 
 sub start {
@@ -65,8 +59,7 @@ sub start {
 sub calc_progress {
 	my $self = shift;
 
-       return "Merging audio of PSU ".$self->psu.", ".
-	      $self->progress_runtime;
+       return "Runtime: ".$self->progress_runtime;
 }
  
 1;

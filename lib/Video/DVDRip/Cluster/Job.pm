@@ -1,4 +1,4 @@
-# $Id: Job.pm,v 1.10 2002/02/18 23:02:49 joern Exp $
+# $Id: Job.pm,v 1.11 2002/03/17 18:51:42 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -157,15 +157,15 @@ sub abort_job {
 			"Last output of job was:\n".
 			$self->pipe->output_tail
 		);
-		$node->set_state ('aborted');
-		$node->save;
+		$self->set_state ('aborted');
+	} else {
+		$self->set_state ('waiting');
 	}
 
 	$node->set_assigned_job (undef);
 	$self->set_node(undef);
-
-	$self->set_state ("aborted");
 	$self->set_pipe (undef);
+
 	$self->project->determine_state;
 	$self->project->save;
 
@@ -227,7 +227,7 @@ sub popen {
 
 	$command = $self->node->get_popen_code ( command => $command );
 
-	$self->log (3, "Executing command: $command");
+	$self->log (2, "Executing command: $command");
 
 	my $pipe = Video::DVDRip::Cluster::Pipe->new (
 		command => $command,

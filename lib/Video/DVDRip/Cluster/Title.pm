@@ -1,4 +1,4 @@
-# $Id: Title.pm,v 1.20 2002/03/14 17:59:24 joern Exp $
+# $Id: Title.pm,v 1.21 2002/03/17 18:54:54 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -48,13 +48,17 @@ sub create_avi_dir {
 	return 1;
 }
 
-sub multipass_log_dir {
+#-----------------------------------------------------------------------
+# Filenames of all stages
+#-----------------------------------------------------------------------
+
+sub multipass_log_dir {				# directory for multipass logs
 	my $self = shift;
 
 	my $job = $self->project->assigned_job or croak "No job assigned";
 	
 	return sprintf (
-		"%s/%s/cluster/_mplog/%03d-%02d-%05d",
+		"%s/%s/cluster/%03d-%02d-%05d",
 		$job->node->data_base_dir,
 		$self->project->name,
 		$self->nr,
@@ -63,144 +67,88 @@ sub multipass_log_dir {
 	);
 }
 
-sub avi_file {
+sub avi_chunks_dir {				# directory for avi chunks
 	my $self = shift; $self->trace_in;
-
-	my $job = $self->project->assigned_job or croak "No job assigned";
-
-	return sprintf (
-		"%s/psu-%02d/%s-%03d-chunk-%05d.avi",
-		$self->project->avi_dir,
-		$job->psu,
-		$self->project->name,
-		$self->nr,
-		$job->chunk
-	);
-}
-
-sub final_avi_dir {
-	my $self = shift;
 
 	my $job = $self->project->assigned_job or croak "No job assigned";
 	
 	return sprintf (
-		"%s/%03d/psu-%02d-chunks",
+		"%s/%03d/chunks-psu-%02d",
 		$self->project->final_avi_dir,
 		$self->nr,
-		$job->psu
+		$job->psu,
 	);
 }
 
-sub final_avi_file {
-	my $self = shift;
+sub avi_file {					# transcode output file
+	my $self = shift; $self->trace_in;
 
 	my $job = $self->project->assigned_job or croak "No job assigned";
 	
 	return sprintf (
 		"%s/%s-%03d-%05d.avi",
-		$self->final_avi_dir,
+		$self->avi_chunks_dir,
 		$self->project->name,
 		$self->nr,
-		$job->chunk
+		$job->chunk,
 	);
 }
 
-sub audio_avi_dir {
+sub audio_avi_file {				# audio only file
 	my $self = shift;
 
 	my $job = $self->project->assigned_job or croak "No job assigned";
 	
 	return sprintf (
-		"%s/%03d/psu-%02d-audio",
+		"%s/%03d/audio-only/%s-%03d-audio.avi",
 		$self->project->final_avi_dir,
 		$self->nr,
-		$job->psu
-	);
-}
-
-sub audio_avi_file {
-	my $self = shift;
-
-	my $job = $self->project->assigned_job or croak "No job assigned";
-	
-	return sprintf (
-		"%s/%s-%03d-audio.avi",
-		$self->audio_avi_dir,
 		$self->project->name,
-		$self->nr
+		$self->nr,
 	);
 }
 
-sub merged_chunks_avi_dir {
+sub merged_chunks_avi_dir {			# directory for merged chunks
 	my $self = shift;
 
 	my $job = $self->project->assigned_job or croak "No job assigned";
 	
 	return sprintf (
-		"%s/%03d/psu-%02d-merged",
+		"%s/%03d/chunks-merged",
 		$self->project->final_avi_dir,
 		$self->nr,
-		$job->psu,
 	);
+
 }
 
-sub merged_chunks_avi_file {
+sub merged_chunks_avi_file {			# merged chunks of a PSU
 	my $self = shift;
 
 	my $job = $self->project->assigned_job or croak "No job assigned";
 	
 	return sprintf (
-		"%s/%s-%03d-psu-%02d.avi",
+		"%s/%s-%03d-merged.avi",
 		$self->merged_chunks_avi_dir,
 		$self->project->name,
 		$self->nr,
-		$job->psu
 	);
 }
 
-sub merged_chunks_with_audio_avi_dir {
-	my $self = shift;
-
-	my $job = $self->project->assigned_job or croak "No job assigned";
-	
-	return sprintf (
-		"%s/%03d/psu-audio",
-		$self->project->final_avi_dir,
-		$self->nr,
-	);
-}
-
-
-sub merged_chunks_with_audio_avi_file {
-	my $self = shift;
-
-	my $job = $self->project->assigned_job or croak "No job assigned";
-	
-	return sprintf (
-		"%s/%s-%03d-psu-audio-%02d.avi",
-		$self->merged_chunks_with_audio_avi_dir,
-		$self->project->name,
-		$self->nr,
-		$job->psu,
-	);
-}
-
-sub target_avi_dir {
-	my $self = shift;
-	return $self->project->final_avi_dir,
-}
-
-sub target_avi_file {
+sub target_avi_file {				# final avi, merged PSUs + audio
 	my $self = shift;
 
 	return sprintf (
 		"%s/%03d/%s-%03d.avi",
-		$self->target_avi_dir,
+		$self->project->final_avi_dir,
 		$self->nr,
 		$self->project->name,
 		$self->nr
 	);
 }
+
+#-----------------------------------------------------------------------
+# Commands for all Jobs
+#-----------------------------------------------------------------------
 
 sub get_transcode_command {
 	my $self = shift;
@@ -240,15 +188,29 @@ sub get_transcode_command {
 	return $command;
 }
 
-sub get_move_avi_command {
+sub get_transcode_audio_command {
 	my $self = shift;
+	
+	my $job = $self->project->assigned_job or croak "No job assigned";
 
-	my $avi_file       = $self->avi_file;
-	my $final_avi_dir  = $self->final_avi_dir;
-	my $final_avi_file = $self->final_avi_file;
+	my $audio_avi_file = $self->audio_avi_file;
+	my $audio_avi_dir  = dirname($audio_avi_file);
 
-	return  "mkdir -m 0775 -p '$final_avi_dir'; ".
-		"mv '$avi_file' '$final_avi_file'";
+	my $nice;
+	$nice = "/usr/bin/nice -n ".$self->tc_nice." "
+		if $self->tc_nice =~ /\S/;
+
+	my $command =
+		"mkdir -m 0775 -p '$audio_avi_dir' && ".
+		$nice.
+		"transcode -i ".$self->vob_dir.
+		" -x null,vob -g 0x0 -y raw -u 50".
+		" -a ".$self->audio_channel.
+		" -s ".$self->tc_volume_rescale.
+		" -o ".$audio_avi_file.
+		" && echo DVDRIP_SUCCESS";
+
+	return $command;
 }
 
 sub get_merge_chunks_command {
@@ -256,77 +218,45 @@ sub get_merge_chunks_command {
 	
 	my $job = $self->project->assigned_job or croak "No job assigned";
 
-	my $merged_avi_file = $self->merged_chunks_avi_file;
-	my $merged_avi_dir  = $self->merged_chunks_avi_dir;
-	my $avi_dir         = $self->final_avi_dir;
-	
+	my $merged_chunks_avi_file = $self->merged_chunks_avi_file;
+	my $merged_chunks_avi_dir  = dirname ( $merged_chunks_avi_file );
+
+	my $chunks_mask = sprintf (
+		"%s/%03d/chunks-psu-??/*",
+		$self->project->final_avi_dir,
+		$self->nr
+	);
+
 	my $command = 
-		"mkdir -m 0775 -p '$merged_avi_dir'; ".
-		"avimerge -o '$merged_avi_file' -i $avi_dir/*.avi";
+		"mkdir -m 0775 -p '$merged_chunks_avi_dir'; ".
+		"avimerge -o '$merged_chunks_avi_file' -i $chunks_mask";
 
 	$command .= " && echo DVDRIP_SUCCESS";
 	
-	$command .= " && rm $avi_dir/*.avi" if $self->with_cleanup;
+	$command .= " && rm $chunks_mask" if $self->with_cleanup;
 
 	return $command;
 }
 
-sub get_process_audio_command {
+sub get_merge_audio_command {
 	my $self = shift;
-
+	
 	my $job = $self->project->assigned_job or croak "No job assigned";
 
-	my $vob_dir           = $self->vob_dir;
-	my $merged_avi_file   = $self->merged_chunks_avi_file;
-	my $target_avi_file   = $self->merged_chunks_with_audio_avi_file;
-	my $nav_file	      = $self->vob_nav_file;
-	my $audio_channel     = $self->audio_channel;
-	my $avi_dir           = dirname $merged_avi_file;
-	my $volume_rescale    = $self->tc_volume_rescale;
-
-	my $psu       = $job->psu;
-	my $chunk_cnt = $job->chunk_cnt;
-
-	$target_avi_file = $self->target_avi_file if $job->move_final;
-
-	my $target_avi_dir = dirname($target_avi_file);
-
-	my $nice;
-	$nice = "/usr/bin/nice -n ".$self->tc_nice." "
-		if $self->tc_nice =~ /\S/;
+	my $target_avi_file        = $self->target_avi_file;
+	my $target_avi_dir         = dirname ( $target_avi_file );
+	my $audio_avi_file         = $self->audio_avi_file;
+	my $merged_chunks_avi_file = $self->merged_chunks_avi_file;
 
 	my $command =
 		"mkdir -m 0775 -p '$target_avi_dir' && ".
-		$nice.
-		"transcode -p '$vob_dir/' ".
-		"-a $audio_channel ".
-		"-S $psu -W$chunk_cnt,$chunk_cnt,$nav_file ".
-		"-i '$merged_avi_file' ".
-		"-o '$target_avi_file' ".
-		"-s $volume_rescale ".
-		"-P 1 -x avi,vob -y raw -u 50 ";
+		"avimerge -i $merged_chunks_avi_file".
+		" -o $target_avi_file ".
+		" -p $audio_avi_file ".
+		" && echo DVDRIP_SUCCESS";
 
-	$command .= " && echo DVDRIP_SUCCESS";
-	$command .= " && rm $merged_avi_file" if $self->with_cleanup;
-
-	return $command;
-}
-
-sub get_merge_psu_command {
-	my $self = shift;
-	my %par = @_;
-	my ($psu) = @par{'psu'};
-	
-	my $target_avi_file = $self->target_avi_file;
-	my $target_avi_dir  = dirname($target_avi_file);
-	my $avi_dir         = $self->merged_chunks_with_audio_avi_dir;
-	
-	my $command =
-		"mkdir -m 0775 -p '$target_avi_dir' && ".
-		"avimerge -o '$target_avi_file' -i $avi_dir/*.avi 2>/dev/null";
-
-	$command .= " && echo DVDRIP_SUCCESS";
-	$command .= " && rm $avi_dir/*.avi" if $self->with_cleanup;
+	$command .= " && rm '$merged_chunks_avi_file' '$audio_avi_file'"
+		if $self->with_cleanup;
 
 	return $command;
 }
@@ -346,55 +276,6 @@ sub get_split_command {
 	
 	$command .= " && rm '$target_avi_file'" if $self->with_cleanup;
 	
-	return $command;
-}
-
-sub get_transcode_audio_command {
-	my $self = shift;
-	
-	my $job = $self->project->assigned_job or croak "No job assigned";
-	my $audio_avi_dir = $self->audio_avi_dir;
-
-	my $nice;
-	$nice = "/usr/bin/nice -n ".$self->tc_nice." "
-		if $self->tc_nice =~ /\S/;
-
-	my $command =
-		"mkdir -m 0775 -p '$audio_avi_dir' && ".
-		$nice.
-		"transcode -i ".$self->vob_dir.
-		" -x null,vob -g 0x0 -y raw -u 50".
-		" -S ".$job->psu.
-		" -a ".$self->audio_channel.
-		" -o ".$self->audio_avi_file.
-		" && echo DVDRIP_SUCCESS";
-
-	return $command;
-}
-
-sub get_merge_audio_command {
-	my $self = shift;
-	
-	my $job = $self->project->assigned_job or croak "No job assigned";
-
-	my $merged_avi_file = $self->merged_chunks_avi_file;
-	my $audio_avi_file  = $self->audio_avi_file;
-	my $target_avi_file = $self->merged_chunks_with_audio_avi_file;
-
-	$target_avi_file = $self->target_avi_file if $job->move_final;
-
-	my $target_avi_dir = dirname $target_avi_file;
-
-	my $command =
-		"mkdir -m 0775 -p '$target_avi_dir' && ".
-		"avimerge -i $merged_avi_file".
-		" -o $target_avi_file ".
-		" -p $audio_avi_file ".
-		" && echo DVDRIP_SUCCESS";
-
-	$command .= " && rm '$merged_avi_file' '$audio_avi_file'"
-		if $self->with_cleanup;
-
 	return $command;
 }
 

@@ -160,9 +160,47 @@ SEE ALSO
     perl(1).
 
 CHANGES
-    $Id: Changes,v 1.61 2002/03/14 18:04:36 joern Exp $
+    $Id: Changes,v 1.64 2002/03/17 18:55:24 joern Exp $
 
     Revision history for Perl extension Video::DVDRip
+
+    0.37 Sun Mar 17 2002, joern
+	Note:
+	- first finish all Cluster Mode projects before updating.
+	  Job workflow and file system layout did change.
+	- creating target AVI files >2GB does not work in Cluster
+	  Mode due to problems with transcode's avimerge program.
+	  Maybe this doesn't work on my system only, so if anyone
+	  has success building larger files, please drop me a note.
+
+	Features:
+	- Cluster Mode:
+	  - Now the overall runtime for a project is printed when 
+	    it's finished.
+	  - executed commands are now logged already at the default
+	    log level 2
+	  - due to on error aborted jobs doesn't stop the node
+	    anymore. If you stop a node the corresponding job doesn't
+	    get the 'aborted' state, instead it's set to 'waiting'.
+	    This way one aborted job doesn't effect the whole process
+	    by blocking the corresponding node.
+
+	Bugfixes:
+	- Cluster Mode:
+	  - was still broken, if a title consists of more than one
+	    PSU. Now the whole internal workflow changed. Audio
+	    transcoding is done for the whole movie, not per PSU.
+	    There is no merge per PSU anymore. All chunks are merged
+	    into one AVI, before adding the audio.
+	  - one side effect of this change is, that it's not possible
+	    to select which PSUs should be processed. The corresponding
+	    selection list disappeared from the Edit Cluster Project
+	    dialog. All PSUs are always processed from now, as in
+	    standard mode.
+	  - scheduler: local jobs of other projects with lower priority
+	    were preferred instead of finishing the actual project first.
+	  - fps and ETA of transcode video/audio jobs are now more exact,
+	    particularly at the beginning of the job.
 
     0.36 Thu Mar 14 2002, joern
 	Bugfixes:

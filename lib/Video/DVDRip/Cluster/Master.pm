@@ -1,4 +1,4 @@
-# $Id: Master.pm,v 1.20 2002/03/13 18:08:29 joern Exp $
+# $Id: Master.pm,v 1.21 2002/03/17 18:53:55 joern Exp $
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
 # 
@@ -301,8 +301,8 @@ sub load_projects {
 		my $project = Video::DVDRip::Cluster::Project->new_from_file (
 			filename  => $filename,
 		);
-		$project->determine_state;
 		$project->reset_jobs;
+		$project->determine_state;
 		push @projects, $project;
 	}
 
@@ -601,18 +601,23 @@ sub job_delegate_pending_jobs {
 	# nothing to do if no project is in the queue for processing
 	return 1 if not @{$projects};	
 
-	# create list of jobs, which are waiting, with local_access
-	# jobs first (because we actively search local nodes later, 
-	# this prevents blocking a local node with a non local job,
-	# just a round before we try to schedule a local job).
-	# But besides that we keep the order which is defined by
-	# the project priorities.
-	my (@local_jobs, @other_jobs);
+	# now check for jobs for each project, in order of priority
 	foreach my $project ( @{$projects} ) {
+
+		# get out here if no idles nodes are left
+		last if not @{$nodes};
+
+		# create list of jobs, which are waiting, with local_access
+		# jobs first (because we actively search local nodes later, 
+		# this prevents blocking a local node with a non local job,
+		# just a round before we try to schedule a local job).
+		my (@local_jobs, @other_jobs);
+
 		foreach my $job ( @{$project->jobs} ) {
-			# skip jobs which are finished or running
+			# skip jobs that are finished or running
 			next if $job->state eq 'finished' or
-				$job->state eq 'running';
+				$job->state eq 'running' or
+				$job->state eq 'aborted';
 
 			# We do not check the dependency state of
 			# the job here, because this is expensive.
@@ -628,50 +633,50 @@ sub job_delegate_pending_jobs {
 				push @other_jobs, $job;
 			}
 		}
-	}
 
-	# in this array we remember local jobs which
-	# are skipped due to a lack of local nodes
-	my @skipped_local_access_jobs;
+		# in this array we remember local jobs which
+		# are skipped due to a lack of local nodes
+		my @skipped_local_access_jobs;
 
-	# check if we can start jobs
-	foreach my $job ( @local_jobs, @other_jobs ) {
-		last if not @{$nodes};
-		next if not $job->dependency_ok;
-		
-		if ( $job->prefer_local_access ) {
-			# search a node with local access
-			my $i = 0;
-			foreach my $node ( @{$nodes} ) {
-				last if $node->data_is_local;
-				++$i;
+		# check if we can start jobs
+		foreach my $job ( @local_jobs, @other_jobs ) {
+			last if not @{$nodes};
+			next if not $job->dependency_ok;
+
+			if ( $job->prefer_local_access ) {
+				# search a node with local access
+				my $i = 0;
+				foreach my $node ( @{$nodes} ) {
+					last if $node->data_is_local;
+					++$i;
+				}
+				if ( $i < @{$nodes} ) {
+					# found one: start the job on it
+					$job->start_job (
+						node => splice (@{$nodes}, $i, 1)
+					);
+					next;
+
+				} else {
+					# no local node found. skip this job.
+					# schedule it later if we have idle
+					# nodes left after this round.
+					push @skipped_local_access_jobs, $job;
+					next;
+				}
+
 			}
-			if ( $i < @{$nodes} ) {
-				# found one: start the job on it
-				$job->start_job (
-					node => splice (@{$nodes}, $i, 1)
-				);
-				next;
 
-			} else {
-				# no local node found. skip this job.
-				# schedule it later if we have idle
-				# nodes left after this round.
-				push @skipped_local_access_jobs, $job;
-				next;
-			}
-
+			# this is a normal job: start it on the next idle node
+			$job->start_job ( node => shift @{$nodes} );
 		}
 
-		# this is a normal job: start it on the next idle node
-		$job->start_job ( node => shift @{$nodes} );
-	}
-
-	# do we have skipped local jobs and idle nodes left?
-	if ( @{$nodes} and @skipped_local_access_jobs ) {
-		foreach my $job ( @skipped_local_access_jobs ) {
-			$job->start_job ( node => shift @{$nodes} );
-			last if not @{$nodes};
+		# do we have skipped local jobs and idle nodes left?
+		if ( @{$nodes} and @skipped_local_access_jobs ) {
+			foreach my $job ( @skipped_local_access_jobs ) {
+				$job->start_job ( node => shift @{$nodes} );
+				last if not @{$nodes};
+			}
 		}
 	}
 

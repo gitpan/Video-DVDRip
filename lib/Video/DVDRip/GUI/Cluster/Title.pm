@@ -1,4 +1,4 @@
-# $Id: Title.pm,v 1.4 2002/03/02 16:20:47 joern Exp $
+# $Id: Title.pm,v 1.5 2002/03/17 18:55:11 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -130,7 +130,8 @@ sub build {
 	my $table = $self->create_dialog ( @fields );
 	$vbox->pack_start ($table, 0, 1, 0);
 
-	# Program Stream Units
+	# Program Stream Units: DISABLED
+if ( 0 ) {
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
 	$vbox->pack_start ($hbox, 0, 1, 0);
@@ -161,6 +162,7 @@ sub build {
 		);
 		$psu_clist->select_row ( $psu->nr, 0 ) if $psu->selected;
 	}
+}
 
 	# Buttons
 	$hbox = Gtk::HBox->new;
@@ -192,11 +194,12 @@ sub dialog_ok {
 	my $self = shift;
 
 	my $title = $self->title;
+	my $title_data = $self->title_data;
 
-	# check psu changes
+	# check psu changes: DISABLED
+if ( 0 ) {
 	my $psu_changed;
 	my $psu_cnt;
-	my $title_data = $self->title_data;
 
 	foreach my $psu ( @{$title->program_stream_units} ) {
 		++$psu_cnt if $title_data->{selected_psu}->{$psu->nr};
@@ -215,6 +218,7 @@ sub dialog_ok {
 			$psu_changed = 1;
 		}
 	};
+}
 
 	# copy data fields into title object
 	my ($k, $v);

@@ -1,4 +1,4 @@
-# $Id: MergeChunks.pm,v 1.4 2002/03/12 13:55:46 joern Exp $
+# $Id: MergeChunks.pm,v 1.5 2002/03/17 18:52:39 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -23,6 +23,9 @@ sub set_chunk_cnt		{ shift->{chunk_cnt}		= $_[1]	}
 sub progress_chunks		{ shift->{progress_chunks}	= $_[1]	}
 sub set_progress_chunks		{ shift->{progress_chunks}	= $_[1]	}
 
+sub move_final			{ shift->{move_final}			}
+sub set_move_final		{ shift->{move_final}		= $_[1]	}
+
 sub type {
 	return "psu merge";
 }
@@ -30,7 +33,7 @@ sub type {
 sub info {
 	my $self = shift;
 
-	return "merge ".$self->chunk_cnt." chunks of psu ".$self->psu;
+	return "merge video chunks";
 }
 
 sub start {
@@ -73,8 +76,7 @@ sub start {
 sub calc_progress {
 	my $self = shift;
 
-       return 	"Chunk ".($self->progress_chunks||1)."/".$self->chunk_cnt.
-		", ".$self->progress_runtime;
+       return "Runtime: ".$self->progress_runtime;
 }
  
 1;

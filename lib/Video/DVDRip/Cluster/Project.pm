@@ -1,4 +1,4 @@
-# $Id: Project.pm,v 1.20 2002/03/13 18:08:55 joern Exp $
+# $Id: Project.pm,v 1.22 2002/03/17 18:54:20 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -31,12 +31,40 @@ sub title			{ shift->{title}			}
 sub jobs			{ shift->{jobs}				}
 sub state			{ shift->{state}			}
 sub assigned_job		{ shift->{assigned_job} 		}
+sub start_time			{ shift->{start_time} 			}
+sub end_time			{ shift->{end_time} 			}
+sub runtime			{ shift->{runtime} 			}
 
 sub set_id			{ shift->{id}			= $_[1] }
 sub set_title			{ shift->{title} 		= $_[1] }
 sub set_jobs			{ shift->{jobs} 		= $_[1] }
-sub set_state			{ shift->{state} 		= $_[1] }
 sub set_assigned_job		{ shift->{assigned_job} 	= $_[1] }
+sub set_start_time		{ shift->{start_time} 		= $_[1] }
+sub set_end_time		{ shift->{end_time} 		= $_[1] }
+sub set_runtime			{ shift->{runtime} 		= $_[1] }
+
+sub set_state {
+	my $self = shift;
+	my ($new_state) = @_;
+	
+	my $old_state = $self->state;
+	$self->{state} = $new_state;
+	
+	if ( $new_state eq 'running' and not $self->start_time ) {
+		$self->set_start_time(time);
+	}
+	
+	if ( $new_state eq 'finished' and $old_state ne 'finished' ) {
+		$self->set_end_time(time);
+		my $runtime = $self->format_time (
+			time => $self->end_time - $self->start_time
+		);
+		$self->set_runtime($runtime);
+	}
+	
+	$new_state;
+}
+
 
 sub load {
 	my $self = shift;
@@ -118,7 +146,10 @@ sub new {
 	my $psu_selected;
 	foreach my $psu ( @{$title->program_stream_units} ) {
 		bless $psu, "Video::DVDRip::Cluster::PSU";
-		if ( $psu->frames >= 1000 ) {
+
+		# PSU selection is currently DISABLED,
+		# so all PSUs are always selected
+		if ( 1 or $psu->frames >= 1000 ) {
 			$psu->set_selected(1);
 			$psu_selected = 1;
 		}
@@ -151,25 +182,21 @@ sub create_job_plan {
 	push @pass, 2 if $multipass;
 
 	my (@jobs, $job, $last_job);
-	my @depend_merge_psu;
+	my @depend_merge_video;
+	my $audio_job;
 
 	my $nr = 1;
 
-	# first we have to do some work per psu
+	# first the audio processing job
+	$job = Video::DVDRip::Cluster::Job::TranscodeAudio->new ( nr => $nr++ );
+	push @jobs, $job;
+	$job->set_project ($self);
+	$job->set_prefer_local_access (1);
+	$audio_job = $job;
+
+	# then we have to do some work per psu
 	foreach my $psu ( @{$title->program_stream_units} ) {
 		next if not $psu->selected;
-
-		my @depend_merge_video;
-		my @depend_merge_audio;
-
-		# audio processing job
-		$job = Video::DVDRip::Cluster::Job::TranscodeAudio->new ( nr => $nr++ );
-		push @jobs, $job;
-		$job->set_project ($self);
-		$job->set_psu ( $psu->nr );
-		$job->set_prefer_local_access (1);
-		$last_job = $job;
-		push @depend_merge_audio, $job;
 
 		# calculate chunk cnt of this psu
 		my $chunk_cnt = int($psu->frames / 10000);
@@ -203,41 +230,23 @@ sub create_job_plan {
 				$last_job = $job;
 			}
 		}
-		
-		# add a video merge job for this psu
-		$job = Video::DVDRip::Cluster::Job::MergeChunks->new ( nr => $nr++ );
-		push @jobs, $job;
-		$job->set_project ($self);
-		$job->set_chunk_cnt ( $chunk_cnt );
-		$job->set_psu ( $psu->nr );
-		$job->set_prefer_local_access (1);
-		$job->set_depends_on_jobs ( \@depend_merge_video );
-		$last_job = $job;
-		push @depend_merge_audio, $job;
+	}
 
-		# finaly audio and video has to be merged
-		$job = Video::DVDRip::Cluster::Job::MergeAudio->new ( nr => $nr++ );
-		push @jobs, $job;
-		$job->set_project ($self);
-		$job->set_psu ( $psu->nr );
-		$job->set_prefer_local_access (1);
-		$job->set_depends_on_jobs ( \@depend_merge_audio );
-		$last_job = $job;
-		push @depend_merge_psu, $job;
-	}
-	
-	# do we need merging of psu AVIs?
-	if ( @depend_merge_psu > 1 ) {
-		$job = Video::DVDRip::Cluster::Job::MergePSUs->new ( nr => $nr++ );
-		push @jobs, $job;
-		$job->set_project ($self);
-		$job->set_chunk_cnt ( scalar(@depend_merge_psu) );
-		$job->set_depends_on_jobs ( \@depend_merge_psu );
-		$job->set_prefer_local_access (1);
-		$last_job = $job;
-	} else {
-		$last_job->set_move_final(1) if $last_job;
-	}
+	# video has to be merged
+	$job = Video::DVDRip::Cluster::Job::MergeChunks->new ( nr => $nr++ );
+	push @jobs, $job;
+	$job->set_project ($self);
+	$job->set_prefer_local_access (1);
+	$job->set_depends_on_jobs ( [ $audio_job, @depend_merge_video ] );
+	$last_job = $job;
+
+	# audio and video has to be merged
+	$job = Video::DVDRip::Cluster::Job::MergeAudio->new ( nr => $nr++ );
+	push @jobs, $job;
+	$job->set_project ($self);
+	$job->set_prefer_local_access (1);
+	$job->set_depends_on_jobs ( [ $last_job ] );
+	$last_job = $job;
 	
 	# finally split the AVI if requested
 	if ( $title->with_avisplit ) {
@@ -245,11 +254,7 @@ sub create_job_plan {
 		push @jobs, $job;
 		$job->set_project ($self);
 		$job->set_prefer_local_access (1);
-		if ( @depend_merge_psu > 1 ) {
-			$job->set_depends_on_jobs ( [ $last_job ] );
-		} else {
-			$job->set_depends_on_jobs ( \@depend_merge_psu );
-		}
+		$job->set_depends_on_jobs ( [ $last_job ] );
 		$last_job = $job;
 	}
 	
@@ -417,6 +422,8 @@ sub get_save_data {
 sub progress {
 	my $self = shift;
 	
+	return "Duration: ".$self->runtime if $self->state eq 'finished';
+	
 	my $sum;
 	my $finished = 0;
 	my $running  = 0;
@@ -430,7 +437,6 @@ sub progress {
 			       $job->state eq 'aborted';
 	}
 	
-	return "finished" if $finished == $sum;
 	return "Jobs: run=$running wait=$waiting fin=$finished sum=$sum";
 }
 
@@ -460,12 +466,13 @@ sub determine_state {
 	my $state = 'finished';
 
 	foreach my $job ( @{$self->jobs} ) {
-		if ( $job->state eq 'waiting' ) {
-			$state = 'waiting';
-		}
 		if ( $job->state eq 'running' ) {
 			$state = 'running';
 			last;
+		}
+		if ( $job->state eq 'waiting' or
+		     $job->state eq 'aborted' ) {
+			$state = 'waiting';
 		}
 	}
 	
@@ -529,7 +536,8 @@ sub reset_job {
 	my ($job_id) = @par{'job_id'};
 	
 	my $job = $self->get_job_by_id ( job_id => $job_id );
-	return if $job->state ne 'finished';
+	return if $job->state ne 'finished' and
+		  $job->state ne 'aborted';
 	
 	my $dep_jobs = $self->get_dependent_jobs ( job => $job );
 
@@ -541,11 +549,13 @@ sub reset_job {
 	# now reset all dependent jobs after resetting the
 	# parent job
 	$job->set_state ('waiting');
-	$self->set_state ('not scheduled');
 
 	foreach my $dep_job ( @{$dep_jobs} ) {
 		$dep_job->set_state ('waiting');
 	}
+
+	# determine project state
+	$self->determine_state;
 
 	$self->save;
 

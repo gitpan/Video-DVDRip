@@ -1,4 +1,4 @@
-# $Id: TranscodeAudio.pm,v 1.1 2002/03/12 14:03:42 joern Exp $
+# $Id: TranscodeAudio.pm,v 1.2 2002/03/17 18:53:25 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -14,9 +14,6 @@ use base Video::DVDRip::Cluster::Job;
 use Carp;
 use strict;
 
-sub psu				{ shift->{psu}				}
-sub set_psu			{ shift->{psu}			= $_[1]	}
-
 sub type {
 	return "transcode audio";
 }
@@ -24,7 +21,7 @@ sub type {
 sub info {
 	my $self = shift;
 
-	return  "transcode audio of psu ".$self->psu;
+	return  "transcode audio";
 }
 
 sub start {
@@ -44,9 +41,7 @@ sub start {
 
 	$self->set_progress_frames (0);
 
-	$frames_cnt = $self->project->title
-				    ->program_stream_units
-				    ->[$self->psu]->frames;
+	$frames_cnt = $self->project->title->frames;
 
 	$self->set_progress_frames_cnt ($frames_cnt);
 
@@ -57,6 +52,7 @@ sub start {
 			if ( $line =~ /split.*?frames.*?-c\s+\d+-(\d+)/ ) {
 				$self->set_progress_frames_cnt ($1);
 				$frames_cnt = $1;
+				$self->set_progress_start_time(time);
 
 			} elsif ( $line =~ /\[\d{6}-(\d+)\]/ ) {
 				$self->set_progress_frames($1);

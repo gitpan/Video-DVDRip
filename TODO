@@ -1,6 +1,7 @@
-$Id: TODO,v 1.54 2002/03/14 18:04:36 joern Exp $
+$Id: TODO,v 1.56 2002/03/17 20:48:20 joern Exp $
 
 KNOWN BUGS
+- deactivating audio doesn't work
 - cluster mode
   - cluster control daemon leaks memory
   - still avimerge progress problems. GUI freezes sometimes
@@ -13,7 +14,6 @@ TODO
 - cluster mode:
   - schedule start/end time of a node, suggested by Rainer Lay
   - stop node after current job, suggested by Rainer Lay
-  - enhance chunk calculation (e.g. min: number of idle nodes)
   - checkbox for reducing the bitrate about a few precent to
     prevent a slightly bigger result, which can happen because
     the bitrate estimation tends to bigger files on small chunks.
