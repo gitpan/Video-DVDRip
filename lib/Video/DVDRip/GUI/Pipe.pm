@@ -1,4 +1,4 @@
-# $Id: Pipe.pm,v 1.8 2003/02/06 15:00:33 joern Exp $
+# $Id: Pipe.pm,v 1.8.2.2 2003/02/17 21:10:05 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -141,6 +141,7 @@ sub close {
 	Gtk::Gdk->input_remove ( $self->gtk_input ) if $self->gtk_input;
 
 	close ($self->fh) if $self->fh;
+	waitpid $self->pid, 0;
 
 	$self->set_gtk_input(undef);
 	$self->set_fh ( undef );
@@ -151,12 +152,40 @@ sub close {
 sub cancel {
 	my $self = shift;
 
+	# $self->pid belong to the sh we started with exec,
+	# but we want to kill it's child
+	my $child_pid = $self->get_child_pid ( pid => $self->pid );
+
+	# kill the child
+	$self->log ("Aborting command. Sending signal 1 to PID $child_pid...");
+	kill 1, $child_pid;
+
+	# close this pipe
+	$self->close;
+
+	1;
+}
+
+sub cancel_pstree {
+	my $self = shift;
+
+	# this pid belong to the sh we started with exec
 	my $pid = $self->pid;
+	
+	# but we want to have its child. We use pstree for that.
+	my $pstree = qx[pstree -p $pid];
+	$pstree =~ /\($pid\).*?\((\d+)/;
+	my $child_pid = $1;
 
-	$self->log ("Aborting command. Sending signal 1 to PID $pid...");
+	# if there was no sh with a further child, we have to kill
+	# our child process directly
+	$child_pid ||= $pid;
 
-	kill 1, $pid;
+	# kill the child
+	$self->log ("Aborting command. Sending signal 1 to PID $child_pid...");
+	kill 1, $child_pid;
 
+	# close this pipe
 	$self->close;
 
 	1;

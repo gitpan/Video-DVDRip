@@ -1,4 +1,4 @@
-# $Id: Depend.pm,v 1.2 2003/02/10 11:57:17 joern Exp $
+# $Id: Depend.pm,v 1.2.2.3 2003/02/17 22:16:02 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -25,6 +25,7 @@ my %TOOLS = (
 	optional	=> 0,
 	get_version 	=> sub {
 		qx[transcode -v 2>&1] =~ /v(\d+\.\d+\.\d+(\.\d+)?)/i;
+		wait;	# saw zombies on a Slackware system without it.
 		return $1;
 	},
 	convert 	=> 'default',
@@ -42,11 +43,33 @@ my %TOOLS = (
 	optional	=> 0,
 	get_version 	=> sub {
 		qx[convert -version 2>&1] =~ /ImageMagick\s+(\d+\.\d+(\.\d+)?)/i;
+		wait;	# saw zombies on a Slackware system without it.
 		return $1;
 	},
 	convert 	=> 'default',
 	min 		=> "4.0.0",
 	suggested 	=> "5.5.3",
+    },
+    'ps -H' => {
+    	order		=> ++$ORDER,
+    	comment		=> "Needed to determine child PID's",
+	optional	=> 0,
+	get_version 	=> sub {
+		my $pid = $$;
+		my $test_child_pid = open (IN, "cat /dev/zero |")
+			or die "can't fork ps";
+		my $child_pid = Video::DVDRip::Base->get_child_pid (
+			pid => $pid
+		);
+		close IN;
+		wait;	# saw zombies on a Slackware system without it.
+
+		return 1 if $test_child_pid == $child_pid;
+		return 0;
+	},
+	convert 	=> 'default',
+	min 		=> "1",
+	suggested 	=> "1",
     },
     subtitle2pgm => {
      	order		=> ++$ORDER,
@@ -54,6 +77,7 @@ my %TOOLS = (
 	optional	=> 1,
 	get_version 	=> sub {
 		qx[subtitle2pgm -h  2>&1] =~ /version\s+(\d+\.\d+(\.\d+)?)/i;
+		wait;	# saw zombies on a Slackware system without it.
 		return $1;
 	},
 	convert 	=> 'default',
@@ -68,6 +92,7 @@ my %TOOLS = (
 		my $self = shift;
 		my $rar = $self->config('rar_command');
 		qx[$rar '-?' 2>&1] =~ /rar\s+(\d+\.\d+(\.\d+)?)/i;
+		wait;	# saw zombies on a Slackware system without it.
 		return $1;
 	},
 	convert 	=> 'default',
@@ -81,6 +106,7 @@ my %TOOLS = (
 	optional	=> 1,
 	get_version 	=> sub {
 		qx[mplayer --help 2>&1] =~ /MPlayer\s+(\d+\.\d+(\.\d+)?)/i;
+		wait;	# saw zombies on a Slackware system without it.
 		return $1;
 	},
 	convert 	=> 'default',
@@ -93,6 +119,7 @@ my %TOOLS = (
 	optional	=> 1,
 	get_version 	=> sub {
 		qx[ogmmerge -V 2>&1] =~ /v(\d+\.\d+)/i;
+		wait;	# saw zombies on a Slackware system without it.
 		return $1;
 	},
 	convert 	=> 'none',
@@ -105,6 +132,7 @@ my %TOOLS = (
 	optional	=> 1,
 	get_version 	=> sub {
 		qx[mplex --help 2>&1] =~ /version\s+(\d+\.\d+(\.\d+)?)/i;
+		wait;	# saw zombies on a Slackware system without it.
 		return $1;
 	},
 	convert 	=> 'default',
@@ -117,6 +145,7 @@ my %TOOLS = (
 	optional	=> 1,
 	get_version 	=> sub {
 		qx[cdrdao show-toc -h 2>&1] =~ /version\s+(\d+\.\d+\.\d+(\.\d+)?)/i;
+		wait;	# saw zombies on a Slackware system without it.
 		return $1;
 	},
 	convert 	=> 'default',
@@ -129,6 +158,7 @@ my %TOOLS = (
 	optional	=> 1,
 	get_version 	=> sub {
 		qx[vcdimager -V 2>&1] =~ /vcdimager.*?\s+(\d+\.\d+(\.\d+)?)/i;
+		wait;	# saw zombies on a Slackware system without it.
 		return $1;
 	},
 	convert 	=> 'default',
@@ -141,6 +171,7 @@ my %TOOLS = (
 	optional	=> 1,
 	get_version 	=> sub {
 		qx[mkisofs -version 2>&1] =~ /mkisofs\s+(\d+\.\d+(\.\d+)?)/i;
+		wait;	# saw zombies on a Slackware system without it.
 		return $1;
 	},
 	convert 	=> 'default',
@@ -153,6 +184,7 @@ my %TOOLS = (
 	optional	=> 1,
 	get_version 	=> sub {
 		qx[cdrecord -version 2>&1] =~ /Cdrecord\s+(\d+\.\d+(\.\d+)?)/i;
+		wait;	# saw zombies on a Slackware system without it.
 		return $1;
 	},
 	convert 	=> 'default',
@@ -165,6 +197,7 @@ my %TOOLS = (
 	optional	=> 1,
 	get_version 	=> sub {
 		qx[xine -version 2>&1] =~ /v(\d+\.\d+(\.\d+)?)/i;
+		wait;	# saw zombies on a Slackware system without it.
 		return $1;
 	},
 	convert 	=> 'default',
@@ -176,24 +209,13 @@ my %TOOLS = (
     	comment		=> "Only for cluster mode master",
 	optional	=> 1,
 	get_version 	=> sub {
-		qx[fping -v 2>&1] =~ /Version\s+(\d+\.\d+(\.\d+)?)/i;
+		qx[/usr/sbin/fping -v 2>&1] =~ /Version\s+(\d+\.\d+(\.\d+)?)/i;
+		wait;	# saw zombies on a Slackware system without it.
 		return $1;
 	},
 	convert 	=> 'default',
 	min 		=> "2.2",
 	suggested 	=> "2.4",
-    },
-    pstree => {
-    	order		=> ++$ORDER,
-    	comment		=> "Only for cluster mode master",
-	optional	=> 1,
-	get_version 	=> sub {
-		qx[pstree -V 2>&1] =~ /pstree.*?(\d+\.\d+(\.\d+)?)/i;
-		return $1;
-	},
-	convert 	=> 'default',
-	min 		=> "18",
-	suggested 	=> "21.2",
     },
 );
 

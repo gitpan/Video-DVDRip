@@ -1,4 +1,4 @@
-# $Id: Pipe.pm,v 1.10 2003/01/28 20:19:57 joern Exp $
+# $Id: Pipe.pm,v 1.10.2.1 2003/02/17 21:09:48 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -205,6 +205,7 @@ sub close {
 	$self->set_event_waiter (undef);
 
 	close $fh;
+	waitpid $self->pid, 0;
 
 	$self->log (5, "command finished: ".$self->command);
 	
@@ -212,6 +213,23 @@ sub close {
 }
 
 sub cancel {
+	my $self = shift;
+
+	# $self->pid belong to the sh we started with exec,
+	# but we want to kill it's child
+	my $child_pid = $self->get_child_pid ( pid => $self->pid );
+
+	# kill the child
+	$self->log ("Aborting command. Sending signal 1 to PID $child_pid...");
+	kill 1, $child_pid;
+
+	# close this pipe
+	$self->close;
+
+	1;
+}
+
+sub cancel_pstree {
 	my $self = shift;
 
 	# this pid belong to the sh we started with exec

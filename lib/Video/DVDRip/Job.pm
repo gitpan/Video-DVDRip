@@ -1,4 +1,4 @@
-# $Id: Job.pm,v 1.10 2003/01/28 20:19:57 joern Exp $
+# $Id: Job.pm,v 1.10.2.1 2003/02/15 09:38:56 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -256,6 +256,8 @@ sub abort_job {
 	$self->set_job_aborted (1);
 
 	$self->log ("Aborting job: ".$self->info);
+
+	$self->rollback if $self->can('rollback');
 
 	my $cb_job_aborted = $self->cb_job_aborted;
 	&$cb_job_aborted() if $cb_job_aborted;

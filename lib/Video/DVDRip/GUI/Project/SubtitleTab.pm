@@ -1,4 +1,4 @@
-# $Id: SubtitleTab.pm,v 1.14.2.1 2003/02/11 22:17:05 joern Exp $
+# $Id: SubtitleTab.pm,v 1.14.2.2 2003/02/15 09:38:20 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -64,7 +64,7 @@ sub create_subtitle_tab {
 	$table->show;
 	$table->set_row_spacings ( $TABLE_SPACING );
 	$table->set_col_spacings ( $TABLE_SPACING );
-	$vbox->pack_start ($table, 0, 1, 0);
+	$vbox->pack_start ($table, 1, 1, 0);
 
 	$table->attach_defaults ($select, 	0, 1, 0, 1);
 	$table->attach_defaults ($preview, 	0, 1, 1, 2);

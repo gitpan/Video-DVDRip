@@ -1,4 +1,4 @@
-# $Id: TranscodeTab.pm,v 1.83.2.1 2003/02/11 22:00:39 joern Exp $
+# $Id: TranscodeTab.pm,v 1.83.2.2 2003/02/15 09:38:30 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -16,7 +16,7 @@ use Video::DVDRip::GUI::Project::TranscodeTabAudio;
 use Carp;
 use strict;
 
-my $TABLE_SPACING = 5;
+my $TABLE_SPACING = 4;
 
 sub transcode_widgets		{ shift->{transcode_widgets}		}	# href
 sub set_transcode_widgets	{ shift->{transcode_widgets}	= $_[1] }
@@ -79,7 +79,7 @@ sub create_transcode_tab {
 	$table->show;
 	$table->set_row_spacings ( $TABLE_SPACING );
 	$table->set_col_spacings ( $TABLE_SPACING );
-	$vbox->pack_start ($table, 0, 1, 0);
+	$vbox->pack_start ($table, 1, 1, 0);
 
 	$table->attach_defaults ($container_options, 	0, 1, 0, 1);
 	$table->attach_defaults ($video_options, 	0, 1, 1, 2);

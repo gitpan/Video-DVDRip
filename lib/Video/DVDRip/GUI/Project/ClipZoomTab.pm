@@ -1,4 +1,4 @@
-# $Id: ClipZoomTab.pm,v 1.38 2003/01/28 20:19:57 joern Exp $
+# $Id: ClipZoomTab.pm,v 1.38.2.1 2003/02/15 09:37:47 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -44,7 +44,7 @@ sub create_adjust_tab {
 
 	$frame = Gtk::Frame->new ("Preview images");
 	$frame->show;
-	$vbox->pack_start ( $frame, 0, 1, 0);
+	$vbox->pack_start ( $frame, 1, 1, 0);
 
 	$box = Gtk::VBox->new;
 	$box->show;
@@ -206,7 +206,7 @@ sub create_adjust_tab {
 
 	$frame = Gtk::Frame->new ("Adjust clip and zoom parameters");
 	$frame->show;
-	$vbox->pack_start ( $frame, 0, 1, 0);
+	$vbox->pack_start ( $frame, 1, 1, 0);
 
 	$hbox = Gtk::HBox->new;
 	$hbox->set_border_width(5);
@@ -217,7 +217,7 @@ sub create_adjust_tab {
 	my $table = Gtk::Table->new ( 5, 3, 0 );
 	$table->show;
 	$table->set_row_spacings ( 10 );
-	$table->set_col_spacings ( 10 );
+	$table->set_col_spacings ( 5 );
 	$hbox->pack_start ($table, 0, 1, 0);
 
 	# Presets Menu

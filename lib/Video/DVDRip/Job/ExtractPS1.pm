@@ -1,4 +1,4 @@
-# $Id: ExtractPS1.pm,v 1.3 2003/01/28 20:19:57 joern Exp $
+# $Id: ExtractPS1.pm,v 1.3.2.1 2003/02/15 09:39:05 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -86,7 +86,7 @@ sub parse_output {
 
 sub rollback {
 	my $self = shift;
-	
+
 	unlink $self->subtitle->ps1_file;
 	
 	1;

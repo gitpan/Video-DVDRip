@@ -1,4 +1,4 @@
-$Id: TODO,v 1.117 2003/02/08 12:37:41 joern Exp $
+$Id: TODO,v 1.117.2.1 2003/02/15 09:41:25 joern Exp $
 
 KNOWN BUGS:
 ===========
@@ -34,6 +34,8 @@ TODO:
   suggested by James Dowlearn <alwjdd AT utdallas.edu>
 - on-the-fly/dvd-image mode: rip a small ammount to harddisk, to get ac3
   probing and passthrough working.
+- AVI: pause/resume for transcode job (using frame range trancoding
+  and avimerge)
 - link ETA compution of a 2-pass transcode together, requested by Ole Tange.
 - add a DVD profile, Suggested by Felix Maibaum <f.maibaum AT tu-bs.de>
 - mplayer aid parameter must be codec specific. Thanks for

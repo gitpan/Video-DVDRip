@@ -1,4 +1,4 @@
-# $Id: Base.pm,v 1.31 2003/02/10 11:56:28 joern Exp $
+# $Id: Base.pm,v 1.31.2.2 2003/02/17 21:09:30 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -107,9 +107,9 @@ sub trace_in {
 	
 	# Level 2: Methodenaufrufe mit Parametern
 	if ( $debug == 3 ) {
-		package DB;
+		package Video::DVDRip::DB;
 		my @c = caller (1);
-		my $args = '"'.(join('","',@DB::args)).'"';
+		my $args = '"'.(join('","',@Video::DVDRip::DB::args)).'"';
 		my @c2 = caller (2);
 		print STDERR "$$: TRACE IN : $c[3] (-> $c2[3])\n\t($args)\n";
 	}
@@ -455,6 +455,28 @@ sub search_perl_inc {
 	}
 
 	return $file;
+}
+
+sub get_child_pid {
+	my $self = shift;
+	my %par = @_;
+	my ($pid) = @par{'pid'};
+
+	my $fh = FileHandle->new;
+	open ($fh, "ps -H |") or die "can't fork ps";
+
+	my $child_pid = $pid;
+	FINDPID: while ( <$fh> ) {
+		next if ! /^.*$pid\s/;
+		FINDCHILD: while ( <$fh> ) {
+			($child_pid) = ( /(\d+)/ );
+			next FINDCHILD if /<defunct>/;
+			last FINDPID;
+		}
+	}
+	close $fh;
+
+	return $child_pid;	
 }
 
 1;

@@ -1,6 +1,8 @@
 package Video::DVDRip::CPAN::Scanf;
 
-package String::Scanf;
+# This is the unmodified String::Scanf module from Jarkko Hietaniemi
+# which is just included into this distribution to keep the dependencies
+# low. According credits are noted in the COPYRIGHT file.
 
 use strict;
 

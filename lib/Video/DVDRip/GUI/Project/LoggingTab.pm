@@ -1,4 +1,4 @@
-# $Id: LoggingTab.pm,v 1.6.2.1 2003/02/11 22:00:11 joern Exp $
+# $Id: LoggingTab.pm,v 1.6.2.2 2003/02/15 09:38:09 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -42,7 +42,6 @@ sub create_logging_tab {
 
 	my $text = new Gtk::Text( undef, undef );
 	$text->show;
-	$text->set_usize (undef, $self->config('main_window_height') - 200);
 	$text->set_editable( 0 );
 	$text->set_word_wrap ( 1 );
 	$text_table->attach( $text, 0, 1, 0, 1,

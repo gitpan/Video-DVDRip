@@ -142,7 +142,7 @@ deb http://marillat.free.fr/ unstable main
 
    Local download of the latest stable release:
 
-     [53]Video-DVDRip-0.50.1.tar.gz
+     [53]Video-DVDRip-0.50.3.tar.gz
 
    CPAN download directory: ([54]list of mirrors)
 
@@ -213,6 +213,7 @@ cd dvdrip; cvs -z9 update
    Tool Comment Mandatory Suggested Minimum Maximum
    transcode dvd::rip is nothing without transcode Yes 0.6.3 0.6.2 -
    ImageMagick Needed for preview image processing Yes 5.5.3 4.0.0 -
+   pstree Needed to determine child PID's Yes 21.2 18 -
    subtitle2pgm Needed for subtitles No 0.3 0.3 -
    rar Needed for compressed subtitles No 2.71 2.71 2.99
    mplayer Needed for subtitle vobsub viewing No 0.90 0.90 -
@@ -224,7 +225,6 @@ cd dvdrip; cvs -z9 update
    cdrecord Needed for AVI/OGG burning No 2.0 0.7.12 -
    xine Can be used to view DVD's/files No 0.9.15 0.9.13 -
    fping Only for cluster mode master No 2.4 2.2 -
-   pstree Only for cluster mode master No 21.2 18 -
 
    The following chapters describe the needed tools in detail, including
    information on how to get them. Additionally to the table above all
@@ -392,7 +392,7 @@ chmod u+s /usr/sbin/fping
    generate the Makefile and execute make:
 
 # as a normal user
-tar xfz Video-DVDRip-0.50.1.tar.gz
+tar xfz Video-DVDRip-0.50.3.tar.gz
 cd Video-DVDRip-x.xx
 perl Makefile.PL
 make
@@ -445,7 +445,7 @@ make install
    otherwise some dvd::rip helper binaries may be taken from another
    place.
 
-tar xvfz Video-DVDRip-0.50.1.tar.gz
+tar xvfz Video-DVDRip-0.50.3.tar.gz
 cd Video-DVDRip-x.xx
 perl Makefile.PL && make
 export PATH=.:$PATH
@@ -499,78 +499,78 @@ URL References
   30. http://www.exit1.org/tmp/install.cipp#update_dvdrip
   31. http://www.exit1.org/tmp/install.cipp#parallel_dvdrip
   32. http://www.exit1.org/tmp/install.cipp#docs_download
-  33. http://www.exit1.org/tmp/genreadme6814.html#top
+  33. http://www.exit1.org/tmp/genreadme31089.html#top
   34. http://www.exit1.org/tmp/index.cipp
-  35. http://www.exit1.org/tmp/genreadme6814.html#top
-  36. http://www.exit1.org/tmp/genreadme6814.html#top
+  35. http://www.exit1.org/tmp/genreadme31089.html#top
+  36. http://www.exit1.org/tmp/genreadme31089.html#top
   37. http://marillat.free.fr/
-  38. http://www.exit1.org/tmp/genreadme6814.html#top
+  38. http://www.exit1.org/tmp/genreadme31089.html#top
   39. http://www.exit1.org/dvdrip/contrib/suse/
   40. http://www6.informatik.uni-erlangen.de/~rainer/rpms/
-  41. http://www.exit1.org/tmp/genreadme6814.html#top
+  41. http://www.exit1.org/tmp/genreadme31089.html#top
   42. http://plf.zarb.org/
-  43. http://www.exit1.org/tmp/genreadme6814.html#top
+  43. http://www.exit1.org/tmp/genreadme31089.html#top
   44. http://www.exit1.org/dvdrip/contrib/redhat/
-  45. http://www.exit1.org/tmp/genreadme6814.html#top
+  45. http://www.exit1.org/tmp/genreadme31089.html#top
   46. http://messlab.sourceforge.net/
-  47. http://www.exit1.org/tmp/genreadme6814.html#top
+  47. http://www.exit1.org/tmp/genreadme31089.html#top
   48. http://www.gentoo.org/packages/media-video/dvdrip.html
-  49. http://www.exit1.org/tmp/genreadme6814.html#top
+  49. http://www.exit1.org/tmp/genreadme31089.html#top
   50. http://www.exit1.org/tmp/index.cipp
-  51. http://www.exit1.org/tmp/genreadme6814.html#top
-  52. http://www.exit1.org/tmp/genreadme6814.html#top
-  53. http://www.exit1.org/dvdrip/dist/Video-DVDRip-0.50.1.tar.gz
+  51. http://www.exit1.org/tmp/genreadme31089.html#top
+  52. http://www.exit1.org/tmp/genreadme31089.html#top
+  53. http://www.exit1.org/dvdrip/dist/Video-DVDRip-0.50.3.tar.gz
   54. http://www.cpan.org/CPAN/SITES.html
   55. http://www.cpan.org/CPAN/modules/by-authors/id/J/JR/JRED/
   56. http://www.exit1.org/dvdrip/dist/
   57. http://www.exit1.org/dvdrip/dist/pre/
-  58. http://www.exit1.org/tmp/genreadme6814.html#top
-  59. http://www.exit1.org/tmp/genreadme6814.html#top
-  60. http://www.exit1.org/tmp/genreadme6814.html#top
+  58. http://www.exit1.org/tmp/genreadme31089.html#top
+  59. http://www.exit1.org/tmp/genreadme31089.html#top
+  60. http://www.exit1.org/tmp/genreadme31089.html#top
   61. http://www.exit1.org/tmp/index.cipp
-  62. http://www.exit1.org/tmp/genreadme6814.html#top
-  63. http://www.exit1.org/tmp/genreadme6814.html#top
+  62. http://www.exit1.org/tmp/genreadme31089.html#top
+  63. http://www.exit1.org/tmp/genreadme31089.html#top
   64. http://www.exit1.org/tmp/gui-gui_depend.cipp
-  65. http://www.exit1.org/tmp/genreadme6814.html#top
-  66. http://www.exit1.org/tmp/genreadme6814.html#top
+  65. http://www.exit1.org/tmp/genreadme31089.html#top
+  66. http://www.exit1.org/tmp/genreadme31089.html#top
   67. http://www.perl.org/CPAN/modules/by-module/Gtk/
-  68. http://www.exit1.org/tmp/genreadme6814.html#top
+  68. http://www.exit1.org/tmp/genreadme31089.html#top
   69. http://www.theorie.physik.uni-goettingen.de/~ostreich/transcode/
   70. http://www.exit1.org/tmp/install.cipp#binary_download
-  71. http://www.exit1.org/tmp/genreadme6814.html#top
+  71. http://www.exit1.org/tmp/genreadme31089.html#top
   72. http://www.imagemagick.org/
-  73. http://www.exit1.org/tmp/genreadme6814.html#top
+  73. http://www.exit1.org/tmp/genreadme31089.html#top
   74. http://www.bunkus.org/videotools/ogmtools/index.html
-  75. http://www.exit1.org/tmp/genreadme6814.html#top
+  75. http://www.exit1.org/tmp/genreadme31089.html#top
   76. http://sourceforge.net/projects/subtitleripper
-  77. http://www.exit1.org/tmp/genreadme6814.html#top
+  77. http://www.exit1.org/tmp/genreadme31089.html#top
   78. http://xine.sourceforge.net/
   79. http://www.mplayerhq.hu/
-  80. http://www.exit1.org/tmp/genreadme6814.html#top
+  80. http://www.exit1.org/tmp/genreadme31089.html#top
   81. http://www.exit1.org/tmp/gui-gui_burn.cipp
   82. http://www.fokus.gmd.de/research/cc/glone/employees/joerg.schilling/private/mkisofs.html
   83. http://www.fokus.gmd.de/research/cc/glone/employees/joerg.schilling/private/cdrecord.html
   84. http://www.vcdimager.org/
   85. http://cdrdao.sourceforge.net/
-  86. http://www.exit1.org/tmp/genreadme6814.html#top
+  86. http://www.exit1.org/tmp/genreadme31089.html#top
   87. http://www.exit1.org/dvdrip/contrib/rarlnx271.sfx.bin
   88. http://www.exit1.org/tmp/gui-gui_pref.cipp#pref_commands_rar
-  89. http://www.exit1.org/tmp/genreadme6814.html#top
-  90. http://www.exit1.org/tmp/genreadme6814.html#top
+  89. http://www.exit1.org/tmp/genreadme31089.html#top
+  90. http://www.exit1.org/tmp/genreadme31089.html#top
   91. http://www.perl.org/CPAN/modules/by-module/Storable/
   92. http://www.perl.org/CPAN/modules/by-module/Event/
-  93. http://www.exit1.org/tmp/genreadme6814.html#top
+  93. http://www.exit1.org/tmp/genreadme31089.html#top
   94. http://www.fping.com/
-  95. http://www.exit1.org/tmp/genreadme6814.html#top
+  95. http://www.exit1.org/tmp/genreadme31089.html#top
   96. http://www.exit1.org/tmp/index.cipp
-  97. http://www.exit1.org/tmp/genreadme6814.html#top
-  98. http://www.exit1.org/tmp/genreadme6814.html#top
+  97. http://www.exit1.org/tmp/genreadme31089.html#top
+  98. http://www.exit1.org/tmp/genreadme31089.html#top
   99. http://www.exit1.org/tmp/install.cipp#source_download
- 100. http://www.exit1.org/tmp/genreadme6814.html#top
- 101. http://www.exit1.org/tmp/genreadme6814.html#top
- 102. http://www.exit1.org/tmp/genreadme6814.html#top
+ 100. http://www.exit1.org/tmp/genreadme31089.html#top
+ 101. http://www.exit1.org/tmp/genreadme31089.html#top
+ 102. http://www.exit1.org/tmp/genreadme31089.html#top
  103. http://www.exit1.org/tmp/index.cipp
- 104. http://www.exit1.org/tmp/genreadme6814.html#top
+ 104. http://www.exit1.org/tmp/genreadme31089.html#top
  105. http://www.exit1.org/dvdrip/dist/dvdrip-doc-html.tar.bz2
  106. http://www.easysw.com/htmldoc/
  107. http://www.exit1.org/dvdrip/dist/dvdrip-doc.pdf.bz2
@@ -622,19 +622,17 @@ VI.
 URL References
 
 VII. CHANGES
-   $Id: Changes,v 1.131.2.2 2003/02/11 22:17:10 joern Exp $
+   $Id: Changes,v 1.131.2.6 2003/02/17 22:22:16 joern Exp $
 
    Revision history and release notes for dvd::rip.
 
-   0.50.1 [stable branch] Mon 11 Feb 2003, joern
+   0.50.3 [stable branch] Mon 17 Feb 2003, joern
 	Bugfixes:
-	- NTSC VCD film encoding (at 23.976) didn't work. Thanks for
-	  the report to Chris Elston <celston AT corky.sapien.net>.
-	- dvd::rip's main window was too tall for standard desktops
-	  with 1024x768 resolution. I could save some space within
-	  the "Calculated storage" frame to fix this. On my system the
-	  window has now 657x696 pixels, which should be Ok for
-	  1024x768 desktops. Thanks for the report to Florin.
-	- Subtitle selection wasn't activated, if subtitle2pgm was
-	  detected correctly.
-
+	- Dropped the pstree dependend stuff completely. Now ps
+	  is used, using Posix conform options only, so this should
+	  work on most systems without problems.
+	- Thanks to Ron Smits, who reported a problem with a few
+	  zombie processes per dvd::rip session on a Slackware system.
+	  After about an hour of IRC chatting we found a solution
+	  for it ;)
+	

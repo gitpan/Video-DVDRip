@@ -1,8 +1,38 @@
-$Id: Changes,v 1.131.2.2 2003/02/11 22:17:10 joern Exp $
+$Id: Changes,v 1.131.2.6 2003/02/17 22:22:16 joern Exp $
 
 Revision history and release notes for dvd::rip.
 
-0.50.1 [stable branch] Mon 11 Feb 2003, joern
+0.50.3 [stable branch] Mon 17 Feb 2003, joern
+	Bugfixes:
+	- Dropped the pstree dependend stuff completely. Now ps
+	  is used, using Posix conform options only, so this should
+	  work on most systems without problems.
+	- Thanks to Ron Smits, who reported a problem with a few
+	  zombie processes per dvd::rip session on a Slackware system.
+	  After about an hour of IRC chatting we found a solution
+	  for it ;)
+	
+0.50.2 [stable branch] Sat 15 Feb 2003, joern
+	Features:
+	- Some layout optimizations: squeezed the GUI again a bit
+	  and the preview images are now slightly bigger.
+
+	Bugfixes:
+	- Fixed a typo in SVCD transcode command. Reported by
+	  several users.
+	- Cancellation of some tasks left processes over. Changed
+	  back to old cancellation method, which depends on
+	  pstree, so this is now listed "mandatory" in the dependency
+	  window. Reported by Fridtjof Busse <fridtjof AT fbunet.de>.
+	- Depend check didn't check for absolute path of
+	  /usr/sbin/fping. Also reported by Fridtjof Busse.
+	- Cancellation of a vobsub PS1 extraction left files over,
+	  so further vobsub PS1 extraction didn't work. Thanks for
+	  the report to Gregorio Guidi <g.guidi AT sns.it>.
+	- Changed two internal Perl namespaces, which confused the
+	  CPAN/PAUSE Perl module indexer.
+
+0.50.1 [stable branch] Tue 11 Feb 2003, joern
 	Bugfixes:
 	- NTSC VCD film encoding (at 23.976) didn't work. Thanks for
 	  the report to Chris Elston <celston AT corky.sapien.net>.
@@ -11,8 +41,8 @@ Revision history and release notes for dvd::rip.
 	  the "Calculated storage" frame to fix this. On my system the
 	  window has now 657x696 pixels, which should be Ok for
 	  1024x768 desktops. Thanks for the report to Florin.
-	- Subtitle selection wasn't activated, if subtitle2pgm was
-	  detected correctly.
+	- Subtitle selection wasn't activated, even if subtitle2pgm
+	  was detected correctly.
 
 0.50.0 [stable branch] Mon 10 Feb 2003, joern
 	Notes:
