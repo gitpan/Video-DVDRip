@@ -1,4 +1,4 @@
-# $Id: Depend.pm,v 1.2.2.5 2003/03/28 21:24:39 joern Exp $
+# $Id: Depend.pm,v 1.2.2.6 2003/05/23 19:50:51 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -97,13 +97,26 @@ my %TOOLS = (
     	comment		=> "Needed for OGG/Vorbis",
 	optional	=> 1,
 	get_version 	=> sub {
-		qx[ogmmerge -V 2>&1] =~ /v(\d+\.\d+)/i;
+		qx[ogmmerge -V 2>&1] =~ /v(\d+\.\d+(\.\d+)?)/i;
 		wait;	# saw zombies on a Slackware system without it.
 		return $1;
 	},
-	convert 	=> 'none',
-	min 		=> "0.972",
-	suggested 	=> "0.973",
+	convert 	=> 'default',
+	min 		=> "1.0.0",
+	suggested 	=> "1.0.0",
+    },
+    dvdxchap => {
+    	order		=> ++$ORDER,
+    	comment		=> "For chapter progress bar (ogmtools)",
+	optional	=> 1,
+	get_version 	=> sub {
+		qx[dvdxchap -V 2>&1] =~ /v(\d+\.\d+(\.\d+)?)/i;
+		wait;	# saw zombies on a Slackware system without it.
+		return $1;
+	},
+	convert 	=> 'default',
+	min 		=> "1.0.0",
+	suggested 	=> "1.0.0",
     },
     mjpegtools => {
     	order		=> ++$ORDER,

@@ -1,4 +1,4 @@
-# $Id: Title.pm,v 1.137.2.12 2003/04/26 15:46:08 joern Exp $
+# $Id: Title.pm,v 1.137.2.13 2003/05/23 19:53:02 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -1468,7 +1468,7 @@ sub suggest_transcode_options {
 	$self->set_tc_video_codec ( $self->config('default_video_codec') );
 	$self->set_tc_multipass ( 1 );
 	$self->set_tc_target_size ( 1406 );
-	$self->set_tc_disc_size ( 703 );
+	$self->set_tc_disc_size ( 700 );
 	$self->set_tc_disc_cnt ( 2 );
 	$self->set_tc_video_framerate (
 		$self->video_mode eq 'pal' ? 25 : 23.976
@@ -1747,25 +1747,31 @@ sub get_transcode_command {
 	$command .= " -C ".$self->tc_anti_alias
 		if $self->tc_anti_alias;
 	
+	my $fr = $self->tc_video_framerate;
+
 	if ( $self->tc_deinterlace eq '32detect' ) {
 		$command .= " -J 32detect=force_mode=3";
 
 	} elsif ( $self->tc_deinterlace eq 'smart' ) {
 		$command .= " -J smartdeinter=threshold=10:Blend=1:diffmode=2:highq=1";
 
+	} elsif ( $self->tc_deinterlace eq 'ivtc' ) {
+		$fr = 23.976;
+		$command .= " -J ivtc,32detect=force_mode=3,decimate";
+
 	} elsif ( $self->tc_deinterlace ) {
 		$command .= " -I ".$self->tc_deinterlace;
 	}
 
 	if ( $self->tc_video_framerate ) {
-		my $fr = $self->tc_video_framerate;
 		$fr = "24,1" if $fr == 23.976;
 		$fr = "30,4" if $fr == 29.97;
 		$command .= " -f $fr";
 	}
 
 	if ( $self->video_mode eq 'ntsc' ) {
-		$command .= " -g 720x480 -M 2";
+		$command .= " -g 720x480";
+		$command .= " -M ".($self->tc_deinterlace ne 'ivtc' ? 2 : 0);
 	}
 
 	$command .= " -J preview=xv" if $self->tc_preview;

@@ -31,8 +31,7 @@ III. DOCUMENTATION
      * 1.1.2 SuSE packages
      * 1.1.3 Mandrake packages
      * 1.1.4 RedHat packages
-     * 1.1.5 More RedHat packages
-     * 1.1.6 gentoo packages
+     * 1.1.5 gentoo packages
 
      1.2 Source download
      * 1.2.1 dvd::rip tarball download
@@ -109,18 +108,13 @@ deb http://marillat.free.fr/ unstable main
 
 1.1.4 RedHat packages
 
-   A kind RedHat user (who wants to stay anonymous) builds dvd::rip
-   RedHat RPM's, you can download from the contrib directory:
-
-     http://www.exit1.org/dvdrip/contrib/redhat/
-
-1.1.5 More RedHat packages
-
-   Matthias Saou builds dvd::rip packages you can find at freshrpms.net:
+   Matthias Saou does a great job in building dvd::rip and other
+   multimedia related packages. You can find them at freshrpms.net. This
+   is a direct link the dvd::rip package:
 
      http://freshrpms.net/rpm/perl-Video-DVDRip
 
-1.1.6 gentoo packages
+1.1.5 gentoo packages
 
    You can get dvd::rip and transcode from the official gentoo package
    repository:
@@ -137,7 +131,7 @@ deb http://marillat.free.fr/ unstable main
    Local download of the latest stable release: (currently no unstable
    release available)
 
-     Video-DVDRip-0.50.12.tar.gz
+     Video-DVDRip-0.50.13.tar.gz
 
    CPAN download directory: (list of mirrors)
 
@@ -176,15 +170,15 @@ deb http://marillat.free.fr/ unstable main
 
    Checkout a stable/bugfix version (here 0.48.5) with:
 
-cvs -z9 -d :pserver:cvs@cvs.exit1.org:/cvs checkout -r rel-0-48-5 dvdrip
+cvs -z3 -d :pserver:cvs@cvs.exit1.org:/cvs checkout -r rel-0-48-5 dvdrip
 
    Checkout the current development version with:
 
-cvs -z9 -d :pserver:cvs@cvs.exit1.org:/cvs checkout dvdrip
+cvs -z3 -d :pserver:cvs@cvs.exit1.org:/cvs checkout dvdrip
 
    Update a checkout - created using one of the commands above - with:
 
-cd dvdrip; cvs -z9 update
+cd dvdrip; cvs -z3 update
 
 1.3 Requirements
 
@@ -213,7 +207,8 @@ cd dvdrip; cvs -z9 update
    subtitle2pgm Needed for subtitles No 0.3 0.3 -
    rar Needed for compressed subtitles No 2.71 2.71 2.99
    mplayer Needed for subtitle vobsub viewing No 0.90 0.90 -
-   ogmtools Needed for OGG/Vorbis No 0.973 0.972 -
+   ogmtools Needed for OGG/Vorbis No 1.0.0 1.0.0 -
+   dvdxchap For chapter progress bar (ogmtools) No 1.0.0 1.0.0 -
    mjpegtools Needed for (S)VCD encoding No 1.6.0 1.6.0 -
    cdrdao Needed for (S)VCD burning No 1.1.7 1.1.7 -
    vcdimager Needed for (S)VCD burning No 0.7.12 0.7.12 -
@@ -385,7 +380,7 @@ chmod u+s /usr/sbin/fping
    generate the Makefile and execute make:
 
 # as a normal user
-tar xfz Video-DVDRip-0.50.12.tar.gz
+tar xfz Video-DVDRip-0.50.13.tar.gz
 cd Video-DVDRip-x.xx
 perl Makefile.PL
 make
@@ -439,7 +434,7 @@ make install
    otherwise some dvd::rip helper binaries may be taken from another
    place.
 
-tar xvfz Video-DVDRip-0.50.12.tar.gz
+tar xvfz Video-DVDRip-0.50.13.tar.gz
 cd Video-DVDRip-x.xx
 perl Makefile.PL && make
 export PATH=.:$PATH
@@ -522,6 +517,14 @@ This is a closed mailing list: subscribe before posting.
    downloads or something like this! Members breaking this simple rule
    will be removed immediately.
 
+   Please note: copying encrypted DVD's is illegal in many countries.
+   Also it's illegal to provide information about how this could be
+   accomplished. So don't send any questions regarding encrypted DVD's or
+   DVD cracking tools to the author of dvd::rip or to the dvd::rip
+   mailing list. Corresponding mails will be silently ignored,
+   correspondent posts will be removed from the mailing list archive
+   without notification.
+
 URL References
 
    1. http://www.exit1.org/dvdrip/list.cipp
@@ -541,6 +544,16 @@ Getting help
    [3]documentation, in particular the [4]FAQ, subscribe to the
    [5]dvdrip-users mailing list and ask your question there. Don't forget
    to tell the dvd::rip and transcode versions you're using.
+
+Getting no help
+
+   Please note: copying encrypted DVD's is illegal in many countries.
+   Also it's illegal to provide information about how this could be
+   accomplished. So don't send any questions regarding encrypted DVD's or
+   DVD cracking to the author of dvd::rip or to the dvd::rip mailing
+   list. Corresponding mails will be silently ignored, correspondent
+   posts will be removed from the mailing list archive without
+   notification.
 
 Reporting bugs and suggestions
 
@@ -619,32 +632,31 @@ URL References
   13. mailto:?subject=dvd::rip
 
 VI. CHANGES
-   $Id: Changes,v 1.131.2.29 2003/05/01 12:04:10 joern Exp $
+   $Id: Changes,v 1.131.2.31 2003/05/23 20:22:40 joern Exp $
 
    Revision history and release notes for dvd::rip.
 
-   0.50.12 [stable branch] Thu 1 May 2003, joern
+   0.50.13 [stable branch] Thu 23 May 2003, joern
 	Features:
-	- Yet another useless feature ;) You can start the
-	  dvdrip-master cluster control daemon with the -w
-	  option to fire up a webserver (listening on port 8888
-	  by default, can be changed with -W) which delivers
-	  the cluster status as HTML. Based on an inspiriation
-	  by Fabio Russo. Maybe somewhat senseless but much fun
-	  to implement ;)
+	- New deinterlace preset: inverse telecine (for NTSC).
+	  Suggested by Andrew Ukrainec <ukrainec AT sympatico.ca>
+	  and Thanasis Tsiodras <ttsiod AT softlab.ece.ntua.gr>.
+	- Added dvdxchap dependency (which is part of ogmtools),
+	  because you get proper chapter progress bars only
+	  if dvdxchap is installed.
 
 	Bugfixes:
-	- Removed the LD_ASSUME_KERNEL workaround for RedHat 9.
-	  At least on gentoo dvd::rip didn't start anymore. So
-	  all RH9 users, which suffer from the transcode/NPTL
-	  problem, need to set LD_ASSUME_KERNEL=2.2.5 on their own
-	  before starting dvd::rip. Thanks a lot to Fridtjof Busse
-	  who helped me debugging this issue.
-	- When no title is selected all notebook pages with title
-	  specific settings are disabled now. Some entries threw
-	  exceptions if you enter them with no titles selected.
-	  Thanks for the report to Fabio Russo.
-	- Prefefined mplayer command played all chapters from the
-	  selected chapter on. Now it plays only the one selected
-	  chapter. Thanks for the report to Fabio Russo.
+	- Removed a small copy protection related function. You
+	  can read details about why this happened on
+	  http://www.exit1.org/dvdrip/ news entry 2003/05/23.
+	- Default disc size for a new project was still 703 MB
+	  (instead of 700). Also the Zoom Calculator showed
+	  703 MB in the disc size popup. Thanks for the report
+	  to Fridtjof Busse.
+	- Audio bitrate combo box popdown button was sensitive
+	  for VCD, although VCD has a fixed rate of 224. Reported
+	  by Andreas Volz <andreas AT brachttal.net>.
+	- Sometimes the chapter progress bar was messed up, if no
+	  dvdxchap is installed on the system (which is part of
+	  ogmtools).
 

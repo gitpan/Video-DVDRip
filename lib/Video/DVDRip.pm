@@ -8,7 +8,7 @@
 
 package Video::DVDRip;
 
-$VERSION = "0.50.12";
+$VERSION = "0.50.13";
 
 use base Video::DVDRip::Base;
 
@@ -29,6 +29,7 @@ require 5.006;
 	3          => "Zoom to full frame (slow)",
 	'32detect' => "Automatic deinterlacing of single frames",
 	'smart'    => "Smart deinterlacing",
+	'ivtc'     => "Inverse telecine",
 );
 
 %Video::DVDRip::antialias_filters = (

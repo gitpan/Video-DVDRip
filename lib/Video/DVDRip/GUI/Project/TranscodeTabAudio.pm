@@ -1,4 +1,4 @@
-# $Id: TranscodeTabAudio.pm,v 1.13 2003/01/28 20:19:57 joern Exp $
+# $Id: TranscodeTabAudio.pm,v 1.13.2.1 2003/05/23 19:51:22 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -896,9 +896,9 @@ sub init_audio_values {
 	}
 
 	if ( $title->tc_video_codec eq 'VCD' ) {
-		$widgets->{tc_mp2_bitrate}->set_sensitive ( 0 );
+		$widgets->{tc_mp2_bitrate_combo}->set_sensitive ( 0 );
 	} else {
-		$widgets->{tc_mp2_bitrate}->set_sensitive ( 1 );
+		$widgets->{tc_mp2_bitrate_combo}->set_sensitive ( 1 );
 	}
 
 	$widgets->{tc_audio_codec_notebook}->set_sensitive (

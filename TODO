@@ -1,4 +1,4 @@
-$Id: TODO,v 1.117.2.8 2003/05/01 11:41:24 joern Exp $
+$Id: TODO,v 1.117.2.9 2003/05/23 20:09:01 joern Exp $
 
 KNOWN BUGS:
 ===========
@@ -17,6 +17,7 @@ KNOWN BUGS:
   (all calculations and the transcoding itself work, so
    it's not that big problem ;)
 - free diskspace calculation doesn't reflect a frame range selection
+  and is wrong in chapter mode
 
 NOTE:
 =====
@@ -30,10 +31,6 @@ TODO:
 - Make creating vcd11 images possible (e.g. by not overiding a
   --type=vcd11 setting in the preferences). Suggested by
   "Eric Fether" <efether AT rwconsulting.com>
-- integrate a HTTP interface into dvdrip-master, which delivers
-  the cluster status on request. Inspired by Fabio Russo.
-- add support for inverse telecine ( -M 0 -J ivtc,decimate )
-  requested by Andrew Ukrainec <ukrainec AT sympatico.ca>
 - generic target aspect ratio mechanism: user can provide an arbitrary
   target aspect ratio (e.g. 1:1, 12:11, 16:11, 10:11 and 40:33)
   All autoadjusting presets take that into account (currently they
@@ -42,6 +39,8 @@ TODO:
 - check for fat32 file system and warn, that files may not get
   larger than 2 GB (and suggest to use unix filsystems instead ;)
   Sugested by Felix Knecht.
+- detect interlaced material (-J 32detect). Suggested by Rafael
+  Kolless <rafael AT mondoria.de>
 - check chapter mode && diskspace calculations
 - add an "uninstall HOWTO" to the FAQ
 - global nice preference, which apply to all started processes.

@@ -1,4 +1,4 @@
-# $Id: Rip.pm,v 1.9 2003/02/08 11:29:21 joern Exp $
+# $Id: Rip.pm,v 1.9.2.1 2003/05/23 19:51:53 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -144,7 +144,7 @@ sub commit {
 				"WARNING: it seems that transcode ripping stopped short.\n".
 				"The movie has $title_frames frames, but only $job_frames\n".
 				"were ripped. This is most likely a problem with your\n".
-				"transcode/libdvdread/libdvdcss installation, resp. with\n".
+				"transcode/libdvdread installation, resp. a problem with\n".
 				"this specific DVD."
 			);
 		}

@@ -1,4 +1,4 @@
-# $Id: Probe.pm,v 1.21.2.1 2003/04/26 15:45:46 joern Exp $
+# $Id: Probe.pm,v 1.21.2.2 2003/05/23 19:52:30 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -153,7 +153,7 @@ sub analyze {
 		$last_timecode = $timecode;
 	}
 
-	$title->chapter_frames->{$chapters} = $frames - $timecode;
+	$title->chapter_frames->{$chapters} = $frames - $timecode if $timecode;
 
 	$title->set_width		( $width		);	   
 	$title->set_height   		( $height		);  

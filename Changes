@@ -1,6 +1,30 @@
-$Id: Changes,v 1.131.2.29 2003/05/01 12:04:10 joern Exp $
+$Id: Changes,v 1.131.2.31 2003/05/23 20:22:40 joern Exp $
 
 Revision history and release notes for dvd::rip.
+
+0.50.13 [stable branch] Thu 23 May 2003, joern
+	Features:
+	- New deinterlace preset: inverse telecine (for NTSC).
+	  Suggested by Andrew Ukrainec <ukrainec AT sympatico.ca>
+	  and Thanasis Tsiodras <ttsiod AT softlab.ece.ntua.gr>.
+	- Added dvdxchap dependency (which is part of ogmtools),
+	  because you get proper chapter progress bars only
+	  if dvdxchap is installed.
+
+	Bugfixes:
+	- Removed a small copy protection related function. You
+	  can read details about why this happened on
+	  http://www.exit1.org/dvdrip/ news entry 2003/05/23.
+	- Default disc size for a new project was still 703 MB
+	  (instead of 700). Also the Zoom Calculator showed
+	  703 MB in the disc size popup. Thanks for the report
+	  to Fridtjof Busse.
+	- Audio bitrate combo box popdown button was sensitive
+	  for VCD, although VCD has a fixed rate of 224. Reported
+	  by Andreas Volz <andreas AT brachttal.net>.
+	- Sometimes the chapter progress bar was messed up, if no
+	  dvdxchap is installed on the system (which is part of
+	  ogmtools).
 
 0.50.12 [stable branch] Thu 1 May 2003, joern
 	Features:
@@ -532,14 +556,6 @@ Revision history and release notes for dvd::rip.
 
 0.49.6 [unstable branch] Tue 7 Jan 2003, joern
 	Features:
-	- New preference for DVDCSS_METHOD environment variable
-	  (in the misc section) which may help solving libdvdcss
-	  related problems.
-	  Refer to http://www.videolan.org/libdvdcss/doc/ for
-	  details about the possible values and their meanings.
-	  Default value is 'title', which works well for me.
-	  Thanks to Dan <ayahuasca AT internode.on.net> for this
-	  suggestion.
 	- WAV creation command now printed in the debugging window.
 
 	Bugfixes:

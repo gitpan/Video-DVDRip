@@ -1,4 +1,4 @@
-# $Id: ZoomCalculator.pm,v 1.13 2003/01/28 20:19:57 joern Exp $
+# $Id: ZoomCalculator.pm,v 1.13.2.1 2003/05/23 19:51:35 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -405,7 +405,7 @@ sub create_video_bitrate_calc {
 		may_empty      => 0,
 	);
 	$entry->show;
-	$entry->set_popdown_strings (650, 703, 800, 870);
+	$entry->set_popdown_strings (650, 700, 800, 870);
 	$entry->set_usize(60,undef);
 	$hbox->pack_start($entry, 0, 1, 0);
 
