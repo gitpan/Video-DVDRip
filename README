@@ -6,7 +6,7 @@ I.   ABOUT
    known video processing swissknife transcode and many other Open Source
    tools. dvd::rip itself is licensed under GPL / Perl Artistic License.
 
-            "And note: it's spelled dvd::rip, and nothing else."
+             "And note: it's spelt dvd::rip, and nothing else."
 
 II.  NOTE
 
@@ -46,23 +46,25 @@ III. DOCUMENTATION
 
      * 1.3.3.1 Additional notes on building Perl Gtk (e.g. on Slackware)
 
-     1.3.4 transcode
+     1.3.4 Locale::TextDomain
 
-     1.3.5 Image Magick
+     1.3.5 transcode
 
-     1.3.6 xvid4conf
+     1.3.6 Image Magick
 
-     1.3.7 ogmtools
+     1.3.7 xvid4conf
 
-     1.3.8 subtitleripper
+     1.3.8 ogmtools
 
-     1.3.9 mplayer and/or xine (with a DVD plugin)
+     1.3.9 subtitleripper
 
-     1.3.10 CD burning tools
+     1.3.10 mplayer and/or xine (with a DVD plugin)
 
-     1.3.11 rar (for vobsub compression)
+     1.3.11 CD burning tools
 
-     1.3.12 Additional requirements for cluster mode
+     1.3.12 rar (for vobsub compression)
+
+     1.3.13 Additional requirements for cluster mode
 
      1.4 Install from source
      * 1.4.1 Install dvd::rip
@@ -161,8 +163,8 @@ deb ftp://ftp.nerim.net/debian-marillat unstable main
    Local download of the latest stable release: (currently no unstable
    release available)
 
-     Video-DVDRip-0.52.2.tar.gz
-     Video-DVDRip-0.52.2.tar.gz.asc (GnuPG signature, get key)
+     Video-DVDRip-0.52.3.tar.gz
+     Video-DVDRip-0.52.3.tar.gz.asc (GnuPG signature, get key)
 
    CPAN download directory: (list of mirrors)
 
@@ -333,7 +335,20 @@ make install
 
    Now install the dvd::rip program as neccessary and hopefully - enjoy!
 
-1.3.4 transcode
+1.3.4 Locale::TextDomain
+
+   Since version 0.52.0 dvd::rip is localized and uses the Perl modul
+   Locale::TextDomain for that. Most Linux distributions ship the module
+   as libintl-perl.
+
+   If you want to install it from source you can get it from CPAN, as
+   usual:
+
+     http://www.cpan.org/modules/by-module/Locale/
+
+   The tarball is called libintl-perl-x.xx.tar.gz.
+
+1.3.5 transcode
 
    dvd::rip delegates all the low level video processing to transcode,
    which can be obtained from here:
@@ -356,7 +371,7 @@ make install
    lots of dependencies. So you should try binary packages first. Refer
    to the binaries section for details.
 
-1.3.5 Image Magick
+1.3.6 Image Magick
 
    For image processing dvd::rip uses the widely distributed software
    package Image Magick, at least the programs identify and convert
@@ -367,7 +382,7 @@ make install
 
      http://www.imagemagick.org/
 
-1.3.6 xvid4conf
+1.3.7 xvid4conf
 
    If you have transcode >= 0.6.9 you can use the xvid4 export module,
    which is transcode's binding to the upcoming XviD 1.0, resp. the
@@ -376,7 +391,7 @@ make install
 
      http://zebra.fh-weingarten.de/~transcode/xvid4conf/
 
-1.3.7 ogmtools
+1.3.8 ogmtools
 
    dvd::rip has support for generating audio / video ogg streams (often
    known as OGM streams). You need a recent version of ogmtools for that
@@ -384,7 +399,7 @@ make install
 
      http://www.bunkus.org/videotools/ogmtools/index.html
 
-1.3.8 subtitleripper
+1.3.9 subtitleripper
 
    To get subtitles with dvd::rip you need a recent version of the
    subtitleripper package. It's shipped with transcode in the
@@ -393,7 +408,7 @@ make install
 
      http://sourceforge.net/projects/subtitleripper
 
-1.3.9 mplayer and/or xine (with a DVD plugin)
+1.3.10 mplayer and/or xine (with a DVD plugin)
 
    If you have mplayer or xine installed, you can preview selected DVD
    titles/chapters with the appropriate audio channels.
@@ -403,7 +418,7 @@ make install
      http://xine.sourceforge.net/
      http://www.mplayerhq.hu/
 
-1.3.10 CD burning tools
+1.3.11 CD burning tools
 
    If you want to use dvd::rip's CD burning module, you must have the
    following tools installed:
@@ -413,7 +428,7 @@ make install
      vcdimager
      cdrdao
 
-1.3.11 rar (for vobsub compression)
+1.3.12 rar (for vobsub compression)
 
    MPlayer supports vobsub files compressed with rar, but you need a 2.x
    version, 3.x and higher doesn't work. You can get a 2.x version
@@ -424,12 +439,12 @@ make install
    I suggest to install the binary to e.g. /usr/local/bin. Then configure
    this path using the Preferences dialog.
 
-1.3.12 Additional requirements for cluster mode
+1.3.13 Additional requirements for cluster mode
 
    Some additional Perl modules and command line tools are needed for the
    cluster mode.
 
-1.3.12.1 Perl modules
+1.3.13.1 Perl modules
 
    Cluster mode needs the Storable and Event Perl modules. Check if your
    distribution ships them already. If not, you can find them on CPAN:
@@ -437,7 +452,7 @@ make install
      http://www.cpan.org/modules/by-module/Storable/
      http://www.cpan.org/modules/by-module/Event/
 
-1.3.12.2 fping
+1.3.13.2 fping
 
    The dvd::rip cluster control daemon uses fping to check if nodes are
    online. If fping isn't shipped with your Linux distribution you can
@@ -477,7 +492,7 @@ chmod u+s /usr/sbin/fping
    generate the Makefile and execute make:
 
 # as a normal user
-tar xfz Video-DVDRip-0.52.2.tar.gz
+tar xfz Video-DVDRip-0.52.3.tar.gz
 cd Video-DVDRip-x.xx
 perl Makefile.PL
 make
@@ -531,7 +546,7 @@ make install
    otherwise some dvd::rip helper binaries may be taken from another
    place.
 
-tar xvfz Video-DVDRip-0.52.2.tar.gz
+tar xvfz Video-DVDRip-0.52.3.tar.gz
 cd Video-DVDRip-x.xx
 perl Makefile.PL && make
 export PATH=.:$PATH
@@ -761,12 +776,28 @@ URL References
   15. http://wwwkeys.de.pgp.net:11371/pks/lookup?op=get&search=0x285CF473
 
 VI. CHANGES
-   $Id: Changes,v 1.149 2005/01/09 11:48:16 joern Exp $
+   $Id: Changes,v 1.150 2005/03/13 11:06:13 joern Exp $
 
    Revision history and release notes for dvd::rip.
 
-   0.52.2 [stable branch] Sun Jan 9 2005, joern
+   0.52.3 [stable branch] Sun Mar 13 2005, joern
+	Features
+	- Updated french translation from Christophe Combelles
+	  <ccomb AT free.fr>
+
 	Bugfixes:
-	- Missed adding Italian and Serbin translation files to
-	  the distribution tarball.
+	- PCM passthrough didn't work.
+	- Newer transcode release seem not to need -d for
+	  PCM audio tracks anymore, so it's used only with
+	  versions < 0.6.13.
+	- Mistaken switch to RGB color space if audio only
+	  filters are added to the filter chain. Reported
+	  by Dag Rune Sneeggen <contactus AT dudcore.net>.
+	- Applied a patch from Fabio Russo fixing a potential
+	  problem with mplayer playback of DVD titles with
+	  an audio codec reported by transcode as 'mpeg1',
+	  although neither Fabio nor I ever had such a DVD
+	  in the hand ;)
+	- Removed POSIX::setlocale(), since it's not necessary
+	  and probably the reason for a crash on Mandrake.
 

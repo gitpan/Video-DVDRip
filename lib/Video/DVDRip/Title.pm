@@ -1,4 +1,4 @@
-# $Id: Title.pm,v 1.144 2004/12/11 15:20:47 joern Exp $
+# $Id: Title.pm,v 1.145 2005/02/13 21:21:43 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -269,7 +269,8 @@ sub tc_use_yuv_internal {
 		    $self->tc_zoom_height % 2;
 
 	foreach my $filter_instance ( @{$self->tc_filter_settings->filters} ) {
-		return 0 if not $filter_instance->get_filter->can_yuv;
+		return 0 if $filter_instance->can_video and not
+			    $filter_instance->get_filter->can_yuv;
 	}
 	
 	return 1;
@@ -1757,7 +1758,8 @@ sub get_transcode_command {
 	}
 
 	if ( $audio_channel != -1 ) {
-		$command .= " -d" if $audio_info->type eq 'lpcm';
+		$command .= " -d" if $audio_info->type eq 'lpcm' and
+				     $self->version("transcode") < 613;
 
 		if ( $mpeg ) {
 			$command .= " -b ".
@@ -2715,10 +2717,14 @@ sub get_view_dvd_command {
 
 	if ( $self->audio_track->type eq 'lpcm' ) {
 		$base_audio_code = 160;
+
+	} elsif ( $self->audio_track->type eq 'mpeg1' ) {
+		$base_audio_code = 0;
+
 	} else {
 		$base_audio_code = 128;
 	}
-		
+
 	my @opts = ( {
 		t => $self->nr,
 		a => $self->audio_channel,
@@ -3554,7 +3560,8 @@ sub get_create_wav_command {
 
 	$command .= " -$_ $source_options->{$_}" for keys %{$source_options};
 
-	$command .= " -d" if $self->audio_track->type eq 'lpcm';
+	$command .= " -d" if $self->audio_track->type eq 'lpcm' and
+			     $self->version("transcode") < 613;
 
 	if ( $self->tc_start_frame ne '' or
 	     $self->tc_end_frame ne '' ) {

@@ -1,4 +1,4 @@
-# $Id: ClipZoomTab.pm,v 1.41 2004/04/12 09:48:49 joern Exp $
+# $Id: ClipZoomTab.pm,v 1.42 2005/03/13 10:57:03 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -878,7 +878,7 @@ sub preview_video {
 
 	if ( $title->project->rip_mode ne 'rip' ) {
 		$self->message_window (
-			message => __"This function is only avaiable for ripped DVD's."
+			message => __"This function is only available for ripped DVD's."
 		);
 		return 1;
 	}

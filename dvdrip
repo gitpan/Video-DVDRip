@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# $Id: dvdrip,v 1.19 2004/10/10 13:45:50 joern Exp $
+# $Id: dvdrip,v 1.20 2005/03/13 10:55:28 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -15,11 +15,7 @@ use strict;
 use lib 'lib';
 use Getopt::Std;
 
-#-- l10n stuff
-use POSIX qw(setlocale);
-use Locale::Messages qw (LC_MESSAGES);
 use Locale::TextDomain ("video.dvdrip");
-setlocale(LC_MESSAGES,"");
 
 # That's Perl! The job classes derive from this class,
 # which is decided at *runtime* - this way standard and

@@ -1,6 +1,27 @@
-$Id: Changes,v 1.149 2005/01/09 11:48:16 joern Exp $
+$Id: Changes,v 1.150 2005/03/13 11:06:13 joern Exp $
 
 Revision history and release notes for dvd::rip.
+
+0.52.3 [stable branch] Sun Mar 13 2005, joern
+	Features
+	- Updated french translation from Christophe Combelles
+	  <ccomb AT free.fr>
+
+	Bugfixes:
+	- PCM passthrough didn't work.
+	- Newer transcode release seem not to need -d for
+	  PCM audio tracks anymore, so it's used only with
+	  versions < 0.6.13.
+	- Mistaken switch to RGB color space if audio only
+	  filters are added to the filter chain. Reported
+	  by Dag Rune Sneeggen <contactus AT dudcore.net>.
+	- Applied a patch from Fabio Russo fixing a potential
+	  problem with mplayer playback of DVD titles with
+	  an audio codec reported by transcode as 'mpeg1',
+	  although neither Fabio nor I ever had such a DVD
+	  in the hand ;)
+	- Removed POSIX::setlocale(), since it's not necessary
+	  and probably the reason for a crash on Mandrake.
 
 0.52.2 [stable branch] Sun Jan 9 2005, joern
 	Bugfixes:

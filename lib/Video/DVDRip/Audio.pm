@@ -1,4 +1,4 @@
-# $Id: Audio.pm,v 1.13 2004/04/25 16:01:58 joern Exp $
+# $Id: Audio.pm,v 1.14 2005/02/13 21:22:51 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -168,7 +168,7 @@ sub pcm_ok {
 
 sub is_passthrough {
 	my $self = shift;
-	return $self->tc_audio_codec eq 'ac3' or
+	return $self->tc_audio_codec eq 'ac3' ||
 	       $self->tc_audio_codec eq 'pcm';
 }
 
