@@ -161,8 +161,8 @@ deb ftp://ftp.nerim.net/debian-marillat unstable main
    Local download of the latest stable release: (currently no unstable
    release available)
 
-     Video-DVDRip-0.52.0.tar.gz
-     Video-DVDRip-0.52.0.tar.gz.asc (GnuPG signature, get key)
+     Video-DVDRip-0.52.2.tar.gz
+     Video-DVDRip-0.52.2.tar.gz.asc (GnuPG signature, get key)
 
    CPAN download directory: (list of mirrors)
 
@@ -245,7 +245,7 @@ cd dvdrip; cvs -z3 update
    chapter in the documentation for details.
 
    Tool Comment Mandatory Suggested Minimum Maximum
-   transcode dvd::rip is nothing without transcode Yes 0.6.9 0.6.2 -
+   transcode dvd::rip is nothing without transcode Yes 0.6.14 0.6.2 -
    ImageMagick Needed for preview image processing Yes 5.5.3 4.0.0 -
    xvid4conf xvid4 configuration tool No 1.6 1.6 -
    subtitle2pgm Needed for subtitles No 0.3 0.3 -
@@ -477,7 +477,7 @@ chmod u+s /usr/sbin/fping
    generate the Makefile and execute make:
 
 # as a normal user
-tar xfz Video-DVDRip-0.52.0.tar.gz
+tar xfz Video-DVDRip-0.52.2.tar.gz
 cd Video-DVDRip-x.xx
 perl Makefile.PL
 make
@@ -531,7 +531,7 @@ make install
    otherwise some dvd::rip helper binaries may be taken from another
    place.
 
-tar xvfz Video-DVDRip-0.52.0.tar.gz
+tar xvfz Video-DVDRip-0.52.2.tar.gz
 cd Video-DVDRip-x.xx
 perl Makefile.PL && make
 export PATH=.:$PATH
@@ -761,14 +761,12 @@ URL References
   15. http://wwwkeys.de.pgp.net:11371/pks/lookup?op=get&search=0x285CF473
 
 VI. CHANGES
-   $Id: Changes,v 1.147 2005/01/04 13:44:59 joern Exp $
+   $Id: Changes,v 1.149 2005/01/09 11:48:16 joern Exp $
 
    Revision history and release notes for dvd::rip.
 
-   0.52.0 [stable branch] Tue Jan 4 2005, joern
-	Notes:
-	- This is just a stable release of 0.51.4. Only change
-	  is that the suggested transcode minimum version is 0.6.14.
-	- For changes since the last stable release 0.50.18 please
-	  refer to the change log entries of the 0.51 branch.
+   0.52.2 [stable branch] Sun Jan 9 2005, joern
+	Bugfixes:
+	- Missed adding Italian and Serbin translation files to
+	  the distribution tarball.
 

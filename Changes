@@ -1,6 +1,15 @@
-$Id: Changes,v 1.147 2005/01/04 13:44:59 joern Exp $
+$Id: Changes,v 1.149 2005/01/09 11:48:16 joern Exp $
 
 Revision history and release notes for dvd::rip.
+
+0.52.2 [stable branch] Sun Jan 9 2005, joern
+	Bugfixes:
+	- Missed adding Italian and Serbin translation files to
+	  the distribution tarball.
+
+0.52.1 [stable branch] Sun Jan 9 2005, joern
+	Features:
+	- Italian translation added by Fabio Russo and Costantino.
 
 0.52.0 [stable branch] Tue Jan 4 2005, joern
 	Notes:

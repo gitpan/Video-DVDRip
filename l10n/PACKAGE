@@ -1,7 +1,7 @@
 # Makefile snippet that holds all package-dependent information.
 
 # Add more languages here, separated with spaces
-LINGUAS = de fr cs es sr
+LINGUAS = de fr cs es sr it
 
 # Textdomain for our package.
 TEXTDOMAIN = video.dvdrip
