@@ -1,4 +1,4 @@
-# $Id: LoggingTab.pm,v 1.6 2003/01/28 20:19:57 joern Exp $
+# $Id: LoggingTab.pm,v 1.6.2.1 2003/02/11 22:00:11 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -56,7 +56,7 @@ sub create_logging_tab {
 	$vscrollbar->show();
 
 	$frame->add ($hbox);
-	$vbox->pack_start ( $frame, 0, 1, 0);
+	$vbox->pack_start ( $frame, 1, 1, 0);
 
 	my $button = Gtk::Button->new (" Nuke log file ");
 	$button->show;

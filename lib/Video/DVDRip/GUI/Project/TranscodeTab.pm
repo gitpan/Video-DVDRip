@@ -1,4 +1,4 @@
-# $Id: TranscodeTab.pm,v 1.83 2003/02/08 11:29:21 joern Exp $
+# $Id: TranscodeTab.pm,v 1.83.2.1 2003/02/11 22:00:39 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -954,104 +954,87 @@ sub create_calculated_storage {
 	$frame->add ($frame_hbox);
 
 	# Table
-	$table = Gtk::Table->new ( 4, 3, 0 );
+	$table = Gtk::Table->new ( 3, 4, 0 );
 	$table->show;
 	$table->set_row_spacings ( $TABLE_SPACING );
-	$table->set_col_spacings ( $TABLE_SPACING );
+	$table->set_col_spacings ( $TABLE_SPACING + 5 );
 	$frame_hbox->pack_start ($table, 0, 1, 0);
 
-	# Video
 	$row = 0;
+
+	# Header line
+
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new ("Video size");
+	$label = Gtk::Label->new ("Video");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 	$table->attach_defaults ($hbox, 0, 1, $row, $row+1);
-	$hsize_group->add ($hbox);
 
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new ("100");
+	$label = Gtk::Label->new ("Non video");
 	$label->show;
-	$label->set_justify("right");
 	$hbox->pack_start($label, 0, 1, 0);
 	$table->attach_defaults ($hbox, 1, 2, $row, $row+1);
 
-	$self->transcode_widgets->{label_size_video} = $label;
-
-	$label = Gtk::Label->new ("MB");
-	$label->show;
-	$hbox->pack_start($label, 0, 1, 0);
-
-	# Audio
-	++$row;
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new ("Non video size");
+	$label = Gtk::Label->new ("Total");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
-	$table->attach_defaults ($hbox, 0, 1, $row, $row+1);
-	$hsize_group->add ($hbox);
+	$table->attach_defaults ($hbox, 2, 3, $row, $row+1);
 
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new ("100");
-	$label->show;
-	$label->set_justify("right");
-	$hbox->pack_start($label, 0, 1, 0);
-	$table->attach_defaults ($hbox, 1, 2, $row, $row+1);
+	$button = Gtk::Button->new (" Details... ");
+	$button->show;
+	$hbox->pack_start($button, 0, 1, 0);
+	$table->attach_defaults ($hbox, 3, 4, $row, $row+1);
 
-	$self->transcode_widgets->{label_size_audio} = $label;
-
-	$label = Gtk::Label->new ("MB");
-	$label->show;
-	$hbox->pack_start($label, 0, 1, 0);
+	$button->signal_connect ("clicked", sub { $self->show_calc_details } );
 
 	# Separator
 	++$row;
 	my $sep = Gtk::HSeparator->new;
 	$sep->show;
-	$table->attach_defaults ($sep, 0, 2, $row, $row+1);
+	$table->attach_defaults ($sep, 0, 3, $row, $row+1);
 
-	# Sum
+	# Values
+
 	++$row;
-	$label = Gtk::Label->new ("Total size");
-	$label->show;
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
+	$label = Gtk::Label->new ("");
+	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 	$table->attach_defaults ($hbox, 0, 1, $row, $row+1);
-	$hsize_group->add ($hbox);
-
-	$hbox = Gtk::HBox->new;
-	$hbox->show;
-	$label = Gtk::Label->new ("100");
-	$label->show;
-	$label->set_justify("right");
-	$hbox->pack_start($label, 0, 1, 0);
-
-	$table->attach_defaults ($hbox, 1, 2, $row, $row+1);
-
-	$self->transcode_widgets->{label_size_total} = $label;
-
+	$self->transcode_widgets->{label_size_video} = $label;
 	$label = Gtk::Label->new ("MB");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 
-	# details button
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new ("   ");
+	$label = Gtk::Label->new ("");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
-	$button = Gtk::Button->new (" Show details... ");
-	$button->show;
-	$hbox->pack_start($button, 0, 1, 0);
+	$table->attach_defaults ($hbox, 1, 2, $row, $row+1);
+	$self->transcode_widgets->{label_size_audio} = $label;
+	$label = Gtk::Label->new ("MB");
+	$label->show;
+	$hbox->pack_start($label, 0, 1, 0);
 
+	$hbox = Gtk::HBox->new;
+	$hbox->show;
+	$label = Gtk::Label->new ("");
+	$label->show;
+	$hbox->pack_start($label, 0, 1, 0);
 	$table->attach_defaults ($hbox, 2, 3, $row, $row+1);
-
-	$button->signal_connect ("clicked", sub { $self->show_calc_details } );
+	$self->transcode_widgets->{label_size_total} = $label;
+	$label = Gtk::Label->new ("MB");
+	$label->show;
+	$hbox->pack_start($label, 0, 1, 0);
 
 	return $frame;
 }

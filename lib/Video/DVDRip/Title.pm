@@ -1,4 +1,4 @@
-# $Id: Title.pm,v 1.137 2003/02/10 11:58:52 joern Exp $
+# $Id: Title.pm,v 1.137.2.1 2003/02/11 22:01:07 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -1648,15 +1648,14 @@ sub get_transcode_command {
 			$mpeg2enc_opts   .= "-S 10000 ";
 		}
 
-		if ( $self->frame_rate == 23.976 ) {
-			$mpeg2enc_opts .= "-I 0 -p ";
-		}
-
 		if ( $mpeg eq 'svcd' ) {
 			if ( $self->video_mode eq 'pal' ) {
 				$mpeg2enc_opts .= " -g 6 -G 15";
 			} else {
 				$mpeg2enc_opts .= " -g 9 -G 18";
+				if ( $self->frame_rate == 23.976 ) {
+					$mpeg2enc_opts .= "-I 0 -p ";
+				}
 			}
 
 			$mpeg2enc_opts = ",'$mpeg2enc_opts'" if $mpeg2enc_opts;

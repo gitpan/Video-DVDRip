@@ -1,4 +1,4 @@
-# $Id: SubtitleTab.pm,v 1.14 2003/02/08 10:40:50 joern Exp $
+# $Id: SubtitleTab.pm,v 1.14.2.1 2003/02/11 22:17:05 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -138,7 +138,7 @@ sub create_subtitle_select {
 
 	if ( $selected eq 'Activated:' ) {
 		$selected = "subtitle2pgm is missing or too old"
-			if $self->has("subtitle2pgm");
+			if not $self->has("subtitle2pgm");
 	}
 
 	if ( $selected ne 'Activated:' ) {

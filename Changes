@@ -1,6 +1,18 @@
-$Id: Changes,v 1.131 2003/02/10 13:10:33 joern Exp $
+$Id: Changes,v 1.131.2.2 2003/02/11 22:17:10 joern Exp $
 
 Revision history and release notes for dvd::rip.
+
+0.50.1 [stable branch] Mon 11 Feb 2003, joern
+	Bugfixes:
+	- NTSC VCD film encoding (at 23.976) didn't work. Thanks for
+	  the report to Chris Elston <celston AT corky.sapien.net>.
+	- dvd::rip's main window was too tall for standard desktops
+	  with 1024x768 resolution. I could save some space within
+	  the "Calculated storage" frame to fix this. On my system the
+	  window has now 657x696 pixels, which should be Ok for
+	  1024x768 desktops. Thanks for the report to Florin.
+	- Subtitle selection wasn't activated, if subtitle2pgm was
+	  detected correctly.
 
 0.50.0 [stable branch] Mon 10 Feb 2003, joern
 	Notes:

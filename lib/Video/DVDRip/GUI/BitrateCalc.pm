@@ -1,4 +1,4 @@
-# $Id: BitrateCalc.pm,v 1.4 2003/01/28 20:19:57 joern Exp $
+# $Id: BitrateCalc.pm,v 1.4.2.1 2003/02/11 21:59:55 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -34,7 +34,7 @@ sub build {
 	$win->set_title($self->config('program_name'). " Storage and bitrate calculation details");
 	$win->border_width(0);
 	$win->realize;
-	$win->set_default_size ( 550, 330 );
+	$win->set_default_size ( 580, 330 );
 
 	# Register component and window ------------------------------
 	$self->set_widget($win);
