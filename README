@@ -31,7 +31,7 @@ III. DOCUMENTATION
      * 1.1.2 SuSE packages
      * 1.1.3 Mandrake packages
      * 1.1.4 RedHat packages
-     * 1.1.5 RedHat-8.0-only packages
+     * 1.1.5 More RedHat packages
      * 1.1.6 gentoo packages
 
      1.2 Source download
@@ -114,12 +114,11 @@ deb http://marillat.free.fr/ unstable main
 
      http://www.exit1.org/dvdrip/contrib/redhat/
 
-1.1.5 RedHat-8.0-only packages
+1.1.5 More RedHat packages
 
-   Michel Alexandre Salim maintains an apt repository with the very
-   latest snapshots of transcode and dvd::rip. It's for RedHat 8.0 only:
+   Matthias Saou builds dvd::rip packages you can find at freshrpms.net:
 
-     http://messlab.sourceforge.net
+     http://freshrpms.net/rpm/perl-Video-DVDRip
 
 1.1.6 gentoo packages
 
@@ -137,7 +136,7 @@ deb http://marillat.free.fr/ unstable main
 
    Local download of the latest stable release:
 
-     Video-DVDRip-0.50.5.tar.gz
+     Video-DVDRip-0.50.6.tar.gz
 
    CPAN download directory: (list of mirrors)
 
@@ -385,7 +384,7 @@ chmod u+s /usr/sbin/fping
    generate the Makefile and execute make:
 
 # as a normal user
-tar xfz Video-DVDRip-0.50.5.tar.gz
+tar xfz Video-DVDRip-0.50.6.tar.gz
 cd Video-DVDRip-x.xx
 perl Makefile.PL
 make
@@ -438,7 +437,7 @@ make install
    otherwise some dvd::rip helper binaries may be taken from another
    place.
 
-tar xvfz Video-DVDRip-0.50.5.tar.gz
+tar xvfz Video-DVDRip-0.50.6.tar.gz
 cd Video-DVDRip-x.xx
 perl Makefile.PL && make
 export PATH=.:$PATH
@@ -584,27 +583,14 @@ URL References
   11. http://www.exit1.org/dvdrip/doc/install.cipp#cvs
 
 VI. CHANGES
-   $Id: Changes,v 1.131.2.10 2003/03/03 12:02:52 joern Exp $
+   $Id: Changes,v 1.131.2.13 2003/03/03 18:34:48 joern Exp $
 
    Revision history and release notes for dvd::rip.
 
-   0.50.5 [stable branch] Mon 3 Mar 2003, joern
-	Features:
-	- You can pass the preferences filename with the new command
-	  line option -p to have multiple configurations (default
-	  is still ~/.dvdriprc). Suggested by Harald Dunkel.
-	- Log last output of aborted job's. Suggested by Felix Enning
-	  <felix AT hfsclub.de>.
-	- Don't split the movie, if it fits already on one disc.
-	  Suggested by Nicos Panayides <anarxia AT gmx.net>.
-	- subtitle language ID is now patched into the vobsub .idx
-	  file, requested by Douglas Bollinger.
-
+   0.50.6 [stable branch] Mon 3 Mar 2003, joern
 	Bugfixes:
-	- Video bitrate entry was not greyed out for VCD. Other
-	  bitrates than the standard value of 1152 are not supported.
-	- Creating splitted vobsub's was broken. Thanks for their
-	  reports to Lutz Birkhahn <lutz.birkhahn AT gmx.de> and
-	  Douglas Bollinger.
-	- transcode's version number was missing in .dvdrip-info file.
+	- Fixed an evil bug, which overwrote the preferences file
+	  on each startup. Sorry for the inconvenience. I also lost
+	  my preferences due to it... Thanks for the report to
+	  Matthias Saou <matthias AT rpmforge.net>.
 

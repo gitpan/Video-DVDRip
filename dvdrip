@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# $Id: dvdrip,v 1.16.2.3 2003/03/03 11:59:26 joern Exp $
+# $Id: dvdrip,v 1.16.2.4 2003/03/03 18:30:46 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -79,7 +79,7 @@ main: {
 
 	usage() if $function and $function !~ /^(transcode|transcode_split)$/;
 
-	$Video::DVDRip::PREFERENCE_FILE = $prefs;
+	$Video::DVDRip::PREFERENCE_FILE = $prefs || "$ENV{HOME}/.dvdriprc";
 
 	require Video::DVDRip;
 	require Video::DVDRip::GUI::Main;

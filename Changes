@@ -1,6 +1,13 @@
-$Id: Changes,v 1.131.2.10 2003/03/03 12:02:52 joern Exp $
+$Id: Changes,v 1.131.2.13 2003/03/03 18:34:48 joern Exp $
 
 Revision history and release notes for dvd::rip.
+
+0.50.6 [stable branch] Mon 3 Mar 2003, joern
+	Bugfixes:
+	- Fixed an evil bug, which overwrote the preferences file
+	  on each startup. Sorry for the inconvenience. I also lost
+	  my preferences due to it... Thanks for the report to
+	  Matthias Saou <matthias AT rpmforge.net>.
 
 0.50.5 [stable branch] Mon 3 Mar 2003, joern
 	Features:

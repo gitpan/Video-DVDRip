@@ -26,6 +26,8 @@ END {
 	print "not ok 1\n" if not $loaded;
 }
 
+BEGIN { $Video::DVDRip::PREFERENCE_FILE = "$ENV{HOME}/.dvdriprc" }
+
 use Video::DVDRip::GUI::Main;
 
 $loaded = 1;
