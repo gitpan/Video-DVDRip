@@ -1,6 +1,35 @@
-$Id: Changes,v 1.131.2.16 2003/03/06 22:08:23 joern Exp $
+$Id: Changes,v 1.131.2.21 2003/03/28 21:41:59 joern Exp $
 
 Revision history and release notes for dvd::rip.
+
+0.50.9 [stable branch] Fri 28 Mar 2003, joern
+	Features:
+	- Dropped cluster mode restriction for OGG projects
+	  with more than one PSU. Thanks for the patch to
+	  Jonathan Rogers <jonner AT mailandnews.com>.
+	  Now dvd::rip needs ogmtools >= 0.972.
+	
+	Bugfixes:
+	- Fixed another division by zero condition in the
+	  Clip & Zoom module. Thanks for the report to
+	  Mike Oosten <shaggy AT slavery.cx>.
+	- Burning page was disabled if only one of the four burning
+	  related tools (mkisofs, cdrecord, vcdimager, cdrdao)
+	  was missing, although you e.g. don't need mkisofs for VCD
+	  burning and no cdrdao for CDROM burning. Now dvd::rip
+	  is more specific here und disables only the corresponding
+	  burning types.
+	- Adjusted xine DVD player preference for actual versions
+	  of xine. Thanks for the hint to Fridtjof Busse.
+	- Additional transcode options entry didn't work (most
+	  probably since 0.50.4). Thanks to James L. Paul <james AT
+	  mauibay.net>
+	- Vorbis quality mode didn't work in cluster mode. Thanks
+	  for the fix to Jonathan Rogers.
+	- Lock audio selection popup, during a volume rescale
+	  scan. Otherwise the scanned value would be assigned to the
+	  latest selected channel, which may be wrong. Reported
+	  by Felix Knecht.
 
 0.50.8 [stable branch] Thu 6 Mar 2003, joern
 	Bugfixes:

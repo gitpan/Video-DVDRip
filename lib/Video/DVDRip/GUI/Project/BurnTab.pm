@@ -1,4 +1,4 @@
-# $Id: BurnTab.pm,v 1.13 2003/02/08 10:40:29 joern Exp $
+# $Id: BurnTab.pm,v 1.13.2.1 2003/03/28 20:36:52 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -80,11 +80,12 @@ sub create_burn_tab {
 	$table->attach ($options, 	0, 1, 3, 4, ['fill','expand'], [], 0, 0);
 	$table->attach ($operate, 	0, 1, 4, 5, ['fill','expand'], [], 0, 0);
 
-	$table->set_sensitive(0) if not $self->has ("mkisofs") or
-				    not $self->has ("cdrecord") or
-				    not $self->has ("vcdimager") or
-				    not $self->has ("cdrdao");
+	my $sensitive = ( $self->has ("mkisofs") &&
+			  $self->has ("cdrecord") ) ||
+			( $self->has ("vcdimager") &&
+			  $self->has ("cdrdao") );
 
+	$table->set_sensitive($sensitive);
 
 	return $vbox;
 }

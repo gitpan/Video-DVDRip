@@ -1,4 +1,4 @@
-# $Id: Base.pm,v 1.31.2.4 2003/03/03 11:44:12 joern Exp $
+# $Id: Base.pm,v 1.31.2.5 2003/03/28 20:35:56 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -291,7 +291,7 @@ sub combine_command_options {
 	$cmd_line =~ s/\s+$//;
 	$cmd_line .= ";" if $cmd_line !~ /;$/;
 	my @parts = grep !/^$/, (
-		$cmd_line =~ m!(.*?)\s*(\(|\)|;|&&|\|\||\`which nice\`\s+-n\s+[\d-]+)\s*!g
+		$cmd_line =~ m!(.*?)\s*(\(|\)|;|&&|\|\||\`which nice\`\s+-n\s+[\d-]+|dr_exec\s+)\s*!g
 	);
 
 	# walk through and process requested command

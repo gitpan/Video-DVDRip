@@ -1,4 +1,4 @@
-# $Id: TranscodeTab.pm,v 1.83.2.3 2003/03/03 11:39:50 joern Exp $
+# $Id: TranscodeTab.pm,v 1.83.2.5 2003/03/28 21:24:39 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -1724,9 +1724,7 @@ sub scan_rescale_volume {
 	my $nr;
         my $chapter_count = 0;
 	my $last_job;
-	my $exec = Video::DVDRip::GUI::ExecuteJobs->new (
-		cb_finished => sub { $self->init_transcode_values }
-	);
+	my $exec = Video::DVDRip::GUI::ExecuteJobs->new;
 
 	my $chapters = $title->get_chapters;
 
@@ -1743,6 +1741,18 @@ sub scan_rescale_volume {
 		$job->set_count   ($chapter_count++);
 		$last_job = $exec->add_job ( job => $job );
 	}
+
+	$self->transcode_widgets
+	     ->{select_audio_channel_popup}
+	     ->set_sensitive(0);
+
+	$exec->set_cb_finished (sub{
+		$self->init_transcode_values;
+		$self->transcode_widgets
+		     ->{select_audio_channel_popup}
+		     ->set_sensitive(1);
+		1;
+	});
 
 	$exec->execute_jobs;
 
@@ -1802,19 +1812,6 @@ sub add_to_cluster {
 	$title->calc_program_stream_units
 		if not $title->program_stream_units or
 		   not @{$title->program_stream_units};
-
-	if ( $title->is_ogg and @{$title->program_stream_units} > 1 ) {
-		$self->message_window (
-			message =>
-				"Cluster mode supports OGG/Vorbis only for movies with\n".
-				"one PSU. Unfortunetaly this title has ".
-				@{$title->program_stream_units}." PSU's.\n\n".
-				"Cluster mode support for such titles will be added\n".
-				"as soon as ogmtools handle concatenating\n".
-				"several OGG files. Stay tuned."
-		);
-		return 1;
-	}
 
 	$self->comp('main')->cluster_control;
 	

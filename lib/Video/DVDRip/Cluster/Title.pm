@@ -1,4 +1,4 @@
-# $Id: Title.pm,v 1.38.2.2 2003/03/06 22:08:11 joern Exp $
+# $Id: Title.pm,v 1.38.2.3 2003/03/28 21:24:39 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -337,14 +337,24 @@ sub get_merge_psu_command {
 	my $target_avi_dir       = dirname($target_avi_file);
 	my $audio_video_psu_dir  = $self->audio_video_psu_dir;
 
+	my $ext = $self->is_ogg ? $self->config('ogg_file_ext') : 'avi';
 	my $nice;
 	$nice = "`which nice` -n ".$self->tc_nice." "
 		if $self->tc_nice =~ /\S/;
 
 	my $command =
 		"mkdir -m 0775 -p '$target_avi_dir' && ".
-		"${nice}dr_exec avimerge -o '$target_avi_file' ".
-		" -i $audio_video_psu_dir/*.avi";
+		"${nice}dr_exec ";
+
+	if ( $self->is_ogg ) {
+		$command .="ogmcat ";
+	} else {
+		$command .="avimerge ";
+	}
+
+	$command .= "-o '$target_avi_file' ";
+	$command .= "-i " if not $self->is_ogg;
+	$command .= "$audio_video_psu_dir/*.$ext";
 
 	$command .= " && echo DVDRIP_SUCCESS";
 	$command .= " && rm $audio_video_psu_dir/*.avi"

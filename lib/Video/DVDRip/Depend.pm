@@ -1,4 +1,4 @@
-# $Id: Depend.pm,v 1.2.2.4 2003/02/23 21:40:30 joern Exp $
+# $Id: Depend.pm,v 1.2.2.5 2003/03/28 21:24:39 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -102,8 +102,8 @@ my %TOOLS = (
 		return $1;
 	},
 	convert 	=> 'none',
-	min 		=> "0.960",
-	suggested 	=> "0.972",
+	min 		=> "0.972",
+	suggested 	=> "0.973",
     },
     mjpegtools => {
     	order		=> ++$ORDER,

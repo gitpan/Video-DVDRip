@@ -1,4 +1,4 @@
-# $Id: Title.pm,v 1.137.2.7 2003/03/06 22:08:19 joern Exp $
+# $Id: Title.pm,v 1.137.2.9 2003/03/28 21:24:39 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -1161,13 +1161,15 @@ sub get_zoom_parameters {
 		}
 	}
 
-	my $phys_ar = $clip2_width/$clip2_height;
+	my $phys_ar = 0;
+	$phys_ar = $clip2_width/$clip2_height if $clip2_height != 0;
 
 	# pixels per second
 	my $pps = $self->frame_rate * $clip2_width * $clip2_height;
 	
 	# bits per pixel
-	my $bpp = $video_bitrate * 1000 / $pps;
+	my $bpp = 0;
+	$bpp = $video_bitrate * 1000 / $pps if $pps != 0;
 	
 	return {
 		zoom_width	=> $zoom_width,
@@ -1968,7 +1970,7 @@ sub get_transcode_audio_command {
 
 		} elsif ( $audio_info->tc_audio_codec eq 'vorbis' ) {
 			if ( $audio_info->tc_vorbis_quality_enable ) {
-				$command .= " -b 0,".
+				$command .= " -b 0,1,".
 					$audio_info->tc_vorbis_quality;
 			} else {
 				$command .= " -b ".

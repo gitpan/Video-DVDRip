@@ -134,9 +134,10 @@ deb http://marillat.free.fr/ unstable main
    You can download dvd::rip sources from this server or all stable
    releases from any CPAN mirror.
 
-   Local download of the latest stable release:
+   Local download of the latest stable release: (currently no unstable
+   release available)
 
-     Video-DVDRip-0.50.8.tar.gz
+     Video-DVDRip-0.50.9.tar.gz
 
    CPAN download directory: (list of mirrors)
 
@@ -212,7 +213,7 @@ cd dvdrip; cvs -z9 update
    subtitle2pgm Needed for subtitles No 0.3 0.3 -
    rar Needed for compressed subtitles No 2.71 2.71 2.99
    mplayer Needed for subtitle vobsub viewing No 0.90 0.90 -
-   ogmtools Needed for OGG/Vorbis No 0.972 0.960 -
+   ogmtools Needed for OGG/Vorbis No 0.973 0.972 -
    mjpegtools Needed for (S)VCD encoding No 1.6.0 1.6.0 -
    cdrdao Needed for (S)VCD burning No 1.1.7 1.1.7 -
    vcdimager Needed for (S)VCD burning No 0.7.12 0.7.12 -
@@ -302,9 +303,8 @@ cd dvdrip; cvs -z9 update
 
 1.3.8 mplayer and/or xine (with a DVD plugin)
 
-   If you have mplayer or xine (with the d4d or dvdnav plugin) installed,
-   you can preview selected DVD titles/chapters with the appropriate
-   audio channels.
+   If you have mplayer or xine installed, you can preview selected DVD
+   titles/chapters with the appropriate audio channels.
 
    You can download xine and mplayer from here:
 
@@ -385,7 +385,7 @@ chmod u+s /usr/sbin/fping
    generate the Makefile and execute make:
 
 # as a normal user
-tar xfz Video-DVDRip-0.50.8.tar.gz
+tar xfz Video-DVDRip-0.50.9.tar.gz
 cd Video-DVDRip-x.xx
 perl Makefile.PL
 make
@@ -439,7 +439,7 @@ make install
    otherwise some dvd::rip helper binaries may be taken from another
    place.
 
-tar xvfz Video-DVDRip-0.50.8.tar.gz
+tar xvfz Video-DVDRip-0.50.9.tar.gz
 cd Video-DVDRip-x.xx
 perl Makefile.PL && make
 export PATH=.:$PATH
@@ -493,7 +493,7 @@ IV.  MAILING LIST
 
    The language of the mailing list is english.
 
-This is closed mailing list: subscribe before posting.
+This is a closed mailing list: subscribe before posting.
 
    The list is closed to prevent members from getting flooded by spam. So
    you have to subscribe before posting. Postings from non subscribed
@@ -507,12 +507,20 @@ This is closed mailing list: subscribe before posting.
      * [5]Mailing list subscription
      * [6]Searchable mailing list archive
 
-   IMPORTANT NOTE: please don't post any illegal stuff here, e.g.
-   requests for movie downloads or similar stuff! Members breaking this
-   simple rule will be removed immediately.
+   The list is registered for reading at [7]gmane.org, a mailing list to
+   news gateway, which has a public searchable mailing list archive:
+     * [8]Mailing list archive at gmane.org
+
+   Please note, that you can't post to the gmane.comp.video.dvdrip.user
+   newsgroup. You must be a regular list member for posting.
 
    Because dvd::rip is highly transcode related, I suggest subscribing to
-   the [7]transcode-user mailing list, too.
+   the [9]transcode-user mailing list, too.
+
+   IMPORTANT NOTE:
+   Don't post any illegal stuff here, e.g. requesting or offering movie
+   downloads or something like this! Members breaking this simple rule
+   will be removed immediately.
 
 URL References
 
@@ -522,7 +530,9 @@ URL References
    4. http://www.exit1.org/dvdrip/doc/faq.cipp
    5. http://lists.exit1.org/mailman/listinfo/dvdrip-users
    6. http://www.exit1.org/dvdrip/htdig/search.cipp
-   7. http://www.theorie.physik.uni-goettingen.de/mailman/listinfo/transcode-users
+   7. http://www.gmane.org/
+   8. http://news.gmane.org/thread.php?group=gmane.comp.video.dvdrip.user
+   9. http://www.theorie.physik.uni-goettingen.de/mailman/listinfo/transcode-users
 
 V.  COPYRIGHT / CONTACT
 
@@ -612,16 +622,36 @@ URL References
   11. http://www.exit1.org/dvdrip/doc/install.cipp#cvs
 
 VI. CHANGES
-   $Id: Changes,v 1.131.2.16 2003/03/06 22:08:23 joern Exp $
+   $Id: Changes,v 1.131.2.21 2003/03/28 21:41:59 joern Exp $
 
    Revision history and release notes for dvd::rip.
 
-   0.50.8 [stable branch] Thu 6 Mar 2003, joern
+   0.50.9 [stable branch] Fri 28 Mar 2003, joern
+	Features:
+	- Dropped cluster mode restriction for OGG projects
+	  with more than one PSU. Thanks for the patch to
+	  Jonathan Rogers <jonner AT mailandnews.com>.
+	  Now dvd::rip needs ogmtools >= 0.972.
+	
 	Bugfixes:
-	- Cluster mode: dvdrip-master daemon bailed out with an
-	  error message on startup. Thanks for the report to
-	  David Chan <davidchan AT rcn.com>.
-	- Cluster mode: if file cleanup was requested and file
-	  splitting not necessary (because the file is smaller
-	  than one disc) the transcoded file was removed.
+	- Fixed another division by zero condition in the
+	  Clip & Zoom module. Thanks for the report to
+	  Mike Oosten <shaggy AT slavery.cx>.
+	- Burning page was disabled if only one of the four burning
+	  related tools (mkisofs, cdrecord, vcdimager, cdrdao)
+	  was missing, although you e.g. don't need mkisofs for VCD
+	  burning and no cdrdao for CDROM burning. Now dvd::rip
+	  is more specific here und disables only the corresponding
+	  burning types.
+	- Adjusted xine DVD player preference for actual versions
+	  of xine. Thanks for the hint to Fridtjof Busse.
+	- Additional transcode options entry didn't work (most
+	  probably since 0.50.4). Thanks to James L. Paul <james AT
+	  mauibay.net>
+	- Vorbis quality mode didn't work in cluster mode. Thanks
+	  for the fix to Jonathan Rogers.
+	- Lock audio selection popup, during a volume rescale
+	  scan. Otherwise the scanned value would be assigned to the
+	  latest selected channel, which may be wrong. Reported
+	  by Felix Knecht.
 

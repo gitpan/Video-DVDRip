@@ -1,4 +1,4 @@
-# $Id: TitleTab.pm,v 1.56 2003/02/05 22:50:25 joern Exp $
+# $Id: TitleTab.pm,v 1.56.2.1 2003/03/28 20:37:04 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -957,6 +957,8 @@ sub view_title {
 	my $command = $title->get_view_dvd_command (
 		command_tmpl => $self->config('play_dvd_command')
 	);
+
+	$self->log ("Executing view command: $command");
 
 	system ($command." &");
 	

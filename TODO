@@ -1,7 +1,17 @@
-$Id: TODO,v 1.117.2.4 2003/03/06 21:56:55 joern Exp $
+$Id: TODO,v 1.117.2.5 2003/03/28 20:37:53 joern Exp $
 
 KNOWN BUGS:
 ===========
+- selecting (S)VCD container type, triggers SVCD video
+  codec, but doesn't set the SVCD type on the burning page.
+  Reported by mark <Xebeque AT gmx.de>
+- when doing multiple cds, multiple audio tracks, and mutiple vobsubs:
+  i've had to down the twice 703MB proposed to 683, else the files and
+  add-ons were too big to be contained on the two cds; but i still have to
+  put a slight lower target size, if not, i have 2 cds and ~15MB for a
+  third one (at the second test, i had 1,5MB left for a third cd :(  ),
+  this is an annoying test because it takes lots of time to proceed :)
+- vobsub subtitling seems to be (partly) broken for chapter mode.
 - Ripping and snapshot grabbing fails if the title has no
   audio at all. Reported by Sean Dwyer <ewe2 AT can.org.au>.
 - negative cropping isn't visualized in the preview image
@@ -17,12 +27,15 @@ may be implemented soon, some eventually never... ;)
 
 TODO:
 =====
-
+- warn, if a project with a selected frame range is put
+  on a cluster.
 - check chapter mode && diskspace calculations
 - add an "uninstall HOWTO" to the FAQ
 - global nice preference, which apply to all started processes.
   It's not necessary to adjust this per project. Suggested by
   Spencer Ogden.
+- possibility of stopping transcoding after 1st pass, continue
+  the 2nd pass later. Suggested by Christoph Lampert.
 - drop constant 6GB per disc guess for ripping free disc space
   calculation. Use (total disk used/total number of frames)*title's
   number of frames instead. Suggested by Ole Tange.
@@ -30,8 +43,11 @@ TODO:
   suggested by James Dowlearn <alwjdd AT utdallas.edu>
 - on-the-fly/dvd-image mode: rip a small ammount to harddisk, to get ac3
   probing and passthrough working.
+- CVD support, suggested by James L. Paul <james AT mauibay.net>
 - enable (S)VCD interlaced encoding: add -F "-I 1", and remove "-p".
   Suggested by Ian Eure <ieure AT blarg.net>
+- subtitle: enter subtitle id by hand, in case of badly probed DVD.
+  Suggested by Mats Högberg <mitt.namn AT telia.com>.
 - AVI: pause/resume for transcode job (using frame range trancoding
   and avimerge)
 - link ETA compution of a 2-pass transcode together, requested by Ole Tange.
