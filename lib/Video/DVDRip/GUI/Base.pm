@@ -1,4 +1,4 @@
-# $Id: Base.pm,v 1.14 2002/03/12 14:01:50 joern Exp $
+# $Id: Base.pm,v 1.15 2002/05/26 22:16:41 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -272,6 +272,20 @@ sub create_dialog {
 				$radio_no->set_active(1);
 			}
 			
+		} elsif ( $field->{type} eq 'string' and $field->{presets} ) {
+			my $entry = Gtk::Combo->new;
+			$entry->show;
+			$entry->set_popdown_strings (@{$field->{presets}});
+			$entry->set_usize(($field->{width}||300),undef);
+			$entry->entry->set_text ($field->{value});
+			if ( $field->{onchange} ) {
+				$entry->entry->signal_connect (
+					"changed", $field->{onchange},
+				);
+			}
+			push @widgets, $entry;
+			$table->attach_defaults ($entry, 1, 2, $i, $i+1);
+
 		} else {
 			my $entry;
 			$entry = Gtk::Entry->new;

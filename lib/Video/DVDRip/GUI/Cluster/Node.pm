@@ -1,4 +1,4 @@
-# $Id: Node.pm,v 1.8 2002/04/17 20:08:27 joern Exp $
+# $Id: Node.pm,v 1.9 2002/05/26 22:17:00 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -150,7 +150,7 @@ sub build {
 			}
 		},
 		{
-			label => "SSH command (leave empty for 'ssh -C')",
+			label => "SSH command and options (default is 'ssh -x')",
 			type => "string",
 			value => $node->ssh_cmd,
 			onchange => sub {
@@ -331,7 +331,7 @@ sub test_node_show_result {
 		write_test		=> "Project base directory writable",
 		transcode_version	=> "transcode version match",
 	);
-	
+
 	foreach my $case ( qw ( ssh_connect data_base_dir_content write_test transcode_version ) ) {
 		$report .= "Test case : $desc{$case}\n";
 		$report .= "Result    : ";

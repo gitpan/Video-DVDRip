@@ -1,4 +1,4 @@
-# $Id: TranscodeTab.pm,v 1.42 2002/05/14 22:14:30 joern Exp $
+# $Id: TranscodeTab.pm,v 1.44 2002/05/26 22:18:27 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -120,7 +120,8 @@ sub create_transcode_tab {
 	
 	# radio button signals
 	
-	foreach my $attr (qw ( tc_use_yuv_internal tc_multipass tc_preview )) {
+	foreach my $attr (qw ( tc_use_yuv_internal tc_multipass
+			       tc_preview tc_audio_drc tc_psu_core )) {
 		$widgets->{$attr."_yes"}->signal_connect ( "clicked", sub {
 			my ($widget, $method) = @_;
 			return 1 if not $self->selected_title;
@@ -145,18 +146,6 @@ sub create_transcode_tab {
 			$title->set_tc_ac3_passthrough(1);
 			$title->calc_video_bitrate;
 			$self->init_transcode_values;
-#			$title->set_tc_audio_bitrate(
-#				$title->audio_tracks
-#				      ->[$title->audio_channel]
-#				      ->{bitrate}
-#			);
-#			$widgets->{tc_audio_bitrate}
-#			     	->set_text($title->tc_audio_bitrate);
-#			$widgets->{tc_audio_bitrate}
-#			     	->set_editable(0);
-#			$widgets->{tc_audio_bitrate_combo}
-#				->set_sensitive (0);
-#			$_->hide foreach @{$self->transcode_widgets->{tc_ac3_hide}};
 		}
 	);
 
@@ -168,13 +157,6 @@ sub create_transcode_tab {
 			$self->selected_title->set_tc_ac3_passthrough(0);
 			$title->calc_video_bitrate;
 			$self->init_transcode_values;
-#			$widgets->{tc_audio_bitrate}
-#			     	->set_editable(1);
-#			$widgets->{tc_volume_rescale}
-#			     	->set_editable(1);
-#			$widgets->{tc_audio_bitrate_combo}
-#				->set_sensitive (1);
-#			$_->show foreach @{$self->transcode_widgets->{tc_ac3_hide}};
 		}
 	);
 
@@ -412,7 +394,7 @@ sub create_audio_options {
 	my ($frame, $frame_hbox, $table, $row, $hbox, $label, $entry);
 	my ($popup_menu, $popup, $item, %popup_entries, $radio_yes, $radio_no);
 
-	my (@ac3_hide, @ac3_keep);
+	my (@ac3_hide, @ac3_keep, @mpeg_hide);
 	my $ac3_vsize_group = Video::DVDRip::GUI::MinSizeGroup->new (
 		type => 'v',
 	);
@@ -486,6 +468,36 @@ sub create_audio_options {
 	$self->transcode_widgets->{tc_audio_bitrate} = $entry->entry;
 	$self->transcode_widgets->{tc_audio_bitrate_combo} = $entry;
 
+	# a52_drc_off
+	++$row;
+	$hbox = Gtk::HBox->new;
+	$hbox->show;
+	$label = Gtk::Label->new ("Range Compression");
+	$label->show;
+	$hbox->pack_start($label, 0, 1, 0);
+	$table->attach ($hbox, 0, 1, $row, $row+1, 'fill','expand',0,0);
+	$hsize_group->add ($hbox);
+
+	push @ac3_keep, $hbox;
+	push @ac3_hide, $label;
+
+	$hbox = Gtk::HBox->new;
+	$hbox->show;
+	my $radio_yes = Gtk::RadioButton->new ("Yes");
+	$radio_yes->show;
+	$hbox->pack_start($radio_yes, 0, 1, 0);
+	my $radio_no = Gtk::RadioButton->new ("No", $radio_yes);
+	$radio_no->show;
+	$hbox->pack_start($radio_no, 0, 1, 0);
+
+	$table->attach_defaults ($hbox, 1, 2, $row, $row+1);
+
+	$self->transcode_widgets->{tc_audio_drc_yes} = $radio_yes;
+	$self->transcode_widgets->{tc_audio_drc_no}  = $radio_no;
+
+	push @ac3_keep, $hbox;
+	push @ac3_hide, ($radio_yes, $radio_no);
+
 	# Volume Rescale
 	++$row;
 	$hbox = Gtk::HBox->new;
@@ -498,6 +510,7 @@ sub create_audio_options {
 
 	push @ac3_keep, $hbox;
 	push @ac3_hide, $label;
+	push @mpeg_hide, $label;
 
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
@@ -509,6 +522,7 @@ sub create_audio_options {
 
 	push @ac3_keep, $hbox;
 	push @ac3_hide, $entry;
+	push @mpeg_hide, $entry;
 
 	$self->transcode_widgets->{tc_volume_rescale} = $entry;
 
@@ -530,6 +544,7 @@ sub create_audio_options {
 
 	push @ac3_keep, $hbox;
 	push @ac3_hide, ($label, $popup);
+	push @mpeg_hide, ($label, $popup);
 
 	%popup_entries = (
 		0 => "0 - best but slower",
@@ -543,10 +558,6 @@ sub create_audio_options {
 		8 => "8",
 		9 => "9 - low but faster",
 	);
-	
-	%popup_entries = (
-		0 => "needs transcode >= 0.6",
-	) if $TC::VERSION < 600;
 	
 	foreach my $key ( sort keys %popup_entries ) {
 		$item = Gtk::MenuItem->new ($popup_entries{$key});
@@ -568,7 +579,8 @@ sub create_audio_options {
 
 	# build vsize group of @ac3_keep widgets
 	$ac3_vsize_group->add ($_) foreach @ac3_keep;
-	$self->transcode_widgets->{tc_ac3_hide} = \@ac3_hide;
+	$self->transcode_widgets->{tc_ac3_hide}  = \@ac3_hide;
+	$self->transcode_widgets->{tc_mpeg_hide} = \@mpeg_hide;
 
 	return $frame;
 }
@@ -936,6 +948,30 @@ sub create_general_options {
 	$self->transcode_widgets->{tc_preview_yes} = $radio_yes;
 	$self->transcode_widgets->{tc_preview_no}  = $radio_no;
 	
+	# Use new PSU core
+	++$row;
+	$hbox = Gtk::HBox->new;
+	$hbox->show;
+	$label = Gtk::Label->new ("Use PSU core");
+	$label->show;
+	$hbox->pack_start($label, 0, 1, 0);
+	$table->attach ($hbox, 0, 1, $row, $row+1, 'fill','expand',0,0);
+	$hsize_group->add ($hbox);
+
+	$hbox = Gtk::HBox->new;
+	$hbox->show;
+	$radio_yes = Gtk::RadioButton->new ("Yes");
+	$radio_yes->show;
+	$hbox->pack_start($radio_yes, 0, 1, 0);
+	$radio_no = Gtk::RadioButton->new ("No", $radio_yes);
+	$radio_no->show;
+	$hbox->pack_start($radio_no, 0, 1, 0);
+	
+	$table->attach_defaults ($hbox, 1, 2, $row, $row+1);
+
+	$self->transcode_widgets->{tc_psu_core_yes} = $radio_yes;
+	$self->transcode_widgets->{tc_psu_core_no}  = $radio_no;
+	
 	return $frame;
 }
 
@@ -1058,6 +1094,8 @@ sub init_transcode_values {
 	my $preview	    = $title->tc_preview;
 	my $mp3_quality	    = $title->tc_mp3_quality;
 	my $video_codec     = $title->tc_video_codec;
+	my $audio_drc       = $title->tc_audio_drc;
+	my $psu_core        = $title->tc_psu_core;
 
 	my $disc_cnt        = $title->tc_disc_cnt;
 	my $disc_size       = $title->tc_disc_size;
@@ -1081,6 +1119,12 @@ sub init_transcode_values {
 
 	$widgets->{tc_preview_yes}->set_active($preview);
 	$widgets->{tc_preview_no}->set_active(!$preview);
+
+	$widgets->{tc_audio_drc_yes}->set_active($audio_drc);
+	$widgets->{tc_audio_drc_no}->set_active(!$audio_drc);
+
+	$widgets->{tc_psu_core_yes}->set_active($psu_core);
+	$widgets->{tc_psu_core_no}->set_active(!$psu_core);
 
 	if ( $title->audio_tracks->[$title->audio_channel]->{type} eq 'ac3' ) {
 		$widgets->{tc_ac3_passthrough_radio}->show;
@@ -1134,7 +1178,7 @@ sub switch_to_mpeg_encoding {
 		$widgets->{tc_target_size}->set_sensitive(1);
 	}
 
-	$_->hide foreach @{$widgets->{tc_ac3_hide}};
+	$_->hide foreach @{$widgets->{tc_mpeg_hide}};
 	
 	1;
 }
@@ -1630,39 +1674,12 @@ sub view_avi {
 
 	$title ||= $self->selected_title;
 	return 1 if not $title;
-	return 1 if $self->comp('progress')->is_active;
 
-	if ( $title->tc_use_chapter_mode ) {
-		my $chapters = $title->get_chapters;
-		my (@filenames, $filename);
-		foreach my $chapter ( @{$chapters} ) {
-			$title->set_actual_chapter ($chapter);
-			$filename = $title->avi_file;
-			push @filenames, $filename if -f $filename;
-		}
-		$title->set_actual_chapter(undef);
-		
-		if ( not @filenames ) {
-			$self->message_window (
-				message => "You first have to transcode this title."
-			);
-			return 1;
-		}
+	my $command = $title->get_view_avi_command (
+		command_tmpl => $self->config('play_file_command'),
+	);
 
-		system ("xine ".join(" ", @filenames)." -p &");
-
-	} else {
-		my $filename = $title->avi_file;
-		$filename =~ s/\.avi$//;
-		if ( $title->tc_video_codec =~ /^S?VCD$/ ) {
-			system ("xine ${filename}.mpg -p &");
-		} else {
-			system ("xine ${filename}* -p &");
-		}
-
-	}
-	
-	1;
+	system ($command." %");
 }
 
 sub add_to_cluster {
@@ -1678,9 +1695,9 @@ sub add_to_cluster {
 		return 1;
 	}
 
-	if ( $title->tc_ac3_passthrough ) {
+	if ( $title->tc_psu_core ) {
 		$self->message_window (
-			message => "Titles with AC3 passthrough mode are currently not supported"
+			message => "PSU core mode currently not supported"
 		);
 		return 1;
 	}

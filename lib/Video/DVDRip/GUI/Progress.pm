@@ -1,4 +1,4 @@
-# $Id: Progress.pm,v 1.18 2002/05/14 22:13:18 joern Exp $
+# $Id: Progress.pm,v 1.20 2002/06/09 10:00:22 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -67,7 +67,7 @@ my %KNOWN_STATES = (
 	idle      => { ''      => 1, running => 1, cancelled => 1 },
 	opened    => { idle    => 1 },
 	running   => { opened  => 1, running => 1 },
-	cancelled => { running => 1 },
+	cancelled => { running => 1, opened  => 1 },
 );
 
 sub set_state {
@@ -154,7 +154,7 @@ sub open {
 	$self->gtk_cancel_button->show if $cancel_callback;
 	$self->gtk_cancel_button->hide if not $cancel_callback;
 
-	$self->set_start_time (time);
+	$self->set_start_time (0);
 	$self->set_log_time ( 60 );
 
 	$self->log ("Starting task '".$self->label."'...");
@@ -256,6 +256,10 @@ sub progress {
 
 	if ( $value > 0 ) {
 		my ($eta, $elapsed, $fps, $percent_fmt);
+
+		if ( $self->start_time == 0 ) {
+			$self->set_start_time(time);
+		}
 
 		my $percent = 100*$value/$max_value;
 		my $time = time - $self->start_time;

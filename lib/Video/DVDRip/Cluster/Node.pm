@@ -1,4 +1,4 @@
-# $Id: Node.pm,v 1.16 2002/04/17 20:08:27 joern Exp $
+# $Id: Node.pm,v 1.17 2002/05/26 22:15:32 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -190,7 +190,7 @@ sub get_popen_code {
 
 	my $username = $self->username;
 	my $name     = $self->hostname;
-	my $ssh_cmd  = $self->ssh_cmd  || 'ssh -C';
+	my $ssh_cmd  = $self->ssh_cmd  || 'ssh -x';
 
 	$command =~ s/"/\\"/g;
 	$command = qq{$ssh_cmd $username\@$name "$command"};
@@ -310,7 +310,7 @@ sub get_test_command {
 	# 1. confirm ssh connection
 	$command .= "echo --ssh_connect-- 2>&1; ".
 		    "echo Ok 2>&1; ".
-		    "echo --ssh_connect-- 2>&1";
+		    "echo --ssh_connect-- 2>&1;";
 	
 	# 2. get content of data_base_dir
 	$data_base_dir ||= $self->data_base_dir;
@@ -327,7 +327,7 @@ sub get_test_command {
 
 	# 4. get transcode version
 	$command .= "echo --transcode_version--; ".
-		    "transcode -h 2>&1; ".
+		    "transcode -v 2>&1; ".
 		    "echo --transcode_version--; ";
 
 	$command .= "'";
@@ -345,7 +345,8 @@ sub parse_test_output {
 	$result{output} = $output;
 	foreach my $case ( qw ( ssh_connect data_base_dir_content
 				write_test transcode_version ) ) {
-		($result{$case}) = $output =~ s/--$case--\n(.*?)--$case--//s;
+		$output =~ s/--$case--\n(.*?)--$case--//s;
+		$result{$case} = $1;
 	}
 
 	$result{output_rest} = $output;

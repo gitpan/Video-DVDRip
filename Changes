@@ -1,6 +1,117 @@
-$Id: Changes,v 1.80 2002/05/14 22:27:11 joern Exp $
+$Id: Changes,v 1.86 2002/06/09 10:01:10 joern Exp $
 
 Revision history for dvd::rip
+
+0.42 Sun Jun 09 2002, joern
+	Bugfixes:
+	- Clip&Zoom: the autoadjust HQ presets didn't work for
+	  NTSC movies, and also the new "Calc Width/Height" feature
+	  which uses interally the HQ resizing algorithm. Thanks
+	  to Torsten Howard for his bug report
+	- also some of the old static presets didn't work with NTSC.
+	  I decided to remove them completely, because they're not
+	  needed anymore since we have the auto-adjusting presets
+	  and the "Calc Width/Height" feature. They were confusing
+	  and made the preset list unnecessary long.
+
+0.41 Sat Jun 08 2002, joern
+	Note:
+	You need at least transcode 0.6.0pre6-20020524 for this
+	release!
+
+	Features:
+	- new "Calc Height" and "Calc Width" buttons on the
+	  Clip&Zoom tab. Just set the clipping parameters
+	  (e.g. using an autoadjust preset, or by hand), enter
+	  the desired width and press "Calc Height": the
+	  corresponding height which keeps aspect ratio will be
+	  calculated (the same for calculating the width while
+	  setting the height). Based on a suggestion from
+	  Florin Andrei.
+
+0.41_03 Tue May 28 2002, joern
+	Bugfixes:
+	- a stupid typo bug made cluster mode audio transcoding
+	  fail. Thanks to Ryan Zachry <rzachry AT rectorseal.com>
+	  for his extensive bug report.
+	- Florin Andrei reported that the preview windows are
+	  strangly placed with Ximian Gnome desktop. I removed
+	  any positioning stuff, so the window manager can
+	  decide where to place the window. This should fix
+	  the problem.
+	
+0.41_02 Sun May 26 2002, joern
+	Features:
+	- support for transcode's new PSU core, which increases
+	  A/V sync quality for NTSC material. You need at least
+	  transcode version 0.6.0pre6-20020524 for this feature.
+	  Note: this is currently not supported by the cluster
+	  mode.
+	- cluster mode: ssh command now defaults to 'ssh -x',
+	  ("don't try to establish X forwarding"). Suggested
+	  by Matthias Riese <matthias.riese AT Uni-Bremen.DE>
+	- enabled AC3 passthrough support for cluster mode
+	- video player is now customizable, requested by Guillaume
+	  Rousse <rousse AT ccr.jussieu.fr>. There are two new
+	  entries in the global preferences dialog: DVD player,
+	  and file player. These are templates for the appropriate
+	  commands. The following format strings are recognized:
+	    %t   DVD title (1..n)
+	    %a   Audio Channel (0..n)
+	    %c   Chapter (1..n)
+	    %m   Viewing Angle (1..n)
+	    %f   Filename
+          Strings enclosed in <> will be repeated for each selected
+	  entry (e.g. DVD Chapter or filename). Also you can specify
+	  arbitrary expressions using %() brackets, e.g. %(%c-1)
+	  will evaluate to the actual chapter minus 1. Defaults for
+	  xine and mplayer are present, but you can customize these
+	  entries if you like. The debugging window shows the result
+	  of both command templates, so you can see how your changes
+	  take effect. xine dvdnav plugin is not tested yet, feedback
+	  is welcome. 
+
+	Bugfixes:
+	- dvd::rip ripping looped with title 1 if no title was
+	  selected. Thanks to Stefan Opsomer <ets.berger AT
+	  skynet.be> for his extensive bug report. Also
+	  Jure Pecar <pegasus AT telemach.net> reported this
+	  a few weeks ago, but I couldn't reproduce it until
+	  now.
+	- Sven Hartge <hartge AT s9.argh.org> reported a problem
+	  with preview frame grabbing if an audio channel != 0 was
+	  ripped. I can't reproduce the problem, maybe it's DVD
+	  dependent, but I disabled audio decoding for preview
+	  grabbing completely, because it wasn't useful anyway.
+	- Debugging Window threw an exception if it was opened
+	  before ripping the title. Thanks to Ian Truelsen
+	  <ian AT ihtruelsen.2y.net> for his bug report.
+	- fixed Gtk-Warning when closing a project, thanks to
+	  Florin Andrei <florin AT andrei.myip.org> for his
+	  detailed bug report.
+	- Cluster node test suite always reported Ok for all
+	  sub tests, no matter if the configuration is correct
+	  or not. Thanks to Matthias Riese for his bug report.
+	- "make test" complained about missing "splitpipe" on
+	  first time installation, if user doesn't have "."
+	  in PATH.
+
+0.41_01 Thu May 17 2002, joern
+	Features:
+	- control of transcode's new audio dynamic range
+	  compression feature, requested by Christian Lambert.
+	- removed all transcode 0.5.3 specific code, because
+	  this version isn't supported anymore
+	- after ripping a title the preview frame entry is
+	  automatically pointed to the middle of the movie resp.
+	  of the first ripped chapter. Suggested by Michael
+	  Dodwell <elmer AT trellian.com>. Additionally the preview
+	  image is grabbed immediately afterwards.
+
+	Bugfixes:
+	- transcode options field didn't recognize long options
+	  always correctly
+	- fast preview frame grabbing didn't work in chapter mode
 
 0.40 Tue May 13 2002, joern
 	Note:

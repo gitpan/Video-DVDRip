@@ -1,4 +1,4 @@
-# $Id: ClipZoomTab.pm,v 1.23 2002/05/14 22:14:30 joern Exp $
+# $Id: ClipZoomTab.pm,v 1.26 2002/06/08 08:27:04 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -335,7 +335,7 @@ sub create_adjust_tab {
 
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$table->attach_defaults ($hbox, 1, 3, $row, $row+1);
+	$table->attach_defaults ($hbox, 1, 2, $row, $row+1);
 
 	$label = Gtk::Label->new("Width");
 	$label->show;
@@ -367,6 +367,25 @@ sub create_adjust_tab {
 
 	$self->adjust_widgets->{tc_zoom_info}        = $label;
 
+	$hbox = Gtk::HBox->new;
+	$hbox->show;
+	
+	$table->attach_defaults ($hbox, 2, 3, $row, $row+1);
+
+	$button = Gtk::Button->new_with_label (" Calc Height ");
+	$button->show;
+	$button->signal_connect ("clicked", sub {
+		$self->calc_zoom ( height => 1 );
+	});
+	$hbox->pack_start ($button, 0, 1, 0);
+	
+	$button = Gtk::Button->new_with_label (" Calc Width ");
+	$button->show;
+	$button->signal_connect ("clicked", sub {
+		$self->calc_zoom ( width => 1 );
+	});
+	$hbox->pack_start ($button, 0, 1, 0);
+	
 	# fast resizing
 	++$row;
 	$hbox = Gtk::HBox->new;
@@ -621,7 +640,7 @@ sub update_fast_resize_info {
 			$title->get_fast_resize_options;
 
 		if ( $err_div32 or $err_shrink_expand ) {
-			my $multiple_of = $TC::VERSION < 600 ? 32 : 8;
+			my $multiple_of = 8;
 			$info .= "$multiple_of boundary! " if $err_div32;
 			$info .= "shrink-expand!" if $err_shrink_expand;
 			$info =~ s! $!!;
@@ -747,13 +766,7 @@ sub grab_preview_frame {
 	};
 
 	my $progress_callback = sub {
-		# no progress for tc > 0.6.0
-		# (direct grabbing using -L)
-		return $frame_nr if $TC::VERSION >= 600;
-		my %par = @_;
-		my ($buffer) = @par{'buffer'};
-		$buffer =~ /\[0+-(\d+)\].*?$/;
-		return $1;
+		return 1;
 	};
 
 	my $close_callback = sub {
@@ -793,20 +806,18 @@ sub grab_preview_frame {
 	my $cancel_callback = sub {
 		my %par = @_;
 		my ($progress) = @par{'progress'};
-		close ($progress->fh);
+		close ($progress->fh) if $progress->fh;
 		return 1;
 	};
-
-	my $has_progress = $TC::VERSION < 600 ? 1 : 0;
 
 	$self->comp('progress')->open (
 		label             => "Grab frame $frame_nr of title #".
 				     $title->nr,
 		need_output       => 0,
-		show_percent      => $has_progress,
+		show_percent      => 0,
 		show_fps          => 0,
-		show_eta          => $has_progress,
-		max_value         => $frame_nr,
+		show_eta          => 0,
+		max_value         => 1,
 		open_callback     => $open_callback,
 		progress_callback => $progress_callback,
 		cancel_callback   => $cancel_callback,
@@ -847,7 +858,6 @@ sub open_preview_window {
 	return 1 if not -f $filename;
 
 	my $win = Gtk::Window->new;
-	$win->set_uposition (10,10);
 	$win->signal_connect( 'destroy', sub {
 		$self->adjust_widgets->{"window_$type"} = undef;
 		$self->make_previews if $type ne 'zoom';
@@ -985,6 +995,25 @@ sub move_clip2_to_clip1 {
 	$title->set_tc_clip2_bottom (0);
 	$title->set_tc_clip2_left   (0);
 	$title->set_tc_clip2_right  (0);
+
+	$self->make_previews;
+	$self->init_adjust_values;
+
+	1;
+}
+
+sub calc_zoom {
+	my $self = shift;
+	my %par = @_;
+	my ($width, $height) = @par{'width','height'};
+	
+	my $title = $self->selected_title;
+	return 1 if not $title;
+
+	$title->calc_zoom (
+		width  => $width,
+		height => $height,
+	);
 
 	$self->make_previews;
 	$self->init_adjust_values;

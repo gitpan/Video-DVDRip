@@ -1,4 +1,4 @@
-# $Id: Main.pm,v 1.39 2002/05/14 22:12:18 joern Exp $
+# $Id: Main.pm,v 1.41 2002/05/26 22:17:26 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -70,7 +70,6 @@ sub start {
 			my $error =
 				"An internal exception was thrown!\n".
 				"The error message was:\n\n$@";
-
 			$self->long_message_window (
 				message => $error
 			);
@@ -321,6 +320,8 @@ sub open_project {
 		wants => "open_project"
 	);
 	
+	$self->close_project;
+	
 	$self->show_file_dialog (
 		dir      => ".",
 		filename => "",
@@ -416,7 +417,7 @@ sub close_project {
 	
 	return if not $self->project_opened;
 	return if not $dont_ask and $self->unsaved_project_open;
-	
+
 	$self->comp('project')->close;
 	$self->gtk_box->remove ($self->comp('project')->widget);
 	$self->comp( project => undef );
@@ -432,10 +433,7 @@ sub unsaved_project_open {
 	my ($wants) = @par{'wants'};
 	
 	return if not $self->project_opened;
-	if ( not $self->comp('project')->project->changed ) {
-		$self->close_project ( dont_ask => 1 );
-		return;
-	}
+	return if not $self->comp('project')->project->changed;
 
 	$self->confirm_window (
 		message => "Do you want to save this project first?",
@@ -464,6 +462,8 @@ sub exit_program {
 	return 1 if not $force and $self->unsaved_project_open (
 		wants => "exit_program"
 	);
+
+	$self->close_project;
 
 	if ( $self->project_opened ) {
 		$self->comp('project')->close if $self->comp('project');
@@ -531,11 +531,21 @@ sub show_transcode_commands {
 	$commands .= "\n\n";
 	
 	$commands .= "Grab Preview Image Command:\n".
-		    "===========================\n".
+		    "===========================\n";
+
+	eval {
+		$commands .=
 		    $title->get_take_snapshot_command(
 		    	frame => $title->preview_frame_nr
 		    )."\n";
-
+	};
+	
+	if ( $@ ) {
+		$commands .=
+			"You must first rip the selected title ".
+			"to see this command.\n";
+	}
+	
 	$commands .= "\n\n";
 	
 	$commands .= "Transcode Command:\n".
@@ -551,6 +561,23 @@ sub show_transcode_commands {
 	if ( $title->tc_video_codec =~ /^S?VCD$/ ) {
 		$commands .= "\n".$title->get_mplex_command( split => 1 ),"\n";
 	}
+
+	$commands .= "\n\n";
+
+	$commands .= "View DVD Command:\n".
+		     "=================\n".
+		     $title->get_view_dvd_command(
+		     	command_tmpl => $self->config('play_dvd_command')
+		     )."\n";
+
+	$commands .= "\n\n";
+
+	$commands .= "View Files Command:\n".
+		     "===================\n".
+		     $title->get_view_avi_command(
+		     	command_tmpl => $self->config('play_file_command'),
+			file => "movie.avi",
+		     )."\n";
 
 	$self->long_message_window (
 		message => $commands

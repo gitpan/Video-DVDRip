@@ -1,4 +1,4 @@
-# $Id: Title.pm,v 1.23 2002/04/10 21:19:12 joern Exp $
+# $Id: Title.pm,v 1.25 2002/05/28 20:55:09 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -166,6 +166,9 @@ sub get_transcode_command {
 
 	my $command   = $self->SUPER::get_transcode_command (@_);
 
+	# no audio options
+	$command =~ s/\s-[baN]\s+[^\s]+//;
+
 	# no -c in cluster mode
 	$command =~ s/ -c \d+-\d+//;
 
@@ -209,12 +212,25 @@ sub get_transcode_audio_command {
 		"transcode -i ".$self->vob_dir.
 		" -x null,vob -g 0x0 -y raw -u 50".
 		" -a ".$self->audio_channel.
-		" -b ".$self->tc_audio_bitrate.",0,".
-		       $self->tc_mp3_quality.
-		" -s ".$self->tc_volume_rescale.
-		" -o ".$audio_avi_file.
-		" && echo DVDRIP_SUCCESS";
+		" -o ".$audio_avi_file;
 
+	if ( $self->tc_ac3_passthrough ) {
+		$command .= " -A -N ".
+			$self->audio_tracks
+			     ->[$self->audio_channel]
+			     ->{tc_option_n};
+	} else {
+		$command .= 
+			" -b ".$self->tc_audio_bitrate.",0,".
+			       $self->tc_mp3_quality.
+			" -s ".$self->tc_volume_rescale;
+		
+		$command .= " --a52_drc_off "
+			if not $self->tc_audio_drc;
+	}
+
+	$command .= " && echo DVDRIP_SUCCESS";
+	
 	return $command;
 }
 

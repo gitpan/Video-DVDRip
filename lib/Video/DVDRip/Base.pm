@@ -1,4 +1,4 @@
-# $Id: Base.pm,v 1.17 2002/05/14 22:10:43 joern Exp $
+# $Id: Base.pm,v 1.19 2002/05/26 22:14:49 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -222,7 +222,6 @@ sub clone {
 	} else {
 		croak "deep cloning currently not supported";
 	}
-
 }
 
 sub combine_command_options {
@@ -241,10 +240,10 @@ sub combine_command_options {
 	# walk through and process requested command
 	foreach my $part ( @parts ) {
 		next if $part !~ s/^$cmd\s+//;
-		my $options = $self->get_shell_options (
+		my $options_href = $self->get_shell_options (
 			options => $part." ".$options
 		);
-		$part = "$cmd ".join (" ", values %{$options});
+		$part = "$cmd ".join (" ", values %{$options_href});
 	}
 
 	# remove trailing semicolon
@@ -265,13 +264,13 @@ sub get_shell_options {
 	my $opt;
 	for (my $i=0; $i < @words; ++$i) {
 		$words[$i] = "'$words[$i]'" if $words[$i] =~ /\s/;
-		if ( $words[$i] =~ /^-(.*)/ ) {
+		if ( $words[$i] =~ /^(-+.*)/ ) {
 			$opt = $1;
 			if ( $i+1 != @words and $words[$i+1] !~ /^-/ ) {
-				$options{$opt} = "-$opt $words[$i+1]";
+				$options{$opt} = "$opt $words[$i+1]";
 				++$i;
 			} else {
-				$options{$opt} = "-$opt";
+				$options{$opt} = "$opt";
 			}
 		} else {
 			$options{$opt} .= " ".$words[$i];
@@ -325,5 +324,63 @@ sub get_shell_words {
 
 	return @words;
 }
+
+sub apply_command_template {
+	my $self = shift;
+	my %par = @_;
+	my ($template, $opts) = @par{'template','opts'};
+
+	$template =~ s/<(.*?)>/__DVDRIP_REPEATED_GROUP__/;
+	my ($group_tmpl) = "$1 ";
+	
+	my $opts_href = shift @{$opts};
+	
+	$template = $self->apply_template (
+		template  => $template,
+		opts_href => $opts_href,
+	);
+	
+	my $group = "";
+
+	foreach my $group_opts_href ( @{$opts} ) {
+		$opts_href->{$_} = $group_opts_href->{$_}
+			for keys %{$group_opts_href};
+		$group .= $self->apply_template (
+			template  => $group_tmpl,
+			opts_href => $opts_href,
+		);
+	}
+	
+	$template =~ s/__DVDRIP_REPEATED_GROUP__/$group/;
+	
+	return $template;
+}
+
+sub apply_template {
+	my $self = shift;
+	my %par = @_;
+	my ($template, $opts_href) = @par{'template','opts_href'};
+
+	$template =~
+		s{\%(\(.*?\)|.)}{
+			my $var = $1;
+			if ( $var =~ s/^\((.*)\)$/$1/ ) {
+				$var =~ s/\%(.)/$opts_href->{$1}/g;
+				my $eval = $var;
+				$var = eval $eval;
+				if ( $@ ) {
+					my $err = $@;
+					$err =~ s/at\s+\(.*//;
+					warn "Perl expression ( $eval ) => $err";
+				}
+			} else {
+				$var = $opts_href->{$var};
+			}
+			$var;
+		}eg;
+	
+	return $template;
+}
+
 
 1;

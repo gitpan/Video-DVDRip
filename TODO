@@ -1,6 +1,7 @@
-$Id: TODO,v 1.68 2002/05/14 22:27:11 joern Exp $
+$Id: TODO,v 1.74 2002/06/08 12:18:19 joern Exp $
 
-KNOWN BUGS
+KNOWN BUGS:
+===========
 - cluster mode
   - cluster control daemon leaks memory
 - canceling a transcode process (in standard mode) kills all
@@ -9,57 +10,84 @@ KNOWN BUGS
 - negative cropping isn't visualized in the preview image
   (all calculations and the transcoding itself work, so
    it's not that big problem ;)
-- Jure Pecar <pegasus AT telemach.net> reported a bug with
-  endless operation in while ripping multiple titles. I currently
-  can't reproduce it, but I'll keep an eye on it ;)
-- "make test" complains about missing "splitpipe" on first time
-  installation, if user doesn't have "." in PATH
-- transcode long options are not supported by the transcode
-  options field
 
-TODO
-- checkbox for --a52_drc_off, suggested by Christian Lambert.
+NOTE:
+=====
+The todo list beyond is my "notebook" for good ideas and
+suggestions, which would be senseful or fun to implement
+somedays. You see: this list is rather long. Some features
+may be implented soon, some eventually never... ;)
+
+TODO:
+=====
+- integrate patch from Wolfgang Kinkeldei <kinkeldei AT nureg.de>
+  which enables playing the ripped VOB from a specific frame
+  number.
+- SVCD: restrict overall bitrate to 2748kbps, thanks for the
+  hint to Joerg Friedrich <Joerg.Dieter.Friedrich AT uni-konstanz.de>
+- use mpeg2enc's --sequence-length for splitting MPEGs, suggested
+  by Todd Inglett <tinglett AT magnaspeed.net>
+- support generating multilanguage AVIs
+- support rendering subtitles
+- use tccat -P instead of -T if chapter mode is disabled,
+  suggested by Sven Hartge
+- autosave function (after ripping, every X seconds or something)
+- localize the GUI
+- framework for translated documentation
 - cluster mode
+  - give a better message if dvdrip-master can't be started due
+    lack of needed Perl modules (and the lack of documentation reading
+    users... ;)
   - cleanup all files in tmp/ and cluster/ if VOB cleanup is
     enabled. Suggested by Stefan Opsomer <stefan.opsomer AT wanadoo.be>
   - no VOB cleanup if AVI size > requested size,
     suggested by Stefan Opsomer <stefan.opsomer AT wanadoo.be>
   - verify double audio problem reported by Philippe <sweafty AT free.fr>
+  - optimization of date intensive jobs doesn't check if
+    there is at least one node with local access. Reported by
+    Marek Malcherek <Malcherek AT Fh-Worms.DE>
+  - implement alternatives for fping
+    - make path customizable
+    - provide a wrapper which uses GNU ping, but behaves like
+      fping
+    - replace fping by a Perl module but give the user the
+      choice which to use
+    Based on a suggestion from Greg McLearn <glmclear AT
+    plg2.math.uwaterloo.ca>
+  - schedule start/end time of a node, suggested by Rainer Lay
+  - stop node after current job, suggested by Rainer Lay
+- check file access rights before operation (ripping, transcoding etc.)
+- enable transcode's debugging mode (-q 2) and collect messages
+  in a specific logfile (suggested by Florin Andrei)
+- log some statistics after transcoding (e.g. avi size, actual bitrate,
+  total time, total CPU time, sysload...), suggested by Florin Andrei
+- add checkbox "exit after transcoding" which saves the project
+  and exits after transcoding. Suggested by Florin Andrei
+- pcm passthrough
 - add a preference option whether dvd::rip project data files
   should be saved in the project directory by default,
   suggested by Davide Ferrari
-- add a dvd::rip window manager icon
+- option for disabling audio processing completely, suggested by
+  <xercist AT xernet.lammah.com>
+- enable dvd::rip to work on already existent VOB copies in filesystem
+- add a dvd::rip window manager icon, suggested by Florin Andrei
 - export some sort of Makefile export for transcoding as a
   simple batch mode, suggested by Moritz Bunkus <moritz AT bunkus.org>
-- support transcodes new --psu mode to solve NTSC sync problems
-- set $frame_cnt/2 as default for frame grabber, suggested by
-  Michael Dodwell <elmer AT trellian.com>
 - option for forking the transcode process into the background,
   suggested by Akos Maroy <darkeye AT tyrell.hu>
-- support generating multilanguage AVIs
 - support smartdeinter filter, suggested by Christian Lambert
-- support rendering subtitles
 - support for transcode's -r option for fast frame bisection
   (and very fast deinterlacing)
-- autosave function (after ripping, every X seconds or something)
 - check for negative nice value if not run as root
 - merge chapter avi's in two modes: all into one file,
   or adjacent chapters in separate files. Suggested by
   Certron DiSoni <certron_80 AT yahoo.com>
-- make video player customizable, requested by Guillaume Rousse
-  <rousse AT ccr.jussieu.fr>
 - enable video bitrate calculation for chapter mode
-- global preference for warning width divisible by 16 or 32 violations,
-  suggested by Christian Lambert
-- cluster mode:
-  - schedule start/end time of a node, suggested by Rainer Lay
-  - stop node after current job, suggested by Rainer Lay
 - textfield for arbitrary command execution after transcoding,
-  e.g. for system shutdown. Suggested by simbolo <simbolo225@yahoo.com>
+  e.g. for system shutdown. Suggested by simbolo <simbolo225 AT yahoo.com>
+  - add checkbox for executing in a xterm, suggested by Florin Andrei
 - enable pausing after 1st pass of a two-pass divx4 encoding,
   suggested by Chris <chris AT axique.de>.
-- enable dvd::rip to work on already existent VOB copies
-  in filesystem
 - don't rip chapters already ripped in chapter selection mode
 - check space on filesystem before ripping and transcoding
 - extensive checking of user input. most input is currently

@@ -29,9 +29,11 @@ II.  NOTE
    
 III. INSTALLATION
 
-   dvd::rip itself is a Gtk+ based program written in Perl, using the
-   video processing tool transcode for the internals. So you first have
-   to comply some prerequisites before installing dvd::rip.
+   This documentation page covers dvd::rip 0.42.
+
+   dvd::rip is a Gtk+ based program written in Perl, using the video
+   processing tool transcode for the internals. So you first have to
+   comply some prerequisites before installing dvd::rip.
 
 transcode
 
@@ -108,7 +110,7 @@ Installing / Updating dvd::rip itself
    generate the Makefile and execute make:
 
      # as a normal user
-     tar xfz Video-DVDRip-0.40.tar.gz
+     tar xfz Video-DVDRip-0.42.tar.gz
      cd Video-DVDRip-x.xx
      perl Makefile.PL
      make
@@ -157,7 +159,12 @@ fping and pstree
    The dvd::rip cluster control daemon uses fping to check if nodes are
    online and pstree to get information about specific child processes.
    Both tools should be shipped with your Linux distribution (fping
-   sometimes isn't, but you can get it here: [10]http://www.fping.com/)
+   sometimes isn't, but you can get it here: [10]http://www.fping.com/).
+
+   Note: Matthias Riese told me that there are IPv6 fping packages which
+   don't support IPv4, what's most likely not what you want, so pay
+   attention to get the right version ("ipv6" should not occur in the
+   package name).
 
    dvd::rip expects fping to be installed set-uid root (because you
    hopefully don't run dvd::rip as root ;), which is not the default for
@@ -174,7 +181,7 @@ fping and pstree
    only need transcode installed, dvd::rip or any packages mentioned here
    aren't needed there.
 
-Verweise
+URL References
 
    1. file://localhost/dvdrip/doc/install.cipp
    2. file://localhost/dvdrip/doc/install.cipp?print=1
@@ -194,7 +201,7 @@ IV.  DOWNLOAD
 
    Local download of the latest stable release:
 
-     [3]Video-DVDRip-0.40.tar.gz
+     [3]Video-DVDRip-0.42.tar.gz
 
    CPAN download directory:
 
@@ -211,9 +218,9 @@ IV.  DOWNLOAD
 
 User contributed downloads
 
-   Currently I do not provide RPM archives myself, but other dvd::rip
-   users are so kind to build some. You'll find them in my contribution
-   directory, beside other interesting donated stuff:
+   I do not provide RPM archives myself, but other dvd::rip users are so
+   kind to build some. You'll find them in my contribution directory,
+   beside other interesting donated stuff:
 
      [8]http://www.exit1.org/dvdrip/contrib/
 
@@ -230,18 +237,30 @@ Debian packages
   deb http://marillat.free.fr/ unstable main
 
    You will find all packages to compile transcode on your own (if you
-   need always the very latest versions), or can get binary versions of
-   reasonably recent transcode directly. The same applies to dvd::rip.
+   need always the very latest versions), or can get binaries of
+   reasonably recent transcode versions directly. The same applies to
+   dvd::rip.
 
-Verweise
+Anonymous CVS access
+
+   Note: this is intended for developers and documentation translators.
+   This CVS repository is only a read only mirror of my main repository.
+   It's updated manually when I publish releases or pre-releases, so
+   there is no advantage for normal users compared to downloading the tar
+   balls mentioned above.
+
+   Root                            Module
+   :pserver:cvs@cvs.exit1.org:/cvs dvdrip
+
+URL References
 
    1. file://localhost/dvdrip/download.cipp
    2. file://localhost/dvdrip/download.cipp?print=1
-   3. file://localhost/dvdrip/dist/Video-DVDRip-0.40.tar.gz
+   3. file://localhost/dvdrip/dist/Video-DVDRip-0.42.tar.gz
    4. http://www.perl.org/CPAN/modules/by-authors/id/J/JR/JRED/
    5. http://www.perl.org/CPAN/SITES.html
    6. file://localhost/dvdrip/dist/
-   7. file://localhost/dvdrip/dist/
+   7. file://localhost/dvdrip/dist/pre/
    8. file://localhost/dvdrip/contrib/
    9. http://marillat.free.fr/
 
@@ -266,7 +285,7 @@ V.   MAILING LIST
    Because dvd::rip is highly transcode related, I suggest subscribing to
    the [5]transcode-user mailing list, too.
 
-Verweise
+URL References
 
    1. file://localhost/dvdrip/list.cipp
    2. file://localhost/dvdrip/list.cipp?print=1
@@ -300,7 +319,7 @@ VI.  COPYRIGHT / CONTACT
    And: consider subscription and posting to the [4]dvdrip-users mailing
    list list.
 
-Verweise
+URL References
 
    1. file://localhost/dvdrip/copyright.cipp
    2. file://localhost/dvdrip/copyright.cipp?print=1
@@ -308,44 +327,19 @@ Verweise
    4. http://lists.exit1.org/mailman/listinfo/dvdrip-users
 
 VII. CHANGES
-   $Id: Changes,v 1.80 2002/05/14 22:27:11 joern Exp $
+   $Id: Changes,v 1.86 2002/06/09 10:01:10 joern Exp $
 
    Revision history for dvd::rip
 
-   0.40 Tue May 13 2002, joern
-	Note:
-	- please install at least transcode-0.6.0pre5-20020514.
-	  Some older versions have a bug with chapter selection
-	  which crashes dvd::rip's ripping procedure.
-	  
-	Features:
-	- dvdrip command now supports --version (or -version or -v)
-	  to print the version number, suggested by Michael Bushey
-	- unexpected error message with command output are now
-	  displayed in a textarea, so they're cut and pastable
-	  (better for bug reporting ;)
-
+   0.42 Sun Jun 09 2002, joern
 	Bugfixes:
-	- many enhancements regarding the handling of
-	  unexpected errors
-	  - no need to cancel the operation manually anymore
-	  - error output of some commands was missing
-	  - dvd::rip consumed 99% of CPU, thanks for the report
-	    to Andreas Theofilu <andreas AT mehlbox.at>. I didn't
-	    really solved this problem but added a workaround
-	    which should help in most situations. Otherwise
-	    you should restart dvd::rip after a fatal error which
-	    let dvd::rip itself occupating the whole CPU. This seems
-	    to be a very strange bug around Gtk::input_add...
-	- cluster mode transcode progress information was messed up
-	  due to slightly changes of transcode's output format.
-	- newer versions of avisplit croak on absolute filename
-	  parameters (I reported this already as a bug to Thomas),
-	  so dvd::rip now changes into the data directory and uses
-	  relative filenames. Thanks to Davide Ferrari for his bug
-	  report.
-	- mplex segfaulted if Transcode+Split was chosen (used %s
-	  instead of %d in the output pattern)
-	- VCD mode: --export-asr is set to 2 instead of 1. Thanks
-	  for the hint to Andreas Theofilu
-	
+	- Clip&Zoom: the autoadjust HQ presets didn't work for
+	  NTSC movies, and also the new "Calc Width/Height" feature
+	  which uses interally the HQ resizing algorithm. Thanks
+	  to Torsten Howard for his bug report
+	- also some of the old static presets didn't work with NTSC.
+	  I decided to remove them completely, because they're not
+	  needed anymore since we have the auto-adjusting presets
+	  and the "Calc Width/Height" feature. They were confusing
+	  and made the preset list unnecessary long.
+

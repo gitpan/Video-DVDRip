@@ -1,19 +1,26 @@
-# $Id: DVDRip.pm,v 1.62 2002/05/14 22:24:38 joern Exp $
+# $Id: DVDRip.pm,v 1.67 2002/06/09 10:01:11 joern Exp $
 
 package Video::DVDRip;
 
-$VERSION = "0.40";
+$VERSION = "0.42";
 
 use Carp;
 use FileHandle;
 
 init: {
+	# skip transcode check during "make test". This makes
+	# automatic CPAN testing fail erroneously and makes
+	# problems during first dvd::rip install, when the
+	# use has no "." in PATH, because then splitpipe isn't
+	# found.
+	last if $ENV{PERL_DL_NONLAZY} == 1;
+
 	my @path = split(":", $ENV{PATH});
+
 	my @programs = qw (
 		rm convert identify
 		transcode tcscan tccat
 		tcextract tcdecode splitpipe
-		
 	);
 	
 	my $missing = "";
@@ -56,9 +63,9 @@ init: {
 		      "Please upgrade transcode.\n";
 		exit 1;
 	}
-
-	1;
 }
+
+1;
 
 __END__
 

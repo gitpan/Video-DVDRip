@@ -1,4 +1,4 @@
-# $Id: Title.pm,v 1.74 2002/05/14 22:15:31 joern Exp $
+# $Id: Title.pm,v 1.78 2002/06/09 10:00:44 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -100,6 +100,8 @@ sub tc_video_bitrate		{ shift->{tc_video_bitrate}      	}
 sub tc_audio_bitrate		{ shift->{tc_audio_bitrate}      	}
 sub tc_video_framerate		{ shift->{tc_video_framerate}      	}
 sub tc_fast_bisection		{ shift->{tc_fast_bisection}      	}
+sub tc_audio_drc		{ shift->{tc_audio_drc}      		}
+sub tc_psu_core			{ shift->{tc_psu_core}      		}
 
 sub tc_target_size		{ shift->{tc_target_size}		}
 sub tc_disc_cnt 	    	{ shift->{tc_disc_cnt}			}
@@ -139,6 +141,8 @@ sub set_tc_video_bitrate	{ shift->{tc_video_bitrate}  	= $_[1]	}
 sub set_tc_audio_bitrate	{ shift->{tc_audio_bitrate} 	= $_[1]	}
 sub set_tc_video_framerate	{ shift->{tc_video_framerate} 	= $_[1]	}
 sub set_tc_fast_bisection	{ shift->{tc_fast_bisection} 	= $_[1]	}
+sub set_tc_audio_drc		{ shift->{tc_audio_drc} 	= $_[1]	}
+sub set_tc_psu_core		{ shift->{tc_psu_core} 		= $_[1]	}
 
 sub set_tc_target_size		{ shift->{tc_target_size}    	= $_[1]	}
 sub set_tc_disc_cnt		{ shift->{tc_disc_cnt}    	= $_[1]	}
@@ -379,8 +383,6 @@ sub get_chapters {
 sub calc_program_stream_units {
 	my $self = shift;
 
-	croak "You need at least transcode 0.6pre2" if $TC::VERSION < 600;
-
 	my $vob_nav_file = $self->vob_nav_file;
 
 	my $fh = FileHandle->new;
@@ -423,8 +425,8 @@ sub calc_program_stream_units {
 sub auto_adjust_clip_zoom {
 	my $self = shift;
 	my %par = @_;
-	my  ($frame_size, $fast_resize) =	# frame_size  = 'big' or 'small'
-	@par{'frame_size','fast_resize'};	# fast_resize = 1 or 0
+	my  ($frame_size, $fast_resize, $keep_clip) =	# frame_size  = 'big' or 'small'
+	@par{'frame_size','fast_resize','keep_clip'};	# fast_resize = 1 or 0
 
 	croak "invalid parameter for frame_size ('$frame_size')"
 		if not $frame_size =~ /^(big|medium|small)$/;
@@ -434,10 +436,18 @@ sub auto_adjust_clip_zoom {
 	my $height     = $self->height;
 
 	# bounding box
-	my $min_x  = $self->bbox_min_x;
-	my $min_y  = $self->bbox_min_y;
-	my $max_x  = $self->bbox_max_x;
-	my $max_y  = $self->bbox_max_y;
+	my ($min_x, $min_y, $max_x, $max_y);
+	if ( $keep_clip ) {
+		$min_x  = $self->tc_clip1_left;
+		$min_y  = $self->tc_clip1_top;
+		$max_x  = $self->width  - $self->tc_clip1_right;
+		$max_y  = $self->height - $self->tc_clip1_bottom;
+	} else {
+		$min_x  = $self->bbox_min_x;
+		$min_y  = $self->bbox_min_y;
+		$max_x  = $self->bbox_max_x;
+		$max_y  = $self->bbox_max_y;
+	}
 
 	# aspect ratio
 	my $aspect_ratio = $self->aspect_ratio;	# 4:3 or 16:9
@@ -460,15 +470,13 @@ sub auto_adjust_clip_zoom {
 
 		if ( $aspect_ratio eq '4:3' ) {
 			# resizing to correct aspect ratio
-			# (increase width with factor 1.3333333 / 1.25
-			#  which is exactly 1024 / 720)
-			$zoom_width   = $bb_width * 4/3 / 1.25;
+			# (increase width with factor 1.3333333 / orig-ratio)
+			$zoom_width   = $bb_width * 4/3 / ($width/$height);
 			$zoom_height  = $bb_height;
 		} else {
 			# resizing to correct aspect ratio
-			# (increase width with factor 1.777777 / 1.25
-			#  which is exactly 1024 / 720)
-			$zoom_width   = $bb_width * 1024 / 720;
+			# (increase width with factor 1.777777 / orig-ratio)
+			$zoom_width   = $bb_width * 16/9 / ($width/$height);
 			$zoom_height  = $bb_height;
 		}
 		
@@ -673,11 +681,61 @@ sub get_effective_ratio {
 	my $clip2_height = $zoom_height - $self->tc_clip2_top  - $self->tc_clip2_bottom;
 
 	return ($clip2_width, $clip2_height, $zoom_ratio);
+}
 
+sub calc_zoom {
+	my $self = shift;
+	my %par = @_;
+	my ($width, $height) = @par{'width','height'};
 
-#	return ($self->aspect_ratio eq '16:9' ? 16/9 : 4/3)
-#		if $from_width == 0 or $from_height == 0;
+	my $old_zoom_width  = $self->tc_zoom_width;
+	my $old_zoom_height = $self->tc_zoom_height;
 
+	$self->auto_adjust_clip_zoom (
+		frame_size  => 'big',
+		fast_resize => 0,
+		keep_clip   => 1,
+	);
+
+	my ($zoom_width, $zoom_height);
+
+	if ( $height ) {
+		$zoom_width  = $old_zoom_width;
+		$zoom_height = int ($self->tc_zoom_height * $old_zoom_width / $self->tc_zoom_width);
+	} else {
+		$zoom_height  = $old_zoom_height;
+		$zoom_width = int ($self->tc_zoom_width * $old_zoom_height / $self->tc_zoom_height);
+	}
+	
+	# finally use 2nd clipping to get width/height
+	# divisible by 16
+	my ($clip2_left, $clip2_right, $clip2_top, $clip2_bottom);
+	my $rest;
+	if ( $rest = $zoom_width % 16 ) {
+		if ( $rest % 2 == 0 ) {
+			$clip2_left = $clip2_right = $rest / 2;
+		} else {
+			$clip2_left  = $rest / 2 - 0.5;
+			$clip2_right = $rest / 2 + 0.5;
+		}
+	}
+	if ( $rest = $zoom_height % 16 ) {
+		if ( $rest % 2 == 0 ) {
+			$clip2_top = $clip2_bottom = $rest / 2;
+		} else {
+			$clip2_top    = $rest / 2 - 0.5;
+			$clip2_bottom = $rest / 2 + 0.5;
+		}
+	}
+
+	$self->set_tc_zoom_width   ( $zoom_width );
+	$self->set_tc_zoom_height  ( $zoom_height );
+	$self->set_tc_clip2_left   ( $clip2_left );
+	$self->set_tc_clip2_right  ( $clip2_right );
+	$self->set_tc_clip2_top    ( $clip2_top );
+	$self->set_tc_clip2_bottom ( $clip2_bottom );
+
+	1;
 }
 
 #---------------------------------------------------------------------
@@ -723,15 +781,10 @@ sub get_rip_command {
 
 	my $angle = $self->tc_viewing_angle || 1;
 
-	# version 0.6.0pre has tcdemux -W which can be used
-	# for calculating the progress bar and for cluster
-	# transcoding. The splitpipe -f switch enables piping
-	# data through tcdemux.
-	my $f = $TC::VERSION >= 600 ? "-f $vob_nav_file" : "";
-
 	my $command = "rm -f $vob_dir/$name-???.vob;\n".
 	           "tccat -t dvd -T $nr,$chapter,$angle -i $dvd_device ".
-	           "| splitpipe $f 1024 $vob_dir/$name vob >/dev/null";
+	           "| splitpipe -f $vob_nav_file 1024 ".
+		   "  $vob_dir/$name vob >/dev/null";
 
 	return $command;
 }
@@ -927,16 +980,10 @@ sub get_rip_and_scan_command {
 
 	my $angle = $self->tc_viewing_angle || 1;
 
-	# version 0.6.0pre has tcdemux -W which can be used
-	# for calculating the progress bar and for cluster
-	# transcoding. The splitpipe -f switch enables piping
-	# data through tcdemux.
-	my $f = $TC::VERSION >= 600 ? "-f $vob_nav_file" : "";
-
 	my $command =
 	       "rm -f $vob_dir/$name-???.vob;\n".
 	       "tccat -t dvd -T $nr,$chapter,$angle -i $dvd_device ".
-	       "| splitpipe $f 1024 $vob_dir/$name vob ".
+	       "| splitpipe -f $vob_nav_file 1024 $vob_dir/$name vob ".
 	       "| tcextract -a $audio_channel -x ac3 -t vob ".
 	       "| tcdecode -x ac3 ".
 	       "| tcscan -x pcm";
@@ -1158,14 +1205,27 @@ sub suggest_transcode_options {
 	$self->set_tc_ac3_passthrough ( 0 );
 	$self->set_tc_mp3_quality ( 0 );
 	$self->set_tc_multipass ( 1 );
+	$self->set_tc_audio_drc ( 0 );
 	$self->set_tc_target_size ( 1400 );
 	$self->set_tc_disc_size ( 700 );
 	$self->set_tc_disc_cnt ( 2 );
 	$self->set_tc_video_framerate (
 		$self->video_mode eq 'pal' ? 25 : 23.976
 	);
+	$self->set_tc_psu_core (
+		$self->video_mode eq 'pal' ? 0 : 1
+	);
 	$self->calc_video_bitrate;
 	$self->set_preset ( "auto_medium_fast" );
+
+	if ( $self->tc_use_chapter_mode ) {
+		my $chapter = $self->get_first_chapter;
+		$self->set_preview_frame_nr (
+			int($self->chapter_frames->{$chapter} / 2)
+		);
+	} else {
+		$self->set_preview_frame_nr ( int($self->frames / 2) );
+	}
 
 	1;
 }
@@ -1250,10 +1310,6 @@ sub get_transcode_command {
 				if $self->tc_video_bitrate;
 	}
 
-	if ( $self->tc_use_chapter_mode and $TC::VERSION < 600 ) {
-		$command .= qq{ -J skip="0-2" };
-	}
-	
 	if ( $self->tc_start_frame ne '' or
 	     $self->tc_end_frame ne '' ) {
 		my $start_frame = $self->tc_start_frame;
@@ -1284,18 +1340,13 @@ sub get_transcode_command {
 
 	$command .= " -d" if $audio_info->{type} eq 'lpcm';
 
-	if ( $TC::VERSION < 600 ) {
-		$command .= " -b ".$self->tc_audio_bitrate
-			if $self->tc_audio_bitrate ne '';
+	if ( $mpeg ) {
+		$command .= " -b ".
+			$self->tc_audio_bitrate;
 	} else {
-		if ( $mpeg ) {
-			$command .= " -b ".
-				$self->tc_audio_bitrate;
-		} else {
-			$command .= " -b ".
-				$self->tc_audio_bitrate.",0,".
-				$self->tc_mp3_quality;
-		}
+		$command .= " -b ".
+			$self->tc_audio_bitrate.",0,".
+			$self->tc_mp3_quality;
 	}
 
 	if ( $self->tc_ac3_passthrough ) {
@@ -1305,6 +1356,8 @@ sub get_transcode_command {
 		$command .= " -s ".$audio_info->{tc_volume_rescale}
 			if $audio_info->{tc_volume_rescale} != 0 and 
 			   $audio_info->{type} ne 'lpcm';
+		$command .= " --a52_drc_off "
+			if not $self->tc_audio_drc;
 	}
 
 	$command .= " -V "
@@ -1314,10 +1367,7 @@ sub get_transcode_command {
 	$command .= " -I ".$self->tc_deinterlace
 		if $self->tc_deinterlace;
 
-	if ( $TC::VERSION < 600 ) {
-		$command .= " -f ".$self->tc_video_framerate
-			if $self->tc_video_framerate;
-	} elsif ( $self->tc_video_framerate ) {
+	if ( $self->tc_video_framerate ) {
 		my $fr = $self->tc_video_framerate;
 		$fr = "24,1" if $fr == 23.976;
 		$fr = "30,4" if $fr == 29.97;
@@ -1356,7 +1406,7 @@ sub get_transcode_command {
 
 	} else {
 
-		my $multiple_of = $TC::VERSION < 600 ? 32 : 8;
+		my $multiple_of = 8;
 
 		my ($width_n, $height_n, $err_div32, $err_shrink_expand) =
 			$self->get_fast_resize_options;
@@ -1388,14 +1438,14 @@ sub get_transcode_command {
 		$command .= " -R $pass";
 
 		if ( $pass == 1 ) {
-			$command .= " -x vob,null -o /dev/null";
+			$command .= " -x vob,null ";
 			$command .= " -y ".$self->tc_video_codec.",null";
+			$avi_file = "/dev/null";
 		}
 	}
 	
 	if ( not $self->tc_multipass or $pass == 2 ) {
 		$command .= " -x vob";
-		$command .= " -o $avi_file";
 		
 		if ( $mpeg ) {
 			$command .= " -y mpeg2enc,mp2enc -E 44100";
@@ -1403,6 +1453,14 @@ sub get_transcode_command {
 			$command .= " -y ".$self->tc_video_codec;
 		}
 	}
+
+	if ( $self->tc_psu_core ) {
+		$command .=
+			" --psu_mode --nav_seek ".$self->vob_nav_file.
+			" --no_split ";
+	}
+	
+	$command .= " -o $avi_file";
 
 	$self->create_avi_dir;
 
@@ -1418,7 +1476,7 @@ sub get_transcode_command {
 sub get_fast_resize_options {
 	my $self = shift;
 
-	my $multiple_of = $TC::VERSION < 600 ? 32 : 8;
+	my $multiple_of = 8;
 
 	my $width = $self->width - $self->tc_clip1_left
 				 - $self->tc_clip1_right;
@@ -1665,21 +1723,17 @@ sub get_frame_grab_options {
 	my $self = shift;
 	my %par = @_;
 	my ($frame) = @par{'frame'};
-	
+
+	my $old_chapter = $self->actual_chapter;
+
+	$self->set_actual_chapter ( $self->get_first_chapter )
+		if $self->tc_use_chapter_mode;
+
 	my $vob_nav_file = $self->vob_nav_file;
 
-	# older transcode versions only support frame grabbing
-	# with parameter -c (which decodes all precedent frames,
-	# which is very slow.
-	if ( $TC::VERSION < 600 or not -f $vob_nav_file ) {
-		return {
-			c => $frame."-".($frame+1),
-		};
-	}
-	
-	# newer versions support direct block navigation
-	# by analyzing the tcedmux -W output.
-	
+	$self->set_actual_chapter ( $old_chapter )
+		if $self->tc_use_chapter_mode;
+
 	my $fh = FileHandle->new;
 	open ($fh, $vob_nav_file) or
 		croak "Can't read VOB navigation file '$vob_nav_file'";
@@ -1720,8 +1774,6 @@ sub get_take_snapshot_command {
 	       " -z -k -i ".$self->vob_dir.
 	       " -o snapshot".
 	       " -x vob -y ppm ";
-
-#	$command .= "-V " if $self->tc_use_yuv_internal;
 
 	my $options = $self->get_frame_grab_options ( frame => $frame );
 	
@@ -2043,6 +2095,76 @@ sub get_remove_vobs_command {
 	my $vob_dir = $self->vob_dir;
 
 	my $command = "rm $vob_dir/* && echo DVDRIP_SUCCESS";
+	
+	return $command;
+}
+
+sub get_view_dvd_command {
+	my $self = shift;
+	my %par = @_;
+	my ($command_tmpl) = @par{command_tmpl};
+
+	my $nr            = $self->nr;
+	my $audio_channel = $self->audio_channel;
+
+	my @opts = ( {
+		t => $self->nr,
+		a => $self->audio_channel,
+		m => $self->tc_viewing_angle,
+	} );
+		
+	if ( $self->tc_use_chapter_mode eq 'select' ) {
+		my $chapters = $self->tc_selected_chapters;
+		if ( not $chapters or not @{$chapters} ) {
+			return "echo 'no chapters selected'";
+		}
+		push @opts, { c => $_ } foreach @{$chapters};
+	} else {
+		push @opts, { c => 1 };
+	}
+	
+	my $command = $self->apply_command_template (
+		template => $command_tmpl,
+		opts     => \@opts,
+	);
+	
+	return $command;
+}
+
+sub get_view_avi_command {
+	my $self = shift;
+	my %par = @_;
+	my ($command_tmpl, $file) = @par{'command_tmpl','file'};
+
+	my @filenames;
+	push @filenames, $file if $file;
+
+	if ( $self->tc_use_chapter_mode ) {
+		my $chapters = $self->get_chapters;
+		my $filename;
+		foreach my $chapter ( @{$chapters} ) {
+			$self->set_actual_chapter ($chapter);
+			$filename = $self->avi_file;
+			push @filenames, $filename if -f $filename;
+		}
+		$self->set_actual_chapter(undef);
+
+	} else {
+		my $filename = $self->avi_file;
+		$filename =~ s/\.avi$//;
+		push @filenames, glob ("${filename}*");
+	}
+
+	croak "msg:You first have to transcode this title."
+		if not @filenames;
+
+	my @opts = ( {} );
+	push @opts, { f => $_ } for @filenames;
+
+	my $command = $self->apply_command_template (
+		template => $command_tmpl,
+		opts     => \@opts,
+	);
 	
 	return $command;
 }

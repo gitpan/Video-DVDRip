@@ -1,4 +1,4 @@
-# $Id: TitleTab.pm,v 1.34 2002/05/14 22:13:48 joern Exp $
+# $Id: TitleTab.pm,v 1.36 2002/05/26 22:17:56 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -479,6 +479,7 @@ sub read_dvd_toc {
 			my $title = $self->project->content->titles->{$nr};
 			$self->set_selected_title( $title );
 			$self->fill_with_values;
+			$self->rip_title_widgets->{content_clist}->select_row (0,0);
 			return 'finished';
 
 		} else {
@@ -629,7 +630,13 @@ sub rip_title {
 	$sel_idx ||= 0;
 
 	return if $self->comp('progress')->is_active;
-	return if not $self->selected_title;
+
+	if ( not $self->selected_title ) {
+		$self->message_window (
+			message => "Please select at least one title."
+		);
+		return;
+	}
 
 	$self->rip_title_selection_sensitive(0);
 
@@ -663,9 +670,6 @@ sub rip_title {
 
 	my $frames = 0;
 	my $progress_callback = sub {
-		# no progress bar for versions prior 0.6.0(pre)
-		return 1 if $TC::VERSION < 600;
-
 		# otherwise we get the output of "tcdemux -W" here,
 		# where we just need to count lines (one frame per line)
 		my %par = @_;
@@ -683,12 +687,14 @@ sub rip_title {
 		);
 		$title->probe_audio;
 		$title->suggest_transcode_options;
+		$title->calc_program_stream_units;
 		$self->fill_with_values;
-		$title->calc_program_stream_units if $TC::VERSION >= 600;
 
 		if ( $sel_idx == @sel - 1 ) {
 			$self->rip_title_selection_sensitive(1);
-			return "finished";
+			return sub {
+				$self->grab_preview_frame;
+			};
 		}
 		return sub {
 			$self->rip_title ( sel_idx => $sel_idx + 1);
@@ -708,10 +714,10 @@ sub rip_title {
 	$self->comp('progress')->open (
 		label             => "Ripping Title #".$title->nr,
 		need_output       => 1,
-		show_percent      => ($TC::VERSION >= 600),
-		show_eta          => ($TC::VERSION >= 600),
-		show_fps          => ($TC::VERSION >= 600),
-		max_value         => ($TC::VERSION >= 600 ? $title->frames : 1),
+		show_percent      => 1,
+		show_eta          => 1,
+		show_fps          => 1,
+		max_value         => $title->frames,
 		open_callback     => $open_callback,
 		progress_callback => $progress_callback,
 		cancel_callback   => $cancel_callback,
@@ -787,7 +793,9 @@ sub rip_title_chapters {
 			$self->fill_with_values;
 			if ( $sel_idx == @sel - 1 ) {
 				$self->rip_title_selection_sensitive(1);
-				return "finished";
+				return sub {
+					$self->grab_preview_frame;
+				};
 			}
 			return sub {
 				$self->rip_title ( sel_idx => $sel_idx + 1);
@@ -835,12 +843,14 @@ sub view_title {
 	my $self = shift;
 
 	my $title = $self->selected_title;
-	return if not $title;
 
-	my $nr            = $title->nr;
-	my $audio_channel = $title->audio_channel;
-	
-	my @mrls;
+	if ( not $title ) {
+		$self->message_window (
+			message => "Please select a title."
+		);
+		return;
+	}
+
 	if ( $title->tc_use_chapter_mode eq 'select' ) {
 		my $chapters = $title->tc_selected_chapters;
 		if ( not $chapters or not @{$chapters} ) {
@@ -849,19 +859,13 @@ sub view_title {
 			);
 			return;
 		}
-		foreach my $i ( @{$chapters} ) {
-			push @mrls, "d4d://i".$nr."t0c".($i-1)."t".($i-1);
-		}
-	} else {
-		push @mrls, "d4d://i".$nr."t0c0t0";
 	}
+	
+	my $command = $title->get_view_dvd_command (
+		command_tmpl => $self->config('play_dvd_command')
+	);
 
-	my $command =
-		"xine ".
-		join (" ", @mrls).
-		" -a $audio_channel -p &";
-
-	system ($command);
+	system ($command." &");
 	
 	1;
 }
