@@ -23,6 +23,13 @@ lib/Video/DVDRip/Scan.pm
 lib/Video/DVDRip/Project.pm
 lib/Video/DVDRip/Title.pm
 lib/Video/DVDRip/Config.pm
+lib/Video/DVDRip/Cluster/Project.pm
+lib/Video/DVDRip/Cluster/Master.pm
+lib/Video/DVDRip/Cluster/Slave.pm
+lib/Video/DVDRip/Cluster/Title.pm
+lib/Video/DVDRip/GUI/Cluster.pm
+lib/Video/DVDRip/RPC/Client.pm
+lib/Video/DVDRip/RPC/Server.pm
 contrib/fast_resize.ksp
 tools/genreadme
 tools/genscreenshots

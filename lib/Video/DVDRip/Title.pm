@@ -1,4 +1,4 @@
-# $Id: Title.pm,v 1.42 2002/01/10 22:23:34 joern Exp $
+# $Id: Title.pm,v 1.44 2002/01/19 10:47:36 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -17,6 +17,7 @@ use Video::DVDRip::Probe;
 use Carp;
 use strict;
 
+use FileHandle;
 use File::Path;
 use File::Basename;
 use File::Copy;
@@ -1009,6 +1010,50 @@ sub split_async_stop {
 sub snapshot_filename	   { shift->{snapshot_filename}  	 }
 sub set_snapshot_filename  { shift->{snapshot_filename}  = $_[1] }
 
+sub get_frame_grab_options {
+	my $self = shift;
+	my %par = @_;
+	my ($frame) = @par{'frame'};
+	
+	my $vob_nav_file = $self->vob_nav_file;
+
+	# older transcode versions only support frame grabbing
+	# with parameter -c (which decodes all precedent frames,
+	# which is very slow.
+	if ( $TC::VERSION < 600 or not -f $vob_nav_file ) {
+		return {
+			c => $frame."-".($frame+1),
+		};
+	}
+	
+	# newer versions support direct block navigation
+	# by analyzing the tcedmux -W output.
+	
+	my $fh = FileHandle->new;
+	open ($fh, $vob_nav_file) or
+		croak "Can't read VOB navigation file '$vob_nav_file'";
+
+	my ($frames, $block_offset, $frame_offset);
+	
+	while (<$fh>) {
+		if ( $frames == $frame ) {
+			s/^\s+//;
+			($block_offset, $frame_offset) =
+				(split (/\s+/, $_))[4,5];
+			last;
+		}
+		++$frames;
+	}
+	
+	close $fh;
+	
+	return {
+		L => $block_offset,
+		c => $frame_offset."-".
+		     ($frame_offset+1)
+	};
+}
+
 sub get_take_snapshot_command {
 	my $self = shift; $self->trace_in;
 	my %par = @_;
@@ -1023,7 +1068,14 @@ sub get_take_snapshot_command {
 	       "transcode".
 	       " -z -k -i ".$self->vob_dir.
 	       " -o snapshot".
-	       " -x vob -y ppm -c $frame-".($frame+1);
+	       " -x vob -y ppm ";
+
+	my $options = $self->get_frame_grab_options ( frame => $frame );
+	
+	my ($opt, $val);
+	while ( ($opt, $val) = each %{$options} ) {
+		$command .= "-$opt $val ";
+	}
 
 	return $command;
 }

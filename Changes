@@ -1,6 +1,34 @@
-$Id: Changes,v 1.26 2002/01/10 22:41:45 joern Exp $
+$Id: Changes,v 1.30 2002/01/19 11:05:36 joern Exp $
 
 Revision history for Perl extension Video::DVDRip
+
+0.30 Sat Jan 19 2002, joern
+	Features:
+	- Christian Lambert sent me an enhanced version of my
+	  fast resize calculator kspread file.
+
+	Bugfixes:
+	- creating a new project failed with an exception,
+	  thanks to Christian Lambert for his bug report.
+	- splitpipe did not work correctly if you use transcode
+	  0.5.x, thanks to Marc Wäckerlin <mrw AT atheismus.ch>
+	  for his bug report.
+	- opening the "Show transcode commands" window without
+	  an opened project threw an exception.
+
+0.30_01 Sat Jan 12 2002, joern
+	Quick pre-release, because I like this feature so much ;)
+
+	Features:
+	- added fast frame grabbing using the vob navigation
+	  information created by 'tcdemux -W' for transcode
+	  >= 0.6.0pre. Frame grabbing now needs a constant
+	  amount of time (2-3 seconds on my A1000 workstation),
+	  regardless of the frame number, you entered.
+	  transcode 0.5.x is still supported, using the -c
+	  option, which is slow because it decodes all precedent
+	  frames. Thanks to Thomas Östreich, who helped me
+	  demystifying the navigation logfile ;)
 
 0.29 Thu Jan 10 2002, joern
 	Bugfixes:
@@ -16,7 +44,7 @@ Revision history for Perl extension Video::DVDRip
 
 	Features:
 	- transcode version is detected on startup, so different
-	  behaviour for different transcode version is possible.
+	  behaviour for different transcode versions is possible.
 	- preparing for cluster mode: dvd::rip already creates
 	  the neccessary vob navigation logging data.
 

@@ -1,4 +1,4 @@
-# $Id: Main.pm,v 1.23 2002/01/10 22:21:57 joern Exp $
+# $Id: Main.pm,v 1.24 2002/01/19 10:46:52 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -260,8 +260,6 @@ sub new_project {
 	
 	$self->set_window_title;
 
-	$project->check_installation;
-
 	1;
 }
 
@@ -450,8 +448,8 @@ sub edit_preferences {
 sub show_transcode_commands {
 	my $self = shift;
 	
-	my $title = $self->comp('project')->selected_title;
-	return if not $title;
+	my $title = eval { $self->comp('project')->selected_title };
+	return if not $title or $@;
 
 	my $commands = "";
 	

@@ -1,17 +1,11 @@
-$Id: TODO,v 1.22 2002/01/10 22:41:45 joern Exp $
-
-BUGS
-- debugging window fails if no project is open or content isn't
-  scanned yet
+$Id: TODO,v 1.23 2002/01/19 11:05:36 joern Exp $
 
 TODO
-- faster preview frame grabbing using transcode -S (with
-  transcode 0.6.0pre)
 - add a FAQ section to the homepage
 - AC3 passthrough
 - show div8 exclamation marks only in clip2 stage
 - enable pausing after 1st pass of a two-pass divx4 encoding,
-  suggested by Chris <chris@axique.de>.
+  suggested by Chris <chris AT axique.de>.
 - don't rip chapters already ripped in chapter selection mode
 - provide avimerge option in chapter mode
 - check space on filesystem before ripping and transcoding

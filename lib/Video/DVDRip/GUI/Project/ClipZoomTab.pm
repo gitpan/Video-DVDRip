@@ -1,4 +1,4 @@
-# $Id: ClipZoomTab.pm,v 1.15 2002/01/03 17:40:01 joern Exp $
+# $Id: ClipZoomTab.pm,v 1.16 2002/01/12 11:03:24 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -666,6 +666,9 @@ sub grab_preview_frame {
 	};
 
 	my $progress_callback = sub {
+		# no progress for tc > 0.6.0
+		# (direct grabbing using -L)
+		return $frame_nr if $TC::VERSION >= 600;
 		my %par = @_;
 		my ($buffer) = @par{'buffer'};
 		$buffer =~ /\[0+-(\d+)\].*?$/;
@@ -703,13 +706,15 @@ sub grab_preview_frame {
 		return 1;
 	};
 
+	my $has_progress = $TC::VERSION < 600 ? 1 : 0;
+
 	$self->comp('progress')->open (
 		label             => "Grab frame $frame_nr of title #".
 				     $title->nr,
 		need_output       => 0,
-		show_percent      => 1,
+		show_percent      => $has_progress,
 		show_fps          => 0,
-		show_eta          => 1,
+		show_eta          => $has_progress,
 		max_value         => $frame_nr,
 		open_callback     => $open_callback,
 		progress_callback => $progress_callback,

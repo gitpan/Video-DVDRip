@@ -1,4 +1,4 @@
-/* $Id: splitpipe.c,v 1.7 2002/01/10 22:24:18 joern Exp $
+/* $Id: splitpipe.c,v 1.8 2002/01/19 10:48:00 joern Exp $
  *
  * Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
  * 
@@ -26,7 +26,7 @@ FILE*   open_tcdemux_pipe ( char* filename );
 
 /* print usage */
 void usage (void) {
-	printf ("usage: splitpipe [-f] size-in-mb base-filename extension\n\n");
+	printf ("usage: splitpipe [-f vob_nav_file] size-in-mb base-filename extension\n\n");
 	printf ("       -f   use tcdemux for progress information (transcode 0.6.0)\n");
 	exit(1);
 }
@@ -47,28 +47,32 @@ int main(int argc, char *argv[]) {
 	char*  vob_nav_file;
 	int    opt_cnt;
 	
-	opt_cnt = argc;
+	opt_cnt = 0;
 
 	while ((opt = getopt(argc, argv, "f:")) != -1) {
-		--opt_cnt;
+		++opt_cnt;
 		switch (opt) {
 			case 'f' :
 				if ( optarg[0]=='-' ) usage();
 				use_tcdemux  = 1;
 				vob_nav_file = optarg;
-				--opt_cnt;
+				++opt_cnt;
 				break;
 		}
 	}
 	
-	if ( opt_cnt != 4 ) usage();
+/* printf ("-f=%d argc=%d optind=%d\n", use_tcdemux, argc, optind); */
 	
-	ok = sscanf (argv[use_tcdemux+2], "%d", &chunk_size);
+	if ( argc - optind != 3 ) usage();
+	
+	ok = sscanf (argv[optind], "%d", &chunk_size);
 	
 	if ( ok != 1 )   usage();
 	
-	base_filename = argv[use_tcdemux+3];
-	extension     = argv[use_tcdemux+4];
+	base_filename = argv[optind+1];
+	extension     = argv[optind+2];
+	
+/* printf ("-f=%d nav_file=%s size=%d base=%s ext=%s\n", use_tcdemux, vob_nav_file, chunk_size, base_filename, extension); */
 	
 	split_pipe ( chunk_size, base_filename, extension, use_tcdemux, vob_nav_file );
 	
