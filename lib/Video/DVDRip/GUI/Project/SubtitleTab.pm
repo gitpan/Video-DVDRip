@@ -1,4 +1,4 @@
-# $Id: SubtitleTab.pm,v 1.14.2.3 2003/02/19 21:24:09 joern Exp $
+# $Id: SubtitleTab.pm,v 1.14.2.4 2003/03/03 11:39:27 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -1428,6 +1428,8 @@ sub create_splitted_vobsub {
 			title => $title,
 		);
 		$job->set_subtitle ( $subtitle );
+
+		$job->set_depends_on_jobs ( [ $last_job ] );
 
 		$last_job = $exec->add_job ( job => $job );
 

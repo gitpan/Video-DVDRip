@@ -1,4 +1,4 @@
-# $Id: Job.pm,v 1.10.2.2 2003/02/23 21:41:06 joern Exp $
+# $Id: Job.pm,v 1.10.2.3 2003/03/03 11:40:39 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -201,7 +201,7 @@ sub finish_job {
 
 sub commit_job {
 	my $self = shift;
-	
+
 	my $nr = $self->nr;
 
 	my $cb_finished = $self->cb_finished;

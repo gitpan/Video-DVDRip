@@ -1,4 +1,4 @@
-# $Id: Title.pm,v 1.137.2.4 2003/02/23 21:41:30 joern Exp $
+# $Id: Title.pm,v 1.137.2.5 2003/03/03 11:43:47 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -301,7 +301,9 @@ sub set_tc_video_codec {
 	
 	$self->set_tc_video_af6_codec ('mpeg4') if $value eq 'ffmpeg';
 	$self->set_tc_video_af6_codec ('')      if $value ne 'ffmpeg';
-	
+	$self->set_tc_video_bitrate_manual (0)
+		if $value eq 'VCD';
+
 	return $value;
 }
 
@@ -1613,7 +1615,7 @@ sub get_transcode_command {
 	
 	if ( not $mpeg ) {
 		$command .=
-			" -w ".int($self->tc_video_bitrate).",250,100";
+			" -w ".int($self->tc_video_bitrate);
 	} elsif ( $mpeg eq 'svcd' and $self->tc_video_bitrate ) {
 		$command .=
 			" -w ".int($self->tc_video_bitrate);
@@ -2183,6 +2185,14 @@ sub get_split_command {
 	);
 
 	my $command;
+
+	if ( -s "$avi_dir/$avi_file" > 0 and
+	     -s "$avi_dir/$avi_file" <= $size * 1024 * 1024 ) {
+		$command =
+			"echo File is smaller than one disc, no need to split.".
+			"&& echo DVDRIP_SUCCESS";
+		return $command;
+	}
 
 	my $nice;
 	$nice = "`which nice` -n ".$self->tc_nice." "
@@ -3270,7 +3280,7 @@ sub get_create_vobsub_command {
 		$vobsub_ifo_file = "$vobsub_prefix.ifo";
 	}
 
-	my $rar = $self->config('rar_command');
+	my $lang = $subtitle->lang;
 
 	my $command =
 		"mkdir -p $avi_dir && ".
@@ -3281,10 +3291,13 @@ sub get_create_vobsub_command {
 		"dr_progress -m $ps1_size -i 1 | ".
 		"subtitle2vobsub $range".
 		" -i $vobsub_ifo_file ".
-		" -o $vobsub_prefix && ".
+		" -o $vobsub_prefix &&".
+		"sed 's/^id: /id: $lang/' < $vobsub_prefix.idx > vobsub$$.tmp && ".
+		"mv vobsub$$.tmp $vobsub_prefix.idx && ".
 		"echo DVDRIP_SUCCESS";
 
 	if ( $self->has ( "rar" ) ) {
+		my $rar = $self->config('rar_command');
 		$command .=
 			" && $rar a $vobsub_prefix $vobsub_prefix.{idx,ifo,sub} && ".
 			"rm $vobsub_prefix.{idx,ifo,sub}";
@@ -3334,12 +3347,12 @@ sub get_count_frames_in_files_command {
 		if ( $self->is_ogg ) {
 			$command .= " && echo 'DVDRIP:OGG:$file' frames=\$(";
 			$command .=
-				" ogminfo -v $file 2>&1 |".
+				" ogminfo -v -v $file 2>&1 |".
 				" grep 'v1.*granulepos' | wc -l )";
 		} else {
-			$command .= " && echo 'DVDRIP:AVI:$file' $(";
+			$command .= " && echo 'DVDRIP:AVI:$file' \$(";
 			$command .=
-				" && tcprobe -i $file 2>&1 | grep frames= )";
+				" tcprobe -i $file 2>&1 | grep frames= )";
 		}
 	}
 

@@ -1,20 +1,12 @@
-$Id: TODO,v 1.117.2.2 2003/02/23 21:42:37 joern Exp $
+$Id: TODO,v 1.117.2.3 2003/03/03 11:59:50 joern Exp $
 
 KNOWN BUGS:
 ===========
-- cluster mode
-  - cluster control daemon leaks memory
-- cluster mode: on FreeBSD pstree's output looks different,
-  so stopping jobs doesn't work on FreeBSD. Should use some
-  Perl modules instead. Reported by Lukas Ertl <l.ertl AT
-  univie.ac.at>
-
 - Ripping and snapshot grabbing fails if the title has no
   audio at all. Reported by Sean Dwyer <ewe2 AT can.org.au>.
 - negative cropping isn't visualized in the preview image
   (all calculations and the transcoding itself work, so
    it's not that big problem ;)
-- check chapter mode && diskspace calculations
 
 NOTE:
 =====
@@ -25,9 +17,8 @@ may be implemented soon, some eventually never... ;)
 
 TODO:
 =====
+- check chapter mode && diskspace calculations
 - add an "uninstall HOWTO" to the FAQ
-- write error messages of executed tools in dvd::rip's log.
-  Suggested by Felix Enning <felix AT hfsclub.de>.
 - global nice preference, which apply to all started processes.
   It's not necessary to adjust this per project. Suggested by
   Spencer Ogden.

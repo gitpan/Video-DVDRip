@@ -1,4 +1,4 @@
-# $Id: CreateVobsub.pm,v 1.3 2003/01/28 20:19:57 joern Exp $
+# $Id: CreateVobsub.pm,v 1.3.2.1 2003/03/03 11:41:06 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -59,7 +59,7 @@ sub command {
 			subtitle => $self->subtitle
 		);
 	}
-	
+
 	# with splitting
 	my $file_nr = $self->file_nr;
 

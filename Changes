@@ -1,11 +1,31 @@
-$Id: Changes,v 1.131.2.8 2003/02/23 21:49:56 joern Exp $
+$Id: Changes,v 1.131.2.10 2003/03/03 12:02:52 joern Exp $
 
 Revision history and release notes for dvd::rip.
+
+0.50.5 [stable branch] Mon 3 Mar 2003, joern
+	Features:
+	- You can pass the preferences filename with the new command
+	  line option -p to have multiple configurations (default
+	  is still ~/.dvdriprc). Suggested by Harald Dunkel.
+	- Log last output of aborted job's. Suggested by Felix Enning
+	  <felix AT hfsclub.de>.
+	- Don't split the movie, if it fits already on one disc.
+	  Suggested by Nicos Panayides <anarxia AT gmx.net>.
+	- subtitle language ID is now patched into the vobsub .idx
+	  file, requested by Douglas Bollinger.
+
+	Bugfixes:
+	- Video bitrate entry was not greyed out for VCD. Other
+	  bitrates than the standard value of 1152 are not supported.
+	- Creating splitted vobsub's was broken. Thanks for their
+	  reports to Lutz Birkhahn <lutz.birkhahn AT gmx.de> and
+	  Douglas Bollinger.
+	- transcode's version number was missing in .dvdrip-info file.
 
 0.50.4 [stable branch] Sun 24 Feb 2003, joern
 	Features:
 	- Minor layout improvements. GUI should now look better with
-	  bigger fonts.
+	  different sized fonts.
 	- I removed the ps command dependency - found a completely
 	  different and more flexible solution, which doesn't depend
 	  on external tools. A new helper program called dr_exec

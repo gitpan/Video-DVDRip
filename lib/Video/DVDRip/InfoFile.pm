@@ -1,4 +1,4 @@
-# $Id: InfoFile.pm,v 1.8 2003/01/28 20:19:57 joern Exp $
+# $Id: InfoFile.pm,v 1.8.2.1 2003/03/03 11:40:25 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -212,7 +212,7 @@ sub write {
 	);
 	$self->add_field (
 		name  => "transcode version",
-		value => $TC::ORIG_VERSION,
+		value => $self->depend_object->tools->{transcode}->{installed},
 	);
 
 	$self->write_fields;

@@ -1,4 +1,4 @@
-# $Id: Base.pm,v 1.31.2.3 2003/02/23 21:39:12 joern Exp $
+# $Id: Base.pm,v 1.31.2.4 2003/03/03 11:44:12 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -22,8 +22,8 @@ use Data::Dumper;
 
 # load preferences ---------------------------------------------------
 my $CONFIG_OBJECT = Video::DVDRip::Config->new;
-$CONFIG_OBJECT->set_filename ("$ENV{HOME}/.dvdriprc");
-$CONFIG_OBJECT->save if not -f "$ENV{HOME}/.dvdriprc";
+$CONFIG_OBJECT->set_filename ($Video::DVDRip::PREFERENCE_FILE);
+$CONFIG_OBJECT->save if not -f $Video::DVDRip::PREFERENCE_FILE;
 $CONFIG_OBJECT->load;
 
 # detect installed tool versions -------------------------------------

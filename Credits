@@ -1,123 +1,132 @@
-These users helped making dvd::rip a better tool by sending
-bug reports, patches or good suggestions (listed in chrono-
-logical order; see the Changes file for details):
+* These users helped making dvd::rip a better tool by sending
+  bug reports, patches or good suggestions (listed in chrono-
+  logical order; see the Changes files for details):
 
-Thomas Östreich <ostreich AT Theorie.Physik.UNI-Goettingen.DE>
-Norbert Preining <preining AT logic.at>
-Michal Szymanski <msz AT astrouw.edu.pl>
-Bjoern Buerger <b.buerger AT tu-bs.de>
-Matthias Rieber <matthias AT lsoe.uni-karlsruhe.de>
-Florin Andrei <florin AT andrei.myip.org>
-Thomas Speck <thomas-speck AT gmx.de>
-George Farris <george AT gmsys.com> 
-Tim Currie <jtcurrie AT mediaone.net>
-Certron DiSoni <certron_80 AT yahoo.com>
-Christian Lambert <clambert AT csd.sgi.com>
-Marc Wäckerlin <mrw AT atheismus.ch>
-Ron Smits <rons AT ronsmits.com>
-Doug Shea <doug_shea AT alumni.ucsd.edu>
-Ulmo <ulmo AT garozzo.franken.de>
-Timothy Harris <tim AT pongle.net>
-Hrvoje Husic <husic AT zyn.de>
-Torsten Howard <torsten AT inetw.net>
-Rainer Lay <Rainer.Lay AT informatik.uni-erlangen.de>
-Douglas Bollinger <dcb AT 321.net>
-Sebastian Beneke <sebastian AT beneke-it.de>
-Martin Hill <mhill AT alumni.uwaterloo.ca>
-Alexander Toppmann <talex AT karyopse.de>
-Davide Ferrari <il_vide AT libero.it>
-Akos Maroy <darkeye AT tyrell.hu>
-Uwe Fischer <uwe.fischer AT berlin.de>
-Michael Bushey <dvdrip AT michael.mailshell.com>
-Andreas Theofilu <andreas AT mehlbox.at>
-Michael Dodwell <elmer AT trellian.com>
-Matthias Riese <matthias.riese AT Uni-Bremen.DE>
-Jure Pecar <pegasus AT telemach.net>
-Stefan Opsomer <ets.berger AT skynet.be>
-Sven Hartge <hartge AT s9.argh.org>
-Laurent Grawet <laurent.grawet AT ibelgique.com> 
-Ian Truelsen <ian AT ihtruelsen.2y.net>
-Guillaume Rousse <rousse AT ccr.jussieu.fr>
-Ryan Zachry <rzachry AT rectorseal.com>
-Wolfgang Kinkeldei <kinkeldei AT nureg.de>
-Todd Inglett <tinglett AT magnaspeed.net>
-Joerg Friedrich <Joerg.Dieter.Friedrich AT uni-konstanz.de>
-David Kvarnberg <david AT mellow.net>
-Greg McLearn <gmclearn AT chebucto.ns.ca>
-Patrick Pfifferling <ppfifferling AT free.fr>
-marc'O <dvdrip AT hackerwelt.de>
-Detlef Neubauer <detlef.neubauer AT wzrz.de>
-Moritz Bunkus <moritz AT bunkus.org>
-Markus Liebl <lieblm AT web.de>
-Peter Kirk <pwk.linuxfan AT gmx.de>
-Jeremy Mann <jeremy AT bioc09.v19.uthscsa.edu>
-Ole Tange <tange AT tange.dk>
-Raymond Olufsen <oluray AT online.no>
-Lukas Ertl <l.ertl AT univie.ac.at>
-Ryan Underwood <nemesis-lists AT icequake.net>
-Arne Driescher <driescher AT mpi-magdeburg.mpg.de>
-Roland Seuhs <roland AT hasos.com>
-simbolo <simbolo225 AT yahoo.com>
-Tilmann Bitterberg <transcode AT tibit.org>
-David Rosky <d_rosky AT nccn.net>
-Fabio Russo <f.russo AT anthesia.it>
-Lethal Weapon <lethalwp AT tiscali.be>
-Clint Silvester <clint AT focuscompanies.com>
-Christian Herrmann <paras.rasmatazz AT t-online.de>
-edaniel <edaniel AT perso.mine.nu>
-Michèl Alexandre Salim <salimma1 AT yahoo.co.uk>
-Michael Mason <mgm AT eskimoman.net>
-Ragnar Kjørstad <dvdrip AT ragnark.vestdata.no>
-Paul Gohn <pgohn AT nexgo.de>
-William Hawkins <whawkins AT vt.edu>
-Andrea Carpani <ancarpan AT tiscalinet.it>
-Matthias Kukuk <m.kukuk AT gmx.de>
-Chris Jensen <chris AT drspirograph.com>
-Andreas Lemke <andreas.lemke AT epost.de>
-Stefano <stefano AT symbola.it>
-thranduil <thranduil AT free.fr>
-Stefan Gmeiner <riddlebox AT freesurf.ch>
-Petros Stavrakakis <petros AT stavrakakis.de>
-Matthias Hennemann <Matthias.Hennemann AT Organik.Uni-Erlangen.DE>
-Ronny Buchmann <ronny-transcode AT vlugnet.org>
-Eckehardt Luhm <bselu AT web.de>
-Julio Sánchez <j.sanchezf AT terra.es>
-Tom Vijlbrief <tom.vijlbrief AT ision.nl>
-Jamie Manley <jamie AT homebrewcomputing.com>
-Jochen Puchalla <mail AT puchalla-online.de>
-David Legg <david_legg AT tiscali.co.uk>
-Fred Beondo <bl8206 AT mindspring.com>
-Thibaut Cousin <cousin AT in2p3.fr>
-Marc Dirix <dirixmjm AT home.nl>
-Wolfgang Schricker <wols AT wols.org>
-Tillmann Bitterberg <transcode AT tibit.org>
-Mikkel Mondrup Kristensen <mikkel AT tdx.dk>
-Dirk Aust <dirk_aust AT gmx.de>
-Markus Dewerny <dewerny AT web.de>
-Joakim Verona <joakim AT verona.se>
-Damien Covey <djcovey AT softhome.net>
-Dan <ayahuasca AT internode.on.net>
-Christoph Bartoschek <bartoschek AT gmx.de>
-Vlad Spichek <spy AT mbox.ath.cx>
-Felix Knecht <felixknecht AT web.de>
-Simone Lehmann <simone AT lisanet.de>
-Yves Duret <yves AT zarb.org>
-Spencer Ogden <spencero AT mail.utexas.edu>
-Andrew Ukrainec <ukrainec AT sympatico.ca>
-Kianusch Sayah Karadji <kianusch AT sk-tech.net>
-Mauro Spluga <ferluga AT inwind.it>
-Chris Elston <celston AT corky.sapien.net>
-Gregorio Guidi <g.guidi AT sns.it>
-Fridtjof Busse <fridtjof AT fbunet.de>
-Clint <clint AT woh.rr.com>
-Brian Healy <brianhealy AT vodafone.ie>
-Davros <tashuu AT newsguy.com>
-Petr Stehlik <pstehlik AT sophics.cz>
+  Thomas Östreich <ostreich AT Theorie.Physik.UNI-Goettingen.DE>
+  Norbert Preining <preining AT logic.at>
+  Michal Szymanski <msz AT astrouw.edu.pl>
+  Bjoern Buerger <b.buerger AT tu-bs.de>
+  Matthias Rieber <matthias AT lsoe.uni-karlsruhe.de>
+  Florin Andrei <florin AT andrei.myip.org>
+  Thomas Speck <thomas-speck AT gmx.de>
+  George Farris <george AT gmsys.com> 
+  Tim Currie <jtcurrie AT mediaone.net>
+  Certron DiSoni <certron_80 AT yahoo.com>
+  Christian Lambert <clambert AT csd.sgi.com>
+  Marc Wäckerlin <mrw AT atheismus.ch>
+  Ron Smits <rons AT ronsmits.com>
+  Doug Shea <doug_shea AT alumni.ucsd.edu>
+  Ulmo <ulmo AT garozzo.franken.de>
+  Timothy Harris <tim AT pongle.net>
+  Hrvoje Husic <husic AT zyn.de>
+  Torsten Howard <torsten AT inetw.net>
+  Rainer Lay <Rainer.Lay AT informatik.uni-erlangen.de>
+  Douglas Bollinger <dcb AT 321.net>
+  Sebastian Beneke <sebastian AT beneke-it.de>
+  Martin Hill <mhill AT alumni.uwaterloo.ca>
+  Alexander Toppmann <talex AT karyopse.de>
+  Davide Ferrari <il_vide AT libero.it>
+  Akos Maroy <darkeye AT tyrell.hu>
+  Uwe Fischer <uwe.fischer AT berlin.de>
+  Michael Bushey <dvdrip AT michael.mailshell.com>
+  Andreas Theofilu <andreas AT mehlbox.at>
+  Michael Dodwell <elmer AT trellian.com>
+  Matthias Riese <matthias.riese AT Uni-Bremen.DE>
+  Jure Pecar <pegasus AT telemach.net>
+  Stefan Opsomer <ets.berger AT skynet.be>
+  Sven Hartge <hartge AT s9.argh.org>
+  Laurent Grawet <laurent.grawet AT ibelgique.com> 
+  Ian Truelsen <ian AT ihtruelsen.2y.net>
+  Guillaume Rousse <rousse AT ccr.jussieu.fr>
+  Ryan Zachry <rzachry AT rectorseal.com>
+  Wolfgang Kinkeldei <kinkeldei AT nureg.de>
+  Todd Inglett <tinglett AT magnaspeed.net>
+  Joerg Friedrich <Joerg.Dieter.Friedrich AT uni-konstanz.de>
+  David Kvarnberg <david AT mellow.net>
+  Greg McLearn <gmclearn AT chebucto.ns.ca>
+  Patrick Pfifferling <ppfifferling AT free.fr>
+  marc'O <dvdrip AT hackerwelt.de>
+  Detlef Neubauer <detlef.neubauer AT wzrz.de>
+  Moritz Bunkus <moritz AT bunkus.org>
+  Markus Liebl <lieblm AT web.de>
+  Peter Kirk <pwk.linuxfan AT gmx.de>
+  Jeremy Mann <jeremy AT bioc09.v19.uthscsa.edu>
+  Ole Tange <tange AT tange.dk>
+  Raymond Olufsen <oluray AT online.no>
+  Lukas Ertl <l.ertl AT univie.ac.at>
+  Ryan Underwood <nemesis-lists AT icequake.net>
+  Arne Driescher <driescher AT mpi-magdeburg.mpg.de>
+  Roland Seuhs <roland AT hasos.com>
+  simbolo <simbolo225 AT yahoo.com>
+  Tilmann Bitterberg <transcode AT tibit.org>
+  David Rosky <d_rosky AT nccn.net>
+  Fabio Russo <f.russo AT anthesia.it>
+  Lethal Weapon <lethalwp AT tiscali.be>
+  Clint Silvester <clint AT focuscompanies.com>
+  Christian Herrmann <paras.rasmatazz AT t-online.de>
+  edaniel <edaniel AT perso.mine.nu>
+  Michèl Alexandre Salim <salimma1 AT yahoo.co.uk>
+  Michael Mason <mgm AT eskimoman.net>
+  Ragnar Kjørstad <dvdrip AT ragnark.vestdata.no>
+  Paul Gohn <pgohn AT nexgo.de>
+  William Hawkins <whawkins AT vt.edu>
+  Andrea Carpani <ancarpan AT tiscalinet.it>
+  Matthias Kukuk <m.kukuk AT gmx.de>
+  Chris Jensen <chris AT drspirograph.com>
+  Andreas Lemke <andreas.lemke AT epost.de>
+  Stefano <stefano AT symbola.it>
+  thranduil <thranduil AT free.fr>
+  Stefan Gmeiner <riddlebox AT freesurf.ch>
+  Petros Stavrakakis <petros AT stavrakakis.de>
+  Matthias Hennemann <Matthias.Hennemann AT Organik.Uni-Erlangen.DE>
+  Ronny Buchmann <ronny-transcode AT vlugnet.org>
+  Eckehardt Luhm <bselu AT web.de>
+  Julio Sánchez <j.sanchezf AT terra.es>
+  Tom Vijlbrief <tom.vijlbrief AT ision.nl>
+  Jamie Manley <jamie AT homebrewcomputing.com>
+  Jochen Puchalla <mail AT puchalla-online.de>
+  David Legg <david_legg AT tiscali.co.uk>
+  Fred Beondo <bl8206 AT mindspring.com>
+  Thibaut Cousin <cousin AT in2p3.fr>
+  Marc Dirix <dirixmjm AT home.nl>
+  Wolfgang Schricker <wols AT wols.org>
+  Tillmann Bitterberg <transcode AT tibit.org>
+  Mikkel Mondrup Kristensen <mikkel AT tdx.dk>
+  Dirk Aust <dirk_aust AT gmx.de>
+  Markus Dewerny <dewerny AT web.de>
+  Joakim Verona <joakim AT verona.se>
+  Damien Covey <djcovey AT softhome.net>
+  Dan <ayahuasca AT internode.on.net>
+  Christoph Bartoschek <bartoschek AT gmx.de>
+  Vlad Spichek <spy AT mbox.ath.cx>
+  Felix Knecht <felixknecht AT web.de>
+  Simone Lehmann <simone AT lisanet.de>
+  Yves Duret <yves AT zarb.org>
+  Spencer Ogden <spencero AT mail.utexas.edu>
+  Andrew Ukrainec <ukrainec AT sympatico.ca>
+  Kianusch Sayah Karadji <kianusch AT sk-tech.net>
+  Mauro Spluga <ferluga AT inwind.it>
+  Chris Elston <celston AT corky.sapien.net>
+  Gregorio Guidi <g.guidi AT sns.it>
+  Fridtjof Busse <fridtjof AT fbunet.de>
+  Clint <clint AT woh.rr.com>
+  Brian Healy <brianhealy AT vodafone.ie>
+  Davros <tashuu AT newsguy.com>
+  Petr Stehlik <pstehlik AT sophics.cz>
+  Harald Dunkel <Harri.Dunkel AT synopsys.com>
+  Felix Enning <felix AT hfsclub.de>
+  Nicos Panayides <anarxia AT gmx.net>
+  Robert Sander <gurubert AT gurubert.de>
+  Lutz Birkhahn <lutz.birkhahn AT gmx.de>
 
-(please contact me if you're missing your name here)
+  (please contact me if you're missing your name here)
 
-This special section lists all guys who donated DVD's,
-especially for improving NTSC operation of dvd::rip:
+* Special thanks to Florin Andrei, who revised the documentation
+  and corrected many of my grammatical sins. ;)
 
-Doug Shea <doug_shea AT alumni.ucsd.edu>
-Douglas Bollinger <dcb AT 321.net>
+* This special section lists all guys who donated DVD's,
+  especially for improving NTSC operation of dvd::rip:
+
+  Doug Shea <doug_shea AT alumni.ucsd.edu>
+  Douglas Bollinger <dcb AT 321.net>
+

@@ -1,4 +1,4 @@
-# $Id: TranscodeTab.pm,v 1.83.2.2 2003/02/15 09:38:30 joern Exp $
+# $Id: TranscodeTab.pm,v 1.83.2.3 2003/03/03 11:39:50 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -1115,13 +1115,19 @@ sub init_transcode_values {
 		$self->init_video_codec_combo;
 	}
 
-	if ( $title->tc_video_bitrate_manual ) {
-		$widgets->{tc_video_bitrate_manual}->set_active(1);
-		$widgets->{tc_video_bitrate}->set_sensitive(1);
-	} else {
-		$widgets->{tc_video_bitrate_manual}->set_active(0);
-		$widgets->{tc_video_bitrate}->set_sensitive(0);
-	}
+	my $manual_sensitive;
+	my $bitrate_sensitive;
+
+	$manual_sensitive  = $title->tc_video_codec ne 'VCD';
+	$bitrate_sensitive = $title->tc_video_bitrate_manual;
+	$bitrate_sensitive = 0 if $title->tc_video_codec eq 'VCD';
+	
+	$widgets->{tc_video_bitrate_manual}->set_sensitive($manual_sensitive);
+	$widgets->{tc_video_bitrate}->set_sensitive($bitrate_sensitive);
+	
+	$self->set_in_transcode_init(1);
+	$widgets->{tc_video_bitrate_manual}->set_active($title->tc_video_bitrate_manual);
+	$self->set_in_transcode_init(0);
 
 	if ( $title->tc_video_bitrate_range ) {
 		$widgets->{tc_video_bitrate_range}->set_active(1);

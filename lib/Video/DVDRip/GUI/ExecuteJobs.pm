@@ -1,4 +1,4 @@
-# $Id: ExecuteJobs.pm,v 1.13 2003/02/08 10:38:39 joern Exp $
+# $Id: ExecuteJobs.pm,v 1.13.2.1 2003/03/03 11:37:57 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -32,6 +32,7 @@ use Video::DVDRip::Job::CountFramesInFile;
 use Video::DVDRip::Job::CreateWav;
 
 use strict;
+use Carp;
 
 # list ref of jobs, to bew executed in the specified order
 sub jobs			{ shift->{jobs}				}
@@ -134,7 +135,7 @@ sub execute_jobs {
 	foreach my $job ( @{$jobs} ) {
 		next if $job->state ne 'waiting';
 		next if not $job->dependency_ok;
-		
+
 		$job_started = 1;
 		$job->init if $job->can('init');
 		$job->set_cb_next_job (
@@ -241,6 +242,15 @@ sub job_aborted {
 				"Last output was:\n\n".
 				$job->pipe->output
 		);
+		$self->log (
+			"You should analyze the last output of ".
+			"this job to see what's going wrong here:"
+		);
+		my $output = $job->pipe->output;
+		$output =~ s/^\s+//;
+		$output =~ s/\s+$//;
+		$self->log ("---- job output start ----\n\n".$output."\n");
+		$self->log ("---- job output end ----");
 	}
 
 	1;

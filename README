@@ -71,7 +71,7 @@ III. DOCUMENTATION
    requirements actually is (simply because they are a lot ;). So you
    should first try a binary installation using the package manager of
    your Linux distribution. This should track all dependencies
-   automatcially and speed up things significantly.
+   automatically and speed up things significantly.
 
 1.1.1 Debian packages
 
@@ -137,7 +137,7 @@ deb http://marillat.free.fr/ unstable main
 
    Local download of the latest stable release:
 
-     Video-DVDRip-0.50.4.tar.gz
+     Video-DVDRip-0.50.5.tar.gz
 
    CPAN download directory: (list of mirrors)
 
@@ -147,6 +147,11 @@ deb http://marillat.free.fr/ unstable main
 
      http://www.exit1.org/dvdrip/dist/
      http://www.exit1.org/dvdrip/dist/pre/
+
+   This is a directory, which contains several user contributed files,
+   you probably find useful:
+
+     http://www.exit1.org/dvdrip/contrib/
 
 1.2.2 CVS access
 
@@ -185,18 +190,17 @@ cd dvdrip; cvs -z9 update
 
    dvd::rip is a Gtk+ based program written in Perl, using the video
    processing tool transcode and many other tools for the internals. So
-   you first have to comply some prerequisites before installing
-   dvd::rip.
+   you first have to get some prerequisites before installing dvd::rip.
 
    dvd::rip expects all command line tools mentioned here to be found in
    the standard search PATH.
 
 1.3.1 Brief overview
 
-   This table gives a brief overview about the tools used by dvd::rip
-   (everything but Perl modules - see chapters below for more information
-   about them). Most tools are optional - the corresponding dvd::rip
-   modules are just switched off, if you don't have them.
+   This table gives a brief overview of the tools used by dvd::rip
+   (everything but the Perl modules - see the chapters below for more
+   information about them). Most tools are optional - the corresponding
+   dvd::rip modules are just switched off, if you don't have them.
 
    But you need at least the tools marked mandatory, otherwise dvd::rip
    will complain with an error message on startup. You can get also a
@@ -206,7 +210,6 @@ cd dvdrip; cvs -z9 update
    Tool Comment Mandatory Suggested Minimum Maximum
    transcode dvd::rip is nothing without transcode Yes 0.6.3 0.6.2 -
    ImageMagick Needed for preview image processing Yes 5.5.3 4.0.0 -
-   ps -H Needed to determine child PID's Yes 1 1 -
    subtitle2pgm Needed for subtitles No 0.3 0.3 -
    rar Needed for compressed subtitles No 2.71 2.71 2.99
    mplayer Needed for subtitle vobsub viewing No 0.90 0.90 -
@@ -227,7 +230,7 @@ cd dvdrip; cvs -z9 update
 
    You need a recent Perl version on your system. Perl 5.8.0 is
    recommended, 5.6.0 and 5.6.1 should work also. dvd::rip won't start
-   with Perl versions prior 5.6.0. Actual distributions ship minimum
+   with Perl versions prior to 5.6.0. Actual distributions ship minimum
    5.6.1, so this shouldn't be a real problem, anyway.
 
 1.3.3 Perl Gtk Module
@@ -241,7 +244,7 @@ cd dvdrip; cvs -z9 update
      http://www.perl.org/CPAN/modules/by-module/Gtk/
 
    Note:
-   Perl Gtk detects your installed Gtk libs and build sub components only
+   Perl Gtk detects your installed Gtk libs and build subcomponents only
    if the correspondent Gtk library was found.
 
    dvd::rip needs the Gtk::Gdk::Pixbuf component which needs gdk-pixbuf
@@ -252,7 +255,7 @@ cd dvdrip; cvs -z9 update
 1.3.4 transcode
 
    dvd::rip delegates all the low level video processing to transcode,
-   which can be obtained here:
+   which can be obtained from here:
 
      http://www.theorie.physik.uni-goettingen.de/~ostreich/transcode/
 
@@ -264,8 +267,8 @@ cd dvdrip; cvs -z9 update
    mjpeg export filter module. transcode's internal bbmpeg filter isn't
    supported yet.
 
-   Note: For almost any Linux distribution exist binary transcode
-   packages. Compiling transcode sometimes isn't an easy task, in
+   Note: For almost any Linux distribution binary transcode packages can
+   be found. Compiling transcode sometimes isn't an easy task, in
    particular if you are not familiar with building packages, which have
    lots of dependencies. So you should try binary packages first. Refer
    to the binaries section for details.
@@ -348,10 +351,10 @@ cd dvdrip; cvs -z9 update
    The dvd::rip cluster control daemon uses fping to check if nodes are
    online and pstree to get information about specific child processes.
    Both tools should be shipped with your Linux distribution (fping
-   sometimes isn't, but you can get it here: http://www.fping.com/).
+   sometimes isn't, but you can get it from here: http://www.fping.com/).
 
    Note: Matthias Riese told me that there are IPv6 fping packages which
-   don't support IPv4, what's most likely not what you want, so pay
+   don't support IPv4, which is most likely not what you want, so pay
    attention to get the right version ("ipv6" should not occur in the
    package name).
 
@@ -374,7 +377,7 @@ chmod u+s /usr/sbin/fping
 
 1.4.1 Install dvd::rip
 
-   This is quite easy, if you have managed installing the packages
+   This is quite easy, if you have managed to install the packages
    mentioned above... ;)
 
    Download the .tar.gz archive of the dvd::rip version you want to
@@ -382,7 +385,7 @@ chmod u+s /usr/sbin/fping
    generate the Makefile and execute make:
 
 # as a normal user
-tar xfz Video-DVDRip-0.50.4.tar.gz
+tar xfz Video-DVDRip-0.50.5.tar.gz
 cd Video-DVDRip-x.xx
 perl Makefile.PL
 make
@@ -396,8 +399,8 @@ su
 make install
 
    You can ommit the "make install" step. But then you can execute the
-   'dvdrip' binary only from the build directory and must put "." into
-   your PATH, otherwise dvd::rip can't find its files.
+   'dvdrip' binary only from the build directory and you must put "."
+   into your PATH, otherwise dvd::rip can't find its files.
 
 1.4.2 Update dvd::rip
 
@@ -410,11 +413,11 @@ make install
    Perl directory if you change the Perl version.
    Read the Changes file!
 
-   I strongly suggest you reading at least the latest change log entry of
-   the Changes file, resp. all entries of the versions you probably
-   skipped in case of an update. It contains important release notes,
-   e.g. about compatibility issues, and all relevant changes from release
-   to release.
+   I strongly suggest you should read at least the latest change log
+   entry of the Changes file, resp. all entries of the versions you
+   probably skipped in case of an update. It contains important release
+   notes, e.g. about compatibility issues, and all relevant changes from
+   release to release.
 
    Note:
    Changes on the unstable branch are logged in the file
@@ -435,7 +438,7 @@ make install
    otherwise some dvd::rip helper binaries may be taken from another
    place.
 
-tar xvfz Video-DVDRip-0.50.4.tar.gz
+tar xvfz Video-DVDRip-0.50.5.tar.gz
 cd Video-DVDRip-x.xx
 perl Makefile.PL && make
 export PATH=.:$PATH
@@ -581,27 +584,27 @@ URL References
   11. http://www.exit1.org/dvdrip/doc/install.cipp#cvs
 
 VI. CHANGES
-   $Id: Changes,v 1.131.2.8 2003/02/23 21:49:56 joern Exp $
+   $Id: Changes,v 1.131.2.10 2003/03/03 12:02:52 joern Exp $
 
    Revision history and release notes for dvd::rip.
 
-   0.50.4 [stable branch] Sun 24 Feb 2003, joern
+   0.50.5 [stable branch] Mon 3 Mar 2003, joern
 	Features:
-	- Minor layout improvements. GUI should now look better with
-	  bigger fonts.
-	- I removed the ps command dependency - found a completely
-	  different and more flexible solution, which doesn't depend
-	  on external tools. A new helper program called dr_exec
-	  is used to print the main PID of the current job, which is
-	  needed for cancellation.
+	- You can pass the preferences filename with the new command
+	  line option -p to have multiple configurations (default
+	  is still ~/.dvdriprc). Suggested by Harald Dunkel.
+	- Log last output of aborted job's. Suggested by Felix Enning
+	  <felix AT hfsclub.de>.
+	- Don't split the movie, if it fits already on one disc.
+	  Suggested by Nicos Panayides <anarxia AT gmx.net>.
+	- subtitle language ID is now patched into the vobsub .idx
+	  file, requested by Douglas Bollinger.
 
 	Bugfixes:
-	- Wrong options were passed to transcode for Vorbis quality
-	  encoding. Thanks for the report to Brian Healy <brianhealy
-	  AT vodafone.ie>.
-	- mplex SVCD command used wrong profile for SVCD. Thanks for
-	  the report to Davros <tashuu AT newsguy.com>.
-	- Using the smart deinterlacer switched off YUV processing,
-	  which isn't necessary for transcode >= 0.6.3 anymore. Thanks
-	  for the report to Mark Dirix.
+	- Video bitrate entry was not greyed out for VCD. Other
+	  bitrates than the standard value of 1152 are not supported.
+	- Creating splitted vobsub's was broken. Thanks for their
+	  reports to Lutz Birkhahn <lutz.birkhahn AT gmx.de> and
+	  Douglas Bollinger.
+	- transcode's version number was missing in .dvdrip-info file.
 
