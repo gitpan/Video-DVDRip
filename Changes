@@ -1,6 +1,15 @@
-$Id: Changes,v 1.131.2.14 2003/03/04 16:49:47 joern Exp $
+$Id: Changes,v 1.131.2.16 2003/03/06 22:08:23 joern Exp $
 
 Revision history and release notes for dvd::rip.
+
+0.50.8 [stable branch] Thu 6 Mar 2003, joern
+	Bugfixes:
+	- Cluster mode: dvdrip-master daemon bailed out with an
+	  error message on startup. Thanks for the report to
+	  David Chan <davidchan AT rcn.com>.
+	- Cluster mode: if file cleanup was requested and file
+	  splitting not necessary (because the file is smaller
+	  than one disc) the transcoded file was removed.
 
 0.50.7 [stable branch] Tue 4 Mar 2003, joern
 	Bugfixes:

@@ -1,4 +1,4 @@
-# $Id: Title.pm,v 1.137.2.6 2003/03/04 16:49:22 joern Exp $
+# $Id: Title.pm,v 1.137.2.7 2003/03/06 22:08:19 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -2189,7 +2189,7 @@ sub get_split_command {
 	if ( -s "$avi_dir/$avi_file" > 0 and
 	     -s "$avi_dir/$avi_file" <= $size * 1024 * 1024 ) {
 		$command =
-			"echo File is smaller than one disc, no need to split.".
+			"echo File is smaller than one disc, no need to split. ".
 			"&& echo DVDRIP_SUCCESS";
 		return $command;
 	}

@@ -1,4 +1,4 @@
-# $Id: Title.pm,v 1.38.2.1 2003/02/23 21:40:19 joern Exp $
+# $Id: Title.pm,v 1.38.2.2 2003/03/06 22:08:11 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -359,7 +359,10 @@ sub get_split_command {
 	my $target_avi_file   = $self->target_avi_file;
 
 	my $command = $self->SUPER::get_split_command;
-	$command   .= " && rm '$target_avi_file'" if $self->with_cleanup;
+
+	$command   .= " && rm '$target_avi_file'"
+		if $self->with_cleanup and
+		   $command =~ /avisplit|ogmsplit/;
 	
 	return $command;
 }

@@ -50,8 +50,6 @@ III. DOCUMENTATION
      * 1.3.9 CD burning tools
      * 1.3.10 rar (for vobsub compression)
      * 1.3.11 Additional requirements for cluster mode
-     * 1.3.12 Perl modules
-     * 1.3.13 fping and pstree
 
      1.4 Install from source
      * 1.4.1 Install dvd::rip
@@ -138,7 +136,7 @@ deb http://marillat.free.fr/ unstable main
 
    Local download of the latest stable release:
 
-     Video-DVDRip-0.50.7.tar.gz
+     Video-DVDRip-0.50.8.tar.gz
 
    CPAN download directory: (list of mirrors)
 
@@ -339,7 +337,7 @@ cd dvdrip; cvs -z9 update
    Some additional Perl modules and command line tools are needed for the
    cluster mode.
 
-1.3.12 Perl modules
+1.3.11.1 Perl modules
 
    Cluster mode needs the Storable and Event Perl modules. Check if your
    distribution ships them already. If not, you can find them on CPAN:
@@ -347,12 +345,13 @@ cd dvdrip; cvs -z9 update
      http://www.perl.org/CPAN/modules/by-module/Storable/
      http://www.perl.org/CPAN/modules/by-module/Event/
 
-1.3.13 fping and pstree
+1.3.11.2 fping
 
    The dvd::rip cluster control daemon uses fping to check if nodes are
-   online and pstree to get information about specific child processes.
-   Both tools should be shipped with your Linux distribution (fping
-   sometimes isn't, but you can get it from here: http://www.fping.com/).
+   online. If fping isn't shipped with your Linux distribution you can
+   get it from here:
+
+     http://www.fping.com/
 
    Note: Matthias Riese told me that there are IPv6 fping packages which
    don't support IPv4, which is most likely not what you want, so pay
@@ -386,7 +385,7 @@ chmod u+s /usr/sbin/fping
    generate the Makefile and execute make:
 
 # as a normal user
-tar xfz Video-DVDRip-0.50.7.tar.gz
+tar xfz Video-DVDRip-0.50.8.tar.gz
 cd Video-DVDRip-x.xx
 perl Makefile.PL
 make
@@ -411,7 +410,8 @@ make install
    dvd::rip installs its libraries in your Perl library directory. Such a
    installation mixing isn't recommended unless you know exactly what
    you're doing. So it's better to remove the old version from the old
-   Perl directory if you change the Perl version.
+   Perl directory if you change the Perl version (refer to the uninstall
+   chapter for details).
    Read the Changes file!
 
    I strongly suggest you should read at least the latest change log
@@ -439,7 +439,7 @@ make install
    otherwise some dvd::rip helper binaries may be taken from another
    place.
 
-tar xvfz Video-DVDRip-0.50.7.tar.gz
+tar xvfz Video-DVDRip-0.50.8.tar.gz
 cd Video-DVDRip-x.xx
 perl Makefile.PL && make
 export PATH=.:$PATH
@@ -612,15 +612,16 @@ URL References
   11. http://www.exit1.org/dvdrip/doc/install.cipp#cvs
 
 VI. CHANGES
-   $Id: Changes,v 1.131.2.14 2003/03/04 16:49:47 joern Exp $
+   $Id: Changes,v 1.131.2.16 2003/03/06 22:08:23 joern Exp $
 
    Revision history and release notes for dvd::rip.
 
-   0.50.7 [stable branch] Tue 4 Mar 2003, joern
+   0.50.8 [stable branch] Thu 6 Mar 2003, joern
 	Bugfixes:
-	- Encoding multiple audio tracks with OGG and PSU core
-	  enabled didn't work. Thanks for the report to Daniel Egger
-	  <degger AT fhm.edu>.
-	- Revoked the mplex change from version 0.50.4, because
-	  several users reported problems with it.
+	- Cluster mode: dvdrip-master daemon bailed out with an
+	  error message on startup. Thanks for the report to
+	  David Chan <davidchan AT rcn.com>.
+	- Cluster mode: if file cleanup was requested and file
+	  splitting not necessary (because the file is smaller
+	  than one disc) the transcoded file was removed.
 

@@ -1,4 +1,4 @@
-$Id: TODO,v 1.117.2.3 2003/03/03 11:59:50 joern Exp $
+$Id: TODO,v 1.117.2.4 2003/03/06 21:56:55 joern Exp $
 
 KNOWN BUGS:
 ===========
@@ -17,6 +17,7 @@ may be implemented soon, some eventually never... ;)
 
 TODO:
 =====
+
 - check chapter mode && diskspace calculations
 - add an "uninstall HOWTO" to the FAQ
 - global nice preference, which apply to all started processes.
@@ -29,6 +30,8 @@ TODO:
   suggested by James Dowlearn <alwjdd AT utdallas.edu>
 - on-the-fly/dvd-image mode: rip a small ammount to harddisk, to get ac3
   probing and passthrough working.
+- enable (S)VCD interlaced encoding: add -F "-I 1", and remove "-p".
+  Suggested by Ian Eure <ieure AT blarg.net>
 - AVI: pause/resume for transcode job (using frame range trancoding
   and avimerge)
 - link ETA compution of a 2-pass transcode together, requested by Ole Tange.
