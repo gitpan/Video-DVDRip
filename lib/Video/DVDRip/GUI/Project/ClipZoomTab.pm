@@ -1,4 +1,4 @@
-# $Id: ClipZoomTab.pm,v 1.11 2001/12/15 00:16:44 joern Exp $
+# $Id: ClipZoomTab.pm,v 1.12 2001/12/18 22:44:51 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -667,7 +667,10 @@ sub grab_preview_frame {
 		"Start grabbing preview frame $frame_nr of title ".
 		$title->nr
 	);
-	$self->log ("Command: ".$title->get_take_snapshot_command );
+	$self->log (
+		"Command: ".
+		$title->get_take_snapshot_command (frame => $frame_nr)
+	);
 
 	$self->comp('progress')->open_continious_progress (
 		max_value => $frame_nr,

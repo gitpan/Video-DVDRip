@@ -1,4 +1,4 @@
-# $Id: Main.pm,v 1.18 2001/12/15 14:23:52 joern Exp $
+# $Id: Main.pm,v 1.19 2001/12/18 22:44:51 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -467,7 +467,9 @@ sub show_transcode_commands {
 	
 	$commands .= "Grab Preview Image Command:\n".
 		    "===========================\n".
-		    $title->get_take_snapshot_command()."\n";
+		    $title->get_take_snapshot_command(
+		    	frame => $title->preview_frame_nr
+		    )."\n";
 
 	$commands .= "\n\n";
 	

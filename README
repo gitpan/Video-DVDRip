@@ -152,9 +152,15 @@ SEE ALSO
     perl(1).
 
 CHANGES
-    $Id: Changes,v 1.13 2001/12/16 09:04:43 joern Exp $
+    $Id: Changes,v 1.14 2001/12/18 22:44:51 joern Exp $
 
     Revision history for Perl extension Video::DVDRip
+
+    0.27 Tue Dec 18 2001, joern
+	Bugfix:
+	- this release fixes only a minor bug in the debugging window
+	  and log file output. The snapshot command missed the
+	  frame number, so the -c option was malformed.
 
     0.26 Sun Dec 16 2001, joern
 	Bugfix:
