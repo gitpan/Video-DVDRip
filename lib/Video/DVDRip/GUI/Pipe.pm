@@ -1,4 +1,4 @@
-# $Id: Pipe.pm,v 1.3 2002/09/22 09:37:36 joern Exp $
+# $Id: Pipe.pm,v 1.5 2002/10/06 11:46:40 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -63,6 +63,8 @@ sub open {
 	# STDERR on STDOUT in the child.
 	$pid = open($fh, "-|");
 	croak "can't fork child process" if not defined $pid;
+
+	$fh->blocking(0);
 		
 	if ( not $pid ) {
 		# we are the child. Copy STDERR to STDOUT
@@ -75,13 +77,6 @@ sub open {
 		exec ($self->command)
 			or croak "can't exec program: $!";
 	}
-
-	my $flags = '';
-	fcntl($fh, F_GETFL, $flags)
-		or die "Can't get flags: $!\n";
-	$flags |= O_NONBLOCK;
-	fcntl($fh, F_SETFL, $flags)
-	    	or die "Can't set flags: $!\n";
 
 	$self->log ("Executing command: ".$self->command. " (PID=$pid)");
 
@@ -153,6 +148,31 @@ sub close {
 }
 
 sub cancel {
+	my $self = shift;
+
+	# this pid belong to the sh we started with exec
+	my $pid = $self->pid;
+	
+	# but we want to have its child. We use pstree for that.
+	my $pstree = qx[pstree -p $pid];
+	$pstree =~ /\($pid\).*?\((\d+)/;
+	my $child_pid = $1;
+
+	# if there was no sh with a further child, we have to kill
+	# our child process directly
+	$child_pid ||= $pid;
+
+	# kill the child
+	$self->log ("Aborting command. Sending signal 2 to PID $child_pid...");
+	kill 2, $child_pid;
+
+	# close this pipe
+	$self->close;
+
+	1;
+}
+
+sub OLD_cancel {
 	my $self = shift; $self->trace_in;
 
 	kill 2, $self->pid;

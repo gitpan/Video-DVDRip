@@ -1,4 +1,4 @@
-# $Id: TranscodeAudio.pm,v 1.1 2002/09/01 13:57:52 joern Exp $
+# $Id: TranscodeAudio.pm,v 1.3 2002/10/15 21:15:53 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -25,7 +25,7 @@ sub type {
 }
 
 sub info {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 
 	my $info = "Transcoding audio - title #".$self->title->nr;
 	my $nr      = $self->vob_nr;
@@ -37,8 +37,24 @@ sub info {
 	return $info;
 }
 
+sub get_diskspace_needed {
+	my $self = shift; $self->trace_in;
+
+	my $bitrate = $self->title->tc_audio_tracks
+				  ->[$self->vob_nr]
+				  ->tc_bitrate;
+
+	my $runtime = $self->title->runtime;
+	
+	return int($runtime * $bitrate / 8);
+}
+
+sub get_diskspace_freed {
+	return 0;
+}
+
 sub command {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 
 	my $title = $self->title;
 

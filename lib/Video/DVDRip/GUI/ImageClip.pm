@@ -1,4 +1,4 @@
-# $Id: ImageClip.pm,v 1.10 2002/06/29 20:18:18 joern Exp $
+# $Id: ImageClip.pm,v 1.11 2002/10/15 21:08:33 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -80,7 +80,7 @@ sub new {
 		clip_right       => 16,
 		knob_size        => 11,
 		knobs            => {},
-		grid             => 4,
+		grid             => 2,
 	}, $type;
 
 	if ( $filename ) {

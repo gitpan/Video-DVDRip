@@ -6,11 +6,40 @@
 # Change 1..1 below to 1..last_test_to_print .
 # (It may become useful if the test is moved to ./t subdirectory.)
 
-BEGIN { $| = 1; print "1..1\n"; }
-END {print "not ok 1\n" unless $loaded;}
+use strict;
+
+my $loaded;
+my $test = 1;
+my $max;
+
+BEGIN {
+	open (IN,$0) or die "can't read $0";
+	while (<IN>) {
+		++$max if /^ok/;
+	}
+	close IN;
+	$| = 1;
+	print "1..$max\n";
+}
+
+END {
+	print "not ok 1\n" if not $loaded;
+}
+
 use Video::DVDRip::GUI::Main;
+
 $loaded = 1;
-print "ok 1\n";
+
+ok ($loaded, "load dvd::rip");
+
+sub ok {
+	my ($cond, $comment) = @_;
+	print ($cond ? "ok " : "not ok ");
+	print $test++;
+	print " - $comment" if $comment;
+	print "\n";
+	1;
+}
 
 ######################### End of black magic.
 

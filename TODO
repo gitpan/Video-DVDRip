@@ -1,4 +1,4 @@
-$Id: TODO,v 1.86 2002/09/22 12:13:03 joern Exp $
+$Id: TODO,v 1.97 2002/11/17 17:26:41 joern Exp $
 
 KNOWN BUGS:
 ===========
@@ -7,34 +7,55 @@ KNOWN BUGS:
 - negative cropping isn't visualized in the preview image
   (all calculations and the transcoding itself work, so
    it's not that big problem ;)
-- Autoadjust presets don't work if black bars can't be
-  autodetected correctly, because the image itself is
-  mostly black.
 - cluster mode: on FreeBSD pstree's output looks different,
   so stopping jobs doesn't work on FreeBSD. Should use some
   Perl modules instead. Reported by Lukas Ertl <l.ertl AT
   univie.ac.at>
+- cluster mode: merging PSU / splitting prints "Initializing" and
+  "Finished", no progress. Reported by Fabio Russo
 
 NOTE:
 =====
 The todo list beyond is my "notebook" for good ideas and
 suggestions, which would be senseful or fun to implement
 somedays. You see: this list is rather long. Some features
-may be implented soon, some eventually never... ;)
+may be implemented soon, some eventually never... ;)
 
 TODO:
 =====
+- mplayer aid parameter must be codec specific. Thanks for
+  the report to Fabio Russo.
+- support multiple subtitles in the same vobsub file
+- pcm passthrough
+  -y (video codec),raw -N 0x1 (remove -b), requested by
+  Jamie Manley <jamie AT homebrewcomputing.com> and
+  <xercist AT xernet.lammah.com>
+- consider avi/ogg containter overhead when calculating the
+  video bitrate, suggested by Markus Liebl
+- audio only encoding, suggested by Thibaut Cousin <cousin AT
+  in2p3.fr>
+- add support for inverse telecine filter:
+  -f 23.976024 -M 0 -J ivtc,32detect=force_mode=3,decimate
+  Suggested by xercist AT xernet.lammah.com
+- overall video bitrate calculation for a collection of
+  selected titles. Requested by Felix Knecht <felixknecht AT web.de>
+- add mplayer's deinterlace filter (-J ppcvs=lb), suggested
+  by <xercist AT xernet.lammah.com>
+- print actual bits/pixel somewhere on the clip&zoom tab,
+  suggested by Florin Andrei
+- add bbmpeg support (and DVD compliant presets)
+- use dvdxchap to scan chapter lengths before ripping
+  to show chapter mode ripping/transcoding progress.
+- option for forking the transcode process into the background,
+  suggested by Akos Maroy <darkeye AT tyrell.hu>
 - probe audio on the ripped VOB data. Some DVD's report wrong
   information when probed from the DVD.
 - xvid properties window as a frontend for the xvid.cfg file,
   suggested by Edouard Gomez <ed.gomez AT wanadoo.fr>
-- command line switches for immediate start of transcoding
-  (opt. with splitting) a project. Simple batching is
-  possible this way. Suggested by Rainer Lay
-- print actual bits/pixel somewhere on the clip&zoom tab,
-  suggested by Florin Andrei
-- use tccat -P instead of -T if chapter mode is disabled,
-  suggested by Sven Hartge (under investigation)
+- enable pausing after 1st pass of a two-pass divx4 encoding,
+  suggested by Chris <chris AT axique.de> and Douglas Bollinger.
+- speed up 2pass transcoding with hq resizing by using fast
+  resizing in the 1st pass. Suggested by Magnus Sandin <magnus AT sandin.cx>
 - add (S)VCD support to cluster mode
 - add multi audio support to (S)VCD mode
 - add additionals VCD presets, which doesn't clip the width,
@@ -45,19 +66,15 @@ TODO:
   The file can be loaded, all parameters changed, and saved. Future
   projects will take their default parameters from this file.
 - add proper disc size presets for (S)VCD
-- pcm passthrough
-  -y (video codec),raw -N 0x1 (remove -b), requested by
-  Jamie Manley <jamie AT homebrewcomputing.com> and
-  <xercist AT xernet.lammah.com>
-- support rendering subtitles
-- add ogg/vorbis support
+- splitting: not at 700 MB boundaries, but evenly distributed on
+  the number of discs, if the user wants it. Suggested by
+  Rainer Hantsch <rainer AT hantsch.co.at>
 - preset a reasonably default value for the project data directory
   on first startup, suggested by Ole Tange <tange AT tange.dk>
 - add some explantation to all those codecs to the docs
   (divx4/divx5/xvid/xvidcvs etc.)
-- open preference window on 1st startup (if ~/.dvdriprc isn't there)
 - button for deletion of VOB's and temp files,
-  suggested by Robert NEMKIN <buci AT buci.hu>
+  suggested by Robert Nemkin <buci AT buci.hu>
 - add preference "default clip&zoom preset"
 - copy IFO files to HD, suggested by Magnus Sandin <magnus AT sandin.cx>
 - preference for standard additional transcode options,
@@ -69,8 +86,6 @@ TODO:
   is too big. Decrease/Increase the video bitrate according to
   the divergence in the second run. Suggested by Stefan Raspl
   <stefan.raspl AT playofmind.net>
-- speed up 2pass transcoding with hq resizing by using fast
-  resizing in the 1st pass. Suggested by Magnus Sandin <magnus AT sandin.cx>
 - cluster mode
   - assign "preferred job types" to nodes, for speed optimizing. e.g.
     pass 1 jobs should be done by fast nodes, pass 2 by slow
@@ -112,10 +127,6 @@ TODO:
   suggested by Davide Ferrari
 - option for disabling audio processing completely, suggested by
   <xercist AT xernet.lammah.com>
-- export some sort of Makefile export for transcoding as a
-  simple batch mode, suggested by Moritz Bunkus <moritz AT bunkus.org>
-- option for forking the transcode process into the background,
-  suggested by Akos Maroy <darkeye AT tyrell.hu>
 - support smartdeinter filter, suggested by Christian Lambert
 - support for transcode's -r option for fast frame bisection
   (and very fast deinterlacing)
@@ -124,11 +135,6 @@ TODO:
   or adjacent chapters in separate files. Suggested by
   Certron DiSoni <certron_80 AT yahoo.com>
 - enable video bitrate calculation for chapter mode
-- enable pausing after 1st pass of a two-pass divx4 encoding,
-  suggested by Chris <chris AT axique.de>.
 - don't rip chapters already ripped in chapter selection mode
-- check space on filesystem before ripping and transcoding
-- extensive checking of user input. most input is currently
-  passed through without examination
 - audio resampling, suggested by Certron DiSoni <certron_80 AT yahoo.com>
 - create personal clip&zoom preferences

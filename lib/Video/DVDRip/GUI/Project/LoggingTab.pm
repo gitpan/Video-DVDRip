@@ -1,4 +1,4 @@
-# $Id: LoggingTab.pm,v 1.3 2002/09/01 15:26:58 joern Exp $
+# $Id: LoggingTab.pm,v 1.4 2002/10/06 11:47:11 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -57,6 +57,17 @@ sub create_logging_tab {
 	$frame->add ($hbox);
 	$vbox->pack_start ( $frame, 0, 1, 0);
 
+	my $button = Gtk::Button->new (" Nuke log file ");
+	$button->show;
+	$hbox = Gtk::HBox->new;
+	$hbox->show;
+	$hbox->pack_start ( $button, 0, 1, 0);
+	$vbox->pack_start ( $hbox,  0, 1, 0);
+
+	$button->signal_connect ("clicked", sub {
+		$self->nuke_log;
+	});
+
 	my $logger = Video::DVDRip::GUI::Logger->new (
 		text_widget => $text,
 		project     => $self->project,
@@ -65,6 +76,17 @@ sub create_logging_tab {
 	$self->set_logger ( $logger );
 
 	return $vbox;
+}
+
+sub nuke_log {
+	my $self = shift;
+
+	my $title = $self->selected_title;
+	return 1 if not $title;
+	
+	$self->logger->nuke;
+	
+	1;
 }
 
 1;

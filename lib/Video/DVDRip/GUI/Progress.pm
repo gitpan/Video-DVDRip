@@ -1,4 +1,4 @@
-# $Id: Progress.pm,v 1.22 2002/09/01 13:51:48 joern Exp $
+# $Id: Progress.pm,v 1.23 2002/10/15 21:09:34 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -52,6 +52,7 @@ sub build {
 	$self->set_comp ( progress => $self );
 
 	$self->set_is_active (0);
+	$self->set_idle_label;
 
 	return $hbox;
 }
@@ -96,12 +97,12 @@ sub update {
 sub close {
 	my $self = shift; $self->trace_in;
 
-	$self->gtk_progress->set_show_text ( 0 );
 	$self->gtk_progress->set_value ( 0 );
 	$self->gtk_cancel_button->hide;
 
 	$self->set_is_active( 0 );
-	
+	$self->set_idle_label;
+
 	1;
 }
 
@@ -114,6 +115,27 @@ sub cancel {
 	
 	$self->close;
 
+	1;
+}
+
+sub set_idle_label {
+	my $self = shift; $self->trace_in;
+	
+	my $title;
+	my $project = eval {$self->comp('project')};
+	$title = $project->selected_title if $project;
+
+	my $label;
+	if ( $title ) {
+		my $dir  = $title->avi_dir;
+		my $free = $title->get_free_diskspace;
+		$label = "Free diskspace: $free MB";
+	} else {
+		$label = "";
+	}
+
+	$self->gtk_progress->set_format_string ($label);
+	
 	1;
 }
 

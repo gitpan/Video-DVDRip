@@ -1,4 +1,4 @@
-# $Id: Pipe.pm,v 1.7 2002/09/15 15:31:09 joern Exp $
+# $Id: Pipe.pm,v 1.8 2002/10/06 11:43:06 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -226,14 +226,13 @@ sub cancel {
 	$child_pid ||= $pid;
 
 	# kill the child
-	$self->log ("Aborting command. Sending signal 15 to PID $child_pid...");
-	kill 15, $child_pid;
+	$self->log ("Aborting command. Sending signal 2 to PID $child_pid...");
+	kill 2, $child_pid;
 
 	# close this pipe
 	$self->close;
 
 	1;
 }
-
 
 1;

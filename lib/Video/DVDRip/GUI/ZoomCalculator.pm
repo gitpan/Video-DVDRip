@@ -1,4 +1,4 @@
-# $Id: ZoomCalculator.pm,v 1.5 2002/09/01 13:55:28 joern Exp $
+# $Id: ZoomCalculator.pm,v 1.8 2002/11/01 16:12:20 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -162,7 +162,11 @@ sub build {
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
 
-	$entry = Gtk::Combo->new;
+	$entry = Video::DVDRip::CheckedCombo->new (
+		is_number	=> 1,
+		is_min		=> 1,
+	);
+
 	$entry->show;
 	$entry->set_popdown_strings (16);
 	$entry->set_usize(150,undef);
@@ -394,6 +398,7 @@ sub create_video_bitrate_calc {
 				     ->{video_bitrate}
 				     ->set_text ($bitrate);
 				$self->set_video_bitrate($bitrate);
+				1;
 			}, $key
 		);
 		$popup->set_history($i) if $key == $self->disc_cnt;
@@ -407,48 +412,38 @@ sub create_video_bitrate_calc {
 	$label->show;
 	$hbox->pack_start ($label, 0, 1, 0);
 
-	$popup_menu = Gtk::Menu->new;
-	$popup_menu->show;
-	$popup = Gtk::OptionMenu->new;
-	$popup->show;
-	$popup->set_menu($popup_menu);
-
-	%popup_entries = (
-		650 => "650",
-		700 => "700",
-		760 => "760",
+	$entry = Video::DVDRip::CheckedCombo->new (
+		is_number      => 1,
+		may_fractional => 0,
+		may_empty      => 0,
 	);
+	$entry->show;
+	$entry->set_popdown_strings (650, 700, 760);
+	$entry->set_usize(60,undef);
+	$hbox->pack_start($entry, 0, 1, 0);
 
-	$i = 0;
-	foreach my $key ( sort keys %popup_entries ) {
-		$item = Gtk::MenuItem->new ($popup_entries{$key});
-		$item->show;
-		$popup_menu->append($item);
-		$item->signal_connect (
-			"select", sub {
-				$self->set_disc_size($key);
-				$self->set_target_size(
-					$key * $self->disc_cnt,
-				);
-				$self->gtk_widgets
-				     ->{target_size}
-				     ->set_text ($self->target_size);
-				my $bitrate = $title->get_optimal_video_bitrate (
-					target_size => $self->target_size
-				);
-				$self->gtk_widgets
-				     ->{video_bitrate}
-				     ->set_text ($bitrate);
-				$self->set_video_bitrate($bitrate);
-			}, $key
+	$entry->entry->signal_connect ("changed", sub {
+		$self->set_disc_size ($_[0]->get_text);
+		$self->set_target_size(
+			$self->disc_cnt * $self->disc_size,
 		);
-		$popup->set_history($i) if $key == $self->disc_size;
-		++$i;
-	}
+		return 1 if not $self->gtk_widgets->{target_size};
+		$self->gtk_widgets
+		     ->{target_size}
+		     ->set_text ($self->target_size);
+		my $bitrate = $title->get_optimal_video_bitrate (
+			target_size => $self->target_size
+		);
+		$self->gtk_widgets
+		     ->{video_bitrate}
+		     ->set_text ($bitrate);
+		$self->set_video_bitrate($bitrate);
+		1;
+	});
 
-	$self->gtk_widgets->{disc_size_popup} = $popup;
+	$entry->entry->set_text ($title->tc_disc_size);
 
-	$hbox->pack_start($popup, 1, 1, 0);
+	$self->gtk_widgets->{tc_disc_size_combo} = $entry;
 
 	$label = Gtk::Label->new ("MB");
 	$label->show;
@@ -467,7 +462,11 @@ sub create_video_bitrate_calc {
 
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$entry = Gtk::Entry->new;
+	$entry = Video::DVDRip::CheckedEntry->new (undef,
+		is_number      => 1,
+		may_fractional => 0,
+		may_empty      => 0,
+	);
 	$entry->show;
 	$entry->set_usize(80,undef);
 	$hbox->pack_start($entry, 0, 1, 0);
@@ -493,7 +492,11 @@ sub create_video_bitrate_calc {
 
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$entry = Gtk::Entry->new;
+	$entry = Video::DVDRip::CheckedEntry->new (undef,
+		is_number      => 1,
+		may_fractional => 0,
+		may_empty      => 0,
+	);
 	$entry->show;
 	$entry->set_usize(80,undef);
 	$hbox->pack_start($entry, 0, 1, 0);
@@ -509,7 +512,8 @@ sub create_video_bitrate_calc {
 	$entry->set_text($self->video_bitrate);
 	
 	$entry->signal_connect ("changed", sub {
-		$self->set_video_bitrate($_[0]->get_text)
+		$self->set_video_bitrate($_[0]->get_text);
+		1;
 	});
 
 	return $frame;

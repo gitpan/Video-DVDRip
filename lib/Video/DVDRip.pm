@@ -1,14 +1,36 @@
-# $Id: DVDRip.pm,v 1.82 2002/09/22 18:23:17 joern Exp $
+# $Id: DVDRip.pm,v 1.96 2002/11/17 17:18:07 joern Exp $
 
 package Video::DVDRip;
 
-$VERSION = "0.46";
+$VERSION = "0.48.0";
 
 use Carp;
 use FileHandle;
 
+%Video::DVDRip::deinterlace_filters = (
+	0          => "No deinterlacing",
+	1          => "Interpolate scanlines (fast)",
+	2          => "Handled by encoder (may segfault)",
+	3          => "Zoom to full frame (slow)",
+	'32detect' => "Automatic deinterlacing of single frames",
+);
+
+%Video::DVDRip::antialias_filters = (
+	0 => "No antialiasing",
+	1 => "Process de-interlace effects",
+	2 => "Process resize effects",
+	3 => "Process full frame (slow)",
+);
+
+%Video::DVDRip::audio_filters = (
+	'rescale'   => "None, volume rescale only",
+	'a52drc'    => "Range compression (liba52 filter)",
+	'normalize' => "Normalizing (mplayer filter)",
+);
+	
+
 init: {
-	# skip transcode check during "make test". This makes
+	# Skip transcode check during "make test". This makes
 	# automatic CPAN testing fail erroneously and makes
 	# problems during first dvd::rip install, when the
 	# use has no "." in PATH, because then dr_splitpipe isn't
@@ -18,7 +40,7 @@ init: {
 	my @path = split(":", $ENV{PATH});
 
 	my @programs = qw (
-		rm convert identify
+		rm convert identify pstree
 		transcode tcscan tccat
 		tcextract tcdecode
 		dr_splitpipe dr_progress
@@ -45,22 +67,36 @@ init: {
 	my $ver = <$fh>;
 	close $fh;
 
-	$ver =~ m/v(\d+)\.(\d+)\.(\d+)/;
+	$ver =~ m/v(\d+)\.(\d+)\.(\d+)(.\d+)?/;
 	
-	# -------------------------
+	# ------------------------------
 	# transcode version numbers:
-	# -------------------------
+	# ------------------------------
 	# 0.5.3    => 503
 	# 0.6.0    => 600
 	# 1.2.7    => 100207
 	# 99.99.99 => 999999
-	# -------------------------
+	#
+	# 0.6.2.20021011 => 601.20021011
+	# ------------------------------
+
+	$TC::ORIG_VERSION = "$1.$2.$3$4";
 
 	$TC::VERSION = $1*10000+$2*100+$3;
 	$TC::VERSION ||= 0;
 
+	if ( $4 ) {
+		# If we have a snapshot release, reduce the
+		# version number by 1 and add the snapshot
+		# date as decimals. This way version
+		# 6.0.2.20021011 is newer than 0.6.1 but
+		# older than 0.6.2 (final).
+
+		$TC::VERSION = $TC::VERSION - 1 + $4;
+	}
+
 	if ( $TC::VERSION < 600 ) {
-		print "Sorry, transcode versions prior 0.6.0pre4 are no longer supported.\n".
+		print "Sorry, transcode versions prior 0.6.0 are no longer supported.\n".
 		      "Please upgrade transcode.\n";
 		exit 1;
 	}

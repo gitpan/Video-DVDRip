@@ -1,4 +1,4 @@
-# $Id: TitleTab.pm,v 1.41 2002/09/22 09:38:22 joern Exp $
+# $Id: TitleTab.pm,v 1.48 2002/11/03 11:35:16 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -20,6 +20,9 @@ sub set_clist_row2title_nr	{ shift->{clist_row2title_nr}	= $_[1] }
 sub rip_title_widgets		{ shift->{rip_title_widgets}		}
 sub set_rip_title_widgets	{ shift->{rip_title_widgets}	= $_[1] }
 
+sub in_title_init		{ shift->{in_title_init}		}
+sub set_in_title_init		{ shift->{in_title_init}	= $_[1]	}
+
 #------------------------------------------------------------------------
 # Build RIP Title Tab
 #------------------------------------------------------------------------
@@ -28,6 +31,8 @@ sub create_title_tab {
 	my $self = shift; $self->trace_in;
 
 	$self->set_rip_title_widgets({});
+
+	my $hsep;
 
 	my $vbox = Gtk::VBox->new;
 	$vbox->set_border_width(5);
@@ -81,9 +86,11 @@ sub create_title_tab {
 	$clist->set_usize (450, 372);
 	$clist->set_selection_mode( 'extended' ); 
 	$clist->signal_connect ("select_row",   sub {
+		return 1 if $self->in_title_init;
 		$self->cb_select_title (@_);
 	} );
 	$clist->signal_connect ("unselect_row", sub {
+		return 1 if $self->in_title_init;
 		$self->cb_select_title (@_);
 	} );
 
@@ -100,7 +107,12 @@ sub create_title_tab {
 	
 	my $label_hbox = Gtk::HBox->new;
 	$label_hbox->show;
-	$label = Gtk::Label->new ("Select primary audio track");
+	$label = Gtk::Label->new (
+		"Select audio track for volume\n".
+		"scanning.\n".
+		"(Does not affect ripping, all\n".
+		"audio tracks are ripped)"
+	);
 	$label->show;
 	$label->set_justify('left');
 	$label_hbox->pack_start ($label, 0, 1, 0);
@@ -119,10 +131,18 @@ sub create_title_tab {
 
 	$audio_vbox->pack_start($audio_popup, 0, 1, 0);
 
+	$hsep = Gtk::HSeparator->new;
+	$hsep->show;
+	$audio_vbox->pack_start($hsep, 0, 1, 0);
+
 	# Viewing Angle Selection
 	$label_hbox = Gtk::HBox->new;
 	$label_hbox->show;
-	$label = Gtk::Label->new ("Select viewing angle");
+	$label = Gtk::Label->new (
+		"Select viewing angle\n".
+		"(You must rip again if you\n".
+		"change this)"
+	);
 	$label->show;
 	$label->set_justify('left');
 	$label_hbox->pack_start ($label, 0, 1, 0);
@@ -140,6 +160,10 @@ sub create_title_tab {
 	$self->rip_title_widgets->{view_angle_popup} = $view_angle_popup;
 
 	$audio_vbox->pack_start($view_angle_popup, 0, 1, 0);
+
+	$hsep = Gtk::HSeparator->new;
+	$hsep->show;
+	$audio_vbox->pack_start($hsep, 0, 1, 0);
 
 	# Chapter mode ripping
 	$label_hbox = Gtk::HBox->new;
@@ -169,7 +193,7 @@ sub create_title_tab {
 	# chapter selection list
 	$sw = new Gtk::ScrolledWindow( undef, undef );
 	$sw->set_policy( 'automatic', 'automatic' );
-	$sw->set_usize(undef, 156);
+	$sw->set_usize(undef, 138);
 
 	my $chapter_clist = Gtk::CList->new_with_titles ( "Chapter Selection" );
 	$sw->add( $chapter_clist );
@@ -212,6 +236,17 @@ sub create_title_tab {
 	# 6. Fill Content List, if we have content
 	$self->fill_content_list;
 
+	$self->rip_title_widgets->{tc_use_chapter_mode_no}->signal_connect (
+		"clicked", sub {
+			return 1 if not $self->selected_title;
+			$self->selected_title->set_tc_use_chapter_mode(0);
+			$self->init_chapter_list ( without_radio => 1 );
+			$self->rip_title_widgets->{rip_button}->set_sensitive(1);
+			$self->rip_title_widgets->{rip_button}->set_sensitive(1);
+			$self->set_render_vobsub_sensitive;
+			1;
+		}
+	);
 	$self->rip_title_widgets->{tc_use_chapter_mode_all}->signal_connect (
 		"clicked", sub {
 			return 1 if not $self->selected_title;
@@ -220,14 +255,8 @@ sub create_title_tab {
 			$self->rip_title_widgets->{rip_button}->set_sensitive(
 				$self->project->rip_mode eq 'rip'
 			);
-		}
-	);
-	$self->rip_title_widgets->{tc_use_chapter_mode_no}->signal_connect (
-		"clicked", sub {
-			return 1 if not $self->selected_title;
-			$self->selected_title->set_tc_use_chapter_mode(0);
-			$self->init_chapter_list ( without_radio => 1 );
-			$self->rip_title_widgets->{rip_button}->set_sensitive(1);
+			$self->set_render_vobsub_sensitive;
+			1;
 		}
 	);
 	$self->rip_title_widgets->{tc_use_chapter_mode_select}->signal_connect (
@@ -238,6 +267,8 @@ sub create_title_tab {
 			$self->rip_title_widgets->{rip_button}->set_sensitive(
 				$self->project->rip_mode eq 'rip'
 			);
+			$self->set_render_vobsub_sensitive;
+			1;
 		}
 	);
 	my $select_callback =  sub {
@@ -341,16 +372,20 @@ sub fill_audio_popup {
 	my %par = @_;
 	my ($audio_popup, $tab) = @par{'audio_popup','tab'};
 
+	$self->print_debug ("fill_audio_popup: entered for tab '$tab'");
+
 	my $title = $self->selected_title;
 
 	my $audio_popup_menu = Gtk::Menu->new;
 	$audio_popup_menu->show;
+	$audio_popup->remove_menu;
 	$audio_popup->set_menu($audio_popup_menu);
 
 	my $tc_audio_tracks = $title->tc_audio_tracks;
 
 	my $item;
 	my $i = 0;
+	my @items;
 	foreach my $audio ( @{$title->audio_tracks} ) {
 		my $sample_rate = $audio->sample_rate;
 		$sample_rate = "48kHz"   if $sample_rate == 48000;
@@ -359,18 +394,27 @@ sub fill_audio_popup {
 		my $target_track = "";
 		if ( $tc_audio_tracks->[$i]->tc_target_track != -1 ) {
 			$target_track = " => ".$tc_audio_tracks->[$i]->tc_target_track;
+		} else {
+			$target_track = " => skip";
 		}
+		
+		$target_track = "" if $tab eq 'rip_title';
+		
 		$item = Gtk::MenuItem->new (
 			"$i: ".$audio->lang." ".$audio->type." ".
 			"$sample_rate ".$audio->channels."Ch".
 			$target_track
 		);
+
+		$self->print_debug ("fill_audio_popup: New item: ".$item->child->get);
+
 		$item->show;
 		$item->signal_connect (
 			"select", sub {
 				return if $self->in_transcode_init;
 				$_[1]->set_audio_channel($_[2]);
 				$self->init_title_labels;
+				$self->configure_target_audio_popup;
 				if ( $tab eq 'rip_title' ) {
 					$self->init_audio_values (
 					    switch_popup =>
@@ -390,10 +434,12 @@ sub fill_audio_popup {
 						no_audio => 1
 					);
 				}
+				1;
 			},
 			$title, $i
 		);
 		$audio_popup_menu->append($item);
+		push @items, $item;
 		++$i;
 	}
 
@@ -405,6 +451,33 @@ sub fill_audio_popup {
 		
 	} else {
 		$audio_popup->set_history($title->audio_channel);
+	}
+
+	$self->transcode_widgets->{"items_$tab"} = \@items;
+
+	1;
+}
+
+sub configure_target_audio_popup {
+	my $self = shift;
+	
+	my $title = $self->selected_title;
+
+	my $items = $self->rip_title_widgets->{target_popup_items};
+	
+	my %track_is_assigned;
+	foreach my $audio ( @{$title->tc_audio_tracks} ) {
+		$track_is_assigned{$audio->tc_target_track} = 1
+			if $audio->tc_target_track != -1;
+	}
+
+	my $j = -1;
+	foreach my $it ( @{$items} ) {
+		$it->set_sensitive(
+			!($track_is_assigned{$j} and 
+			  $title->tc_target_track != $j)
+		);
+		++$j;
 	}
 
 	1;
@@ -427,24 +500,26 @@ sub fill_target_audio_popup {
 			if $audio->tc_target_track != -1;
 	}
 
+	my @items;
 	my $item;
 	my $text;
 	my %history;
 	my $history = 0;
 	for (my $i=-1; $i < @{$title->audio_tracks}; ++$i ) {
-		$text = $i == -1 ? "Don't add this track" : "Track #$i";
-		next if $track_is_assigned{$i} and
-			$title->tc_target_track != $i;
+		$text = $i == -1 ? "Skip / Decativate this track" : "Track #$i";
 		$history{$i} = $history;
 		$item = Gtk::MenuItem->new ($text);
+		push @items, $item;
 		$item->show;
+		$item->set_sensitive(0) if $track_is_assigned{$i} and
+			$title->tc_target_track != $i;
 		$item->signal_connect (
 			"select", sub {
 				return if $self->in_transcode_init;
 				$title->set_tc_target_track ($_[1]);
 				$title->calc_video_bitrate;
-				$self->init_transcode_values (
-					no_audio => 1
+				$self->init_audio_values (
+					dont_set_target_popup => 1
 				);
 				# this corrects the target track
 				# in both popups
@@ -456,8 +531,9 @@ sub fill_target_audio_popup {
 				$self->fill_audio_popup (
 					audio_popup => $self->rip_title_widgets
 						 	    ->{audio_popup},
-					tab	    => "rip"
+					tab	    => "rip_title"
 				);
+				$self->calc_video_bitrate;
 				1;
 			},$i,
 		);
@@ -466,6 +542,7 @@ sub fill_target_audio_popup {
 	}
 
 	$audio_popup->set_history ($history{$title->tc_target_track});
+	$self->rip_title_widgets->{target_popup_items} = \@items;
 
 	1;
 }
@@ -565,6 +642,7 @@ sub read_dvd_toc {
 		$project->check_dvd_in_drive;
 		$content->read_title_listing;
 	};
+
 	if ( $@ ) {
 		$self->message_window (
 			message => "Can't read DVD TOC. Please put ".
@@ -609,7 +687,19 @@ sub read_dvd_toc {
 		$self->set_selected_title( $title );
 		$self->fill_with_values;
 		$self->rip_title_widgets->{content_clist}->select_row (0,0);
+		eval { $self->project->copy_ifo_files };
+		if ( $@ ) {
+			$self->long_message_window (
+				message =>
+					"Failed to copy the IFO files. vobsub creation ".
+					"won't work properly.\nThe error message is:\n".
+					$self->stripped_exception
+					
+			);
+		}
 		$self->project->backup_copy;
+
+		1;
 	});
 
 	$exec->execute_jobs;
@@ -648,6 +738,12 @@ sub fill_content_list {
 	$self->rip_title_widgets
 	     ->{content_clist}
 	     ->select_row ($select_row, 1);
+
+	if ( $self->project->rip_mode ne 'rip' ) {
+		$self->rip_title_widgets->{rip_button}->set_sensitive(0);
+	} else {
+		$self->rip_title_widgets->{rip_button}->set_sensitive(1);
+	}
 
 	1;
 }
@@ -694,7 +790,7 @@ sub get_title_info {
 sub create_selected_title {
 	my $self = shift; $self->trace_in;
 
-	my $frame = Gtk::Frame->new ("Selected title");
+	my $frame = Gtk::Frame->new ("Selected DVD title");
 	$frame->show;
 
 	my $hbox = Gtk::HBox->new;
@@ -747,11 +843,13 @@ sub rip_title {
 
 	$self->rip_title_selection_sensitive(0);
 
+	my $project = $self->comp('project')->project;
+
 	eval { $self->project->check_dvd_in_drive };
 	if ( $@ ) {
 		$self->rip_title_selection_sensitive(1);
 		$self->message_window (
-			message => "Please put a disc into your drive."
+			message => "Please put a disc into your drive. ($@)"
 		);
 		return;
 	}
@@ -787,17 +885,22 @@ sub rip_title {
 
 	$exec->set_cb_finished (sub {
 		if ( $exec->cancelled ) {
-			$exec->cancelled_job->title->remove_vob_files;
+			$exec->cancelled_job->title->remove_vob_files
+				if $exec->cancelled_job;
 		} else {
 			$self->grab_preview_frame;
 			$self->fill_with_values;
 			$self->project->backup_copy;
 		}
+
 		$self->rip_title_selection_sensitive(1);
+
 		1;
 	});
 
-	$exec->execute_jobs;
+	$exec->execute_jobs (
+		max_diskspace_needed => 6 * 1024
+	);
 
 	1;
 }

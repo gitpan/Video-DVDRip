@@ -1,4 +1,4 @@
-# $Id: Node.pm,v 1.18 2002/09/15 15:31:09 joern Exp $
+# $Id: Node.pm,v 1.21 2002/11/12 22:04:40 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -28,6 +28,7 @@ sub username			{ shift->{username}			}
 sub ssh_cmd			{ shift->{ssh_cmd}			}
 sub speed			{ shift->{speed}			}
 sub tc_options			{ shift->{tc_options}			}
+sub answered_last_ping		{ shift->{answered_last_ping}		}
 
 sub progress_cnt		{ shift->{progress_cnt}			}
 sub progress_max		{ shift->{progress_max}			}
@@ -47,6 +48,7 @@ sub set_username		{ shift->{username}		= $_[1] }
 sub set_ssh_cmd			{ shift->{ssh_cmd}		= $_[1] }
 sub set_speed			{ shift->{speed}		= $_[1] }
 sub set_tc_options		{ shift->{tc_options}		= $_[1] }
+sub set_answered_last_ping	{ shift->{answered_last_ping}	= $_[1]	}
 
 sub set_progress_cnt		{ shift->{progress_cnt}		= $_[1] }
 sub set_progress_max		{ shift->{progress_max}		= $_[1] }
@@ -201,9 +203,16 @@ sub get_popen_code {
 sub reset {
 	my $self = shift;
 	
+	my $startup_state = $self->state;
+
+	$self->set_alive(0);
+	$self->set_state ($startup_state);
+	$self->set_answered_last_ping(0);
 	$self->set_state ('unknown')
-		if $self->state ne 'stopped' and
-		   $self->state ne 'aborted';
+		if $startup_state ne 'stopped' and
+		   $startup_state ne 'aborted';
+
+	$self->save;
 
 	1;
 }
@@ -237,7 +246,9 @@ sub start {
 
 	$self->log ("Node '".$self->name."' started");
 
+	$self->set_alive ( 0 );
 	$self->set_state ('unknown');
+	$self->set_answered_last_ping ( 1 );
 	$self->save;
 
 	Video::DVDRip::Cluster::Master->get_master->node_check;
@@ -295,7 +306,7 @@ sub run_tests {
 			);
 			$self->set_test_finished (1);
 		}
-	);
+	)->open;
 
 	1;
 }

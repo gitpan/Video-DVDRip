@@ -1,4 +1,4 @@
-# $Id: ProbeAudio.pm,v 1.1 2002/09/01 13:57:52 joern Exp $
+# $Id: ProbeAudio.pm,v 1.4 2002/11/01 16:12:43 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -23,7 +23,6 @@ sub bitrate			{ shift->{bitrate}			}
 sub sample_rate			{ shift->{sample_rate}			}
 sub volume_rescale		{ shift->{volume_rescale}		}
 sub scan_output			{ shift->{scan_output}			}
-
 
 sub set_type			{ shift->{type}			= $_[1]	}
 sub set_lang			{ shift->{lang}			= $_[1]	}
@@ -52,6 +51,22 @@ sub new {
 	};
 	
 	return bless $self, $class;
+}
+
+sub ac3_ok {
+	my $self = shift;
+
+	my $ok = ($self->type eq 'ac3' and $self->bitrate ne '');
+
+	return $ok;
+}
+
+sub pcm_ok {
+	my $self = shift;
+
+	my $ok = ($self->type eq 'lpcm' and $self->bitrate ne '');
+
+	return $ok;
 }
 
 1;

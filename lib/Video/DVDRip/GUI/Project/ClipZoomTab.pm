@@ -1,4 +1,4 @@
-# $Id: ClipZoomTab.pm,v 1.33 2002/09/01 15:26:58 joern Exp $
+# $Id: ClipZoomTab.pm,v 1.36 2002/11/01 16:11:34 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -59,7 +59,14 @@ sub create_adjust_tab {
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 	
-	$entry = Gtk::Entry->new;
+	$entry = Video::DVDRip::CheckedEntry->new (undef,
+		is_number      => 1,
+		is_min	       => 0,
+		is_max	       => undef,
+		may_fractional => 0,
+		may_empty      => 0,
+		may_negative   => 0,
+	);
 	$entry->set_usize(80, undef);
 	$entry->show;
 	$hbox->pack_start($entry, 0, 1, 0);
@@ -283,7 +290,11 @@ sub create_adjust_tab {
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 
-	$entry = Gtk::Entry->new;
+	$entry = Video::DVDRip::CheckedEntry->new (undef,
+		is_number	=> 1,
+		may_empty	=> 1,
+		may_negative	=> 1,
+	);
 	$entry->set_text ("");
 	$entry->set_usize(40, undef);
 	$entry->show;
@@ -295,7 +306,11 @@ sub create_adjust_tab {
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 
-	$entry = Gtk::Entry->new;
+	$entry = Video::DVDRip::CheckedEntry->new (undef,
+		is_number	=> 1,
+		may_empty	=> 1,
+		may_negative	=> 1,
+	);
 	$entry->set_text ("");
 	$entry->set_usize(40, undef);
 	$entry->show;
@@ -307,7 +322,11 @@ sub create_adjust_tab {
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 
-	$entry = Gtk::Entry->new;
+	$entry = Video::DVDRip::CheckedEntry->new (undef,
+		is_number	=> 1,
+		may_empty	=> 1,
+		may_negative	=> 1,
+	);
 	$entry->set_text ("");
 	$entry->set_usize(40, undef);
 	$entry->show;
@@ -319,7 +338,11 @@ sub create_adjust_tab {
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 
-	$entry = Gtk::Entry->new;
+	$entry = Video::DVDRip::CheckedEntry->new (undef,
+		is_number	=> 1,
+		may_empty	=> 1,
+		may_negative	=> 1,
+	);
 	$entry->set_text ("");
 	$entry->set_usize(40, undef);
 	$entry->show;
@@ -353,7 +376,11 @@ sub create_adjust_tab {
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 
-	$entry = Gtk::Entry->new;
+	$entry = Video::DVDRip::CheckedEntry->new (undef,
+		is_number	=> 1,
+		may_empty	=> 1,
+		may_negative	=> 0,
+	);
 	$entry->set_text ("");
 	$entry->set_usize(40, undef);
 	$entry->show;
@@ -365,7 +392,11 @@ sub create_adjust_tab {
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 
-	$entry = Gtk::Entry->new;
+	$entry = Video::DVDRip::CheckedEntry->new (undef,
+		is_number	=> 1,
+		may_empty	=> 1,
+		may_negative	=> 0,
+	);
 	$entry->set_text ("");
 	$entry->set_usize(40, undef);
 	$entry->show;
@@ -463,7 +494,11 @@ if ( 0 ) {
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 
-	$entry = Gtk::Entry->new;
+	$entry = Video::DVDRip::CheckedEntry->new (undef,
+		is_number	=> 1,
+		may_empty	=> 1,
+		may_negative	=> 1,
+	);
 	$entry->set_text ("");
 	$entry->set_usize(40, undef);
 	$entry->show;
@@ -475,7 +510,11 @@ if ( 0 ) {
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 
-	$entry = Gtk::Entry->new;
+	$entry = Video::DVDRip::CheckedEntry->new (undef,
+		is_number	=> 1,
+		may_empty	=> 1,
+		may_negative	=> 1,
+	);
 	$entry->set_text ("");
 	$entry->set_usize(40, undef);
 	$entry->show;
@@ -487,7 +526,11 @@ if ( 0 ) {
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 
-	$entry = Gtk::Entry->new;
+	$entry = Video::DVDRip::CheckedEntry->new (undef,
+		is_number	=> 1,
+		may_empty	=> 1,
+		may_negative	=> 1,
+	);
 	$entry->set_text ("");
 	$entry->set_usize(40, undef);
 	$entry->show;
@@ -499,7 +542,11 @@ if ( 0 ) {
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 
-	$entry = Gtk::Entry->new;
+	$entry = Video::DVDRip::CheckedEntry->new (undef,
+		is_number	=> 1,
+		may_empty	=> 1,
+		may_negative	=> 1,
+	);
 	$entry->set_text ("");
 	$entry->set_usize(40, undef);
 	$entry->show;
@@ -529,7 +576,8 @@ if ( 0 ) {
 			my ($widget, $method) = @_;
 			$self->selected_title->$method ( $widget->get_text );
 			$self->update_fast_resize_info;
-			$self->show_preview_labels
+			$self->show_preview_labels;
+			1;
 		}, "set_$attr");
 	}
 
@@ -539,6 +587,7 @@ if ( 0 ) {
 			return 1 if $self->in_adjust_init;
 			$self->selected_title->set_tc_fast_resize(1);
 			$self->show_preview_labels ( type => "zoom" );
+			1;
 		}
 	);
 	$self->adjust_widgets->{tc_fast_resize_no}->signal_connect (
@@ -550,43 +599,6 @@ if ( 0 ) {
 		}
 	);
 
-if ( 0 ) {
-	$self->adjust_widgets->{tc_fast_bisection_yes}->signal_connect (
-		"clicked", sub {
-			return 1 if not $self->selected_title;
-			return 1 if $self->in_adjust_init;
-			my $title = $self->selected_title;
-			$title->set_tc_fast_bisection(1);
-			$self->set_in_adjust_init(1);
-			my $method;
-			foreach my $attr (qw ( 
-			       tc_clip1_top  tc_clip1_bottom
-			       tc_clip1_left tc_clip1_right
-       			       tc_clip2_top  tc_clip2_bottom
-			       tc_clip2_left tc_clip2_right )) {
-				$method = "set_$attr";
-				$title->$method(0);
-			}
-			$title->set_tc_zoom_width  ( $title->width / 2 );
-			$title->set_tc_zoom_height ( $title->height / 2 );
-			$self->set_in_adjust_init(0);
-			$self->init_adjust_values (
-				no_preview_update => 1
-			);
-		}
-	);
-	$self->adjust_widgets->{tc_fast_bisection_no}->signal_connect (
-		"clicked", sub {
-			return 1 if not $self->selected_title;
-			return 1 if $self->in_adjust_init;
-			$self->selected_title->set_tc_fast_bisection(0);
-			$self->init_adjust_values (
-				no_preview_update => 1
-			);
-		}
-	);
-}
-
 	return $vbox;
 }
 
@@ -597,7 +609,6 @@ sub init_adjust_values {
 
 	my $title = $self->selected_title;
 	return 1 if not $title;
-	return 1 if not $self->adjust_widgets->{preview_frame_nr};
 
 	$self->set_in_adjust_init(1);
 
@@ -629,6 +640,8 @@ if ( 0 ) {
 	}
 	$i = 0 if $i >= @{$self->config_object->presets};
 	$widgets->{preset_popup}->set_history ($i);
+
+	$widgets->{preview_frame_nr}->set_is_max ( $title->frames );
 
 	$widgets->{tc_fast_resize_yes}->set_active($fast_resize);
 	$widgets->{tc_fast_resize_no}->set_active(!$fast_resize);
@@ -808,14 +821,6 @@ sub grab_preview_frame {
 		return 1;
 	}
 
-	if ( $frame_nr > $title->frames or $frame_nr !~ /^\d+/ ) {
-		$self->message_window (
-			message => "Illegal frame number. Maximum is ".
-				   ($title->frames-1)
-		);
-		return 1;
-	}
-
 	my $nr;
 	my $last_job;
 
@@ -886,6 +891,8 @@ sub preview_video {
 	my $command = $title->get_view_stdin_command (
 		command_tmpl => $self->config('play_stdin_command'),
 	);
+
+	$self->log ("Executing command for video preview: $command");
 
 	system ("$command &");
 

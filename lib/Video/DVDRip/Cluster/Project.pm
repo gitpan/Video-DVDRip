@@ -1,4 +1,4 @@
-# $Id: Project.pm,v 1.25 2002/09/15 15:31:09 joern Exp $
+# $Id: Project.pm,v 1.26 2002/09/30 21:07:00 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -43,7 +43,7 @@ sub set_end_time		{ shift->{end_time} 		= $_[1] }
 sub set_runtime			{ shift->{runtime} 		= $_[1] }
 
 sub set_state {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 	my ($new_state) = @_;
 	
 	my $old_state = $self->state;
@@ -66,7 +66,7 @@ sub set_state {
 
 
 sub load {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 	
 	$self->SUPER::load(@_);
 	
@@ -82,7 +82,7 @@ sub load {
 }
 
 sub vob_dir {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 	
 	my $job = $self->assigned_job or croak "No job assigned";
 
@@ -91,7 +91,7 @@ sub vob_dir {
 }
 
 sub avi_dir {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 	
 	my $job  = $self->assigned_job or croak "No job assigned";
 	my $node = $job->node;
@@ -102,7 +102,7 @@ sub avi_dir {
 }
 
 sub final_avi_dir {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 	
 	my $job  = $self->assigned_job or croak "No job assigned";
 	my $node = $job->node;
@@ -112,7 +112,7 @@ sub final_avi_dir {
 }
 
 sub snap_dir {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 	
 	my $job = $self->assigned_job or croak "No job assigned";
 	my $node = $job->node;
@@ -122,7 +122,7 @@ sub snap_dir {
 }
 
 sub label {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 	return $self->name." (#".$self->selected_title_nr.")";
 }
 
@@ -171,7 +171,7 @@ sub new {
 }
 
 sub create_job_plan {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 
 	$self->log ("Creating job plan");
 
@@ -249,7 +249,21 @@ sub create_job_plan {
 		$last_job = $job;
 		
 		my $merge_video_audio_job = $job;
-		
+
+		if ( $title->is_ogg ) {
+			$job = Video::DVDRip::Cluster::Job::AddAudioMerge->new ( nr => $nr++ );
+			push @jobs, $job;
+			my $vob_nr = $title->get_first_audio_track;
+			$job->set_avi_nr ( $title->tc_audio_tracks->[$vob_nr]->tc_target_track );
+			$job->set_vob_nr ( $vob_nr );
+			$job->set_project ($self);
+			$job->set_psu ( $psu->nr );
+			$job->set_prefer_local_access (1);
+			$job->set_depends_on_jobs ( [ $last_job ] );
+			$last_job = $job;
+			$merge_video_audio_job = $job;
+		}
+
 		# now evtl. add. audio tracks
 		my $add_audio_tracks = $title->get_additional_audio_tracks;
 		if ( keys %{$add_audio_tracks} ) {
@@ -329,7 +343,7 @@ sub create_job_plan {
 }
 
 sub get_save_data {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 	
 	# don't save current job assignement
 	my $job = $self->assigned_job;
@@ -355,7 +369,7 @@ sub get_save_data {
 }
 
 sub progress {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 	
 	return "Duration: ".$self->runtime if $self->state eq 'finished';
 	
@@ -376,7 +390,7 @@ sub progress {
 }
 
 sub get_jobs_lref {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 	
 	my @jobs;
 	foreach my $job ( @{$self->jobs} ) {
@@ -394,7 +408,7 @@ sub get_jobs_lref {
 }
 
 sub determine_state {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 	
 	return if $self->state eq 'not scheduled';
 
@@ -417,7 +431,7 @@ sub determine_state {
 }
 
 sub reset_jobs {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 	
 	foreach my $job ( @{$self->jobs} ) {
 		$job->set_state ('waiting') if $job->state eq 'running';
@@ -428,7 +442,7 @@ sub reset_jobs {
 }
 
 sub get_job_by_id {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 	my %par = @_;
 	my ($job_id) = @par{'job_id'};
 	
@@ -440,7 +454,7 @@ sub get_job_by_id {
 }
 
 sub get_dependent_jobs {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 	my %par = @_;
 	my ($job) = @par{'job'};
 	
@@ -466,7 +480,7 @@ sub get_dependent_jobs {
 }
 
 sub reset_job {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 	my %par = @_;
 	my ($job_id) = @par{'job_id'};
 	

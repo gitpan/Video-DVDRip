@@ -1,4 +1,4 @@
-# $Id: Probe.pm,v 1.13 2002/09/01 13:55:49 joern Exp $
+# $Id: Probe.pm,v 1.15 2002/10/28 21:47:25 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -127,6 +127,26 @@ sub analyze {
 
 	$title->set_audio_channel(@audio_tracks? 0 : -1);
 
+	my %subtitles;
+	my $sid;
+	while ( $probe_output =~ /subtitle\s+(\d+)=<([^>]+)>/g ) {
+		$sid = $1 + 0;
+		$subtitles{$sid} = Video::DVDRip::Subtitle->new (
+			id    => $sid,
+			lang  => $2,
+			title => $title,
+		);
+	}
+	
+	$title->set_subtitles (\%subtitles);
+
+	if ( defined $sid ) {
+		# we have subtitles
+		$title->set_selected_subtitle_id (0);
+	} else {
+		$title->set_selected_subtitle_id (-1);
+	}
+
 	my $self = {
 		probe_output 	=> $probe_output,
 		width	   	=> $width,
@@ -156,7 +176,6 @@ sub analyze_audio {
 	$self->set_audio_probe_output ( $probe_output );
 	
 	my @lines = split (/\n/, $probe_output);
-	
 	my $nr;
 	for ( my $i=0; $i < @lines; ++$i ) {
 		if ( $lines[$i] =~ /audio\s+track:\s+-a\s+(\d+).*?-n\s+([x0-9]+)/ ) {

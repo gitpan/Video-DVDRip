@@ -1,4 +1,4 @@
-# $Id: MergeAudio.pm,v 1.2 2002/09/15 15:31:10 joern Exp $
+# $Id: MergeAudio.pm,v 1.5 2002/10/16 14:22:12 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -23,10 +23,12 @@ use strict;
 sub chapter			{ shift->{chapter}			}
 sub vob_nr			{ shift->{vob_nr}			}
 sub avi_nr			{ shift->{avi_nr}			}
+sub subtitle_test		{ shift->{subtitle_test}		}
 
 sub set_chapter			{ shift->{chapter}		= $_[1]	}
 sub set_vob_nr			{ shift->{vob_nr}		= $_[1]	}
 sub set_avi_nr			{ shift->{avi_nr}		= $_[1]	}
+sub set_subtitle_test		{ shift->{subtitle_test}	= $_[1]	}
 
 sub type {
 	return "merge audio";
@@ -53,9 +55,34 @@ sub init {
 		
 	$self->set_progress_show_fps ( 1 );
 
-	$self->set_progress_max ( $title->frames );
+	$self->set_progress_max (
+		$title->get_transcode_frame_cnt ( chapter => $chapter )
+	);
 
 	1;
+}
+
+sub get_diskspace_needed {
+	my $self = shift; $self->trace_in;
+
+	my $bitrate = $self->title->tc_audio_tracks
+				  ->[$self->vob_nr]
+				  ->tc_bitrate;
+
+	my $runtime = $self->title->runtime;
+
+	my $video_size = $self->title->tc_target_size * 1024;
+	my $audio_size = int($runtime * $bitrate / 8);
+	
+	return $audio_size + $video_size;
+}
+
+sub get_diskspace_freed {
+	my $self = shift; $self->trace_in;
+
+	my $video_size = $self->title->tc_target_size * 1024;
+
+	return $video_size;
 }
 
 sub command {
@@ -63,14 +90,16 @@ sub command {
 
 	my $title = $self->title;
 
-	$title->set_actual_chapter ($self->chapter);
-
+	$title->set_actual_chapter ( $self->chapter );
+	$title->set_subtitle_test  ( $self->subtitle_test );
+	
 	my $command = $title->get_merge_audio_command (
-		vob_nr    => $self->vob_nr,
-		target_nr => $self->avi_nr,
+		vob_nr        => $self->vob_nr,
+		target_nr     => $self->avi_nr,
 	);
 
 	$title->set_actual_chapter (undef);
+	$title->set_subtitle_test  (undef);
 
 	return $command;
 }
@@ -79,8 +108,10 @@ sub parse_output {
 	my $self = shift;
 	my ($line) = @_;
 
-	if ( $line =~ /\(\d+-(\d+)\)/ ) {
-		$self->set_progress_cnt ($1);
+	if ( $self->title->tc_audio_codec eq 'ogg' ) {
+		$self->set_progress_cnt ($1) if $line =~ /(\d+)/;
+	} else {
+		$self->set_progress_cnt ($1) if $line =~ /\(\d+-(\d+)\)/;
 	}
 
 	$self->set_operation_successful ( 1 )

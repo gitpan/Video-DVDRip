@@ -1,4 +1,4 @@
-# $Id: Mplex.pm,v 1.1 2002/09/01 13:57:52 joern Exp $
+# $Id: Mplex.pm,v 1.3 2002/10/16 14:22:12 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -16,6 +16,9 @@ use strict;
 
 sub chapter			{ shift->{chapter}			}
 sub set_chapter			{ shift->{chapter}		= $_[1]	}
+
+sub subtitle_test		{ shift->{subtitle_test}		}
+sub set_subtitle_test		{ shift->{subtitle_test}	= $_[1]	}
 
 sub type {
 	return "mplex";
@@ -39,15 +42,29 @@ sub init {
 	1;
 }
 
+sub get_diskspace_needed {
+	my $self = shift; $self->trace_in;
+
+	return $self->title->tc_target_size * 1024;
+}
+
+sub get_diskspace_freed {
+	return 0;
+}
+
 sub command {
 	my $self = shift;
 
 	my $title = $self->title;
 
-	$title->set_actual_chapter ($self->chapter);
+	$title->set_actual_chapter ( $self->chapter );
+	$title->set_subtitle_test  ( $self->subtitle_test );
+
 	my $command = $title->get_mplex_command;
+
 	$title->set_actual_chapter (undef);
-	
+	$title->set_subtitle_test  (undef);
+
 	return $command;
 }
 

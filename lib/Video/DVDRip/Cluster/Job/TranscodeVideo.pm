@@ -1,4 +1,4 @@
-# $Id: TranscodeVideo.pm,v 1.2 2002/09/15 15:31:10 joern Exp $
+# $Id: TranscodeVideo.pm,v 1.3 2002/09/30 21:06:11 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -29,7 +29,7 @@ sub type {
 }
 
 sub info {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 
 	return  "transcode video".
 		" chunk ".$self->chunk."/".$self->chunk_cnt.
@@ -38,9 +38,11 @@ sub info {
 }
 
 sub init {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 	 
+	$self->project->set_assigned_job ( $self );
 	$self->SUPER::init;
+	$self->project->set_assigned_job ( undef );
 	 
 	$self->set_progress_max ($self->title->frames_per_chunk);
 	
@@ -48,7 +50,7 @@ sub init {
 }
 
 sub command {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 
 	my $project = $self->project;
 	my $title   = $project->title;
@@ -62,7 +64,7 @@ sub command {
 }
 
 sub commit {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 
 	my $node     = $self->node;
 	my $project  = $self->project;

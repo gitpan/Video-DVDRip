@@ -1,4 +1,4 @@
-# $Id: ExecuteJobs.pm,v 1.3 2002/09/22 09:36:07 joern Exp $
+# $Id: ExecuteJobs.pm,v 1.7 2002/11/01 13:30:02 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -23,6 +23,12 @@ use Video::DVDRip::Job::Split;
 use Video::DVDRip::Job::Mplex;
 use Video::DVDRip::Job::TranscodeAudio;
 use Video::DVDRip::Job::MergeAudio;
+use Video::DVDRip::Job::CreateCDImage;
+use Video::DVDRip::Job::BurnCD;
+use Video::DVDRip::Job::GrabSubtitleImages;
+use Video::DVDRip::Job::ExtractPS1;
+use Video::DVDRip::Job::CreateVobsub;
+use Video::DVDRip::Job::CountFramesInFile;
 
 use strict;
 
@@ -79,10 +85,50 @@ sub add_job {
 
 sub execute_jobs {
 	my $self = shift;
-	
+	my %par = @_;
+	my  ($no_diskspace_check, $max_diskspace_needed) =
+	@par{'no_diskspace_check','max_diskspace_needed'};
+
 	my $jobs = $self->jobs;
 
 	my $job_started;
+	my $title = $self->comp('project')->selected_title;
+
+	if ( $title and not $no_diskspace_check ) {
+		$max_diskspace_needed ||=
+			Video::DVDRip::Job->get_max_disk_usage (
+				jobs => $jobs,
+			);
+
+		my $free = $title->get_free_diskspace ( kb => 1 );
+
+		$max_diskspace_needed = int ($max_diskspace_needed/1024);
+		$free = int($free/1024);
+
+		$self->log ("This task needs about $max_diskspace_needed MB, $free MB are free.");
+
+		if ( $max_diskspace_needed + 100 > $free ) {
+			$self->confirm_window (
+			    message =>
+				"Warning: diskspace is low. This task needs\n".
+				"about $max_diskspace_needed MB, but only $free MB are available.\n".
+				"Do you want to continue anyway?",
+			    yes_callback => sub {
+			    	$self->execute_jobs (
+				    no_diskspace_check => 1,
+				);
+			    },
+			    yes_label => "Yes",
+			    no_label => "No",
+			    no_callback => sub {
+			    	$self->set_cancelled(1);
+				$self->finished;
+			    },
+			    omit_cancel => 1,
+			);
+			return 1;
+		}
+	}
 
 	foreach my $job ( @{$jobs} ) {
 		next if $job->state ne 'waiting';
@@ -151,7 +197,7 @@ sub next_job {
 	$self->comp('progress')->close
 		if not $self->reuse_progress;
 	
-	$self->execute_jobs;
+	$self->execute_jobs ( no_diskspace_check => 1);
 	
 	1;
 }
@@ -196,7 +242,7 @@ sub job_aborted {
 		);
 	}
 	# try hard
-	$self->execute_jobs;
+	$self->execute_jobs ( no_diskspace_check => 1);
 
 	1;
 }

@@ -1,4 +1,4 @@
-# $Id: MergeVideoAudio.pm,v 1.2 2002/09/15 15:31:09 joern Exp $
+# $Id: MergeVideoAudio.pm,v 1.3 2002/09/30 21:05:32 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -27,13 +27,17 @@ sub type {
 sub info {
 	my $self = shift;
 
+	return "merge video chunks psu ".$self->psu if $self->title->is_ogg;
 	return "multiplex video and audio psu ".$self->psu;
 }
 
 sub init {
 	my $self = shift;
 	 
+	my $project  = $self->project;
+	$project->set_assigned_job ( $self );
 	$self->SUPER::init;
+	$project->set_assigned_job ( undef );
 	 
 	$self->set_progress_max (
 		$self->title

@@ -1,19 +1,13 @@
 I.   ABOUT
 
-   dvd::rip is a Perl Gtk+ based DVD copy program build on top of a low
-   level DVD Ripping API, which uses the Linux Video Stream Processing
-   Tool transcode, written by Thomas Oestreich.
+   dvd::rip is a full featured DVD copy program written in Perl. It
+   provides an easy to use but feature-rich Gtk+ GUI to control almost
+   all aspects of the ripping and transcoding process. It uses the widely
+   known video processing swissknife transcode and many other Open
+   Source tools. dvd::rip itself is licensed under GPL / Perl Artistic
+   License.
 
-   It simplifies the whole process of making copies of your DVDs using a
-   straightforward 4 step strategy:
-
-    1. Specify file system storage locations.
-    2. Read TOC from DVD, select a title and rip it.
-    3. Adjust clipping and zooming parameters.
-    4. Set transcode options and go!
-
-   Also dvd::rip has a powerful cluster mode which will use all your
-   hardware to increase transcode performance by parallel encoding.
+            "And note: it's spelled dvd::rip, and nothing else."
 
 II.  NOTE
 
@@ -27,32 +21,163 @@ II.  NOTE
    standard and cluster mode, with screenshots, diagrams and more.
    This README covers only the installation not the usage of dvd::rip.
    
-III. INSTALLATION
+III. DOCUMENTATION
 
-   This documentation page covers dvd::rip 0.46.
+[3]1. Installation
+     _________________________________________________________________
+
+     * [4]1.1 Binary distributions
+
+     * [5]1.1.1 Debian packages
+     * [6]1.1.2 SuSE packages
+     * [7]1.1.3 Mandrake packages
+     * [8]1.1.4 RedHat packages
+     * [9]1.1.5 RedHat-8.0-only packages
+     * [10]1.1.6 gentoo packages
+
+     [11]1.2 Source download
+     * [12]1.2.1 dvd::rip tarball download
+     * [13]1.2.2 CVS access
+
+     [14]1.3 Install from source
+     * [15]1.3.1 Requirements
+     * [16]1.3.2 Install dvd::rip
+     * [17]1.3.3 Update dvd::rip
+     _________________________________________________________________
+
+   This chapter describes how you can get and install dvd::rip. You can
+   try one of the several binary distributions or install it from the
+   source.
+
+[18]1.1 Binary distributions
+
+   [ [19]Content ] [ [20]Top ]
+
+   Installation of dvd::rip isn't that hard, but fulfilling the
+   requirements actually is. So you should first try a binary
+   installation using the package manager of your Linux distribution.
+   This tracks all dependencies automatcially and should speed up things
+   significantly.
+
+[21]1.1.1 Debian packages
+
+   Christian Marillat builds video related Debian packages and publishes
+   them on his website [22]http://marillat.free.fr/. You can use apt-get
+   to install the packages if you add one of the following entries
+   (depending on your distribution) to your /etc/apt/sources.list file:
+  deb http://marillat.free.fr/ testing main
+  deb http://marillat.free.fr/ unstable main
+
+   You will find all packages to compile transcode on your own (if you
+   need always the very latest versions), or can get binaries of
+   reasonably recent transcode versions directly. The same applies to
+   dvd::rip.
+
+[23]1.1.2 SuSE packages
+
+   Rainer Ley builds dvd::rip SuSE RPM's you can download from the
+   contrib directory:
+
+     [24]http://www.exit1.org/dvdrip/contrib/suse/
+
+   On his homepage you find several video related RPM's, including
+   transcode:
+
+     [25]http://www6.informatik.uni-erlangen.de/~rainer/rpms/
+
+[26]1.1.3 Mandrake packages
+
+   Mandrake users can get actual dvd::rip and transcode RPM's from the
+   Penguin Liberation Front lair.
+
+     [27]http://plf.zarb.org/
+
+[28]1.1.4 RedHat packages
+
+   A kind RedHat user (who wants to stay anonymous) builds dvd::rip
+   RedHat RPM's, you can download from the contrib directory:
+
+     [29]http://www.exit1.org/dvdrip/contrib/redhat/
+
+[30]1.1.5 RedHat-8.0-only packages
+
+   Michel Alexandre Salim maintains an apt repository with the very
+   latest snapshots of transcode and dvd::rip. It's for RedHat 8.0 only:
+
+     [31]http://messlab.sourceforge.net
+
+[32]1.1.6 gentoo packages
+
+   You can get dvd::rip and transcode from the official gentoo package
+   repository:
+
+     [33]http://www.gentoo.org/packages/media-video/dvdrip.html
+
+[34]1.2 Source download
+
+   [ [35]Content ] [ [36]Top ]
+
+[37]1.2.1 dvd::rip tarball download
+
+   You can download dvd::rip sources from this server or all stable
+   releases from any CPAN mirror.
+
+   Local download of the latest stable release:
+
+     [38]Video-DVDRip-0.48.0.tar.gz
+
+   CPAN download directory: ([39]list of mirrors)
+
+     [40]http://www.cpan.org/CPAN/modules/by-authors/id/J/JR/JRED/
+
+   You can download older versions from here:
+
+     [41]http://www.exit1.org/dvdrip/dist/
+     [42]http://www.exit1.org/dvdrip/dist/pre/
+
+[43]1.2.2 CVS access
+
+   Note: this is mainly intended for developers. This CVS repository is
+   only a read only mirror of my main repository. It's updated manually
+   when I publish releases or pre-releases, so there is no advantage for
+   normal users compared to downloading the tar balls (besides making it
+   easier using "cvs update" ;)
+
+   Root                            Module
+   :pserver:cvs@cvs.exit1.org:/cvs dvdrip
+
+[44]1.3 Install from source
+
+   [ [45]Content ] [ [46]Top ]
+
+[47]1.3.1 Requirements
 
    dvd::rip is a Gtk+ based program written in Perl, using the video
    processing tool transcode for the internals. So you first have to
    comply some prerequisites before installing dvd::rip.
 
-transcode
+   dvd::rip expects all command line tools mentioned here to be found in
+   the standard search PATH.
+
+[48]1.3.1.1 transcode
 
    dvd::rip delegates all the low level DVD handling to transcode, which
    can be obtained here:
 
-     [3]http://www.theorie.physik.uni-goettingen.de/~ostreich/transcode/
+     [49]http://www.theorie.physik.uni-goettingen.de/~ostreich/transcode
+     /
 
-   dvd::rip expects all transcode binaries to be found in the standard
-   search PATH.
+   Version 0.6.1 is recommended, but 0.6.0 should work, too.
 
    If you plan to create (S)VCD's you must compile transcode with the
-   mjpeg export filter module.
+   mjpeg export filter module. transcode's internal bbmpeg filter isn't
+   supported yet.
 
    Note: For almost any Linux distribution exist binary transcode
    packages. Compiling transcode isn't an easy task, so you should try
-   binary packages first. Refer to the [4]download page for details.
+   binary packages first. Refer to the [50]binaries section for details.
 
-Image Magick
+[51]1.3.1.2 Image Magick
 
    For image processing dvd::rip uses the widely distributed software
    package Image Magick, at least the programs identify and convert
@@ -63,12 +188,29 @@ Image Magick
    If your Linux distribution does not ship Image Magick, you can find it
    here:
 
-     [5]http://www.imagemagick.org/
+     [52]http://www.imagemagick.org/
 
-   dvd::rip expects the Image Magick binaries to be found in the standard
-   search PATH.
+[53]1.3.1.3 ogmtools
 
-Perl Gtk Module
+   dvd::rip has support for generating audio / video ogg streams (often
+   known as OGM streams). You need a recent version of ogmtools for that
+   to work:
+
+     [54]http://www.bunkus.org/videotools/ogmtools/index.html
+
+   dvd::rip expects version 0.954 or higher.
+
+[55]1.3.1.4 subtitleripper
+
+   To get subtitles with dvd::rip you need a recent version of the
+   subtitleripper package. It's shipped with transcode in the
+   contrib/subrip directory. You can use this version for transcode >=
+   transcode-0.6.2.20021017. Otherwise fetch it via CVS from the
+   subtitleripper homepage:
+
+     [56]http://subtitleripper.sourceforge.net/
+
+[57]1.3.1.5 Perl Gtk Module
 
    For its GUI component dvd::rip needs the Perl Gtk module, which
    presumes Gtk+ version 1.2 or higher. I tested dvd::rip with Perl Gtk
@@ -76,7 +218,7 @@ Perl Gtk Module
 
    You can find the Gtk module on CPAN, e.g.:
 
-     [6]http://www.perl.org/CPAN/modules/by-module/Gtk/
+     [58]http://www.perl.org/CPAN/modules/by-module/Gtk/
 
    Note:
    Perl Gtk detects your installed Gtk libs and build sub components only
@@ -87,7 +229,7 @@ Perl Gtk Module
    installed. Then install Perl Gtk and everything should work as
    expected.
 
-mplayer and/or xine (with a DVD plugin)
+[59]1.3.1.6 mplayer and/or xine (with a DVD plugin)
 
    If you have mplayer or xine (with the d4d or dvdnav plugin) installed,
    you can preview selected DVD titles/chapters with the appropriate
@@ -95,72 +237,39 @@ mplayer and/or xine (with a DVD plugin)
 
    You can download xine and mplayer from here:
 
-     [7]http://xine.sourceforge.net/
-     [8]http://www.mplayerhq.hu/
+     [60]http://xine.sourceforge.net/
+     [61]http://www.mplayerhq.hu/
 
-   dvd::rip expects the player binaries to be found in the standard
-   search PATH.
+[62]1.3.1.7 CD burning tools
 
-Installing / Updating dvd::rip itself
+   If you want to use dvd::rip's [63]CD burning module, you must have the
+   following tools installed (in brackets the versions I use, maybe older
+   versions work, too, but I recommend these):
 
-   This is quite easy, if you have managed installing the packages
-   mentioned above... ;)
+     [64]mkisofs (1.15a34)
+     [65]cdrecord (0.7.12)
+     [66]vcdimager (0.7.12)
+     [67]cdrdao (1.1.7)
 
-   [9]Download the .tar.gz archive of the dvd::rip version you want to
-   install. Then extract the file, change into the created directory,
-   generate the Makefile and execute make:
+[68]1.3.1.8 Additional requirements for cluster mode
 
-     # as a normal user
-     tar xfz Video-DVDRip-0.46.tar.gz
-     cd Video-DVDRip-x.xx
-     perl Makefile.PL
-     make
-     make test
+   Some additional Perl modules and command line tools are needed for the
+   cluster mode.
 
-   If the "make test" reported no errors, you can install the files into
-   your Perl library path. Maybe you must be root to do this:
+[69]1.3.1.9 Perl modules
 
-     # become root
-     su
-     make install
+   Cluster mode needs the Storable and Event Perl modules. Check if your
+   distribution ships them already. If not, you can find them on CPAN:
 
-   You can ommit the "make install" step. But then you can execute the
-   'dvdrip' binary only from the build directory, otherwise dvd::rip
-   can't find its files.
+     [70]http://www.perl.org/CPAN/modules/by-module/Storable/
+     [71]http://www.perl.org/CPAN/modules/by-module/Event/
 
-   Note: If you execute 'make test' as root, you most probably get an
-   error message about a missing 'splitpipe' command. This is because
-   root hasn't the actual directory in PATH and so dvd::rip can't find
-   the splitpipe program. Do only the 'make install' as root. As well for
-   security reasons you shouldn't compile packages as root.
-
-   Read the Changes file
-
-   I strongly suggest you reading at least the latest change log entry of
-   the Changes file, resp. all entries of the versions you probably
-   skipped in case of an update. It contains important release notes,
-   e.g. about compatibility issues, and all relevant changes from release
-   to release.
-
-Additional steps for cluster mode
-
-   First ensure that you're using transcode version 0.6.0pre4-20020322 or
-   better, because cluster mode doesn't work with earlier versions.
-
-Perl modules
-
-   Additionally you need the Storable and the Event Perl modules. You can
-   find them on CPAN, e.g.:
-
-     [10]http://www.perl.org/CPAN/modules/by-module/Storable/
-     [11]http://www.perl.org/CPAN/modules/by-module/Event/
-
-fping and pstree
+[72]1.3.1.10 fping and pstree
 
    The dvd::rip cluster control daemon uses fping to check if nodes are
    online and pstree to get information about specific child processes.
    Both tools should be shipped with your Linux distribution (fping
-   sometimes isn't, but you can get it here: [12]http://www.fping.com/).
+   sometimes isn't, but you can get it here: [73]http://www.fping.com/).
 
    Note: Matthias Riese told me that there are IPv6 fping packages which
    don't support IPv4, what's most likely not what you want, so pay
@@ -182,106 +291,132 @@ fping and pstree
    only need transcode installed, dvd::rip or any packages mentioned here
    aren't needed there.
 
+[74]1.3.2 Install dvd::rip
+
+   This is quite easy, if you have managed installing the packages
+   mentioned above... ;)
+
+   [75]Download the .tar.gz archive of the dvd::rip version you want to
+   install. Then extract the file, change into the created directory,
+   generate the Makefile and execute make:
+
+     # as a normal user
+     tar xfz Video-DVDRip-0.48.0.tar.gz
+     cd Video-DVDRip-x.xx
+     perl Makefile.PL
+     make
+     make test
+
+   If the "make test" reported no errors, you can install the files into
+   your Perl library path. Maybe you must be root to do this:
+
+     # become root
+     su
+     make install
+
+   You can ommit the "make install" step. But then you can execute the
+   'dvdrip' binary only from the build directory, otherwise dvd::rip
+   can't find its files.
+
+[76]1.3.3 Update dvd::rip
+
+   Updating is just like installing. The only thing you should be aware
+   of is switching the underlying Perl version. This way you easily can
+   get two versions of dvd::rip installed in your system, because
+   dvd::rip installs its libraries in your Perl library directory. Such a
+   installation mixing isn't recommended unless you know exactly what
+   you're doing. So it's better to remove the old version from the old
+   Perl directory if you change the Perl version.
+   Read the Changes file
+
+   I strongly suggest you reading at least the latest change log entry of
+   the Changes file, resp. all entries of the versions you probably
+   skipped in case of an update. It contains important release notes,
+   e.g. about compatibility issues, and all relevant changes from release
+   to release.
+     _________________________________________________________________
+
 URL References
 
    1. http://www.exit1.org/dvdrip/doc/install.cipp
    2. http://www.exit1.org/dvdrip/doc/install.cipp?print=1
-   3. http://www.theorie.physik.uni-goettingen.de/~ostreich/transcode/
-   4. http://www.exit1.org/dvdrip/download.cipp
-   5. http://www.imagemagick.org/
-   6. http://www.perl.org/CPAN/modules/by-module/Gtk/
-   7. http://xine.sourceforge.net/
-   8. http://www.mplayerhq.hu/
-   9. http://www.exit1.org/dvdrip/download.cipp
-  10. http://www.perl.org/CPAN/modules/by-module/Storable/
-  11. http://www.perl.org/CPAN/modules/by-module/Event/
-  12. http://www.fping.com/
+   3. http://www.exit1.org/tmp/index.cipp
+   4. http://www.exit1.org/tmp/install.cipp#binary_download
+   5. http://www.exit1.org/tmp/install.cipp#debian
+   6. http://www.exit1.org/tmp/install.cipp#suse
+   7. http://www.exit1.org/tmp/install.cipp#mandrake
+   8. http://www.exit1.org/tmp/install.cipp#redhat
+   9. http://www.exit1.org/tmp/install.cipp#redhat-apt
+  10. http://www.exit1.org/tmp/install.cipp#gentoo
+  11. http://www.exit1.org/tmp/install.cipp#source_download
+  12. http://www.exit1.org/tmp/install.cipp#source_tgz
+  13. http://www.exit1.org/tmp/install.cipp#cvs
+  14. http://www.exit1.org/tmp/install.cipp#install_source
+  15. http://www.exit1.org/tmp/install.cipp#require
+  16. http://www.exit1.org/tmp/install.cipp#install_dvdrip
+  17. http://www.exit1.org/tmp/install.cipp#update_dvdrip
+  18. http://www.exit1.org/tmp/genreadme8677.html#top
+  19. http://www.exit1.org/tmp/index.cipp
+  20. http://www.exit1.org/tmp/genreadme8677.html#top
+  21. http://www.exit1.org/tmp/genreadme8677.html#top
+  22. http://marillat.free.fr/
+  23. http://www.exit1.org/tmp/genreadme8677.html#top
+  24. http://www.exit1.org/dvdrip/contrib/suse/
+  25. http://www6.informatik.uni-erlangen.de/~rainer/rpms/
+  26. http://www.exit1.org/tmp/genreadme8677.html#top
+  27. http://plf.zarb.org/
+  28. http://www.exit1.org/tmp/genreadme8677.html#top
+  29. http://www.exit1.org/dvdrip/contrib/redhat/
+  30. http://www.exit1.org/tmp/genreadme8677.html#top
+  31. http://messlab.sourceforge.net/
+  32. http://www.exit1.org/tmp/genreadme8677.html#top
+  33. http://www.gentoo.org/packages/media-video/dvdrip.html
+  34. http://www.exit1.org/tmp/genreadme8677.html#top
+  35. http://www.exit1.org/tmp/index.cipp
+  36. http://www.exit1.org/tmp/genreadme8677.html#top
+  37. http://www.exit1.org/tmp/genreadme8677.html#top
+  38. http://www.exit1.org/dvdrip/dist/Video-DVDRip-0.48.0.tar.gz
+  39. http://www.cpan.org/CPAN/SITES.html
+  40. http://www.cpan.org/CPAN/modules/by-authors/id/J/JR/JRED/
+  41. http://www.exit1.org/dvdrip/dist/
+  42. http://www.exit1.org/dvdrip/dist/pre/
+  43. http://www.exit1.org/tmp/genreadme8677.html#top
+  44. http://www.exit1.org/tmp/genreadme8677.html#top
+  45. http://www.exit1.org/tmp/index.cipp
+  46. http://www.exit1.org/tmp/genreadme8677.html#top
+  47. http://www.exit1.org/tmp/genreadme8677.html#top
+  48. http://www.exit1.org/tmp/genreadme8677.html#top
+  49. http://www.theorie.physik.uni-goettingen.de/~ostreich/transcode/
+  50. http://www.exit1.org/tmp/install.cipp#binary_download
+  51. http://www.exit1.org/tmp/genreadme8677.html#top
+  52. http://www.imagemagick.org/
+  53. http://www.exit1.org/tmp/genreadme8677.html#top
+  54. http://www.bunkus.org/videotools/ogmtools/index.html
+  55. http://www.exit1.org/tmp/genreadme8677.html#top
+  56. http://subtitleripper.sourceforge.net/
+  57. http://www.exit1.org/tmp/genreadme8677.html#top
+  58. http://www.perl.org/CPAN/modules/by-module/Gtk/
+  59. http://www.exit1.org/tmp/genreadme8677.html#top
+  60. http://xine.sourceforge.net/
+  61. http://www.mplayerhq.hu/
+  62. http://www.exit1.org/tmp/genreadme8677.html#top
+  63. http://www.exit1.org/tmp/gui-gui_burn.cipp
+  64. http://www.fokus.gmd.de/research/cc/glone/employees/joerg.schilling/private/mkisofs.html
+  65. http://www.fokus.gmd.de/research/cc/glone/employees/joerg.schilling/private/cdrecord.html
+  66. http://www.vcdimager.org/
+  67. http://cdrdao.sourceforge.net/
+  68. http://www.exit1.org/tmp/genreadme8677.html#top
+  69. http://www.exit1.org/tmp/genreadme8677.html#top
+  70. http://www.perl.org/CPAN/modules/by-module/Storable/
+  71. http://www.perl.org/CPAN/modules/by-module/Event/
+  72. http://www.exit1.org/tmp/genreadme8677.html#top
+  73. http://www.fping.com/
+  74. http://www.exit1.org/tmp/genreadme8677.html#top
+  75. http://www.exit1.org/dvdrip/download.cipp
+  76. http://www.exit1.org/tmp/genreadme8677.html#top
 
-IV.  SOURCE DOWNLOAD
-
-   You can download dvd::rip sources from this server or all stable
-   releases from any CPAN mirror.
-
-   Local download of the latest stable release:
-
-     [3]Video-DVDRip-0.46.tar.gz
-
-   CPAN download directory:
-
-     [4]http://www.perl.org/CPAN/modules/by-authors/id/J/JR/JRED/
-
-   Here you can get a list of CPAN mirrors:
-
-     [5]http://www.perl.org/CPAN/SITES.html
-
-   You can download older versions from here:
-
-     [6]http://www.exit1.org/dvdrip/dist/
-     [7]http://www.exit1.org/dvdrip/dist/pre/
-
-RPM's and other contributed downloads
-
-   I do not provide RPM archives myself, but other dvd::rip users are so
-   kind to build some. You'll find them in my contribution directory,
-   beside other interesting donated stuff:
-
-     [8]http://www.exit1.org/dvdrip/contrib/
-
-   Please understand that I can't offer any support for these files.
-
-Debian packages
-
-   Christian Marillat <marillat.christian AT wanadoo.fr> does a great job
-   building video related Debian packages and publishing them on his
-   website [9]http://marillat.free.fr/. You can use apt-get to install
-   the packages if you add the following entries to your
-   /etc/apt/sources.list file:
-  deb http://marillat.free.fr/ testing main
-  deb http://marillat.free.fr/ unstable main
-
-   You will find all packages to compile transcode on your own (if you
-   need always the very latest versions), or can get binaries of
-   reasonably recent transcode versions directly. The same applies to
-   dvd::rip.
-
-SuSE packages
-
-   Rainer Ley maintains several video related SuSE RPM's, including
-   transcode and dvd::rip. Refer to his download page:
-
-     [10]http://www6.informatik.uni-erlangen.de/~rainer/rpms/
-
-Mandrake packages
-
-   Mandrake users can get actual dvd::rip RPM's from the Penguin
-   Liberation Front lair.
-
-     [11]http://plf.zarb.org/
-
-Anonymous CVS access
-
-   Note: this is intended for developers and documentation translators.
-   This CVS repository is only a read only mirror of my main repository.
-   It's updated manually when I publish releases or pre-releases, so
-   there is no advantage for normal users compared to downloading the tar
-   balls mentioned above (besides making it easier using "cvs update" ;)
-
-   Root                            Module
-   :pserver:cvs@cvs.exit1.org:/cvs dvdrip
-
+IV.  
 URL References
-
-   1. http://www.exit1.org/dvdrip/download.cipp
-   2. http://www.exit1.org/dvdrip/download.cipp?print=1
-   3. http://www.exit1.org/dvdrip/dist/Video-DVDRip-0.46.tar.gz
-   4. http://www.perl.org/CPAN/modules/by-authors/id/J/JR/JRED/
-   5. http://www.perl.org/CPAN/SITES.html
-   6. http://www.exit1.org/dvdrip/dist/
-   7. http://www.exit1.org/dvdrip/dist/pre/
-   8. http://www.exit1.org/dvdrip/contrib/
-   9. http://marillat.free.fr/
-  10. http://www6.informatik.uni-erlangen.de/~rainer/rpms/
-  11. http://plf.zarb.org/
 
 V.   MAILING LIST
 
@@ -299,23 +434,28 @@ V.   MAILING LIST
    you must use the correct sender address, because the mailing list
    program has no idea of your alternative mail addresses.
 
+   Before posting any questions or bug reports: please first check the
+   [3]documentation, in particular the [4]FAQ.
+
    IMPORTANT NOTE: please don't post any illegal stuff here, e.g.
    requests for movie downloads or similar stuff! Mailing list members
    breaking this simple rule will be removed immediately.
 
-     * [3]Mailing list subscription
-     * [4]Mailing list archive
+     * [5]Mailing list subscription
+     * [6]Mailing list archive
 
    Because dvd::rip is highly transcode related, I suggest subscribing to
-   the [5]transcode-user mailing list, too.
+   the [7]transcode-user mailing list, too.
 
 URL References
 
    1. http://www.exit1.org/dvdrip/list.cipp
    2. http://www.exit1.org/dvdrip/list.cipp?print=1
-   3. http://lists.exit1.org/mailman/listinfo/dvdrip-users
-   4. http://lists.exit1.org/pipermail/dvdrip-users/
-   5. http://www.theorie.physik.uni-goettingen.de/mailman/listinfo/transcode-users
+   3. http://www.exit1.org/dvdrip/doc/
+   4. http://www.exit1.org/dvdrip/doc/faq.cipp
+   5. http://lists.exit1.org/mailman/listinfo/dvdrip-users
+   6. http://www.exit1.org/dvdrip/htdig/search.cipp
+   7. http://www.theorie.physik.uni-goettingen.de/mailman/listinfo/transcode-users
 
 VI.  COPYRIGHT / CONTACT
 
@@ -331,7 +471,8 @@ VI.  COPYRIGHT / CONTACT
 
    In case of a bug report: please always tell me which version of
    dvd::rip and transcode you're using, otherwise I often have to guess
-   wildly what's going wrong.
+   wildly what's going wrong. And also first check the [4]documentation,
+   in particular the [5]FAQ.
 
    If users send me suggestions and bug reports I usually add them with
    their name and email address to the Changes or TODO file. If you are
@@ -341,7 +482,7 @@ VI.  COPYRIGHT / CONTACT
    I'm native german speaker, so you can send your mails in german, if
    you want. The others have to accept my rough english ;)
 
-   And: consider subscription and posting to the [4]dvdrip-users mailing
+   And: consider subscription and posting to the [6]dvdrip-users mailing
    list list.
 
 URL References
@@ -349,15 +490,30 @@ URL References
    1. http://www.exit1.org/dvdrip/copyright.cipp
    2. http://www.exit1.org/dvdrip/copyright.cipp?print=1
    3. mailto:?subject=dvd::rip
-   4. http://lists.exit1.org/mailman/listinfo/dvdrip-users
+   4. http://www.exit1.org/dvdrip/doc/
+   5. http://www.exit1.org/dvdrip/doc/faq.cipp
+   6. http://lists.exit1.org/mailman/listinfo/dvdrip-users
 
 VII. CHANGES
-   $Id: Changes,v 1.105 2002/09/22 18:22:57 joern Exp $
+   $Id: Changes,v 1.122 2002/11/17 17:35:16 joern Exp $
 
-   Revision history for dvd::rip
+   Revision history for dvd::rip 0.47.1 and newer. See Changes.0.46
+   for older releases.
 
-   0.46 Sun 22 Sep 2002, joern
-	Bugfixes:
-	- project file version detection and auto conversion didn't
-	  work with files generated by 0.45 itself.
-
+   0.48.0 Sun 17 Nov 2002, joern
+	Notes:
+	- transcode 0.6.2.20021114 is the recommended version for
+	  this release. 0.6.0 and 0.6.1 still work, but dvd::rip
+	  lacks features with them, e.g. subtitle support.
+	- From 0.47.06 on dvd::rip needs to know the mount point of your
+	  DVD device. So open the preferences dialog and enter your
+	  mount point there. Also the DVD must be mountable by the
+	  user who executes dvd::rip.
+	- File format changed slightly with 0.47.02, but is backward
+	  compatible. dvd::rip prints a short message when converting
+	  an older file to the new format.
+	- Version numbering changes with this release. It follows
+	  the common MAJOR.MINOR.PATCH scheme. Two branches are
+	  distuingished using the MINOR number: the stable branch
+	  uses even numbers, the unstable odd. So the next stable
+	  release is 0.50.0, bugfixes on 0.48.0 will be numbered 

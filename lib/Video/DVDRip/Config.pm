@@ -1,4 +1,4 @@
-# $Id: Config.pm,v 1.24 2002/08/18 17:34:26 joern Exp $
+# $Id: Config.pm,v 1.28 2002/10/29 20:46:49 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -36,12 +36,12 @@ my %CONFIG_PARAMETER = (
 		value => "dvd::rip",
 	},
 	main_window_width => {
-		label => "Startup Window Width",
+		label => "Startup window width",
 		type  => 'number',
 		value => 660,
 	},
 	main_window_height => {
-		label => "Startup Window Height",
+		label => "Startup window height",
 		type  => 'number',
 		value => 650,
 	},
@@ -50,9 +50,14 @@ my %CONFIG_PARAMETER = (
 		value => 5,
 	},
 	dvd_device => {
-		label => "DVD Device",
+		label => "DVD device",
 		type => 'file',
 		value => "/dev/dvd",
+	},
+	dvd_mount_point => {
+		label => "DVD mount point",
+		type => 'dir',
+		value => "/cdrom",
 	},
 	play_dvd_command => {
 		label => "DVD player command",
@@ -83,7 +88,7 @@ my %CONFIG_PARAMETER = (
 		],
 	},
 	base_project_dir => {
-		label => "Default Data Base Directory",
+		label => "Default data base directory",
 		type => 'dir',
 		value => "/CHANGE_ME",
 	},
@@ -92,18 +97,69 @@ my %CONFIG_PARAMETER = (
 		type => 'dir',
 		value => "/CHANGE_ME",
 	},
+	ogg_file_ext => {
+		label => "OGG file extension",
+		type  => 'string',
+		value => 'ogm',
+		presets => [
+			'ogg',
+			'ogm',
+		],
+	},
+	burn_cdrecord_device => {
+		label => "cdrecord device",
+		type  => 'string',
+		value => '0,X,0',
+	},
+	burn_writing_speed => {
+		label => "Writing speed",
+		type  => 'string',
+		value => '16',
+		presets => [1,2,4,8,12,16,20,24,30,40],
+	},
+	burn_test_mode => {
+		label => "Simulate burning",
+		value => 0,
+	},
+	burn_cdrecord_cmd => {
+		label => "cdrecord command",
+		type  => 'string',
+		value => '/usr/lib/xcdroast-0.98/bin/xcdrwrap CDRECORD',
+		presets => [
+			'/usr/lib/xcdroast-0.98/bin/xcdrwrap CDRECORD',
+			'cdrecord',
+		],
+	},
+	burn_mkisofs_cmd => {
+		label => "mkisofs command",
+		type  => 'string',
+		value => 'mkisofs',
+		presets => ['mkisofs'],
+	},
+	burn_vcdimager_cmd => {
+		label => "vcdimager command",
+		type  => 'string',
+		value => 'vcdimager',
+		presets => ['vcdimager'],
+	},
+	burn_cdrdao_cmd => {
+		label => "cdrdao command",
+		type  => 'string',
+		value => 'cdrdao',
+		presets => ['cdrdao'],
+	},
 	cluster_master_local => {
-		label => "Start Cluster Control Daemon locally",
+		label => "Start cluster control daemon locally",
 		type  => 'switch',
 		value => 1,
 	},
 	cluster_master_server => {
-		label => "Hostname of server with Cluster Control Daemon",
+		label => "Hostname of server with daemon",
 		type  => 'string',
 		value => "",
 	},
 	cluster_master_port => {
-		label => "TCP Port Number of Cluster Control Daemon",
+		label => "TCP port number of daemon",
 		type  => 'number',
 		value => 28646,
 	},
@@ -124,13 +180,29 @@ my %CONFIG_PARAMETER = (
 	},
 );
 
-my @CONFIG_ORDER = qw (
-	dvd_device base_project_dir dvdrip_files_dir
-	play_dvd_command play_file_command play_stdin_command
-	default_video_codec show_tooltips
-	main_window_width main_window_height
-	cluster_master_local cluster_master_server
-	cluster_master_port  
+my @CONFIG_ORDER = (
+	"Filesystem" => [qw(
+		dvd_device         dvd_mount_point
+		base_project_dir
+		dvdrip_files_dir   ogg_file_ext
+	)],
+	"Player commands" => [qw(
+		play_dvd_command   play_file_command
+		play_stdin_command
+	)],
+	"CD burning" => [qw(
+		burn_writing_speed   burn_cdrecord_device 
+		burn_cdrecord_cmd    burn_cdrdao_cmd
+		burn_mkisofs_cmd     burn_vcdimager_cmd   
+	)],
+	"Cluster options" => [qw(
+		cluster_master_local cluster_master_server
+		cluster_master_port  
+	)],
+	"Miscellaneous options" => [qw(
+		default_video_codec  show_tooltips
+		main_window_width    main_window_height
+	)],
 );
 
 sub new {
@@ -325,22 +397,6 @@ sub new {
 			tc_fast_resize  => 1,
 			tc_fast_bisection => 0,
 		),
-#		Video::DVDRip::Preset->new (
-#			name => "fast_bisection",
-#			title => "Fast Frame Bisection",
-#			tc_clip1_top	=> 0,
-#			tc_clip1_bottom	=> 0,
-#			tc_clip1_left	=> 0,
-#			tc_clip1_right	=> 0,
-#			tc_zoom_width	=> undef,
-#			tc_zoom_height	=> undef,
-#			tc_clip2_top	=> 0,
-#			tc_clip2_bottom	=> 0,
-#			tc_clip2_left	=> 0,
-#			tc_clip2_right	=> 0,
-#			tc_fast_resize  => 0,
-#			tc_fast_bisection => 1,
-#		),
 	);
 
 	my $self = {
@@ -363,7 +419,7 @@ sub load {
 	$loaded = do $filename;
 	confess "can't load $filename. Perl error: $@" if $@;
 
-	foreach my $par ( @{$self->order} ) {
+	foreach my $par ( keys %{$self->config} ) {
 		if ( exists $loaded->config->{$par} ) {
 			$self->config->{$par}->{value} =
 				$loaded->config->{$par}->{value};
@@ -399,7 +455,7 @@ sub save {
 	my $fh = FileHandle->new;
 
 	open ($fh, "> $filename") or confess "can't write $filename";
-	print $fh q{# $Id: Config.pm,v 1.24 2002/08/18 17:34:26 joern Exp $},"\n";
+	print $fh q{# $Id: Config.pm,v 1.28 2002/10/29 20:46:49 joern Exp $},"\n";
 	print $fh "# This file was generated by Video::DVDRip Version $Video::DVDRip::VERSION\n\n";
 
 	print $fh ${$data_sref};
@@ -488,135 +544,100 @@ sub get_preset {
 	return;
 }
 
+#---------------------------------------------------------------------
+# Test methods
+#---------------------------------------------------------------------
+
+sub test_play_dvd_command   	{ _executable (@_) 	}
+sub test_play_file_command  	{ _executable (@_) 	}
+sub test_play_stdin_command 	{ _executable (@_) 	}
+
+sub test_dvd_device		{ _writable (@_)	}
+sub test_dvd_mount_point	{ _exists (@_)		}
+sub test_base_project_dir	{ _writable (@_)	}
+sub test_dvdrip_files_dir	{ _writable (@_)	}
+
+sub test_burn_writing_speed	{ _numeric (@_)		}
+sub test_burn_cdrecord_device	{ _device (@_)		}
+sub test_burn_cdrecord_cmd   	{ _executable (@_) 	}
+sub test_burn_cdrdao_cmd   	{ _executable (@_) 	}
+sub test_burn_mkisofs_cmd   	{ _executable (@_) 	}
+sub test_burn_vcdimager_cmd   	{ _executable (@_) 	}
+
+sub test_cluster_master_port	{ _numeric (@_)		}
+
+sub _executable {
+	my $self = shift;
+	my ($name, $value) = @_;
+	
+	$value ||= $self->get_value ($name);
+	my ($file) = split (/ /, $value);
+	
+	if ( not -f $file ) {
+		foreach my $p ( split (/:/, $ENV{PATH}) ) {
+			$file = "$p/$file",last if -x "$p/$file";
+		}
+	}
+	
+	if ( -x $file ) {
+		return "$file executable : Ok";
+	} else {
+		return "$file not found : NOT Ok" if not -e $file;
+		return "$file not executable : NOT Ok";
+	}
+}
+
+sub _writable {
+	my $self = shift;
+	my ($name) = @_;
+	
+	my $value = $self->get_value ($name);
+
+	if ( not -w $value ) {
+		return "$value not found : NOT Ok" if not -e $value;
+		return "$value not writable : NOT Ok";
+	} else {
+		return "$value writable : Ok";
+	}
+}
+
+sub _numeric {
+	my $self = shift;
+	my ($name) = @_;
+	
+	my $value = $self->get_value ($name);
+
+	if ( $value =~ /^\d+$/ ) {
+		return "$value is numeric : Ok";
+	} else {
+		return "$value isn't numeric : NOT Ok";
+	}
+}
+
+sub _device {
+	my $self = shift;
+	my ($name) = @_;
+	
+	my $value = $self->get_value ($name);
+
+	if ( $value =~ /^\d+,\d+,\d+$/ ) {
+		return "$value has format n,n,n : Ok";
+	} else {
+		return "$value has not format n,n,n : NOT Ok";
+	}
+}
+
+sub _exists {
+	my $self = shift;
+	my ($name) = @_;
+	
+	my $value = $self->get_value ($name);
+
+	if ( -e $value ) {
+		return "$value exists : Ok";
+	} else {
+		return "$value doesn't exist : NOT Ok";
+	}
+}
+
 1;
-
-__END__
-
-		Video::DVDRip::Preset->new (
-			name => "169anamorph",
-			title => "16:9 No Letterbox, HQ Resize",
-			tc_clip1_top	=> 0,
-			tc_clip1_bottom	=> 0,
-			tc_clip1_left	=> 0,
-			tc_clip1_right	=> 0,
-			tc_zoom_width	=> 768,
-			tc_zoom_height	=> 432,
-			tc_clip2_top	=> 0,
-			tc_clip2_bottom	=> 0,
-			tc_clip2_left	=> 0,
-			tc_clip2_right	=> 0,
-			tc_fast_resize  => 0,
-			tc_fast_bisection => 0,
-		),
-		Video::DVDRip::Preset->new (
-			name => "169anamorph_letter",
-			title => "16:9 With Letterbox, HQ Resize",
-			tc_clip1_top	=> 0,
-			tc_clip1_bottom	=> 0,
-			tc_clip1_left	=> 0,
-			tc_clip1_right	=> 0,
-			tc_zoom_width	=> 768,
-			tc_zoom_height	=> 432,
-			tc_clip2_top	=> 56,
-			tc_clip2_bottom	=> 56,
-			tc_clip2_left	=> 64,
-			tc_clip2_right	=> 64,
-			tc_fast_resize  => 0,
-			tc_fast_bisection => 0,
-		),
-		Video::DVDRip::Preset->new (
-			name => "169anamorph_fast",
-			title => "16:9 No Letterbox, Fast Resize",
-			tc_clip1_top	=> 4,
-			tc_clip1_bottom	=> 4,
-			tc_clip1_left	=> 0,
-			tc_clip1_right	=> 0,
-			tc_zoom_width	=> 720,
-			tc_zoom_height	=> 400,
-			tc_clip2_top	=> 0,
-			tc_clip2_bottom	=> 0,
-			tc_clip2_left	=> 0,
-			tc_clip2_right	=> 0,
-			tc_fast_resize  => 1,
-			tc_fast_bisection => 0,
-		),
-		Video::DVDRip::Preset->new (
-			name => "169anamorph_letter_fast",
-			title => "16:9 Letterbox, Fast Resize",
-			tc_clip1_top	=> 60,
-			tc_clip1_bottom	=> 60,
-			tc_clip1_left	=> 40,
-			tc_clip1_right	=> 40,
-			tc_zoom_width	=> 640,
-			tc_zoom_height	=> 320,
-			tc_clip2_top	=> 0,
-			tc_clip2_bottom	=> 0,
-			tc_clip2_left	=> 0,
-			tc_clip2_right	=> 0,
-			tc_fast_resize  => 1,
-			tc_fast_bisection => 0,
-		),
-		Video::DVDRip::Preset->new (
-			name => "43nothing",
-			title => "4:3 No Letterbox, HQ Resize",
-			tc_clip1_top	=> 0,
-			tc_clip1_bottom	=> 0,
-			tc_clip1_left	=> 0,
-			tc_clip1_right	=> 0,
-			tc_zoom_width	=> 720,
-			tc_zoom_height	=> 544,
-			tc_clip2_top	=> 0,
-			tc_clip2_bottom	=> 0,
-			tc_clip2_left	=> 0,
-			tc_clip2_right	=> 0,
-			tc_fast_resize  => 0,
-			tc_fast_bisection => 0,
-		),
-		Video::DVDRip::Preset->new (
-			name => "43letter_clip",
-			title => "4:3 Letterbox, HQ Resize",
-			tc_clip1_top	=> 80,
-			tc_clip1_bottom	=> 80,
-			tc_clip1_left	=> 16,
-			tc_clip1_right	=> 16,
-			tc_zoom_width	=> 688,
-			tc_zoom_height	=> 392,
-			tc_clip2_top	=> 4,
-			tc_clip2_bottom	=> 4,
-			tc_clip2_left	=> 0,
-			tc_clip2_right	=> 0,
-			tc_fast_resize  => 0,
-			tc_fast_bisection => 0,
-		),
-		Video::DVDRip::Preset->new (
-			name => "43nothing_fast",
-			title => "4:3 No Letterbox, Fast Resize",
-			tc_clip1_top	=> 0,
-			tc_clip1_bottom	=> 0,
-			tc_clip1_left	=> 0,
-			tc_clip1_right	=> 0,
-			tc_zoom_width	=> 704,
-			tc_zoom_height	=> 528,
-			tc_clip2_top	=> 4,
-			tc_clip2_bottom	=> 4,
-			tc_clip2_left	=> 0,
-			tc_clip2_right	=> 0,
-			tc_fast_resize  => 1,
-			tc_fast_bisection => 0,
-		),
-		Video::DVDRip::Preset->new (
-			name => "43letter_clip_fast",
-			title => "4:3 Letterbox, Fast Resize",
-			tc_clip1_top	=> 80,
-			tc_clip1_bottom	=> 80,
-			tc_clip1_left	=> 16,
-			tc_clip1_right	=> 16,
-			tc_zoom_width	=> 688,
-			tc_zoom_height	=> 392,
-			tc_clip2_top	=> 4,
-			tc_clip2_bottom	=> 4,
-			tc_clip2_left	=> 0,
-			tc_clip2_right	=> 0,
-			tc_fast_resize  => 1,
-			tc_fast_bisection => 0,
-		),

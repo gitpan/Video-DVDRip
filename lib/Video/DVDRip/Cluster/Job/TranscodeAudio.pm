@@ -1,4 +1,4 @@
-# $Id: TranscodeAudio.pm,v 1.4 2002/09/15 15:31:10 joern Exp $
+# $Id: TranscodeAudio.pm,v 1.5 2002/09/30 21:05:58 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -21,16 +21,18 @@ sub set_psu			{ shift->{psu}			= $_[1]	}
 sub set_chunk_cnt		{ shift->{chunk_cnt}		= $_[1]	}
 
 sub info {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 
 	return  "transcode audio track #".
 		$self->vob_nr.", psu ".$self->psu;
 }
 
 sub init {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 	 
+	$self->project->set_assigned_job ( $self );
 	$self->SUPER::init;
+	$self->project->set_assigned_job ( undef );
 	 
 	$self->set_progress_max (
 		$self->title
@@ -43,7 +45,7 @@ sub init {
 }
 
 sub command {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 
 	my $project = $self->project;
 	my $title   = $project->title;

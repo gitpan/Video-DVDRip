@@ -1,4 +1,4 @@
-# $Id: Content.pm,v 1.12 2002/08/18 17:41:35 joern Exp $
+# $Id: Content.pm,v 1.14 2002/11/03 11:36:58 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -31,6 +31,10 @@ sub set_project	{
 
 	foreach my $title ( values %{$self->titles} ) {
 		$title->set_project ($project);
+		next if not $title->subtitles;
+		foreach my $subtitle ( values %{$title->subtitles} ) {
+			$subtitle->set_title ( $title );
+		}
 	}
 	
 	return $project;
@@ -58,23 +62,18 @@ sub read_title_listing {
 
 	my $title_cnt;
 
-	if ( $rip_mode ne 'vob_title' ) {
-		# execute tcprobe to get the number of titles
-		my $output = $self->system (
-			command => "tcprobe -i $data_source"
-		);
+	# execute tcprobe to get the number of titles
+	my $output = $self->system (
+		command => "tcprobe -i $data_source"
+	);
 	
-		($title_cnt) = $output =~ m!DVD\s+title\s+\d+/(\d+)!;
+	($title_cnt) = $output =~ m!DVD\s+title\s+\d+/(\d+)!;
 
-		# Fatal error if we can't determine the title cnt
-		if ( not $title_cnt ) {
-			croak "Can't determine number of titles.\n".
-			      "Please put the DVD in your drive.\n".
-			      "tcprobe output was:\n$output";
-		}
-	
-	} else {
-		$title_cnt = 1;
+	# Fatal error if we can't determine the title cnt
+	if ( not $title_cnt ) {
+		croak "Can't determine number of titles.\n".
+		      "Please put the DVD in your drive.\n".
+		      "tcprobe output was:\n$output";
 	}
 	
 	my ($nr, %titles);

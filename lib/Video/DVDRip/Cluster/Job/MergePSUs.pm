@@ -1,4 +1,4 @@
-# $Id: MergePSUs.pm,v 1.6 2002/09/15 15:31:09 joern Exp $
+# $Id: MergePSUs.pm,v 1.7 2002/10/06 11:42:39 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -52,7 +52,6 @@ sub parse_output {
 
 	if ( $line =~ /\(\d+-(\d+)\)/ ) {
 		$self->set_progress_cnt ($1);
-
 	}
 
 	$self->set_operation_successful ( 1 )

@@ -1,4 +1,4 @@
-# $Id: Master.pm,v 1.23 2002/09/15 15:31:09 joern Exp $
+# $Id: Master.pm,v 1.26 2002/11/12 22:04:10 joern Exp $
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
 # 
@@ -131,7 +131,7 @@ sub check_prerequisites {
 }
 
 sub node_check_unnecessary {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 
 	return if Video::DVDRip::RPC::Server->instance->clients_connected;
 	return if @{$self->job_get_unfinished_projects};
@@ -139,7 +139,7 @@ sub node_check_unnecessary {
 }
 
 sub enable_node_check {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 
 	return if $self->node_check_watcher;
 
@@ -159,7 +159,7 @@ sub enable_node_check {
 }
 
 sub disable_node_check {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 	
 	return if not $self->node_check_watcher;
 
@@ -172,7 +172,7 @@ sub disable_node_check {
 }
 
 sub node_check {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 	
 	my $nodes_list;
 	foreach my $node ( @{$self->nodes} ) {
@@ -204,12 +204,24 @@ sub node_check {
 				next if $node->state eq 'stopped';
 				$node_name = $node->hostname;
 				if ( $buffer =~ /^$node_name\s+is\s+alive/m ) {
-					$self->log ("Node '$node_name' is now online")
-						if not $node->alive;
-					$self->log ("Node '$node_name' is Ok again")
-						if $node->alive == 0.5;
-					$node->set_alive(1);
+					if ( not $node->alive and $node->answered_last_ping == 2 ) {
+						$self->log ("Node '$node_name' is now online.");
+						$node->set_alive(1);
+					}
+					if ( not $node->alive and $node->answered_last_ping == 1 ) {
+						$self->log ("Node '$node_name' is still reachable. Will be online in 10 seconds.");
+						$node->set_answered_last_ping ( 2 );
+					}
+					if ( not $node->alive and not $node->answered_last_ping ) {
+						$self->log ("Node '$node_name' is now reachable. Will be online in 20 seconds.");
+						$node->set_answered_last_ping ( 1 );
+					}
+					if ( $node->alive == 0.5 ) {
+						$self->log ("Node '$node_name' is Ok again");
+						$node->set_alive(1);
+					}
 				} else {
+					$node->set_answered_last_ping ( 0 );
 					if ( $node->alive == 0.5 ) {
 						$self->log ("Warning: Node '$node_name' is unreachable")
 							if $node->alive or $node->state eq 'unknown';
@@ -236,7 +248,7 @@ sub node_check {
 }
 
 sub hello {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 	
 	$self->enable_node_check;
 	
@@ -244,7 +256,7 @@ sub hello {
 }
 
 sub load {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 	
 	my $filename = $self->config_filename;
 	return if not -f $filename;
@@ -269,7 +281,7 @@ sub load {
 }
 
 sub save {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 	
 	my $filename = $self->config_filename;
 	
@@ -295,7 +307,7 @@ sub save {
 }
 
 sub load_nodes {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 	
 	my $dir = $self->node_dir;
 	
@@ -315,7 +327,7 @@ sub load_nodes {
 }
 
 sub load_projects {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 	my %par = @_;
 	my ($project_order) = @par{'project_order'};
 
@@ -339,7 +351,7 @@ sub load_projects {
 }
 
 sub add_node {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 	my %par = @_;
 	my ($node) = @par{'node'};
 	
@@ -358,7 +370,7 @@ sub add_node {
 }
 
 sub remove_node {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 	my %par = @_;
 	my ($node) = @par{'node'};
 
@@ -378,7 +390,7 @@ sub remove_node {
 }
 
 sub get_project_index {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 	my %par = @_;
 	my ($project) = @par{'project'};
 	
@@ -396,7 +408,7 @@ sub get_project_index {
 }
 
 sub project_by_id {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 	my %par = @_;
 	my ($id) = @par{'id'};
 	
@@ -409,7 +421,7 @@ sub project_by_id {
 }
 
 sub add_project {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 	my %par = @_;
 	my ($project) = @par{'project'};
 	
@@ -439,7 +451,7 @@ sub add_project {
 }
 
 sub move_up_project {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 	my %par = @_;
 	my ($project) = @par{'project'};
 	
@@ -459,7 +471,7 @@ sub move_up_project {
 }
 
 sub move_down_project {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 	my %par = @_;
 	my ($project) = @par{'project'};
 	
@@ -479,7 +491,7 @@ sub move_down_project {
 }
 
 sub schedule_project {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 	my %par = @_;
 	my ($project) = @par{'project'};
 	
@@ -502,7 +514,7 @@ sub schedule_project {
 }
 
 sub remove_project {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 	my %par = @_;
 	my ($project) = @par{'project'};
 	
@@ -526,7 +538,7 @@ sub remove_project {
 }
 
 sub get_projects_lref {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 	
 	my $nr;
 	my @projects;
@@ -544,7 +556,7 @@ sub get_projects_lref {
 }
 
 sub get_jobs_lref {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 	my %par = @_;
 	my ($project_id) = @par{'project_id'};
 	
@@ -554,7 +566,7 @@ sub get_jobs_lref {
 }
 
 sub get_nodes_lref {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 	
 	my $nr;
 	my @nodes;
@@ -571,7 +583,7 @@ sub get_nodes_lref {
 }
 
 sub job_control {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 	return if $self->in_job_control;
 
 	$self->set_in_job_control(1);
@@ -588,7 +600,7 @@ sub job_control {
 }
 
 sub job_sort_projects {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 	
 	# divide projects in order to not scheduled and scheduled projects
 	my @not_scheduled;
@@ -614,7 +626,7 @@ sub job_sort_projects {
 }
 
 sub job_delegate_pending_jobs {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 	
 	# get idle nodes
 	my $nodes = $self->job_get_idle_nodes;
@@ -627,6 +639,10 @@ sub job_delegate_pending_jobs {
 
 	# nothing to do if no project is in the queue for processing
 	return 1 if not @{$projects};	
+
+	# in this array we remember local jobs which
+	# are skipped due to a lack of local nodes
+	my @skipped_local_access_jobs;
 
 	# now check for jobs for each project, in order of priority
 	foreach my $project ( @{$projects} ) {
@@ -661,10 +677,6 @@ sub job_delegate_pending_jobs {
 			}
 		}
 
-		# in this array we remember local jobs which
-		# are skipped due to a lack of local nodes
-		my @skipped_local_access_jobs;
-
 		# check if we can start jobs
 		foreach my $job ( @local_jobs, @other_jobs ) {
 			last if not @{$nodes};
@@ -697,13 +709,13 @@ sub job_delegate_pending_jobs {
 			# this is a normal job: start it on the next idle node
 			$job->start_job ( node => shift @{$nodes} );
 		}
+	}
 
-		# do we have skipped local jobs and idle nodes left?
-		if ( @{$nodes} and @skipped_local_access_jobs ) {
-			foreach my $job ( @skipped_local_access_jobs ) {
-				$job->start_job ( node => shift @{$nodes} );
-				last if not @{$nodes};
-			}
+	# do we have skipped local jobs and have idle nodes left?
+	if ( @{$nodes} and @skipped_local_access_jobs ) {
+		foreach my $job ( @skipped_local_access_jobs ) {
+			$job->start_job ( node => shift @{$nodes} );
+			last if not @{$nodes};
 		}
 	}
 
@@ -711,7 +723,7 @@ sub job_delegate_pending_jobs {
 }
 
 sub job_get_idle_nodes {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 	
 	# create a list of nodes which have the 'idle' state
 	my @idle_nodes;
@@ -725,7 +737,7 @@ sub job_get_idle_nodes {
 }
 
 sub job_get_unfinished_projects {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 	
 	my @projects;
 
@@ -741,7 +753,7 @@ sub job_get_unfinished_projects {
 }
 
 sub shutdown {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 	
 	Event->timer (
 		interval => 2,
@@ -756,7 +768,7 @@ sub shutdown {
 }
 
 sub get_next_job_id {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 	
 	my $job_id = $self->set_job_id ( 1 + $self->job_id );
 	$self->save;
@@ -765,7 +777,7 @@ sub get_next_job_id {
 }
 
 sub get_online_nodes_cnt {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 
 	my $cnt = 0;	
 	foreach my $node ( @{$self->nodes} ) {

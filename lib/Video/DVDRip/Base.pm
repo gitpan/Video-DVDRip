@@ -1,4 +1,4 @@
-# $Id: Base.pm,v 1.24 2002/09/15 15:28:10 joern Exp $
+# $Id: Base.pm,v 1.26 2002/10/15 21:06:45 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -40,7 +40,7 @@ sub config_object {
 	$CONFIG_OBJECT;
 }
 
-sub debug_level			{ shift->{debug_level}		}
+sub debug_level		{ $Video::DVDRip::DEBUG || shift->{debug_level}	}
 
 sub set_debug_level {
 	my $thing = shift;
@@ -216,7 +216,7 @@ sub format_time {
 
 sub stripped_exception {
 	my $text = $@;
-	$text =~ s/\s+at\s+[^\s]+\s+line\s+\d+//;
+	$text =~ s/\s+at\s+[^\s]+\s+line\s+\d+\.?//;
 	$text =~ s/^msg:\s*//;
 	return $text;
 }
@@ -425,6 +425,29 @@ sub search_perl_inc {
 	}
 
 	return $file;
+}
+
+{
+	my %COMMANDS_DETECTED;
+
+	sub has {
+		my $self = shift;
+		my %par = @_;
+		my ($command) = $par{'command'};
+
+		return $COMMANDS_DETECTED{$command}
+			if exists $COMMANDS_DETECTED{$command};
+
+		my $rc = Video::DVDRip::Config->_executable (
+			"", $command
+		);
+
+		if ( $rc =~ /NOT/ ) {
+			return $COMMANDS_DETECTED{$command} = 0;
+		} else {
+			return $COMMANDS_DETECTED{$command} = 1;
+		}
+	}
 }
 
 1;

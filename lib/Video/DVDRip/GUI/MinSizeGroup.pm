@@ -1,4 +1,4 @@
-# $Id: MinSizeGroup.pm,v 1.1 2002/04/06 10:26:48 joern Exp $
+# $Id: MinSizeGroup.pm,v 1.2 2002/10/06 11:46:16 joern Exp $
 
 package Video::DVDRip::GUI::MinSizeGroup;
 
@@ -7,6 +7,7 @@ use Carp;
 
 sub size_aloc_arg		{ shift->{size_aloc_arg}		}
 sub widgets			{ shift->{widgets}			}
+sub debug			{ shift->{debug}			}
 
 sub maximum			{ shift->{maximum}			}
 sub set_maximum			{ shift->{maximum}		= $_[1] }
@@ -16,7 +17,7 @@ sub set_signals_received	{ shift->{signals_received}	= $_[1] }
 sub new {
 	my $class = shift;
 	my %par = @_;
-	my ($type) = @par{'type'};
+	my ($type, $debug) = @par{'type','debug'};
 	
 	# v - control vertical size, h - control horizontal size
 	croak "type must be 'h' or 'v'"
@@ -27,6 +28,7 @@ sub new {
 		type    	 => $type,
 		maximum		 => 0,
 		signals_received => 0,
+		debug            => $debug,
 
 		# index of the size-alloc callback argument
 		# for this type
@@ -40,6 +42,8 @@ sub add {
 	my $self = shift;
 	my ($widget) = @_;
 	
+	$self->debug && print "MinSizeGroup: added widget $widget\n";
+
 	push @{$self->widgets}, $widget;
 	
 	# Track size-alloc signals which are sent when
@@ -64,6 +68,9 @@ sub note_size {
 	my  ($widget, $value, $signal) =
 	@par{'widget','value','signal'};
 	
+	$self->debug && print "MinSizeGroup: got signal for widget $widget. ".
+			      "value=$value max=".$self->maximum."\n";
+
 	# track maximum value
 	$self->set_maximum($value) if $value > $self->maximum;
 

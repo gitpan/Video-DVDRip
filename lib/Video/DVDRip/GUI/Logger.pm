@@ -1,4 +1,4 @@
-# $Id: Logger.pm,v 1.2 2002/01/03 17:40:01 joern Exp $
+# $Id: Logger.pm,v 1.3 2002/10/06 11:45:33 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -48,6 +48,23 @@ sub log {
 	print OUT $line;
 	close OUT;
 
+	1;
+}
+
+sub nuke {
+	my $self = shift;
+
+	my $text = $self->text_widget;
+	
+	my $length = -s $self->project->logfile;
+	
+	$text->set_point( 0 );
+	$text->forward_delete( $length );
+
+	unlink $self->project->logfile;
+	
+	$self->log ("Logfile nuked.");
+	
 	1;
 }
 

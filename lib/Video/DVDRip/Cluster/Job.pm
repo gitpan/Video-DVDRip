@@ -1,4 +1,4 @@
-# $Id: Job.pm,v 1.12 2002/09/15 15:31:09 joern Exp $
+# $Id: Job.pm,v 1.13 2002/09/30 21:04:43 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -50,7 +50,7 @@ sub new {
 }
 
 sub log {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 	my ($msg) = @_;
 
 	$msg .= " on node ".$self->node->name;
@@ -59,7 +59,7 @@ sub log {
 }
 
 sub start_job {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 	my %par = @_;
 	my ($node) = @par{'node'};
 
@@ -76,13 +76,13 @@ sub start_job {
 }
 
 sub get_job_command {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 	
 	return $self->node->get_popen_code ( command => $self->command );
 }
 
 sub commit_job {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 	
 	$self->SUPER::commit_job;
 
@@ -100,7 +100,7 @@ sub commit_job {
 }
 
 sub abort_job {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 	
 	my $pipe = $self->pipe; # save pipe (set to undef in SUPER method)
 

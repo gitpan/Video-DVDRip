@@ -1,4 +1,4 @@
-# $Id: Title.pm,v 1.31 2002/09/22 09:35:36 joern Exp $
+# $Id: Title.pm,v 1.33 2002/10/06 11:43:28 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -32,7 +32,7 @@ sub frames_per_chunk		{ shift->{frames_per_chunk}		}
 sub set_frames_per_chunk	{ shift->{frames_per_chunk} 	= $_[1] }
 
 sub create_vob_dir {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 	
 	# no vob_dir creating here. This is done just before we
 	# start transcoding to prevent from too much ssh remote
@@ -42,7 +42,7 @@ sub create_vob_dir {
 }
 
 sub create_avi_dir {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 
 	# no avi_dir creating here. This is done just before we
 	# start transcoding to prevent from too much ssh remote
@@ -56,7 +56,7 @@ sub create_avi_dir {
 #-----------------------------------------------------------------------
 
 sub multipass_log_dir {				# directory for multipass logs
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 
 	my $job = $self->project->assigned_job or croak "No job assigned";
 	
@@ -98,12 +98,14 @@ sub avi_file {					# transcode output file
 }
 
 sub target_avi_audio_file {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 
 	my $job = $self->project->assigned_job or croak "No job assigned";
 	
+	my $ext = $self->is_ogg ? $self->config('ogg_file_ext') : 'avi';
+
 	return sprintf (
-		"%s/%03d/audio-psu-%02d/%s-%03d-audio-psu-%02d-%02d.avi",
+		"%s/%03d/audio-psu-%02d/%s-%03d-audio-psu-%02d-%02d.$ext",
 		$self->project->final_avi_dir,
 		$self->nr,
 		$job->psu,
@@ -115,7 +117,7 @@ sub target_avi_audio_file {
 }
 
 sub audio_video_psu_dir {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 
 	return sprintf (
 		"%s/%03d/audio-video-psu",
@@ -126,7 +128,7 @@ sub audio_video_psu_dir {
 
 
 sub audio_video_psu_file {				# audio only file
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 
 	my $job = $self->project->assigned_job or croak "No job assigned";
 	
@@ -140,10 +142,12 @@ sub audio_video_psu_file {				# audio only file
 }
 
 sub target_avi_file {				# final avi, merged PSUs + audio
-	my $self = shift;
+	my $self = shift; $self->trace_in;
+
+	my $ext = $self->is_ogg ? $self->config('ogg_file_ext') : 'avi';
 
 	return sprintf (
-		"%s/%03d/%s-%03d.avi",
+		"%s/%03d/%s-%03d.$ext",
 		$self->project->final_avi_dir,
 		$self->nr,
 		$self->project->name,
@@ -156,7 +160,7 @@ sub target_avi_file {				# final avi, merged PSUs + audio
 #-----------------------------------------------------------------------
 
 sub get_transcode_command {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 
 	my $job       = $self->project->assigned_job or croak "No job assigned";
 
@@ -166,14 +170,17 @@ sub get_transcode_command {
 
 	my $nav_file  = $self->vob_nav_file;
 
-	my $command   = $self->SUPER::get_transcode_command (@_);
+	my $command   = $self->SUPER::get_transcode_command (
+		no_audio => 1,
+		@_
+	);
 
 	# remove DVDRIP_SUCCESS
 	$command =~ s/&&\s+echo\s+DVDRIP_SUCCESS//;
 
 	# no audio options
 	$command =~ s/\s-[baN]\s+[^\s]+//;
-
+	
 	# no -c in cluster mode
 	$command =~ s/ -c \d+-\d+//;
 
@@ -203,7 +210,7 @@ sub get_transcode_command {
 }
 
 sub get_transcode_audio_command {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 	my %par = @_;
 	my ($vob_nr, $target_nr) = @par{'vob_nr','target_nr'};
 
@@ -224,34 +231,54 @@ sub get_transcode_audio_command {
 }
 
 sub get_merge_audio_command {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 	my %par = @_;
 	my ($vob_nr, $target_nr) = @par{'vob_nr','target_nr'};
 
 	my $job = $self->project->assigned_job or croak "No job assigned";
 
 	my $avi_file      = $self->audio_video_psu_file;
-	my $audio_file    = $self->target_avi_audio_file ( nr => $target_nr );
+	my $audio_file    = $self->target_avi_audio_file;
 	my $target_file   = $avi_file;
 
 	$target_file = $self->target_avi_file
 		if $job->move_final;
 
-	my $command =
-		"avimerge".
-		" -i $avi_file".
-		" -p $audio_file".
-		" -a $target_nr".
-		" -o $avi_file.merged &&".
-		" mv $avi_file.merged $target_file &&".
-		" rm $audio_file &&".
-		" echo DVDRIP_SUCCESS";
+	my $command;
+
+	if ( $self->is_ogg ) {
+		my $audio_video_psu_file;
+		# remove audio_video_psu file here, because
+		# this isn't done in get_merge_video_audio_command,
+		# because audio merging is done here with ogg.
+		$audio_video_psu_file = $self->audio_video_psu_file
+			if $self->with_cleanup;
+
+		$command =
+			"ogmmerge -o $avi_file.merged ".
+			" $avi_file".
+			" $audio_file &&".
+			" mv $avi_file.merged $target_file &&".
+			" rm -f $audio_file $audio_video_psu_file &&".
+			" echo DVDRIP_SUCCESS";
+		
+	} else {
+		$command =
+			"avimerge".
+			" -i $avi_file".
+			" -p $audio_file".
+			" -a $target_nr".
+			" -o $avi_file.merged &&".
+			" mv $avi_file.merged $target_file &&".
+			" rm $audio_file &&".
+			" echo DVDRIP_SUCCESS";
+	}
 
 	return $command;
 }
 
 sub get_merge_video_audio_command {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 	
 	my $job = $self->project->assigned_job or croak "No job assigned";
 
@@ -271,18 +298,23 @@ sub get_merge_video_audio_command {
 	my $command =
 		"mkdir -m 0775 -p '$audio_video_psu_dir' && ".
 		"avimerge -i $avi_chunks_dir/*".
-		" -o $audio_video_psu_file ".
-		" -p $audio_psu_file ".
-		" && echo DVDRIP_SUCCESS";
+		" -o $audio_video_psu_file ";
+	
+	$command .= " -p $audio_psu_file " if not $self->is_ogg;
 
-	$command .= " && rm $avi_chunks_dir/* '$audio_psu_file'"
-		if $self->with_cleanup;
+	$command .= " && rm $avi_chunks_dir/*"
+			if $self->with_cleanup;
 
+	$command .= " '$audio_psu_file'"
+		if $self->with_cleanup and not $self->is_ogg;
+
+	$command .= " && echo DVDRIP_SUCCESS";
+		    
 	return $command;
 }
 
 sub get_merge_psu_command {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 	my %par = @_;
 	my ($psu) = @par{'psu'};
 	
@@ -303,7 +335,7 @@ sub get_merge_psu_command {
 }
 
 sub get_split_command {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 
 	my $target_avi_file   = $self->target_avi_file;
 
@@ -314,7 +346,7 @@ sub get_split_command {
 }
 
 sub save {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 	
 	$self->project->save;
 	

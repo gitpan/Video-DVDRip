@@ -1,4 +1,4 @@
-# $Id: Job.pm,v 1.2 2002/09/15 15:31:10 joern Exp $
+# $Id: Job.pm,v 1.6 2002/11/01 13:31:46 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -81,6 +81,10 @@ sub set_progress_show_fps	{ shift->{progress_show_fps}	= $_[1]	}
 sub progress_show_elapsed	{ shift->{progress_show_elapsed}	}
 sub set_progress_show_elapsed	{ shift->{progress_show_elapsed}= $_[1]	}
 
+# percent/progress calc possible?
+sub progress_show_percent	{ shift->{progress_show_percent}	}
+sub set_progress_show_percent	{ shift->{progress_show_percent}= $_[1]	}
+
 # internal switch, which notes if the job did receive progress
 # information from the command (progress_start_time is set on
 # first data retreival)
@@ -129,6 +133,7 @@ sub new {
 		state   	   	=> 'waiting',
 		cb_finished		=> $cb_finished,
 		progress_show_elapsed	=> 1,
+		progress_show_percent   => 1,
 		pipe_class		=> "Video::DVDRip::GUI::Pipe",
 	}, $class;
 	
@@ -292,8 +297,11 @@ sub calc_progress {
 			$self->format_time ( time => $time );
 	}
 
+	return $self->info." (no progress information available)"
+		if not $self->progress_show_fps and
+		   not $self->progress_show_percent;
 	return $self->info.": Initializing" if $cnt == 0;
-	
+
 	if ( not $self->progress_called ) {
 		$self->set_progress_start_time (time);
 		$self->set_progress_called(1);
@@ -306,18 +314,23 @@ sub calc_progress {
 	$elapsed = ", elapsed ".$self->format_time( time => $time )
 		if $self->progress_show_elapsed;
 
-	my $eta;
-	$eta = ", ETA: ".$self->format_time (
-		time => int ( $time * $max / $cnt ) - $time
-	) if $cnt > 50;
-
 	my $info = $self->progress_info;
 	$info .= ": " if $info;
 
-	return $info.sprintf (
-		"%2.2f%\%$fps$elapsed$eta",
-		$cnt / $max * 100
-	);
+	my $percent = '';
+	my $eta = '';
+
+	if ( $self->progress_show_percent ) {
+		$percent = sprintf ("%2.2f\%", $cnt / $max * 100);
+		$eta = ", ETA: ".$self->format_time (
+			time => int ( $time * $max / $cnt ) - $time
+		) if $cnt > 50;
+	} else {
+		$eta = ", ETA: unknown";
+		$fps =~ s/, //;
+	}
+ 
+ 	return "$info$percent$fps$elapsed$eta";
 }
 
 sub progress_runtime {
@@ -366,6 +379,30 @@ sub dependency_ok {
 	}
 	
 	return 1;
+}
+
+sub get_max_disk_usage {
+	my $class = shift;
+	my %par = @_;
+	my ($jobs) = @par{'jobs'};
+	
+	my $current_disk_usage = 0;
+	my $max_disk_usage     = 0;
+	
+	foreach my $job ( @{$jobs} ) {
+#		print $job->type.": $current_disk_usage => ";
+		$current_disk_usage += $job->get_diskspace_needed
+			if $job->can('get_diskspace_needed');
+		
+#		print "$current_disk_usage => ";
+		$max_disk_usage = $current_disk_usage
+			if $current_disk_usage > $max_disk_usage; 
+		$current_disk_usage -= $job->get_diskspace_freed
+			if $job->can('get_diskspace_freed');
+#		print "$current_disk_usage\n";
+	}
+	
+	return $max_disk_usage;
 }
 
 1;

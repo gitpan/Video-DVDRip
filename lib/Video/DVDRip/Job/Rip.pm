@@ -1,4 +1,4 @@
-# $Id: Rip.pm,v 1.1 2002/09/01 13:57:52 joern Exp $
+# $Id: Rip.pm,v 1.4 2002/11/01 13:32:30 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -37,9 +37,26 @@ sub init {
 	my $title = $self->title;
 	
 	$self->set_progress_show_fps ( 1 );
-	$self->set_progress_max ( $title->frames );
 	
+	if ( not $self->chapter or $self->title->tc_use_chapter_mode eq 'all' ) {
+		$self->set_progress_max ( $title->frames );
+	} else {
+		$self->set_progress_show_percent( 0 );
+		$self->set_progress_max ( 0 );
+		
+	}
+
 	1;
+}
+
+sub get_diskspace_needed {
+	my $self = shift; $self->trace_in;
+
+	return 0;
+}
+
+sub get_diskspace_freed {
+	return 0;
 }
 
 sub command {

@@ -1,4 +1,4 @@
-# $Id: StorageTab.pm,v 1.11 2002/09/15 15:30:31 joern Exp $
+# $Id: StorageTab.pm,v 1.14 2002/11/03 11:36:59 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -178,6 +178,21 @@ sub create_source_frame {
 
 	$self->storage_widgets->{rip_mode_rip} = $radio;
 
+	# Warning message
+	++$row;
+	$hbox = Gtk::HBox->new;
+	$hbox->show;
+	$label = Gtk::Label->new (
+		"\n".
+		"Use the following modes only, if ripping is no option for you.\n".
+		"Many interesting features are disabled for them."
+	);
+	$label->set_justify('left');
+	$label->show;
+	$hbox->pack_start($label, 0, 1, 0);
+	$table->attach ($hbox, 0, 2, $row, $row+1, 'fill','expand',0,0);
+
+
 	# Mode 2 - transcode on the fly from dvd
 	++$row;
 	$hbox = Gtk::HBox->new;
@@ -220,32 +235,7 @@ sub create_source_frame {
 
 	$self->storage_widgets->{rip_mode_dvd_image} = $radio;
 	$self->storage_widgets->{rip_mode_dvd_image_dir} = $entry;
-if ( 0 ) {
-	# Mode 4 - Use existent VOB title on harddisk
-	++$row;
-	$radio = $radio_group = Gtk::RadioButton->new ("", $radio_group);
-	$radio->show;
-	$table->attach ($radio, 0, 1, $row, $row+1, 'fill','expand',0,0);
 
-	$label = Gtk::Label->new ("Use existent title VOB files(s) on harddisk, directory location:");
-	$label->show;
-	$hbox = Gtk::HBox->new;
-	$hbox->show;
-	$hbox->pack_start($label, 0, 1, 0);
-
-	$table->attach ($hbox, 1, 2, $row, $row+1, 'fill','expand',0,0);
-
-	++$row;
-
-	$entry = Gtk::Entry->new;
-	$entry->show;
-	$entry->set_sensitive(0);
-
-	$table->attach ($entry, 1, 2, $row, $row+1, 'fill','expand',0,0);
-
-	$self->storage_widgets->{rip_mode_vob_title} = $radio;
-	$self->storage_widgets->{rip_mode_vob_title_dir} = $entry;
-}
 	# Connect Signals
 	my $widgets = $self->storage_widgets;
 	foreach my $mode ( qw ( rip dvd dvd_image ) ) {
@@ -255,7 +245,7 @@ if ( 0 ) {
 		} );
 	}
 	
-	$widgets->{rip_mode_dvd_image_dir}->signal_connect ("changed", sub {
+	$widgets->{rip_mode_dvd_image_dir}->signal_connect ("focus-out-event", sub {
 		return 1 if $self->in_storage_init;
 	  	my $text = $_[0]->get_text;
 		if ( not $text =~ m!^/! ) {
@@ -263,19 +253,9 @@ if ( 0 ) {
 			$_[0]->set_text($text);
 		}
 		$self->project->set_dvd_image_dir ( $text );
+		1;
 	} );
 
-if ( 0 ) {
-	$widgets->{rip_mode_vob_title_dir}->signal_connect ("changed", sub {
-		return 1 if $self->in_storage_init;
-	  	my $text = $_[0]->get_text;
-		if ( not $text =~ m!^/! ) {
-			$text = "/$text";
-			$_[0]->set_text($text);
-		}
-		$self->project->set_vob_title_dir ( $text );
-	} );
-}
 	return $frame;
 }
 
@@ -288,7 +268,6 @@ sub init_storage_values {
 
 	my $widgets = $self->storage_widgets;
 	$widgets->{rip_mode_dvd_image_dir}->set_text ($project->dvd_image_dir);
-#	$widgets->{rip_mode_vob_title_dir}->set_text ($project->vob_title_dir);
 
 	my $mode = $project->rip_mode || "rip";
 
@@ -308,16 +287,16 @@ sub change_rip_mode {
 	
 	my $widgets = $self->storage_widgets;
 	$widgets->{rip_mode_dvd_image_dir}->set_sensitive ($mode eq 'dvd_image');
-#	$widgets->{rip_mode_vob_title_dir}->set_sensitive ($mode eq 'vob_title');
 	
 	return 1 if not $self->transcode_widgets->{tc_psu_core_yes};
 
 	if ( $mode ne 'rip' ) {
-		$self->rip_title_widgets->{rip_button}->child->set("Volume Scan\nSelected Title(s) [optional]");
+		$self->rip_title_widgets->{rip_button}->set_sensitive(0);
 	} else {
-		$self->rip_title_widgets->{rip_button}->child->set("Rip\nSelected Title(s)/Chapter(s)");
+		$self->rip_title_widgets->{rip_button}->set_sensitive(1);
 	}
 
+	$self->set_render_vobsub_sensitive;
 	
 	1;
 }

@@ -3,6 +3,7 @@ README
 MANIFEST
 Makefile.PL
 Changes
+Changes.0.46
 Credits
 test.pl
 dvdrip
@@ -11,11 +12,14 @@ lib/Video/DVDRip.pm
 lib/Video/DVDRip/GUI/Base.pm
 lib/Video/DVDRip/GUI/Progress.pm
 lib/Video/DVDRip/GUI/Pipe.pm
+lib/Video/DVDRip/GUI/Project/BurnTab.pm
 lib/Video/DVDRip/GUI/Project/StorageTab.pm
 lib/Video/DVDRip/GUI/Project/TitleTab.pm
 lib/Video/DVDRip/GUI/Project/LoggingTab.pm
 lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm
 lib/Video/DVDRip/GUI/Project/TranscodeTab.pm
+lib/Video/DVDRip/GUI/Project/SubtitleTab.pm
+lib/Video/DVDRip/GUI/Project/TranscodeTabAudio.pm
 lib/Video/DVDRip/GUI/Cluster/Control.pm
 lib/Video/DVDRip/GUI/Cluster/Title.pm
 lib/Video/DVDRip/GUI/Cluster/Node.pm
@@ -29,6 +33,9 @@ lib/Video/DVDRip/GUI/Component.pm
 lib/Video/DVDRip/GUI/Config.pm
 lib/Video/DVDRip/GUI/MinSizeGroup.pm
 lib/Video/DVDRip/GUI/Logger.pm
+lib/Video/DVDRip/GUI/CheckedEntry.pm
+lib/Video/DVDRip/Job/BurnCD.pm
+lib/Video/DVDRip/Job/CreateCDImage.pm
 lib/Video/DVDRip/Job/Rip.pm
 lib/Video/DVDRip/Job/ScanVolume.pm
 lib/Video/DVDRip/Job/Mplex.pm
@@ -38,6 +45,10 @@ lib/Video/DVDRip/Job/GrabPreviewFrame.pm
 lib/Video/DVDRip/Job/TranscodeAudio.pm
 lib/Video/DVDRip/Job/MergeAudio.pm
 lib/Video/DVDRip/Job/Split.pm
+lib/Video/DVDRip/Job/GrabSubtitleImages.pm
+lib/Video/DVDRip/Job/CountFramesInFile.pm
+lib/Video/DVDRip/Job/CreateVobsub.pm
+lib/Video/DVDRip/Job/ExtractPS1.pm
 lib/Video/DVDRip/RPC/Client.pm
 lib/Video/DVDRip/RPC/Server.pm
 lib/Video/DVDRip/RPC/Message.pm
@@ -69,8 +80,13 @@ lib/Video/DVDRip/Project.pm
 lib/Video/DVDRip/Title.pm
 lib/Video/DVDRip/Audio.pm
 lib/Video/DVDRip/Config.pm
+lib/Video/DVDRip/InfoFile.pm
+lib/Video/DVDRip/Subtitle.pm
 src/dr_splitpipe.c
 src/dr_progress.c
 src/Makefile
 contrib/fast_resize.gnumeric
 contrib/fast_resize.ksp
+rpmspecs/RedHat-8.0-perl-Video-DVDRip.spec
+rpmspecs/SuSE-8.0-Video-DVDRip.spec
+rpmspecs/RedHat-Rawhide-Video-DVDRip.spec

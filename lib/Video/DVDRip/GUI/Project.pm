@@ -1,4 +1,4 @@
-# $Id: Project.pm,v 1.22 2002/09/01 13:52:02 joern Exp $
+# $Id: Project.pm,v 1.27 2002/10/28 21:43:14 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -20,8 +20,10 @@ use Video::DVDRip::GUI::Progress;
 
 use Video::DVDRip::GUI::Project::StorageTab;
 use Video::DVDRip::GUI::Project::TitleTab;
+use Video::DVDRip::GUI::Project::SubtitleTab;
 use Video::DVDRip::GUI::Project::ClipZoomTab;
 use Video::DVDRip::GUI::Project::TranscodeTab;
+use Video::DVDRip::GUI::Project::BurnTab;
 use Video::DVDRip::GUI::Project::LoggingTab;
 
 use Video::DVDRip::GUI::ExecuteJobs;
@@ -37,6 +39,9 @@ sub set_selected_title		{ shift->{selected_title}	= $_[1] }
 
 sub gtk_title_labels		{ shift->{gtk_title_labels}		}	# lref
 sub set_gtk_title_labels	{ shift->{gtk_title_labels}	= $_[1] }
+
+sub gtk_notebook		{ shift->{gtk_notebook}			}
+sub set_gtk_notebook		{ shift->{gtk_notebook}		= $_[1]	}
 
 sub closed			{ shift->{closed}			}
 sub set_closed			{ shift->{closed}		= $_[1] }
@@ -60,21 +65,31 @@ sub build {
 
 	my $notebook = Gtk::Notebook->new;
 	$notebook->set_tab_pos ('top');
-#	$notebook->set_usize (undef, 100);
 	$notebook->set_homogeneous_tabs(1);
 	$notebook->show;
-	
+
+	$self->set_gtk_notebook($notebook);
+
 	$self->set_gtk_title_labels([]);
 	$self->set_adjust_widgets({});
 	$self->set_transcode_widgets({});
 
+	my $norm_style = $vbox->style->copy;
+	$self->set_text_norm_style ($norm_style);
+	
+	my $warn_style = $vbox->style->copy;
+	$warn_style->fg('normal',$self->gdk_color('ff0000'));
+	$self->set_text_warn_style ($warn_style);
+
 	my $label;
 
+	my $burn_tab      = $self->create_burn_tab;
+	my $subtitle_tab  = $self->create_subtitle_tab;
 	my $transcode_tab = $self->create_transcode_tab;
 	my $storage_tab   = $self->create_storage_tab;
-	my $title_tab     = $self->create_title_tab;
 	my $adjust_tab    = $self->create_adjust_tab;
 	my $logging_tab   = $self->create_logging_tab;
+	my $title_tab     = $self->create_title_tab;
 
 	$label = Gtk::Label->new ("Storage");
 	$notebook->append_page ($storage_tab, $label);
@@ -82,16 +97,28 @@ sub build {
 	$label = Gtk::Label->new ("RIP Title");
 	$notebook->append_page ($title_tab, $label);
 
-	$label = Gtk::Label->new ("  Clip & Zoom  ");
+	$label = Gtk::Label->new (" Clip & Zoom ");
 	$notebook->append_page ($adjust_tab, $label);
+
+	$label = Gtk::Label->new ("Subtitles");
+	$notebook->append_page ($subtitle_tab, $label);
 
 	$label = Gtk::Label->new ("Transcode");
 	$notebook->append_page ($transcode_tab, $label);
+
+	$label = Gtk::Label->new ("Burn");
+	$notebook->append_page ($burn_tab, $label);
 
 	$label = Gtk::Label->new ("Logging");
 	$notebook->append_page ($logging_tab, $label);
 
 	$vbox->pack_start ($notebook, 1, 1, 0);
+
+	$notebook->signal_connect ("switch-page", sub {
+		my ($nb_wid,$pag_wid,$page_nr) = @_;
+		$self->init_burn_files if $page_nr == 5;
+		1;
+	} );
 
 	my $frame = Gtk::Frame->new ("Status");
 	$frame->show;
@@ -116,25 +143,24 @@ sub build {
 		$self->log ("Create new project.");
 	}
 
-	my $norm_style = $vbox->style->copy;
-	$self->set_text_norm_style ($norm_style);
-	
-	my $warn_style = $vbox->style->copy;
-	$warn_style->fg('normal',$self->gdk_color('ff0000'));
-	$self->set_text_warn_style ($warn_style);
-
 	return $vbox;
 }
 
 sub fill_with_values {
 	my $self = shift; $self->trace_in;
 
+	$self->set_selected_title(
+		$self->project->content->titles->{$self->project->selected_title_nr}
+	);
+
 	$self->init_title_labels;
 	$self->init_audio_popup;
 	$self->init_chapter_list;
-	$self->init_adjust_values;
 	$self->init_transcode_values;
 	$self->init_storage_values;
+	$self->init_burn_values;
+	$self->init_subtitle_values;
+	$self->init_adjust_values;
 
 	1;
 }

@@ -1,4 +1,4 @@
-# $Id: Base.pm,v 1.16 2002/06/29 20:39:54 joern Exp $
+# $Id: Base.pm,v 1.18 2002/11/01 13:29:19 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -90,21 +90,29 @@ sub confirm_window {
 	my %par = @_;
 	my  ($message, $yes_callback, $no_callback, $position, $yes_label, $no_label) =
 	@par{'message','yes_callback','no_callback','position','yes_label','no_label'};
-	
+	my  ($omit_cancel) =
+	@par{'omit_cancel'};
+
 	$yes_label ||= "Ok";
 	$position ||= "center";
 
 	my $confirm = Gtk::Dialog->new;
 	my $label = Gtk::Label->new ($message);
-	$confirm->vbox->pack_start ($label, 1, 1, 0);
+	$label->show;
+	my $hbox = Gtk::HBox->new;
+	$hbox->show;
+	$hbox->set_border_width(20);
+	$hbox->pack_start ($label, 0, 1, 0);
+	$confirm->vbox->pack_start ($hbox, 1, 1, 0);
 	$confirm->border_width(10);
 	$confirm->set_title ("Confirmation");
-	$label->show;
 
-	my $cancel = Gtk::Button->new ("Cancel");
-	$confirm->action_area->pack_start ( $cancel, 1, 1, 0 );
-	$cancel->signal_connect( "clicked", sub { $confirm->destroy } );
-	$cancel->show;
+	if ( not $omit_cancel ) {
+		my $cancel = Gtk::Button->new ("Cancel");
+		$confirm->action_area->pack_start ( $cancel, 1, 1, 0 );
+		$cancel->signal_connect( "clicked", sub { $confirm->destroy } );
+		$cancel->show;
+	}
 
 	if ( $no_label ) {
 		my $no = Gtk::Button->new ($no_label);

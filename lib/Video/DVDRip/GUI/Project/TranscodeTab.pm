@@ -1,4 +1,4 @@
-# $Id: TranscodeTab.pm,v 1.53 2002/09/22 09:39:08 joern Exp $
+# $Id: TranscodeTab.pm,v 1.61 2002/11/12 22:07:20 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -10,6 +10,7 @@
 package Video::DVDRip::GUI::Project;
 
 use Video::DVDRip::GUI::MinSizeGroup;
+use Video::DVDRip::GUI::Project::TranscodeTabAudio;
 
 use Carp;
 use strict;
@@ -58,7 +59,7 @@ sub create_transcode_tab {
 	my $video_bitrate_calc = $self->create_video_bitrate_calc (
 		hsize_group => $left_hsize_group
 	);
-	my $operate = $self->create_operate (
+	my $operate = $self->create_transcode_operate (
 		hsize_group => $right_hsize_group
 	);
 	my $general_options = $self->create_general_options (
@@ -93,31 +94,48 @@ sub create_transcode_tab {
 	foreach my $attr (qw ( tc_video_codec tc_options tc_nice
 			       tc_video_af6_codec tc_video_bitrate
 			       tc_video_framerate tc_execute_afterwards
-			       tc_audio_bitrate tc_volume_rescale
 			       tc_start_frame tc_end_frame
 			       tc_target_size )) {
-		$widgets->{$attr}->signal_connect ("changed", sub {
+		my $signal = ($attr =~ /^tc_(target_size|video_bitrate|video_codec)$/ )
+			? "changed" : "focus-out-event";
+		$widgets->{$attr}->signal_connect ($signal, sub {
 			my ($widget, $method) = @_;
 			return 1 if not $self->selected_title;
 			return 1 if $self->in_transcode_init;
 			my $title = $self->selected_title;
 			$title->$method ( $widget->get_text );
-			if ( $method =~ /audio|target/ ) {
+			if ( $method eq "set_tc_target_size" ) {
 				$title->calc_video_bitrate;
 				$widgets->{tc_video_bitrate}
 					->set_text ( $title->tc_video_bitrate );
 			}
 			$self->update_storage_labels
 				if $method eq 'set_tc_video_bitrate';
+			if ( $attr eq 'tc_video_codec' ) {
+				if ( $widget->get_text eq 'VCD' ) {
+					$self->burn_widgets
+					     ->{burn_cd_type_vcd}->set_active(1);
+				} elsif ( $widget->get_text eq 'SVCD' ) {
+					$self->burn_widgets
+					     ->{burn_cd_type_svcd}->set_active(1);
+				} else {
+					$self->burn_widgets
+					     ->{burn_cd_type_iso}->set_active(1);
+				}
+				$self->selected_title->calc_video_bitrate;
+				$self->init_transcode_values;
+			}
+			1;
 		}, "set_$attr");
 	}
 
-	$widgets->{tc_video_codec}->signal_connect ("changed", sub {
+	$widgets->{tc_video_codec}->signal_connect ("focus-out-event", sub {
 		my ($widget) = @_;
 		return 1 if not $self->selected_title;
 		return 1 if $self->in_transcode_init;
 		$self->selected_title->calc_video_bitrate;
 		$self->init_transcode_values;
+		1;
 	});
 	
 	# radio button signals
@@ -150,32 +168,6 @@ sub create_transcode_tab {
 		}
 	);
 
-	# Audio Codec Signals
-
-	$self->transcode_widgets->{tc_ac3_passthrough_yes}->signal_connect (
-		"clicked", sub {
-			my $title = $self->selected_title;
-			return 1 if not $title;
-			return 1 if $self->in_transcode_init;
-			$title->set_tc_ac3_passthrough(1);
-			$title->calc_video_bitrate;
-			$self->init_transcode_values;
-			1;
-		}
-	);
-
-	$self->transcode_widgets->{tc_ac3_passthrough_no}->signal_connect (
-		"clicked", sub {
-			my $title = $self->selected_title;
-			return 1 if not $title;
-			return 1 if $self->in_transcode_init;
-			$self->selected_title->set_tc_ac3_passthrough(0);
-			$title->calc_video_bitrate;
-			$self->init_transcode_values;
-			1;
-		}
-	);
-
 	return $vbox;
 }
 
@@ -204,87 +196,8 @@ sub create_video_options {
 	$table->set_col_spacings ( $TABLE_SPACING );
 	$frame_hbox->pack_start ($table, 1, 1, 0);
 
-	# Deinterlace
-	$row = 0;
-	$hbox = Gtk::HBox->new;
-	$hbox->show;
-	$label = Gtk::Label->new ("Deinterlace mode");
-	$label->show;
-	$hbox->pack_start($label, 0, 1, 0);
-	$table->attach ($hbox, 0, 1, $row, $row+1, 'fill','expand',0,0);
-	$hsize_group->add ($hbox);
-
-	$popup_menu = Gtk::Menu->new;
-	$popup_menu->show;
-	$popup = Gtk::OptionMenu->new;
-	$popup->show;
-	$popup->set_menu($popup_menu);
-
-	%popup_entries = (
-		0        => "No Deinterlacing",
-		1        => "Interpolate Scanlines (fast)",
-		2        => "Handled By Encoder (may segfault)",
-		3        => "Zoom To Full Frame (slow)",
-		'32detect' => "Automatic deinterlacing of single frames",
-	);
-	foreach my $key ( sort keys %popup_entries ) {
-		$item = Gtk::MenuItem->new ($popup_entries{$key});
-		$item->show;
-		$popup_menu->append($item);
-		$item->signal_connect (
-			"activate", sub {
-				return 1 if not $self->selected_title;
-				return 1 if $self->in_transcode_init;
-				$self->selected_title
-				     ->set_tc_deinterlace($key)
-			}, $key
-		);
-	}
-	$table->attach ($popup, 1, 2, $row, $row+1, 'fill','expand',0,0);
-
-	$self->transcode_widgets->{tc_deinterlace_popup} = $popup;
-
-	# Antialias
-	++$row;
-	$hbox = Gtk::HBox->new;
-	$hbox->show;
-	$label = Gtk::Label->new ("Antialias mode");
-	$label->show;
-	$hbox->pack_start($label, 0, 1, 0);
-	$table->attach ($hbox, 0, 1, $row, $row+1, 'fill','expand',0,0);
-	$hsize_group->add ($hbox);
-
-	$popup_menu = Gtk::Menu->new;
-	$popup_menu->show;
-	$popup = Gtk::OptionMenu->new;
-	$popup->show;
-	$popup->set_menu($popup_menu);
-
-	%popup_entries = (
-		0 => "No Antialiasing",
-		1 => "Process De-Interlace Effects",
-		2 => "Process Resize Effects",
-		3 => "Process Full Frame (slow)",
-	);
-	foreach my $key ( sort keys %popup_entries ) {
-		$item = Gtk::MenuItem->new ($popup_entries{$key});
-		$item->show;
-		$popup_menu->append($item);
-		$item->signal_connect (
-			"activate", sub {
-				return 1 if not $self->selected_title;
-				return 1 if $self->in_transcode_init;
-				$self->selected_title
-				     ->set_tc_anti_alias($key)
-			}, $key
-		);
-	}
-	$table->attach_defaults ($popup, 1, 2, $row, $row+1);
-
-	$self->transcode_widgets->{tc_anti_alias_popup} = $popup;
-
 	# Video Codec
-	++$row;
+	$row = 0;
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
 	$label = Gtk::Label->new ("Video codec");
@@ -338,7 +251,11 @@ sub create_video_options {
 
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$entry = Gtk::Combo->new;
+	$entry = Video::DVDRip::CheckedCombo->new(
+		is_number => 1,
+		may_empty => 1,
+		may_fractional => 1,
+	);
 	$entry->show;
 	$entry->set_popdown_strings ("25", "23.976", "29.97");
 	$entry->set_usize(80,undef);
@@ -380,7 +297,7 @@ sub create_video_options {
 	++$row;
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new ("DivX multipass");
+	$label = Gtk::Label->new ("2-pass encoding");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 	$table->attach ($hbox, 0, 1, $row, $row+1, 'fill','expand',0,0);
@@ -400,74 +317,11 @@ sub create_video_options {
 	$self->transcode_widgets->{tc_multipass_yes} = $radio_yes;
 	$self->transcode_widgets->{tc_multipass_no}  = $radio_no;
 
-	return $frame;
-}
-
-sub create_audio_options {
-	my $self = shift;
-	my %par = @_;
-	my ($hsize_group) = @par{'hsize_group'};
-
-	my ($frame, $frame_hbox, $table, $row, $hbox, $label, $entry, $vbox, $sep);
-	my ($popup_menu, $popup, $item, %popup_entries, $radio_yes, $radio_no, $button);
-
-	my (@ac3_hide, @ac3_keep, @mpeg_hide, @audio_hide);
-	my $ac3_vsize_group = Video::DVDRip::GUI::MinSizeGroup->new (
-		type => 'v',
-	);
-
-	# Frame
-	$frame = Gtk::Frame->new ("Audio options");
-	$frame->show;
-
-	# Frame HBox
-	$frame_hbox = Gtk::VBox->new;
-	$frame_hbox->set_border_width(5);
-	$frame_hbox->show;
-	$frame->add ($frame_hbox);
-
-	# Table
-	$table = Gtk::Table->new ( 7, 2, 0 );
-	$table->show;
-	$table->set_row_spacings ( $TABLE_SPACING );
-	$table->set_col_spacings ( $TABLE_SPACING );
-	$frame_hbox->pack_start ($table, 1, 1, 0);
-
-	# Select a DVD audio channel
-	$vbox = Gtk::VBox->new;
-	$vbox->show;
-	$table->attach ($vbox, 0, 2, $row, $row+1, 'fill','expand',0,0);
-
-	$hbox = Gtk::HBox->new;
-	$hbox->show;
-	$vbox->pack_start ($hbox, 0, 1, 0);
-
-	$label = Gtk::Label->new ("Select a DVD audio track");
-	$label->show;
-	$hbox->pack_start($label, 0, 1, 0);
-
-	$popup_menu = Gtk::Menu->new;
-	$popup_menu->show;
-	$item = Gtk::MenuItem->new ("No Audio");
-	$item->show;
-	$popup_menu->append($item);
-	$popup = Gtk::OptionMenu->new;
-	$popup->show;
-	$popup->set_menu($popup_menu);
-
-	$hbox->pack_start ($popup, 1, 1, 0);
- 
- 	$self->transcode_widgets->{select_audio_channel_popup} = $popup;
- 
-	$sep = new Gtk::HSeparator();
-	$sep->show;
-	$vbox->pack_start($sep, 0, 1, 0);
- 
- 	# Target audio channel
+	# Deinterlace
 	++$row;
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new ("Target track");
+	$label = Gtk::Label->new ("Deinterlace mode");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 	$table->attach ($hbox, 0, 1, $row, $row+1, 'fill','expand',0,0);
@@ -477,211 +331,13 @@ sub create_audio_options {
 	$popup_menu->show;
 	$popup = Gtk::OptionMenu->new;
 	$popup->show;
+	$popup->set_usize(180,undef);
 	$popup->set_menu($popup_menu);
 
-	%popup_entries = (
-		'-' => "Don't add this track",
-	);
-	
-	my $i = 0;
-	foreach my $key ( sort keys %popup_entries ) {
-		$item = Gtk::MenuItem->new ($popup_entries{$key});
-		$item->show;
-		$popup_menu->append($item);
-		++$i;
-	}
-
-	$table->attach ($popup, 1, 2, $row, $row+1, 'fill','expand',0,0);
-
-	$popup->set_history(0);
-
- 	$self->transcode_widgets->{tc_target_audio_channel_popup} = $popup;
-
-	# MP3 or AC3 Audio Passthrough?
-	++$row;
-	$hbox = Gtk::HBox->new;
-	$hbox->show;
-	$label = Gtk::Label->new ("Audio codec");
-	$label->show;
-	push @audio_hide, $label;
-	$hbox->pack_start($label, 0, 1, 0);
-	$table->attach ($hbox, 0, 1, $row, $row+1, 'fill','expand',0,0);
-	$hsize_group->add ($hbox);
-
-	$hbox = Gtk::HBox->new;
-	$hbox->show;
-	my $radio_mp3 = Gtk::RadioButton->new ("MP3");
-	$radio_mp3->show;
-	$hbox->pack_start($radio_mp3, 0, 1, 0);
-	my $radio_ac3 = Gtk::RadioButton->new ("AC3 passthrough", $radio_mp3);
-	$radio_ac3->show;
-	$hbox->pack_start($radio_ac3, 0, 1, 0);
-
-	$table->attach_defaults ($hbox, 1, 2, $row, $row+1);
-
-	$self->transcode_widgets->{tc_ac3_passthrough_no}  = $radio_mp3;
-	$self->transcode_widgets->{tc_ac3_passthrough_yes} = $radio_ac3;
-	$self->transcode_widgets->{tc_ac3_passthrough_radio} = $radio_ac3;
-	
-	push @audio_hide, ($radio_mp3, $radio_ac3);
-	
-	# Audio Bitrate
-	++$row;
-	$hbox = Gtk::HBox->new;
-	$hbox->show;
-	$label = Gtk::Label->new ("Audio bitrate");
-	$label->show;
-	push @audio_hide, $label;
-	$hbox->pack_start($label, 0, 1, 0);
-	$table->attach ($hbox, 0, 1, $row, $row+1, 'fill','expand',0,0);
-	$hsize_group->add ($hbox);
-
-	$hbox = Gtk::HBox->new;
-	$hbox->show;
-	$entry = Gtk::Combo->new;
-	$entry->show;
-	$entry->set_popdown_strings (96, 128, 160, 192, 256, 320, 384);
-	$entry->set_usize(80,undef);
-	$hbox->pack_start($entry, 0, 1, 0);
-	push @audio_hide, $entry;
-
-	$label = Gtk::Label->new ("kbit/s");
-	$label->show;
-	$hbox->pack_start ($label, 0, 1, 0);
-	push @audio_hide, $label;
-
-	$table->attach_defaults ($hbox, 1, 2, $row, $row+1);
-
-	$self->transcode_widgets->{tc_audio_bitrate} = $entry->entry;
-	$self->transcode_widgets->{tc_audio_bitrate_combo} = $entry;
-
-	# Audio Filter
-	++$row;
-	$hbox = Gtk::HBox->new;
-	$hbox->show;
-	$label = Gtk::Label->new ("Filter");
-	$label->show;
-	push @audio_hide, $label;
-	$hbox->pack_start($label, 0, 1, 0);
-	$table->attach ($hbox, 0, 1, $row, $row+1, 'fill','expand',0,0);
-	$hsize_group->add ($hbox);
-
-	$popup_menu = Gtk::Menu->new;
-	$popup_menu->show;
-	$popup = Gtk::OptionMenu->new;
-	$popup->show;
-	$popup->set_menu($popup_menu);
-
-	push @ac3_keep, $hbox;
-	push @ac3_hide, ($label, $popup);
-	push @audio_hide, ($label, $popup);
-
-	%popup_entries = (
-		'rescale'   => "None, volume rescale only",
-		'a52drc'    => "Range compression (liba52 filter)",
-		'normalize' => "Normalizing (mplayer filter)",
-	);
-	
-	foreach my $key ( qw ( rescale a52drc normalize ) ) {
-		$item = Gtk::MenuItem->new ($popup_entries{$key});
-		$item->show;
-		$popup_menu->append($item);
-		$item->signal_connect (
-			"activate", sub {
-				return 1 if $self->in_transcode_init;
-				my $title = $self->selected_title;
-				return 1 if not $title;
-				$title->set_tc_audio_filter($key);
-				if ( $key eq 'normalize' ) {
-					$self->transcode_widgets
-					     ->{tc_volume_rescale}
-					     ->set_text ('');
-				} else {
-					$self->transcode_widgets
-					     ->{tc_volume_rescale}
-					     ->set_text ( $title->volume_rescale );
-				}
-			}, $key
+	foreach my $key ( sort keys %Video::DVDRip::deinterlace_filters ) {
+		$item = Gtk::MenuItem->new (
+			$Video::DVDRip::deinterlace_filters{$key}
 		);
-	}
-
-	$table->attach ($popup, 1, 2, $row, $row+1, 'fill','expand',0,0);
-
-	$self->transcode_widgets->{tc_audio_filter_popup} = $popup;
-
-	# Volume Rescale
-	++$row;
-	$hbox = Gtk::HBox->new;
-	$hbox->show;
-	$label = Gtk::Label->new ("Volume rescale");
-	$label->show;
-	$hbox->pack_start($label, 0, 1, 0);
-	$table->attach ($hbox, 0, 1, $row, $row+1, 'fill','expand',0,0);
-	$hsize_group->add ($hbox);
-
-	push @ac3_keep, $hbox;
-	push @ac3_hide, $label;
-	push @audio_hide, $label;
-
-	$hbox = Gtk::HBox->new;
-	$hbox->show;
-	$entry = Gtk::Entry->new;
-	$entry->show;
-	$entry->set_usize(80,undef);
-	$hbox->pack_start($entry, 0, 1, 0);
-	$table->attach_defaults ($hbox, 1, 2, $row, $row+1);
-
-	push @ac3_keep, $hbox;
-	push @ac3_hide, $entry;
-	push @audio_hide, $entry;
-
-	$self->transcode_widgets->{tc_volume_rescale} = $entry;
-
-	$button = Gtk::Button->new (" Scan value ");
-	$button->show;
-	$hbox->pack_start($button, 0, 1, 0);
-
-	$button->signal_connect ("clicked", sub { $self->scan_rescale_volume } );
-
-	push @ac3_hide, $button;
-	push @audio_hide, $button;
-
-	# MP3 Encoder Quality
-	++$row;
-	$hbox = Gtk::HBox->new;
-	$hbox->show;
-	$label = Gtk::Label->new ("MP3 quality");
-	$label->show;
-	$hbox->pack_start($label, 0, 1, 0);
-	$table->attach ($hbox, 0, 1, $row, $row+1, 'fill','expand',0,0);
-	$hsize_group->add ($hbox);
-
-	$popup_menu = Gtk::Menu->new;
-	$popup_menu->show;
-	$popup = Gtk::OptionMenu->new;
-	$popup->show;
-	$popup->set_menu($popup_menu);
-
-	push @ac3_keep, $hbox;
-	push @ac3_hide, ($label, $popup);
-	push @mpeg_hide, ($label, $popup);
-	push @audio_hide, ($label, $popup);
-
-	%popup_entries = (
-		0 => "0 - best but slower",
-		1 => "1",
-		2 => "2",
-		3 => "3",
-		4 => "4",
-		5 => "5 - medium",
-		6 => "6",
-		7 => "7",
-		8 => "8",
-		9 => "9 - low but faster",
-	);
-	
-	foreach my $key ( sort keys %popup_entries ) {
-		$item = Gtk::MenuItem->new ($popup_entries{$key});
 		$item->show;
 		$popup_menu->append($item);
 		$item->signal_connect (
@@ -689,20 +345,48 @@ sub create_audio_options {
 				return 1 if not $self->selected_title;
 				return 1 if $self->in_transcode_init;
 				$self->selected_title
-				     ->set_tc_mp3_quality($key)
+				     ->set_tc_deinterlace($key)
 			}, $key
 		);
 	}
-
 	$table->attach ($popup, 1, 2, $row, $row+1, 'fill','expand',0,0);
 
-	$self->transcode_widgets->{tc_mp3_quality_popup} = $popup;
+	$self->transcode_widgets->{tc_deinterlace_popup} = $popup;
 
-	# build vsize group of @ac3_keep widgets
-	$ac3_vsize_group->add ($_) foreach @ac3_keep;
-	$self->transcode_widgets->{tc_ac3_hide}   = \@ac3_hide;
-	$self->transcode_widgets->{tc_mpeg_hide}  = \@mpeg_hide;
-	$self->transcode_widgets->{tc_audio_hide} = \@audio_hide;
+	# Antialias
+	++$row;
+	$hbox = Gtk::HBox->new;
+	$hbox->show;
+	$label = Gtk::Label->new ("Antialias mode");
+	$label->show;
+	$hbox->pack_start($label, 0, 1, 0);
+	$table->attach ($hbox, 0, 1, $row, $row+1, 'fill','expand',0,0);
+	$hsize_group->add ($hbox);
+
+	$popup_menu = Gtk::Menu->new;
+	$popup_menu->show;
+	$popup = Gtk::OptionMenu->new;
+	$popup->show;
+	$popup->set_menu($popup_menu);
+
+	foreach my $key ( sort keys %Video::DVDRip::antialias_filters ) {
+		$item = Gtk::MenuItem->new (
+			$Video::DVDRip::antialias_filters{$key}
+		);
+		$item->show;
+		$popup_menu->append($item);
+		$item->signal_connect (
+			"activate", sub {
+				return 1 if not $self->selected_title;
+				return 1 if $self->in_transcode_init;
+				$self->selected_title
+				     ->set_tc_anti_alias($key)
+			}, $key
+		);
+	}
+	$table->attach_defaults ($popup, 1, 2, $row, $row+1);
+
+	$self->transcode_widgets->{tc_anti_alias_popup} = $popup;
 
 	return $frame;
 }
@@ -765,7 +449,7 @@ sub create_video_bitrate_calc {
 		$popup_menu->append($item);
 		$item->signal_connect (
 			"select", sub {
-				my $title =$self->selected_title;
+				my $title = $self->selected_title;
 				return 1 if not $title;
 				return 1 if $self->in_transcode_init;
 				$title->set_tc_disc_cnt($key);
@@ -788,44 +472,33 @@ sub create_video_bitrate_calc {
 	$label->show;
 	$hbox->pack_start ($label, 0, 1, 0);
 
-	$popup_menu = Gtk::Menu->new;
-	$popup_menu->show;
-	$popup = Gtk::OptionMenu->new;
-	$popup->show;
-	$popup->set_usize(60,undef);
-	$popup->set_menu($popup_menu);
-
-	%popup_entries = (
-		650 => "650",
-		700 => "700",
-		760 => "760",
+	$entry = Video::DVDRip::CheckedCombo->new (
+		is_number      => 1,
+		may_fractional => 0,
+		may_empty      => 0,
 	);
+	$entry->show;
+	$entry->set_popdown_strings (650, 700, 760);
+	$entry->set_usize(60,undef);
+	$hbox->pack_start($entry, 0, 1, 0);
 
-	foreach my $key ( sort keys %popup_entries ) {
-		$item = Gtk::MenuItem->new ($popup_entries{$key});
-		$item->show;
-		$popup_menu->append($item);
-		$item->signal_connect (
-			"select", sub {
-				my $title = $self->selected_title;
-				return 1 if not $title;
-				return 1 if $self->in_transcode_init;
-				$title->set_tc_disc_size($key);
-				if ( $title->tc_video_codec ne 'VCD' ) {
-					$title->set_tc_target_size(
-						$key * $title->tc_disc_cnt,
-					);
-					$self->transcode_widgets
-					     ->{tc_target_size}
-					     ->set_text ($title->tc_target_size);
-				}
-			}, $key
-		);
-	}
+	$entry->entry->signal_connect ("changed", sub {
+		my $title = $self->selected_title;
+		return 1 if not $title;
+		return 1 if $self->in_transcode_init;
+		$title->set_tc_disc_size ($_[0]->get_text);
+		if ( $title->tc_video_codec ne 'VCD' ) {
+			$title->set_tc_target_size(
+				$title->tc_disc_cnt * $title->tc_disc_size,
+			);
+			$self->transcode_widgets
+			     ->{tc_target_size}
+			     ->set_text ($title->tc_target_size);
+		}
+		1;
+	});
 
-	$self->transcode_widgets->{tc_disc_size_popup} = $popup;
-
-	$hbox->pack_start($popup, 1, 1, 0);
+	$self->transcode_widgets->{tc_disc_size_combo} = $entry;
 
 	$label = Gtk::Label->new ("MB");
 	$label->show;
@@ -845,7 +518,11 @@ sub create_video_bitrate_calc {
 
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$entry = Gtk::Entry->new;
+	$entry = Video::DVDRip::CheckedEntry->new (undef,
+		is_number      => 1,
+		may_fractional => 0,
+		may_empty      => 0,
+	);
 	$entry->show;
 	$entry->set_usize(80,undef);
 	$hbox->pack_start($entry, 0, 1, 0);
@@ -870,7 +547,11 @@ sub create_video_bitrate_calc {
 
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$entry = Gtk::Entry->new;
+	$entry = Video::DVDRip::CheckedEntry->new (undef,
+		is_number      => 1,
+		may_fractional => 0,
+		may_empty      => 0,
+	);
 	$entry->show;
 	$entry->set_usize(80,undef);
 	$hbox->pack_start($entry, 0, 1, 0);
@@ -886,7 +567,7 @@ sub create_video_bitrate_calc {
 	return $frame;
 }
 
-sub create_operate {
+sub create_transcode_operate {
 	my $self = shift;
 	my %par = @_;
 	my ($hsize_group) = @par{'hsize_group'};
@@ -989,7 +670,10 @@ sub create_general_options {
 	$hbox->show;
 	$table->attach_defaults ($hbox, 1, 2, $row, $row+1);
 
-	$entry = Gtk::Entry->new;
+	$entry = Video::DVDRip::CheckedEntry->new ( undef,
+		is_number => 1,
+		may_empty => 1,
+	);
 	$entry->show;
 	$entry->set_usize (50,undef);
 	$hbox->pack_start ($entry, 0, 1, 0);
@@ -1000,7 +684,10 @@ sub create_general_options {
 	$label->show;
 	$hbox->pack_start ($label, 0, 1, 0);
 
-	$entry = Gtk::Entry->new;
+	$entry = Video::DVDRip::CheckedEntry->new ( undef,
+		is_number => 1,
+		may_empty => 1,
+	);
 	$entry->show;
 	$entry->set_usize (50,undef);
 	$hbox->pack_start ($entry, 0, 1, 0);
@@ -1038,7 +725,11 @@ sub create_general_options {
 
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$entry = Gtk::Combo->new;
+	$entry = Video::DVDRip::CheckedCombo->new (
+		is_number      => 1,
+		may_fractional => 0,
+		may_empty      => 1,
+	);
 	$entry->show;
 	$entry->set_popdown_strings (undef,5,10,15,19);
 	$entry->set_usize(80,undef);
@@ -1111,6 +802,7 @@ sub create_general_options {
 	$hbox->show;
 	$entry = Gtk::Entry->new;
 	$entry->show;
+	$entry->set_usize(120,undef);
 	$hbox->pack_start($entry, 1, 1, 0);
 	$table->attach ($hbox, 1, 2, $row, $row+1, 'fill','expand',0,0);
 
@@ -1228,10 +920,6 @@ sub init_transcode_values {
 
 	$self->set_in_transcode_init(1);
 
-	if ( $title->tc_target_track != -1 ) {
-		$_->set_sensitive(1) foreach @{$widgets->{tc_audio_hide}};
-	}
-
 	foreach my $attr (qw ( tc_video_codec tc_options tc_nice
 			       tc_video_af6_codec tc_video_bitrate
 			       tc_video_framerate tc_target_size
@@ -1263,14 +951,8 @@ sub init_transcode_values {
 	$widgets->{tc_deinterlace_popup}->set_history ($deinterlace);
 	$widgets->{tc_anti_alias_popup}->set_history ($anti_alias);
 
-	my %disc_size_history = (
-		650 => 0,
-		700 => 1,
-		760 => 2,
-	);
-
 	$widgets->{tc_disc_cnt_popup}->set_history ($disc_cnt-1);
-	$widgets->{tc_disc_size_popup}->set_history ($disc_size_history{$disc_size});
+	$widgets->{tc_disc_size_combo}->entry->set_text ($disc_size);
 
 	$widgets->{tc_preview_yes}->set_active($preview);
 	$widgets->{tc_preview_no}->set_active(!$preview);
@@ -1288,10 +970,9 @@ sub init_transcode_values {
 
 	$self->set_in_transcode_init(0);
 
-	$self->init_audio_values if not $no_audio;
-
-	if ( $title->tc_target_track == -1 ) {
-		$_->set_sensitive(0) foreach @{$widgets->{tc_audio_hide}};
+	if ( not $no_audio ) {
+		$self->init_audio_values;
+		$self->fill_target_audio_popup;
 	}
 
 	$self->update_storage_labels;
@@ -1299,70 +980,8 @@ sub init_transcode_values {
 	1;
 }
 
-sub init_audio_values {
-	my $self = shift; $self->trace_in;
-	my %par = @_;
-	my ($switch_popup) = @par{'switch_popup'};
-
-	my $title = $self->selected_title;
-	return 1 if not $title;
-
-	my $widgets = $self->transcode_widgets;
-	return 1 if not defined $widgets->{tc_video_codec};
-
-	return 1 if $title->audio_channel == -1;
-
-	$self->set_in_transcode_init(1);
-
-	foreach my $attr (qw ( tc_audio_bitrate tc_volume_rescale )) {
-		$widgets->{$attr}->set_text ($self->selected_title->$attr());
-	}
-
-	my $video_codec     = $title->tc_video_codec;
-	my $ac3_passthrough = $title->tc_ac3_passthrough;
-	my $mp3_quality	    = $title->tc_mp3_quality;
-	my $audio_filter    = $title->tc_audio_filter;
-
-	$widgets->{tc_ac3_passthrough_yes}->set_active($ac3_passthrough);
-	$widgets->{tc_ac3_passthrough_no}->set_active(!$ac3_passthrough);
-	$widgets->{tc_audio_bitrate}->set_editable( !$ac3_passthrough);
-	$widgets->{tc_mp3_quality_popup}->set_history ($mp3_quality);
-
-	if ( $title->audio_tracks->[$title->audio_channel]->{type} eq 'ac3' ) {
-		$widgets->{tc_ac3_passthrough_radio}->show;
-	} else {
-		$widgets->{tc_ac3_passthrough_radio}->hide;
-	}
-
-	if ( $video_codec eq 'SVCD' or $video_codec eq 'VCD' ) {
-		$self->switch_to_mpeg_encoding;
-	} else {
-		$self->switch_to_divx_encoding;
-	}
-
-	my $audio_channel = $title->audio_channel;
-	if ( $switch_popup ) {
-		$switch_popup->set_history($audio_channel);
-	} else {
-		$self->rip_title_widgets->{audio_popup}->set_history($audio_channel);
-		$self->transcode_widgets->{select_audio_channel_popup}->set_history($audio_channel);
-	}
-
-	$self->transcode_widgets->{tc_audio_filter_popup}->set_history (
-		$audio_filter eq 'rescale'   ? 0 :
-		$audio_filter eq 'a52drc'    ? 1 :
-		$audio_filter eq 'normalize' ? 2 : 0
-	);
-
-	$self->fill_target_audio_popup;
-
-	$self->set_in_transcode_init(0);
-
-	1;
-}
-
 sub switch_to_mpeg_encoding {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 
 	my $title = $self->selected_title;
 	return 1 if not $title;
@@ -1375,10 +994,6 @@ sub switch_to_mpeg_encoding {
 
 	my $video_codec = $title->tc_video_codec;
 
-	$widgets->{tc_ac3_passthrough_no}->child->set("MP2");
-	$widgets->{tc_ac3_passthrough_yes}->hide;
-	$widgets->{tc_audio_bitrate_combo}->set_sensitive ( $video_codec eq 'SVCD' );
-
 	$widgets->{avisplit_button}->set_sensitive(0);
 	$widgets->{cluster_button}->set_sensitive(0);
 	$widgets->{view_avi_button}->child->set("View MPEG");
@@ -1386,23 +1001,23 @@ sub switch_to_mpeg_encoding {
 	if ( $video_codec eq 'VCD' ) {
 		$widgets->{tc_video_bitrate}->set_sensitive(0);
 		$widgets->{tc_disc_cnt_popup}->set_sensitive(0);
-		$widgets->{tc_disc_size_popup}->set_sensitive(0);
+		$widgets->{tc_disc_size_combo}->set_sensitive(0);
 		$widgets->{tc_target_size}->set_text("");
 		$widgets->{tc_target_size}->set_sensitive(0);
 	} else {
 		$widgets->{tc_video_bitrate}->set_sensitive(1);
 		$widgets->{tc_disc_cnt_popup}->set_sensitive(1);
-		$widgets->{tc_disc_size_popup}->set_sensitive(1);
+		$widgets->{tc_disc_size_combo}->set_sensitive(1);
 		$widgets->{tc_target_size}->set_sensitive(1);
 	}
 
 	$_->hide foreach @{$widgets->{tc_mpeg_hide}};
-	
+
 	1;
 }
 
 sub switch_to_divx_encoding {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 
 	my $title = $self->selected_title;
 	return 1 if not $title;
@@ -1413,31 +1028,45 @@ sub switch_to_divx_encoding {
 		$widgets->{$attr}->set_sensitive(1);
 	}
 
-	$widgets->{tc_ac3_passthrough_no}->child->set("MP3");
-	$widgets->{tc_ac3_passthrough_yes}->show;
+	if ( $title->tc_audio_codec eq 'mp2' ) {
+		# just switching from SVCD to DivX
+		$title->set_tc_audio_codec ('mp3');
+	}
 
 	$widgets->{avisplit_button}->set_sensitive(1);
-	$widgets->{view_avi_button}->child->set("View AVI");
 
-	if ( $title->tc_ac3_passthrough ) {
-		$_->hide foreach @{$widgets->{tc_ac3_hide}};
-		$widgets->{tc_audio_bitrate_combo}->set_sensitive (0);
+	if ( $title->tc_audio_codec eq 'ogg' ) {
+		$widgets->{view_avi_button}->child->set("View OGG");
+		$widgets->{avisplit_button}->child->set("Split OGG");
 	} else {
-		$_->show foreach @{$widgets->{tc_ac3_hide}};
-		$widgets->{tc_audio_bitrate_combo}->set_sensitive (1);
+		$widgets->{view_avi_button}->child->set("View AVI");
+		$widgets->{avisplit_button}->child->set("Split AVI");
 	}
 
 	$widgets->{tc_video_bitrate}->set_sensitive(1);
 	$widgets->{tc_disc_cnt_popup}->set_sensitive(1);
-	$widgets->{tc_disc_size_popup}->set_sensitive(1);
+	$widgets->{tc_disc_size_combo}->set_sensitive(1);
 	$widgets->{tc_target_size}->set_sensitive(1);
 	$widgets->{cluster_button}->set_sensitive(1);
+
+	1;
+}
+
+sub calc_video_bitrate {
+	my $self = shift;
+	
+	my $title = $self->selected_title;
+	return 1 if not $title;
+	
+	$title->calc_video_bitrate;
+
+	$self->transcode_widgets->{tc_video_bitrate}->set_text($title->tc_video_bitrate);
 	
 	1;
 }
 
 sub update_storage_labels {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 
 	my $title = $self->selected_title;
 	return 1 if not $title;
@@ -1448,28 +1077,25 @@ sub update_storage_labels {
 
 	my $frames        = $title->frames;
 	my $fps           = $title->frame_rate;
-	my $audio_bitrate = $title->tc_audio_bitrate;
 	my $video_bitrate = $title->tc_video_bitrate;
 
 	my $runtime = $frames/$fps;
 	my $video_size = int($runtime * $video_bitrate * 1000 / 1024 / 1024 / 8);
 
-	my $audio_size = int($runtime * $audio_bitrate / 1024 / 8);
-
 	my $audio_size_text = "";
 	my $audio_sum = 0;
+
 	foreach my $audio ( @{$title->tc_audio_tracks} ) {
 		next if $audio->tc_target_track == -1;
-		my $size = int($runtime * $audio->tc_bitrate / 1024 / 8);
+		my $size = int($runtime * $audio->tc_bitrate / 1000 / 8);
 		$audio_size_text .= "$size + ";
 		$audio_sum       += $size;
-		$audio_bitrate   += $audio->tc_bitrate;
 	}
 
 	$audio_size_text =~ s/ \+ $//;
 	$audio_size_text = "$audio_sum    = $audio_size_text";
 
-	my $total        = $video_size + $audio_sum;
+	my $total = $video_size + $audio_sum;
 
 	$video_label->set_text($video_size);
 	$audio_label->set_text($audio_size_text);
@@ -1481,10 +1107,20 @@ sub update_storage_labels {
 sub transcode {
 	my $self = shift;
 	my %par = @_;
-	my ($split) = @par{'split'};
+	my ($split, $subtitle_test) = @par{'split','subtitle_test'};
+
+	return 1 if $self->comp('progress')->is_active;
 
 	my $title    = $self->selected_title;
+
+	return 1 if not $title;
+
 	my $chapters = $title->get_chapters;
+
+	Video::DVDRip::InfoFile->new (
+		title    => $title,
+		filename => $title->info_file,
+	)->write;
 
 	my $mpeg = $title->tc_video_codec =~ /^S?VCD$/;
 
@@ -1519,7 +1155,7 @@ sub transcode {
 		$self->message_window (
 			message => "No chapters selected."
 		);
-		return;
+		return 1;
 	}
 
 	if ( $title->tc_use_chapter_mode and $split ) {
@@ -1555,14 +1191,15 @@ sub transcode {
 			title => $title,
 		);
 		$job->set_chapter ($chapter);
+		$job->set_subtitle_test ($subtitle_test);
 	
-		if ( $title->tc_multipass ) {
+		if ( not $subtitle_test and $title->tc_multipass ) {
 			$job->set_pass (1);
 			$last_job = $exec->add_job ( job => $job );
 
 			$job = Video::DVDRip::Job::TranscodeVideo->new (
-				nr    => ++$nr,
-				title => $title,
+				nr            => ++$nr,
+				title         => $title,
 			);
 			$job->set_pass (2);
 			$job->set_chapter ($chapter);
@@ -1574,11 +1211,25 @@ sub transcode {
 			$last_job = $exec->add_job ( job => $job );
 		}
 
-		if ( not $mpeg ) {
+		if ( $title->tc_audio_codec eq 'ogg' ) {
+			$job = Video::DVDRip::Job::MergeAudio->new (
+				nr    => ++$nr,
+				title => $title,
+			);
+			$job->set_vob_nr ( $title->get_first_audio_track );
+			$job->set_avi_nr ( 0 );
+			$job->set_chapter ($chapter);
+			$job->set_subtitle_test ($subtitle_test);
+			$last_job = $exec->add_job ( job => $job );
+		}
+
+		if ( not $mpeg and not $subtitle_test ) {
 			my $add_audio_tracks = $title->get_additional_audio_tracks;
 			if ( keys %{$add_audio_tracks} ) {
 				my ($avi_nr, $vob_nr);
-				while ( ($avi_nr, $vob_nr) = each %{$add_audio_tracks} ) {
+				foreach $avi_nr ( sort keys %{$add_audio_tracks} ) {
+					$vob_nr = $add_audio_tracks->{$avi_nr};
+
 					$job = Video::DVDRip::Job::TranscodeAudio->new (
 						nr    => ++$nr,
 						title => $title,
@@ -1607,10 +1258,11 @@ sub transcode {
 			);
 			$job->set_chapter ($chapter);
 			$job->set_depends_on_jobs ( [ $last_job ] );
+			$job->set_subtitle_test ($subtitle_test);
 			$last_job = $exec->add_job ( job => $job );
 		}
 
-		if ( $split and not $mpeg ) {
+		if ( not $subtitle_test and $split and not $mpeg ) {
 			$job = Video::DVDRip::Job::Split->new (
 				nr    => ++$nr,
 				title => $title,
@@ -1620,14 +1272,36 @@ sub transcode {
 		}
 	}
 
+	if ( $split ) {
+		$last_job->set_cb_finished ( sub {
+			$self->create_splitted_vobsub (
+				exec     => $exec,
+				last_job => $last_job
+			);
+			1;
+		} );
+	} else {
+		$last_job->set_cb_finished ( sub {
+			$self->create_non_splitted_vobsub (
+				exec     => $exec,
+				last_job => $last_job
+			);
+			1;
+		} );
+	}
+
 	$exec->set_cb_finished (sub {
 		return 1 if $exec->cancelled or $exec->errors_occured;
+		return 1 if $subtitle_test;
 		if ( $title->tc_execute_afterwards =~ /\S/ ) {
 			system ("(".$title->tc_execute_afterwards.") &");
 		}
 		if ( $title->tc_exit_afterwards ) {
-			$title->project->save;
-			$self->comp('main')->exit_program;
+			$title->project->save
+				if $title->tc_exit_afterwards ne 'dont_save';
+			$self->comp('main')->exit_program (
+				force => ($title->tc_exit_afterwards eq 'dont_save')
+			);
 		}
 		1;
 	});
@@ -1669,6 +1343,14 @@ sub avisplit {
 
 	$last_job = $exec->add_job ( job => $job );
 
+	$last_job->set_cb_finished ( sub {
+		$self->create_splitted_vobsub (
+			exec     => $exec,
+			last_job => $last_job
+		);
+		1;
+	} );
+
 	$exec->execute_jobs;
 
 	1;
@@ -1700,6 +1382,13 @@ sub scan_rescale_volume {
 		$self->message_window (
 			message => "Chapter mode not yet supported"
 		);
+	}
+
+	if ( not $title->is_ripped ) {
+		$self->message_window (
+			message => "You first have to rip this title."
+		);
+		return 1;
 	}
 
 	my $nr;
@@ -1754,10 +1443,30 @@ sub add_to_cluster {
 		return 1;
 	}
 
+	if ( $title->get_first_audio_track < 0 ) {
+		$self->message_window (
+			message => "You have no target audio track selected."
+		);
+		return 1;
+	}
+
 	# calculate program stream units, if not already done
 	$title->calc_program_stream_units
 		if not $title->program_stream_units or
 		   not @{$title->program_stream_units};
+
+	if ( $title->is_ogg and @{$title->program_stream_units} > 1 ) {
+		$self->message_window (
+			message =>
+				"Cluster mode supports OGG/Vorbis only for movies with\n".
+				"one PSU. Unfortunetaly this title has ".
+				@{$title->program_stream_units}." PSU's.\n\n".
+				"Cluster mode support for such titles will be added\n".
+				"as soon as ogmtools handle concatenating\n".
+				"several OGG files. Stay tuned."
+		);
+		return 1;
+	}
 
 	$self->comp('main')->cluster_control;
 	
