@@ -1,4 +1,4 @@
-# $Id: Title.pm,v 1.19 2002/03/12 14:00:55 joern Exp $
+# $Id: Title.pm,v 1.20 2002/03/14 17:59:24 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -383,7 +383,10 @@ sub get_merge_audio_command {
 
 	$target_avi_file = $self->target_avi_file if $job->move_final;
 
+	my $target_avi_dir = dirname $target_avi_file;
+
 	my $command =
+		"mkdir -m 0775 -p '$target_avi_dir' && ".
 		"avimerge -i $merged_avi_file".
 		" -o $target_avi_file ".
 		" -p $audio_avi_file ".

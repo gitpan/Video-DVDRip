@@ -1,7 +1,6 @@
-$Id: TODO,v 1.52 2002/03/13 18:16:09 joern Exp $
+$Id: TODO,v 1.54 2002/03/14 18:04:36 joern Exp $
 
 KNOWN BUGS
-- audio bitrate setting is not saved to project file?
 - cluster mode
   - cluster control daemon leaks memory
   - still avimerge progress problems. GUI freezes sometimes
@@ -11,7 +10,6 @@ KNOWN BUGS
   dvd::rip shouldn't either
 
 TODO
-- dvdrip -c
 - cluster mode:
   - schedule start/end time of a node, suggested by Rainer Lay
   - stop node after current job, suggested by Rainer Lay
@@ -38,7 +36,6 @@ TODO
 - support generating multilanguage AVIs
 - rip multiple titles in batch mode, suggested by Hrvoje Husic
   <husic AT zyn.de>
-- add a FAQ section to the homepage
 - show div8 exclamation marks only in clip2 stage
 - provide avimerge option in chapter mode
 - check space on filesystem before ripping and transcoding

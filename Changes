@@ -1,6 +1,14 @@
-$Id: Changes,v 1.59 2002/03/13 18:16:09 joern Exp $
+$Id: Changes,v 1.61 2002/03/14 18:04:36 joern Exp $
 
 Revision history for Perl extension Video::DVDRip
+
+0.36 Thu Mar 14 2002, joern
+	Bugfixes:
+	- Cluster Mode:
+	  - audio merging didn't work if the movie had more
+	    than one PSU, because the target directory wasn't
+	    created in that case. Thanks to Sebastian Beneke
+	    <sebastian AT beneke-it.de> for his bug report.
 
 0.35 Wed Mar 13 2002, joern
 	Features:
