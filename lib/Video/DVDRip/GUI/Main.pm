@@ -1,4 +1,4 @@
-# $Id: Main.pm,v 1.41 2002/05/26 22:17:26 joern Exp $
+# $Id: Main.pm,v 1.42 2002/06/29 20:18:59 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -552,10 +552,10 @@ sub show_transcode_commands {
 		     "==================\n";
 
 	if ( $title->tc_multipass ) {
-		$commands .= $title->get_transcode_command ( pass => 1 )."\n".
-			     $title->get_transcode_command ( pass => 2 )."\n";
+		$commands .= $title->get_transcode_command ( pass => 1, split => 1 )."\n".
+			     $title->get_transcode_command ( pass => 2, split => 1 )."\n";
 	} else {
-		$commands .= $title->get_transcode_command()."\n";
+		$commands .= $title->get_transcode_command( split => 1 )."\n";
 	}
 	
 	if ( $title->tc_video_codec =~ /^S?VCD$/ ) {

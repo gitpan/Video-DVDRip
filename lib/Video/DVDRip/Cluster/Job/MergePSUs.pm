@@ -1,4 +1,4 @@
-# $Id: MergePSUs.pm,v 1.4 2002/03/12 13:55:46 joern Exp $
+# $Id: MergePSUs.pm,v 1.5 2002/06/23 21:43:35 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -13,12 +13,6 @@ use base Video::DVDRip::Cluster::Job;
 
 use Carp;
 use strict;
-
-sub chunk_cnt			{ shift->{chunk_cnt}			}
-sub set_chunk_cnt		{ shift->{chunk_cnt}		= $_[1]	}
-
-sub progress_chunks		{ shift->{progress_chunks}		}
-sub set_progress_chunks		{ shift->{progress_chunks}	= $_[1]	}
 
 sub type {
 	return "psu merge";
@@ -41,18 +35,20 @@ sub start {
 	my $command = $title->get_merge_psu_command;
 	$project->set_assigned_job ( undef );
 
-	$self->set_progress_chunks(1);
+	$self->set_progress_frames_cnt ($title->frames);
 
 	my $successful_finished = 0;
+	my $first = 1;
 	$self->popen (
 		command      => $command,
 		cb_line_read => sub {
 			my ($line) = @_;
-			if ( $line =~ /DVDRIP_SUCCESS/ ) {
+			if ( $line =~ /\(\d+-(\d+)\)/ ) {
+				$self->set_progress_start_time(time) if $first;
+				$self->set_progress_frames ($1);
+				$first = 0;
+			} elsif ( $line =~ /DVDRIP_SUCCESS/ ) {
 				$successful_finished = 1;
-
-			} elsif ( $line =~ /file\s+(\d+)\s+/ ) {
-				$self->set_progress_chunks($1);
 			}
 		},
 		cb_finished  => sub {
@@ -65,13 +61,6 @@ sub start {
 	);
 
 	1;
-}
-     
-sub calc_progress {
-	my $self = shift;
-
-	return 	"Chunk ".($self->progress_chunks||1)."/".$self->chunk_cnt.
-		", ".$self->progress_runtime;
 }
  
 1;

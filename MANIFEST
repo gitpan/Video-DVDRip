@@ -25,8 +25,9 @@ lib/Video/DVDRip/Cluster/Job/MergeChunks.pm
 lib/Video/DVDRip/Cluster/Job/MergePSUs.pm
 lib/Video/DVDRip/Cluster/Job/MergeAudio.pm
 lib/Video/DVDRip/Cluster/Job/Split.pm
-lib/Video/DVDRip/Cluster/Job/Transcode.pm
 lib/Video/DVDRip/Cluster/Job/RemoveVOBs.pm
+lib/Video/DVDRip/Cluster/Job/MergeVideoAudio.pm
+lib/Video/DVDRip/Cluster/Job/TranscodeVideo.pm
 lib/Video/DVDRip/Cluster/PSU.pm
 lib/Video/DVDRip/GUI/Project.pm
 lib/Video/DVDRip/GUI/ImageClip.pm
@@ -36,6 +37,7 @@ lib/Video/DVDRip/GUI/Window.pm
 lib/Video/DVDRip/GUI/Component.pm
 lib/Video/DVDRip/GUI/Config.pm
 lib/Video/DVDRip/GUI/Logger.pm
+lib/Video/DVDRip/GUI/ZoomCalculator.pm
 lib/Video/DVDRip/RPC/Client.pm
 lib/Video/DVDRip/RPC/Server.pm
 lib/Video/DVDRip/RPC/Message.pm

@@ -1,4 +1,4 @@
-$Id: TODO,v 1.74 2002/06/08 12:18:19 joern Exp $
+$Id: TODO,v 1.79 2002/07/19 21:22:28 joern Exp $
 
 KNOWN BUGS:
 ===========
@@ -20,29 +20,19 @@ may be implented soon, some eventually never... ;)
 
 TODO:
 =====
-- integrate patch from Wolfgang Kinkeldei <kinkeldei AT nureg.de>
-  which enables playing the ripped VOB from a specific frame
-  number.
-- SVCD: restrict overall bitrate to 2748kbps, thanks for the
-  hint to Joerg Friedrich <Joerg.Dieter.Friedrich AT uni-konstanz.de>
-- use mpeg2enc's --sequence-length for splitting MPEGs, suggested
-  by Todd Inglett <tinglett AT magnaspeed.net>
 - support generating multilanguage AVIs
 - support rendering subtitles
 - use tccat -P instead of -T if chapter mode is disabled,
   suggested by Sven Hartge
 - autosave function (after ripping, every X seconds or something)
+- lock project file to prevent multiple instances of the
+  same project at the same time, suggested by Sven Hartge
 - localize the GUI
-- framework for translated documentation
 - cluster mode
-  - give a better message if dvdrip-master can't be started due
-    lack of needed Perl modules (and the lack of documentation reading
-    users... ;)
   - cleanup all files in tmp/ and cluster/ if VOB cleanup is
     enabled. Suggested by Stefan Opsomer <stefan.opsomer AT wanadoo.be>
   - no VOB cleanup if AVI size > requested size,
     suggested by Stefan Opsomer <stefan.opsomer AT wanadoo.be>
-  - verify double audio problem reported by Philippe <sweafty AT free.fr>
   - optimization of date intensive jobs doesn't check if
     there is at least one node with local access. Reported by
     Marek Malcherek <Malcherek AT Fh-Worms.DE>

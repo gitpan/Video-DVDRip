@@ -1,4 +1,4 @@
-# $Id: Progress.pm,v 1.20 2002/06/09 10:00:22 joern Exp $
+# $Id: Progress.pm,v 1.21 2002/06/29 20:19:49 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -176,23 +176,9 @@ sub init_pipe {
 
 	Gtk::Gdk->input_remove ( $self->gtk_input ) if defined $self->gtk_input;
 
-	# This is a evil "workaround". If the executed command fails,
-	# for "some" reasons the process consumes 99% CPU if the
-	# input_add is done before. So we wait half a second and check
-	# if the ->progress call returned command exit and skip
-	# the input_add in this case. This only works for errors, which
-	# occur immediataly, so this is shit but better than nothing for now.
-
-	Gtk->timeout_add( 500, sub {
-		my $rc = $self->progress;
-		if ( $rc != 2 ) {
-			$self->set_gtk_input (
-				Gtk::Gdk->input_add ( $fh->fileno, 'read', sub { $self->progress } )
-			);
-		}
-		return;
-	} );
-
+	$self->set_gtk_input (
+		Gtk::Gdk->input_add ( $fh->fileno, 'read', sub { $self->progress } )
+	);
 
 	1;
 }
@@ -218,11 +204,19 @@ sub progress {
 	# are we finished?
 	if ( $! != EAGAIN ) {
 		my $close_callback = $self->close_callback;
-		my $rc = &$close_callback (
-			progress => $self,
-			output   => $self->{output}
-		);
+		my $rc = eval {
+			&$close_callback (
+				progress => $self,
+				output   => $self->{output}
+			)
+		};
 
+		if ( $@ ) {
+			$rc = 'finished';
+			$self->long_message_window (
+				message => $self->stripped_exception
+			);
+		}
 		if ( $rc eq 'finished' ) {
 			$self->close;
 		} elsif ( ref $rc eq 'CODE' ) {

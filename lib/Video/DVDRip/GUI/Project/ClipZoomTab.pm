@@ -1,4 +1,4 @@
-# $Id: ClipZoomTab.pm,v 1.26 2002/06/08 08:27:04 joern Exp $
+# $Id: ClipZoomTab.pm,v 1.30 2002/07/07 20:13:23 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -11,6 +11,8 @@ package Video::DVDRip::GUI::Project;
 
 use Carp;
 use strict;
+
+use Video::DVDRip::GUI::ZoomCalculator;
 
 sub adjust_widgets		{ shift->{adjust_widgets}		}	# href
 sub set_adjust_widgets		{ shift->{adjust_widgets}	= $_[1] }
@@ -33,7 +35,7 @@ sub create_adjust_tab {
 	$vbox->pack_start ( $selected_title, 0, 1, 0);
 
 	my ($label, $entry, $popup_menu, $popup, $item,
-	    $box, $image, $button, $frame, $hbox);
+	    $box, $image, $button, $frame, $hbox, $vbutton);
 
 	# preview images -------------------------------------------------
 
@@ -63,10 +65,15 @@ sub create_adjust_tab {
 	$hbox->pack_start($entry, 0, 1, 0);
 	$self->adjust_widgets->{preview_frame_nr} = $entry;
 
-	$button = Gtk::Button->new_with_label ("Grab Frame from ripped VOB");
+	$button = Gtk::Button->new_with_label (" Grab Frame from ripped VOB ");
 	$button->show;
 	$button->signal_connect ("clicked", sub { $self->grab_preview_frame } );
 	$hbox->pack_start($button, 0, 1, 0);
+
+	$vbutton = Gtk::Button->new_with_label (" Show Video from here ");
+	$vbutton->show;
+	$vbutton->signal_connect ("clicked", sub { $self->preview_video } );
+	$hbox->pack_start($vbutton, 0, 1, 0);
 
 	# images
 
@@ -86,11 +93,12 @@ sub create_adjust_tab {
 	$box->pack_start ($frame, 0, 1, 0);
 	
 	$image = Video::DVDRip::GUI::ImageClip->new (
-		gtk_window => $self->comp('main')->widget,
-		width      => 180,
-		height     => 160,
-		thumbnail  => $self->config('thumbnail_factor'),
-		no_clip    => 1,
+		gtk_window    => $self->comp('main')->widget,
+		width         => 180,
+		height        => 160,
+		thumbnail     => $self->config('thumbnail_factor'),
+		no_clip       => 1,
+		show_tooltips => $self->config('show_tooltips'),
 	);
 	$frame->add ($image->widget);
 	$image->widget->signal_connect (
@@ -122,11 +130,12 @@ sub create_adjust_tab {
 	$box->pack_start ($frame, 0, 1, 0);
 	
 	$image = Video::DVDRip::GUI::ImageClip->new (
-		gtk_window => $self->comp('main')->widget,
-		width      => 180,
-		height     => 160,
-		thumbnail  => $self->config('thumbnail_factor'),
-		no_clip    => 1,
+		gtk_window    => $self->comp('main')->widget,
+		width         => 180,
+		height        => 160,
+		thumbnail     => $self->config('thumbnail_factor'),
+		no_clip       => 1,
+		show_tooltips => $self->config('show_tooltips'),
 	);
 	$frame->add ($image->widget);
 	$image->widget->signal_connect (
@@ -158,11 +167,12 @@ sub create_adjust_tab {
 	$box->pack_start ($frame, 0, 1, 0);
 	
 	$image = Video::DVDRip::GUI::ImageClip->new (
-		gtk_window => $self->comp('main')->widget,
-		width      => 180,
-		height     => 160,
-		thumbnail  => $self->config('thumbnail_factor'),
-		no_clip    => 1,
+		gtk_window    => $self->comp('main')->widget,
+		width         => 180,
+		height        => 160,
+		thumbnail     => $self->config('thumbnail_factor'),
+		no_clip       => 1,
+		show_tooltips => $self->config('show_tooltips'),
 	);
 	$frame->add ($image->widget);
 	$image->widget->signal_connect (
@@ -426,6 +436,14 @@ if ( 0 ) {
 	$self->adjust_widgets->{tc_fast_bisection_no}  = $radio_no;
 }
 
+	$button = Gtk::Button->new_with_label (" Open Zoom Calculator ");
+
+	$button->show;
+	$button->signal_connect ("clicked", sub {
+		$self->zoom_calculator;
+	});
+	$table->attach_defaults ($button, 2, 3, $row, $row+1);
+
 	# Clipping #2
 	++$row;
 	$hbox = Gtk::HBox->new;
@@ -518,7 +536,7 @@ if ( 0 ) {
 			return 1 if not $self->selected_title;
 			return 1 if $self->in_adjust_init;
 			$self->selected_title->set_tc_fast_resize(1);
-			$self->update_fast_resize_info;
+			$self->show_preview_labels ( type => "zoom" );
 		}
 	);
 	$self->adjust_widgets->{tc_fast_resize_no}->signal_connect (
@@ -526,7 +544,7 @@ if ( 0 ) {
 			return 1 if not $self->selected_title;
 			return 1 if $self->in_adjust_init;
 			$self->selected_title->set_tc_fast_resize(0);
-			$self->update_fast_resize_info;
+			$self->show_preview_labels ( type => "zoom" );
 		}
 	);
 
@@ -635,6 +653,7 @@ sub update_fast_resize_info {
 	return 1 if not $self->adjust_widgets->{preview_frame_nr};
 
 	my $info = "";
+	my $style = $self->text_norm_style;
 	if ( $title->tc_fast_resize ) {
 		my ($width_n, $height_n, $err_div32, $err_shrink_expand) =
 			$title->get_fast_resize_options;
@@ -646,12 +665,28 @@ sub update_fast_resize_info {
 			$info =~ s! $!!;
 			$info =~ s! s! / s!;
 			$info = "Err: $info";
+			if ( $err_shrink_expand ) {
+				$self->adjust_widgets->{"zoom_info_label"}->set_style ($self->text_warn_style);
+				$self->adjust_widgets->{"clip1_info_label"}->set_style ($self->text_warn_style);
+			}
+			$self->adjust_widgets->{"zoom_info_label"}->set_style ($self->text_warn_style)
+				if $title->tc_zoom_width % 8 or $title->tc_zoom_height % 8;
+			$self->adjust_widgets->{"clip1_info_label"}->set_style ($self->text_warn_style)
+				if $title->tc_clip1_left % 8 or $title->tc_clip1_right % 8 or
+				   $title->tc_clip1_top % 8 or $title->tc_clip1_bottom;
+
+			$style = $self->text_warn_style;
 		} else {
 			$info = "Fast Resize: Ok";
+			$self->adjust_widgets->{"zoom_info_label"}->set_style ($self->text_norm_style);
+			$self->adjust_widgets->{"clip1_info_label"}->set_style ($self->text_norm_style);
 		}
+	} else {
+		$self->adjust_widgets->{"clip1_info_label"}->set_style ($self->text_norm_style);
 	}
 
-	$self->adjust_widgets->{tc_zoom_info}->set_text ($info);
+	$self->adjust_widgets->{tc_zoom_info}->set_text  ($info);
+	$self->adjust_widgets->{tc_zoom_info}->set_style ($style);
 
 	1;
 }
@@ -710,20 +745,41 @@ sub show_preview_labels {
 		@types = qw ( clip1 zoom clip2 );
 	}
 
-	my ($width, $height, $warn_width, $warn_height, $text, $ratio);
+	my ($width, $height, $warn_width, $warn_height, $text, $ratio, $phys_ratio);
 	foreach $type ( @types ) {
 		($width, $height, $ratio) = $title->get_effective_ratio ( type => $type );
-		$ratio  = sprintf ("%1.2f", $ratio);
-		$ratio  = "4:3"  if $ratio >= 1.32 and $ratio <= 1.34;
-		$ratio  = "16:9" if $ratio >= 1.76 and $ratio <= 1.78;
-		$warn_width  = ($type eq 'clip2' and $width%16) ? "!":"";
-		$warn_height = ($type eq 'clip2' and $height%16) ? "!":"";
-		$text = sprintf ("Size: %d%sx%d%s, Ratio: %s",
+		$ratio   = "4:3"  if $ratio >= 1.32 and $ratio <= 1.34;
+		$ratio   = "16:9" if $ratio >= 1.76 and $ratio <= 1.78;
+		($ratio) = $ratio =~ /(\d+\.\d{1,2})/ if $ratio !~ /:/;
+		$phys_ratio = $width/$height;
+		($phys_ratio) = $phys_ratio =~ /(\d+\.\d{1,2})/;
+		$warn_width  = ($type eq 'clip2' and $width  % 16) ? "!":"";
+		$warn_height = ($type eq 'clip2' and $height % 16) ? "!":"";
+		$warn_width  ||= ($width  % 2) ? "!":"";
+		$warn_height ||= ($height % 2) ? "!":"";
+		if ( $type eq 'clip1' ) {
+			$warn_height  ||= "!" if $title->tc_clip1_top %2 or
+						 $title->tc_clip1_bottom %2;
+			$warn_width   ||= "!" if $title->tc_clip1_left %2 or
+						 $title->tc_clip1_right %2;
+		}
+		if ( $type eq 'clip2' ) {
+			$warn_height  ||= "!" if $title->tc_clip2_top %2 or
+						 $title->tc_clip2_bottom %2;
+			$warn_width   ||= "!" if $title->tc_clip2_left %2 or
+						 $title->tc_clip2_right %2;
+		}
+		$text = sprintf ("Size: %d%sx%d%s\nEff. ratio: %s, Phys. ratio: %s",
 			$width, $warn_width, $height, $warn_height,
-			$ratio
+			$ratio, $phys_ratio
 		);
-		
+
 		$self->adjust_widgets->{$type."_info_label"}->set_text($text);
+		if ( $warn_width or $warn_height ) {
+			$self->adjust_widgets->{$type."_info_label"}->set_style ($self->text_warn_style);
+		} else {
+			$self->adjust_widgets->{$type."_info_label"}->set_style ($self->text_norm_style);
+		}
 	}
 
 	$self->update_fast_resize_info;
@@ -823,6 +879,41 @@ sub grab_preview_frame {
 		cancel_callback   => $cancel_callback,
 		close_callback    => $close_callback,
 	);
+
+	1;
+}
+
+sub preview_video {
+	my $self = shift; $self->trace_in;
+
+	my $title = $self->selected_title;
+	return 1 if not $title;
+	
+	my $frame_nr = $title->preview_frame_nr;
+	my $filename = $title->preview_filename( type => 'orig' );
+
+	return 1 if not defined $frame_nr;
+
+	if ( not $title->is_ripped ) {
+		$self->message_window (
+			message => "You first have to rip this title."
+		);
+		return 1;
+	}
+
+	if ( $frame_nr > $title->frames or $frame_nr !~ /^\d+/ ) {
+		$self->message_window (
+			message => "Illegal frame number. Maximum is ".
+				   ($title->frames-1)
+		);
+		return 1;
+	}
+
+	my $command = $title->get_view_stdin_command (
+		command_tmpl => $self->config('play_stdin_command'),
+	);
+
+	system ("$command &");
 
 	1;
 }
@@ -985,6 +1076,33 @@ sub move_clip2_to_clip1 {
 	$zoom_width  = $width  * $x_factor;
 	$zoom_height = $height * $y_factor;
 	
+	# no odd clip values
+	if ( $clip1_left % 2 and $clip1_right %2 ) {
+		if ( $clip1_left > $clip1_right ) {
+			--$clip1_left;
+			++$clip1_right;
+		} else {
+			++$clip1_left;
+			--$clip1_right;
+		}
+	} else {
+		--$clip1_left  if $clip1_left  % 2;
+		--$clip1_right if $clip1_right % 2;
+	}
+
+	if ( $clip1_top % 2 and $clip1_bottom %2 ) {
+		if ( $clip1_left > $clip1_bottom ) {
+			--$clip1_top;
+			++$clip1_bottom;
+		} else {
+			++$clip1_top;
+			--$clip1_bottom;
+		}
+	} else {
+		--$clip1_top    if $clip1_top    % 2;
+		--$clip1_bottom if $clip1_bottom % 2;
+	}
+
 	$title->set_tc_clip1_top    (int($clip1_top));
 	$title->set_tc_clip1_bottom (int($clip1_bottom));
 	$title->set_tc_clip1_left   (int($clip1_left));
@@ -1019,6 +1137,18 @@ sub calc_zoom {
 	$self->init_adjust_values;
 
 	1;
+}
+
+sub zoom_calculator {
+	my $self = shift;
+	
+	my $title = $self->selected_title;
+	return 1 if not $title;
+
+	my $calculator = Video::DVDRip::GUI::ZoomCalculator->new;
+	$calculator->open_window;
+
+	1;	
 }
 
 1;

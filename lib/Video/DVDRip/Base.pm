@@ -1,4 +1,4 @@
-# $Id: Base.pm,v 1.19 2002/05/26 22:14:49 joern Exp $
+# $Id: Base.pm,v 1.20 2002/06/29 20:39:54 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -9,11 +9,35 @@
 
 package Video::DVDRip::Base;
 
+use Video::DVDRip::Config;
+
 use Carp;
 use strict;
 use FileHandle;
 use IO::Pipe;
 use Fcntl;
+
+my $CONFIG_OBJECT = Video::DVDRip::Config->new;
+$CONFIG_OBJECT->set_filename ("$ENV{HOME}/.dvdriprc");
+$CONFIG_OBJECT->save if not -f "$ENV{HOME}/.dvdriprc";
+$CONFIG_OBJECT->load;
+
+sub config {
+	my $thingy = shift;
+	my ($name) = @_;
+	return $CONFIG_OBJECT->get_value ($name);
+}
+
+sub set_config {
+	my $thingy = shift;
+	my ($name, $value) = @_;
+	$CONFIG_OBJECT->set_value ($name, $value);
+	return $value;
+}
+
+sub config_object {
+	$CONFIG_OBJECT;
+}
 
 sub debug_level			{ shift->{debug_level}		}
 

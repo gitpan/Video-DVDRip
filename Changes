@@ -1,6 +1,155 @@
-$Id: Changes,v 1.87 2002/06/15 16:34:11 joern Exp $
+$Id: Changes,v 1.97 2002/07/19 21:07:13 joern Exp $
 
 Revision history for dvd::rip
+
+0.44 Fri Jul 19 2002, joern
+	No changes since 0.44_06, just a stable release.
+	
+	Important note for Cluster Mode:
+	================================
+
+	The internal data format of the cluster mode project files
+	changed since version 0.43. You must finish all your projects
+	and remove them from the cluster control daemon	before
+	upgrading. Otherwise dvdrip-master won't start, instead it
+	will fail loading the projects with a fatal error message.
+	
+	If you forgot removing the projects using the GUI, you can
+	delete the files by hand. Just enter:
+	
+	rm ~/.dvdrip-master/projects/*
+
+0.44_06 Wed Jul 17 2002, joern
+	
+	Yet another pre-release record ;)
+	
+	Bugfixes:
+	- Preview grabbing: disabled audio processing completely,
+	  because also with the changes of 0.44_04 preview grabbing
+	  still didn't work with some DVD's. Thanks to 
+	  marc'O <dvdrip AT hackerwelt.de> and  Detlef Neubauer
+	  <detlef.neubauer AT wzrz.de> for their detailed bug reports.
+
+0.44_05 Mon Jul 15 2002, joern
+	Features:
+	- added another deinterlacing option for automatic deinterlacing
+	  of single frames ("transcode -J 32detect=force_mode=3") -
+	  useful for NTSC material. Thanks for the hint to Torsten Howard.
+	- dvdrip-master now checks for needed Perl modules and prints
+	  a more user friendly error message, pointing the user to the
+	  cluster mode documentation.
+	- SVCD presets "16:9 -> 4:3 letterbox" (PAL and NTSC version)
+	  added. Some hardware DVD players have problems playing back
+	  16:9 anamorph encoded SVCD's produced by transcode's mjpeg
+	  export filter.
+
+	Bugfixes:
+	- AC3 passthrough didn't work in chapter mode. Thanks for
+	  the detailed bug report to Patrick Pfifferling
+	  <ppfifferling AT free.fr>
+	- volume rescale entry was missing in (S)VCD mode.
+
+0.44_04 Sun Jul 07 2002, joern
+	Features:
+	- Completed Zoom Calculator window. You now can adjust
+	  *any* parameter, which affects aspect ratio, clipping
+	  and zoom calculation! Play around with it. Maybe not
+	  all parameters are self-explanatory. When I publish
+	  the next stable release the homepage documentation will
+	  cover all the details.
+
+	Bugfixes:
+	- with some DVD's preview grabbing didn't work. Thanks to
+	  Greg McLearn <gmclearn AT chebucto.ns.ca> for his
+	  detailed bug report. There are still some DVD's which
+	  make problems, but this is indeed a transcode bug.
+	- disc size popup didn't restore the 760 MB value
+	  (selected 700 MB instead)
+	- sometimes smallest optimal zoom calculation didn't
+	  appear in Zoom Calculator's result list
+
+0.44_03 Sat Jul 06 2002, joern
+	Features:
+	- added "Refresh" button to Zoom Calculator window.
+	
+	Bugfixes:
+	- cluster mode wasn't working since 0.44_02 due to changes
+	  to the internal error handling in this version.
+
+0.44_02 Sat Jun 29 2002, joern
+	Features:
+	- added global preference "Show tooltips". You must restart
+	  dvd::rip (or at least reopen the project) for this to
+	  take effect.
+	- added global preference "Default Video Codec", so your
+	  favorite video codec is used by default
+	- (S)VCD
+	  - for proper splitting dvd::rip now uses mpeg2enc's
+            -S parameter. Thanks for the hint to Todd Inglett
+            <tinglett AT magnaspeed.net>. dvd::rip reduces the target
+	    disc size internally by 1%, because there seems to be
+	    some mpeg overhead, which is not taken into account
+	    by mpeg2enc.
+	  - Joerg Friedrich <Joerg.Dieter.Friedrich AT uni-konstanz.de>
+            told me, that the overall bitrate (audio + video) must not
+	    exceed 2748kbps for SVCD. dvd::rip now respects this limit.
+	- I revised the internal ar/clip/zoom calculation code.
+	  All features regarding clip&zoom calculation now internally
+	  use the same algorithm. The quality of the auto detect
+	  presets benefits from this.
+	- new "Zoom Calculator" window, which lists all possible
+	  target sizes with an acceptable aspect ratio error. Entries
+	  with perfect aspect ratio are highlighted in red. There
+	  is a column with a magic "BPKP" value. This stands for
+	  "bits per kilo pixel" and is an indicator for the image
+	  quality (taking image size and actual video bitrate into
+	  account). I don't have much experience with this value
+	  until know, but I think values around 500 produce very
+	  good quality. Feedback on this is very welcome.
+	- "calc width/height" now works with fast resizing, too.
+	  Requested by Torsten Howard and Florin Andrei
+
+	Bugfixes:
+	- Cluster mode: target avi file hasn't the usual location in
+	  case of a one-psu-movie.
+	- (S)VCD: mplex complained about missing %d in filename, even
+	  if no splitting was requested. I don't really understand this
+	  error, but now dvd::rip always adds %d to the filename.
+	- somethime dvd::rip did consume 99% CPU after an unexpected
+	  error. I added a workaround for this a few versions ago,
+	  but now I think I really fixed this bug ;)
+	- in case of a transcode problem the corresponding error
+	  message didn't show the correct transcode command
+	  if multipass was enabled. Thanks to David Kvarnberg
+	  <david AT mellow.net> for his extensive bug report.
+   
+0.44_01 Sun Jun 23 2002, joern
+	Work in progress:
+	- Cluster mode: went back to per-psu-audio-processing. At
+	  least in theory the old audio-all-in-one-processing
+	  procedure was problematic regarding NTSC A/V sync.
+	  Unfortunetaly A/V sync isn't better after these changes :(
+	  Not tested in detail yet, so cluster mode may have bugs
+	  in this version.
+
+	Features:
+	- new button on the Clip&Zoom tab: "Show video from here",
+	  which plays the video from the given frame number. Based
+	  on a patch from Wolfgang Kinkeldei <kinkeldei AT nureg.de>.
+	- illegal Clip&Zoom values are not just warned with an
+	  exclamation mark behind the corresponding value. They're
+	  also highlighted in red. Maybe in future versions a small
+	  button will appear in this case, which opens a window
+	  with more explanation of the problem.
+	- added a tooltip to the Clip&Zoom images
+	- Clip&Zoom: not only the effective ratio, also the physical
+	  ratio of each processing stage is printed.
+
+	Bugfixes:
+	- HQ presets sometimes produce odd clip values, which isn't
+	  allowed with YUV. Also they were not warned by
+	  dvd::rip. Thanks for their reports go to Davide Ferrari
+	  and Torsten Howard.
 
 0.43 Sat Jun 15 2002, joern
 	Bugfixes:

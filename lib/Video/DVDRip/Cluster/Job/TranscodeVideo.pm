@@ -1,4 +1,4 @@
-# $Id: Transcode.pm,v 1.6 2002/05/14 22:12:01 joern Exp $
+# $Id: TranscodeVideo.pm,v 1.1 2002/06/23 21:46:40 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -7,7 +7,7 @@
 # redistribute it and/or modify it under the same terms as Perl itself.
 #-----------------------------------------------------------------------
 
-package Video::DVDRip::Cluster::Job::Transcode;
+package Video::DVDRip::Cluster::Job::TranscodeVideo;
 
 use base Video::DVDRip::Cluster::Job;
 

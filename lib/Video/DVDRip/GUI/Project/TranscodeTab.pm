@@ -1,4 +1,4 @@
-# $Id: TranscodeTab.pm,v 1.45 2002/06/15 16:26:48 joern Exp $
+# $Id: TranscodeTab.pm,v 1.48 2002/07/15 07:29:23 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -205,10 +205,11 @@ sub create_video_options {
 	$popup->set_menu($popup_menu);
 
 	%popup_entries = (
-		0 => "No Deinterlacing",
-		1 => "1 - Interpolate Scanlines (fast)",
-		2 => "2 - Handled By Encoder (may segfault)",
-		3 => "3 - Zoom To Full Frame (slow)",
+		0        => "No Deinterlacing",
+		1        => "Interpolate Scanlines (fast)",
+		2        => "Handled By Encoder (may segfault)",
+		3        => "Zoom To Full Frame (slow)",
+		'32detect' => "Automatic deinterlacing of single frames",
 	);
 	foreach my $key ( sort keys %popup_entries ) {
 		$item = Gtk::MenuItem->new ($popup_entries{$key});
@@ -245,9 +246,9 @@ sub create_video_options {
 
 	%popup_entries = (
 		0 => "No Antialiasing",
-		1 => "1 - Process De-Interlace Effects",
-		2 => "2 - Process Resize Effects",
-		3 => "3 - Process Full Frame (slow)",
+		1 => "Process De-Interlace Effects",
+		2 => "Process Resize Effects",
+		3 => "Process Full Frame (slow)",
 	);
 	foreach my $key ( sort keys %popup_entries ) {
 		$item = Gtk::MenuItem->new ($popup_entries{$key});
@@ -510,7 +511,6 @@ sub create_audio_options {
 
 	push @ac3_keep, $hbox;
 	push @ac3_hide, $label;
-	push @mpeg_hide, $label;
 
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
@@ -522,7 +522,6 @@ sub create_audio_options {
 
 	push @ac3_keep, $hbox;
 	push @ac3_hide, $entry;
-	push @mpeg_hide, $entry;
 
 	$self->transcode_widgets->{tc_volume_rescale} = $entry;
 
@@ -683,7 +682,7 @@ sub create_video_bitrate_calc {
 		$popup_menu->append($item);
 		$item->signal_connect (
 			"select", sub {
-				my $title =$self->selected_title;
+				my $title = $self->selected_title;
 				return 1 if not $title;
 				return 1 if $self->in_transcode_init;
 				$title->set_tc_disc_size($key);
@@ -1114,8 +1113,15 @@ sub init_transcode_values {
 	$widgets->{tc_anti_alias_popup}->set_history ($anti_alias);
 	$widgets->{tc_mp3_quality_popup}->set_history ($mp3_quality);
 
+	my %disc_size_history = (
+		650 => 0,
+		700 => 1,
+		760 => 2,
+	);
+
 	$widgets->{tc_disc_cnt_popup}->set_history ($disc_cnt-1);
-	$widgets->{tc_disc_size_popup}->set_history (($disc_size - 600) / 100);
+#	$widgets->{tc_disc_size_popup}->set_history (($disc_size - 600) / 100);
+	$widgets->{tc_disc_size_popup}->set_history ($disc_size_history{$disc_size});
 
 	$widgets->{tc_preview_yes}->set_active($preview);
 	$widgets->{tc_preview_no}->set_active(!$preview);
@@ -1263,13 +1269,23 @@ sub transcode {
 		);
 		return 1;
 	}
+	if ( $title->tc_psu_core and
+	    ($title->tc_start_frame or $title->tc_end_frame) ) {
+		$self->message_window (
+			message => "You can't select a frame range with psu core."
+		);
+		return 1;
+	}
+
 
 	my $pass = 1;
 	my $multipass = $title->tc_multipass;
 	my $mpeg      = $title->tc_video_codec =~ /^S?VCD$/;
 
 	my $open_callback = sub {
-		return $title->transcode_async_start ( pass => $pass );
+		return $title->transcode_async_start (
+			pass => $pass, split => $split
+		)
 	};
 
 	my $frames = 0;
@@ -1290,6 +1306,7 @@ sub transcode {
 		$title->transcode_async_stop (
 			fh     => $progress->fh,
 			output => $output,
+			pass   => $pass,
 		);
 
 		if ( $multipass and $pass == 1 ) {
@@ -1325,7 +1342,7 @@ sub transcode {
 
 		system ("killall -2 transcode");
 		sleep 2;
-		close ($progress->fh);
+		close ($progress->fh) if $progress->fh;
 	};
 
 	my $max_value;

@@ -1,4 +1,4 @@
-# $Id: TranscodeAudio.pm,v 1.3 2002/06/23 21:43:35 joern Exp $
+# $Id: MergeVideoAudio.pm,v 1.1 2002/06/23 21:46:40 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -7,7 +7,7 @@
 # redistribute it and/or modify it under the same terms as Perl itself.
 #-----------------------------------------------------------------------
 
-package Video::DVDRip::Cluster::Job::TranscodeAudio;
+package Video::DVDRip::Cluster::Job::MergeVideoAudio;
 
 use base Video::DVDRip::Cluster::Job;
 
@@ -15,54 +15,44 @@ use Carp;
 use strict;
 
 sub psu				{ shift->{psu}				}
-sub chunk_cnt			{ shift->{chunk_cnt}			}
-
 sub set_psu			{ shift->{psu}			= $_[1]	}
-sub set_chunk_cnt		{ shift->{chunk_cnt}		= $_[1]	}
+
+sub move_final			{ shift->{move_final}			}
+sub set_move_final		{ shift->{move_final}		= $_[1]	}
 
 sub type {
-	return "transcode audio";
+	return "multiplex video and audio";
 }
 
 sub info {
 	my $self = shift;
 
-	return  "transcode audio";
+	return "multiplex video and audio psu ".$self->psu;
 }
 
 sub start {
 	my $self = shift;
 
-	my $project = $self->project;
-	my $title   = $project->title;
+	my $project  = $self->project;
+	my $title    = $project->title;
 
-	# get transcode command
+	# get merge command
 	$project->set_assigned_job ( $self );
-	my $command = $title->get_transcode_audio_command;
+	my $command = $title->get_merge_video_audio_command;
 	$project->set_assigned_job ( undef );
 
-	# start command
-	my $frames_cnt;
+	$self->set_progress_frames_cnt ($title->frames);
+
 	my $successful_finished = 0;
-
-	$self->set_progress_frames (0);
-
-	$frames_cnt = $self->project->title->frames;
-
-	$self->set_progress_frames_cnt ($frames_cnt);
-
+	my $first = 1;
 	$self->popen (
 		command      => $command,
 		cb_line_read => sub {
 			my ($line) = @_;
-			if ( $line =~ /split.*?mapped.*?-c\s+\d+-(\d+)/ ) {
-				$self->set_progress_frames_cnt ($1);
-				$frames_cnt = $1;
-				$self->set_progress_start_time(time);
-
-			} elsif ( $line =~ /\[\d{6}-(\d+)\]/ ) {
-				$self->set_progress_frames($1);
-
+			if ( $line =~ /\(\d+-(\d+)\)/ ) {
+				$self->set_progress_start_time(time) if $first;
+				$self->set_progress_frames ($1);
+				$first = 0;
 			} elsif ( $line =~ /DVDRIP_SUCCESS/ ) {
 				$successful_finished = 1;
 			}
@@ -75,7 +65,7 @@ sub start {
 			}
 		},
 	);
-	
+
 	1;
 }
 

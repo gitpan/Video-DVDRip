@@ -1,4 +1,4 @@
-# $Id: Project.pm,v 1.19 2002/04/06 10:15:51 joern Exp $
+# $Id: Project.pm,v 1.20 2002/06/23 21:39:14 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -38,6 +38,12 @@ sub set_gtk_title_labels	{ shift->{gtk_title_labels}	= $_[1] }
 
 sub closed			{ shift->{closed}			}
 sub set_closed			{ shift->{closed}		= $_[1] }
+
+sub set_text_norm_style		{ shift->{text_norm_style}	= $_[1] }
+sub text_norm_style		{ shift->{text_norm_style}		}
+
+sub set_text_warn_style		{ shift->{text_warn_style}	= $_[1] }
+sub text_warn_style		{ shift->{text_warn_style}		}
 
 #------------------------------------------------------------------------
 # Build Project GUI
@@ -101,6 +107,13 @@ sub build {
 	} else {
 		$self->log ("Create new project.");
 	}
+
+	my $norm_style = $vbox->style->copy;
+	$self->set_text_norm_style ($norm_style);
+	
+	my $warn_style = $vbox->style->copy;
+	$warn_style->fg('normal',$self->gdk_color('ff0000'));
+	$self->set_text_warn_style ($warn_style);
 
 	return $vbox;
 }

@@ -1,4 +1,4 @@
-# $Id: ImageClip.pm,v 1.8 2002/01/03 17:40:01 joern Exp $
+# $Id: ImageClip.pm,v 1.10 2002/06/29 20:18:18 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -58,8 +58,8 @@ sub new {
 	my %par = @_;
 	my  ($gtk_window, $filename, $width, $height, $thumbnail) =
 	@par{'gtk_window','filename','width','height','thumbnail'};
-	my  ($changed_callback, $no_clip) =
-	@par{'changed_callback','no_clip'};
+	my  ($changed_callback, $no_clip, $show_tooltips) =
+	@par{'changed_callback','no_clip','show_tooltips'};
 
 	my $drawing_area = Gtk::DrawingArea->new;
 	my $event_box = Gtk::EventBox->new;
@@ -97,6 +97,13 @@ sub new {
 	$event_box->show;
 	$event_box->add ($drawing_area);
 	
+	if ( $show_tooltips ) {
+		my $tooltip = Gtk::Tooltips->new;
+		$tooltip->set_tip ($event_box, "Click on the image to open a window", "test");
+		$tooltip->enable;
+		$tooltip->set_delay(0);
+	}
+
 	if ( not $thumbnail ) {
 		$event_box->set_events( 'button_press_mask' );
 		$event_box->signal_connect (

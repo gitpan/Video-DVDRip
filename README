@@ -29,7 +29,7 @@ II.  NOTE
    
 III. INSTALLATION
 
-   This documentation page covers dvd::rip 0.43.
+   This documentation page covers dvd::rip 0.44.
 
    dvd::rip is a Gtk+ based program written in Perl, using the video
    processing tool transcode for the internals. So you first have to
@@ -87,30 +87,31 @@ Perl Gtk Module
    installed. Then install Perl Gtk and everything should work as
    expected.
 
-xine Video Player with d4d plugin
+mplayer and/or xine (with a DVD plugin)
 
-   If you have the movie player xine with the d4d plugin installed, you
-   can preview selected DVD titles with the appropriate audio channels.
-   Maybe I'll support mplayer, too, in upcoming versions.
+   If you have mplayer or xine (with the d4d or dvdnav plugin) installed,
+   you can preview selected DVD titles/chapters with the appropriate
+   audio channels.
 
-   You can download xine here:
+   You can download xine and mplayer from here:
 
      [6]http://xine.sourceforge.net/
+     [7]http://www.mplayerhq.hu/
 
-   dvd::rip expects the xine binary to be found in the standard search
-   PATH.
+   dvd::rip expects the player binaries to be found in the standard
+   search PATH.
 
 Installing / Updating dvd::rip itself
 
    This is quite easy, if you have managed installing the packages
    mentioned above... ;)
 
-   [7]Download the .tar.gz archive of the dvd::rip version you want to
+   [8]Download the .tar.gz archive of the dvd::rip version you want to
    install. Then extract the file, change into the created directory,
    generate the Makefile and execute make:
 
      # as a normal user
-     tar xfz Video-DVDRip-0.43.tar.gz
+     tar xfz Video-DVDRip-0.44.tar.gz
      cd Video-DVDRip-x.xx
      perl Makefile.PL
      make
@@ -151,15 +152,15 @@ Perl modules
    Additionally you need the Storable and the Event Perl modules. You can
    find them on CPAN, e.g.:
 
-     [8]http://www.perl.org/CPAN/modules/by-module/Storable/
-     [9]http://www.perl.org/CPAN/modules/by-module/Event/
+     [9]http://www.perl.org/CPAN/modules/by-module/Storable/
+     [10]http://www.perl.org/CPAN/modules/by-module/Event/
 
 fping and pstree
 
    The dvd::rip cluster control daemon uses fping to check if nodes are
    online and pstree to get information about specific child processes.
    Both tools should be shipped with your Linux distribution (fping
-   sometimes isn't, but you can get it here: [10]http://www.fping.com/).
+   sometimes isn't, but you can get it here: [11]http://www.fping.com/).
 
    Note: Matthias Riese told me that there are IPv6 fping packages which
    don't support IPv4, what's most likely not what you want, so pay
@@ -189,10 +190,11 @@ URL References
    4. http://www.imagemagick.org/
    5. http://www.perl.org/CPAN/modules/by-module/Gtk/
    6. http://xine.sourceforge.net/
-   7. http://www.exit1.org/dvdrip/download.cipp
-   8. http://www.perl.org/CPAN/modules/by-module/Storable/
-   9. http://www.perl.org/CPAN/modules/by-module/Event/
-  10. http://www.fping.com/
+   7. http://www.mplayerhq.hu/
+   8. http://www.exit1.org/dvdrip/download.cipp
+   9. http://www.perl.org/CPAN/modules/by-module/Storable/
+  10. http://www.perl.org/CPAN/modules/by-module/Event/
+  11. http://www.fping.com/
 
 IV.  DOWNLOAD
 
@@ -201,7 +203,7 @@ IV.  DOWNLOAD
 
    Local download of the latest stable release:
 
-     [3]Video-DVDRip-0.43.tar.gz
+     [3]Video-DVDRip-0.44.tar.gz
 
    CPAN download directory:
 
@@ -216,7 +218,7 @@ IV.  DOWNLOAD
      [6]http://www.exit1.org/dvdrip/dist/
      [7]http://www.exit1.org/dvdrip/dist/pre/
 
-User contributed downloads
+RPM's and other contributed downloads
 
    I do not provide RPM archives myself, but other dvd::rip users are so
    kind to build some. You'll find them in my contribution directory,
@@ -226,11 +228,16 @@ User contributed downloads
 
    Please understand that I can't offer any support for these files.
 
+   Rainer Ley maintains several video related RPM's, including transcode
+   and dvd::rip. Refer to his download page:
+
+     [9]http://www6.informatik.uni-erlangen.de/~rainer/rpms/
+
 Debian packages
 
    Christian Marillat <marillat.christian AT wanadoo.fr> does a great job
    building video related Debian packages and publishing them on his
-   website [9]http://marillat.free.fr/. You can use apt-get to install
+   website [10]http://marillat.free.fr/. You can use apt-get to install
    the packages if you add the following entries to your
    /etc/apt/sources.list file:
   deb http://marillat.free.fr/ testing main
@@ -256,24 +263,30 @@ URL References
 
    1. http://www.exit1.org/dvdrip/download.cipp
    2. http://www.exit1.org/dvdrip/download.cipp?print=1
-   3. http://www.exit1.org/dvdrip/dist/Video-DVDRip-0.43.tar.gz
+   3. http://www.exit1.org/dvdrip/dist/Video-DVDRip-0.44.tar.gz
    4. http://www.perl.org/CPAN/modules/by-authors/id/J/JR/JRED/
    5. http://www.perl.org/CPAN/SITES.html
    6. http://www.exit1.org/dvdrip/dist/
    7. http://www.exit1.org/dvdrip/dist/pre/
    8. http://www.exit1.org/dvdrip/contrib/
-   9. http://marillat.free.fr/
+   9. http://www6.informatik.uni-erlangen.de/~rainer/rpms/
+  10. http://marillat.free.fr/
 
 V.   MAILING LIST
 
    If you want to discuss usage, problems and suggestions with other
    dvd::rip users, you should subscribe to the dvdrip-users mailing list.
-   Note: this is a closed mailing list to prevent members from getting
-   flooded by spam. So you have to subscribe before posting. This list is
-   low traffic and announces, patches etc. will be posted here, too.
+   This list is low traffic and announces, patches etc. will be posted
+   here, too.
 
    The language of the mailing list is english, although the author and
    many users and contributors are germans (or at least speak german ;).
+
+   Note: this is a closed mailing list to prevent members from getting
+   flooded by spam. So you have to subscribe before posting. Postings
+   from non subscribed users may be discarded without notification! Also
+   you must use the correct sender address, because the mailing list
+   program has no idea of your alternative mail addresses.
 
    IMPORTANT NOTE: please don't post any illegal stuff here, e.g.
    requests for movie downloads or similar stuff! Mailing list members
@@ -300,9 +313,10 @@ VI.  COPYRIGHT / CONTACT
    dvd::rip is free software; you can redistribute it and/or modify it
    under the same terms as Perl itself.
 
-   You can contact me by mail: [3]joern@zyn.de. Please place the word
-   "dvd::rip" everywhere in the subject, in addition to your real topic,
-   because this helps me classifying your email correctly. Thanks.
+   You can contact me by mail: [3]Jörn Reder <joern AT zyn.de>. Please
+   place the word "dvd::rip" everywhere in the subject, in addition to
+   your real topic, because this helps me classifying your email
+   correctly. Thanks.
 
    In case of a bug report: please always tell me which version of
    dvd::rip and transcode you're using, otherwise I often have to guess
@@ -323,24 +337,28 @@ URL References
 
    1. http://www.exit1.org/dvdrip/copyright.cipp
    2. http://www.exit1.org/dvdrip/copyright.cipp?print=1
-   3. mailto:joern@zyn.de?subject=dvd::rip
+   3. mailto:?subject=dvd::rip
    4. http://lists.exit1.org/mailman/listinfo/dvdrip-users
 
 VII. CHANGES
-   $Id: Changes,v 1.87 2002/06/15 16:34:11 joern Exp $
+   $Id: Changes,v 1.97 2002/07/19 21:07:13 joern Exp $
 
    Revision history for dvd::rip
 
-   0.43 Sat Jun 15 2002, joern
-	Bugfixes:
-	- transcode-0.6.0pre6-0.20020608 changed the frame grabbing
-	  output filename, so dvd::rip's frame grabbing didn't work
-	  with this and newer releases. dvd::rip now uses a wildcard
-	  for the filename, so it should work with older and actual
-	  releases as well. Thanks for the numerous reports of this
-	  "bug" (too many to list them all here ;)
-	- fixed a typo in the AVI file viewing command, which prevents
-	  backgrounding of the process.
-	- added the prerequisite for Gtk::Gdk::Pixbuf to Makefile.PL,
-	  for automatic dependency resolution with CPAN or CPANPLUS.
+   0.44 Fri Jul 19 2002, joern
+	No changes since 0.44_06, just a stable release.
+	
+	Important note for Cluster Mode:
+	================================
+
+	The internal data format of the cluster mode project files
+	changed since version 0.43. You must finish all your projects
+	and remove them from the cluster control daemon	before
+	upgrading. Otherwise dvdrip-master won't start, instead it
+	will fail loading the projects with a fatal error message.
+	
+	If you forgot removing the projects using the GUI, you can
+	delete the files by hand. Just enter:
+	
+	rm ~/.dvdrip-master/projects/*
 

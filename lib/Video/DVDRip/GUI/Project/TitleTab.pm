@@ -1,4 +1,4 @@
-# $Id: TitleTab.pm,v 1.36 2002/05/26 22:17:56 joern Exp $
+# $Id: TitleTab.pm,v 1.37 2002/07/15 07:29:00 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -789,6 +789,7 @@ sub rip_title_chapters {
 		$title->set_actual_chapter($chapter);
 
 		if ( not defined $chapter ) {
+			$title->probe_audio;
 			$title->suggest_transcode_options;
 			$self->fill_with_values;
 			if ( $sel_idx == @sel - 1 ) {

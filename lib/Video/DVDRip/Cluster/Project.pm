@@ -1,4 +1,4 @@
-# $Id: Project.pm,v 1.23 2002/03/24 22:52:28 joern Exp $
+# $Id: Project.pm,v 1.24 2002/06/23 21:43:36 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -14,14 +14,15 @@ use base Video::DVDRip::Project;
 use Video::DVDRip::Cluster::Title;
 use Video::DVDRip::Cluster::PSU;
 
-use Video::DVDRip::Cluster::Job::Transcode;
-use Video::DVDRip::Cluster::Job::MergeChunks;
-use Video::DVDRip::Cluster::Job::Audio;
+use Video::DVDRip::Cluster::Job::TranscodeAudio;
+use Video::DVDRip::Cluster::Job::TranscodeVideo;
+use Video::DVDRip::Cluster::Job::MergeVideoAudio;
 use Video::DVDRip::Cluster::Job::MergePSUs;
 use Video::DVDRip::Cluster::Job::Split;
 use Video::DVDRip::Cluster::Job::RemoveVOBs;
-use Video::DVDRip::Cluster::Job::TranscodeAudio;
-use Video::DVDRip::Cluster::Job::MergeAudio;
+
+# use Video::DVDRip::Cluster::Job::MergeChunks;
+# use Video::DVDRip::Cluster::Job::MergeAudio;
 
 use Carp;
 use strict;
@@ -171,7 +172,7 @@ sub new {
 	return $project;
 }
 
-sub create_job_plan {
+sub create_job_plan_audio_one_pass {
 	my $self = shift;
 
 	$self->log ("Creating job plan");
@@ -290,7 +291,7 @@ if ( 0 ) {
 }
 
 
-sub create_job_plan_old {
+sub create_job_plan {
 	my $self = shift;
 
 	$self->log ("Creating job plan");
@@ -305,23 +306,38 @@ sub create_job_plan_old {
 	my @depend_merge_psu;
 
 	my $nr = 1;
+	my $frames_per_chunk = $title->frames_per_chunk || 10000;
 
 	# first we have to do some work per psu
 	foreach my $psu ( @{$title->program_stream_units} ) {
 		next if not $psu->selected;
 
-		my @depend_merge_chunk;
-
 		# calculate chunk cnt of this psu
-		my $chunk_cnt = int($psu->frames / 10000);
-		$chunk_cnt = 2 if $chunk_cnt < 2;
+		my @depend_merge_chunk;
+		my $chunk_cnt = int($psu->frames / $frames_per_chunk);
+		my $nodes_cnt =
+			Video::DVDRip::Cluster::Master->get_master
+						      ->get_online_nodes_cnt + 1;
+
+		$chunk_cnt = $nodes_cnt if $chunk_cnt < $nodes_cnt;
+		$chunk_cnt = 2          if $chunk_cnt < 2;
+
 		$psu->set_chunk_cnt ($chunk_cnt);
+
+		# first an audio processing job
+		$job = Video::DVDRip::Cluster::Job::TranscodeAudio->new ( nr => $nr++ );
+		push @jobs, $job;
+		$job->set_project ($self);
+		$job->set_psu ( $psu->nr );
+		$job->set_chunk_cnt ($chunk_cnt);
+		$job->set_prefer_local_access (1);
+		push @depend_merge_chunk, $job;
 
 		# add transcode jobs for each chunk
 		for (my $i=0; $i < $chunk_cnt; ++$i ) {
 			# one job for each pass
 			foreach my $pass ( @pass ) {
-				$job = Video::DVDRip::Cluster::Job::Transcode->new ( nr => $nr++ );
+				$job = Video::DVDRip::Cluster::Job::TranscodeVideo->new ( nr => $nr++ );
 				push @jobs, $job;
 				$job->set_project ($self);
 				$job->set_pass ($pass);
@@ -340,24 +356,13 @@ sub create_job_plan_old {
 		}
 		
 		# add a merge job for this psu
-		$job = Video::DVDRip::Cluster::Job::MergeChunks->new ( nr => $nr++ );
+		$job = Video::DVDRip::Cluster::Job::MergeVideoAudio->new ( nr => $nr++ );
 		push @jobs, $job;
 		$job->set_project ($self);
-		$job->set_chunk_cnt ( $chunk_cnt );
 		$job->set_psu ( $psu->nr );
 		$job->set_prefer_local_access (1);
 		$job->set_depends_on_jobs ( \@depend_merge_chunk );
-		$last_job = $job;
-		
-		# and then an audio processing job
-		$job = Video::DVDRip::Cluster::Job::Audio->new ( nr => $nr++ );
-		push @jobs, $job;
-		$job->set_project ($self);
-		$job->set_chunk_cnt ( $chunk_cnt );
-		$job->set_psu ( $psu->nr );
-		$job->set_depends_on_jobs ( [ $last_job ] );
-		$job->set_prefer_local_access (1);
-		push @depend_merge_psu, $job;
+		push  @depend_merge_psu, $job;
 		$last_job = $job;
 	}
 	
@@ -366,7 +371,6 @@ sub create_job_plan_old {
 		$job = Video::DVDRip::Cluster::Job::MergePSUs->new ( nr => $nr++ );
 		push @jobs, $job;
 		$job->set_project ($self);
-		$job->set_chunk_cnt ( scalar(@depend_merge_psu) );
 		$job->set_depends_on_jobs ( \@depend_merge_psu );
 		$job->set_prefer_local_access (1);
 		$last_job = $job;
