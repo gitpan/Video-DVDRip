@@ -1,4 +1,4 @@
-# $Id: BurnTab.pm,v 1.5.2.1 2002/11/23 13:41:34 joern Exp $
+# $Id: BurnTab.pm,v 1.5.2.2 2002/12/02 18:21:59 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -577,7 +577,7 @@ sub init_burn_files {
 
 	$self->set_in_transcode_init(1);
 
-	my $free = $title->get_free_diskspace;
+	my $free = $title->project->get_free_diskspace;
 
 	$self->burn_widgets->{mb_selected_label}->set_text ("0 MB");
 	$self->burn_widgets->{free_diskspace_mb}->set_text("$free MB");

@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# $Id: dvdrip,v 1.15 2002/10/15 21:18:50 joern Exp $
+# $Id: dvdrip,v 1.15.2.1 2002/12/02 18:20:55 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -24,6 +24,18 @@ use Getopt::Std;
 my $has_dvdrip_rc;
 
 BEGIN {
+	if ( $] >= 5.008 and not defined $ENV{PERLIO} ) {
+		$ENV{PERLIO} = "stdio";
+		require Config;
+		print STDERR "\nYou're using Perl 5.8.0 without PERLIO set to 'stdio'.\n";
+		print STDERR "Most Perl 5.008 installations currently have a bug.\n";
+		print STDERR "dvd::rip doesn't work with them if PERLIO isn't set.\n\n";
+		print STDERR "I will set PERLIO=stdio for you and restart dvd::rip...\n\n";
+		print STDERR "You can get rid of this messages, by setting PERLIO=stdio\n";
+		print STDERR "in your ~/.profile.\n\n";
+		exec $Config::Config{perlpath}, $0, @ARGV;
+	}
+
 	$Video::DVDRip::JobClass = "Video::DVDRip::Job";
 	$has_dvdrip_rc = -f "$ENV{HOME}/.dvdriprc";
 }

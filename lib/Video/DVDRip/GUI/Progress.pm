@@ -1,4 +1,4 @@
-# $Id: Progress.pm,v 1.23 2002/10/15 21:09:34 joern Exp $
+# $Id: Progress.pm,v 1.23.2.1 2002/12/02 18:21:59 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -121,14 +121,13 @@ sub cancel {
 sub set_idle_label {
 	my $self = shift; $self->trace_in;
 	
-	my $title;
-	my $project = eval {$self->comp('project')};
-	$title = $project->selected_title if $project;
+	my $project;
+	my $project_comp = eval {$self->comp('project')};
+	$project = $project_comp->project if $project_comp;
 
 	my $label;
-	if ( $title ) {
-		my $dir  = $title->avi_dir;
-		my $free = $title->get_free_diskspace;
+	if ( $project ) {
+		my $free = $project->get_free_diskspace;
 		$label = "Free diskspace: $free MB";
 	} else {
 		$label = "";

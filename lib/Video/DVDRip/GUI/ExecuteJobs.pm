@@ -1,4 +1,4 @@
-# $Id: ExecuteJobs.pm,v 1.7 2002/11/01 13:30:02 joern Exp $
+# $Id: ExecuteJobs.pm,v 1.7.2.1 2002/12/02 18:21:59 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -100,7 +100,7 @@ sub execute_jobs {
 				jobs => $jobs,
 			);
 
-		my $free = $title->get_free_diskspace ( kb => 1 );
+		my $free = $title->project->get_free_diskspace ( kb => 1 );
 
 		$max_diskspace_needed = int ($max_diskspace_needed/1024);
 		$free = int($free/1024);

@@ -1,4 +1,4 @@
-# $Id: Probe.pm,v 1.15 2002/10/28 21:47:25 joern Exp $
+# $Id: Probe.pm,v 1.15.2.1 2002/12/03 20:19:02 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -97,8 +97,8 @@ sub analyze {
 
 	my $i = 0;
 	while ( $probe_output =~ /\(dvd_reader.c\)\s+([^\s]+)\s+(\w+).*?(\d+)Ch/g ) {
-		$audio_tracks[$i]->{type}     = $1;
-		$audio_tracks[$i]->{lang}     = $2;
+		$audio_tracks[$i]->{type}     = lc($1);
+		$audio_tracks[$i]->{lang}     = lc($2);
 		$audio_tracks[$i]->{channels} = $3;
 		++$i;
 	}

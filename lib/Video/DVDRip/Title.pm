@@ -1,4 +1,4 @@
-# $Id: Title.pm,v 1.108.2.1 2002/11/23 13:45:45 joern Exp $
+# $Id: Title.pm,v 1.108.2.2 2002/12/02 18:22:00 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -1855,15 +1855,19 @@ sub get_transcode_audio_command {
 		vob_nr => $vob_nr,
 		avi_nr => $target_nr
 	);
+
 	my $dir = dirname ($audio_file);
-	
+
 	my $command =
 		"mkdir -p $dir && transcode ".
-		" -i $source_options->{i}".
-		" -x $source_options->{x}".
 		" -g 0x0 -u 50".
 		" -a $vob_nr".
 		" -y raw";
+
+	my ($k,$v);
+	while ( ($k, $v) = each %{$source_options} ) {
+		$command .= " -$k $v";
+	}	
 
 	if ( $tc_audio_info->tc_audio_codec eq 'ogg' ) {
 		$command .= ",ogg -m $audio_file";
@@ -2715,24 +2719,6 @@ sub get_burn_command {
 	$command .= " && echo DVDRIP_SUCCESS";
 	
 	return $command;
-}
-
-sub get_free_diskspace {
-	my $self = shift;
-	my %par = @_;
-	my ($kb) = @par{'kb'};
-
-	my $dir  = $self->avi_dir;
-	
-	if ( not -d $dir ) {
-		mkpath ( [$dir], 0, 0755);
-	}
-	
-	my $df   = qx[ df -Pk $dir ];
-	my ($free) = $df =~ /\s+\d+\s+\d+\s+(\d+)/;
-	$free = int ($free/1024) if not $kb;
-
-	return $free;
 }
 
 sub selected_subtitle {

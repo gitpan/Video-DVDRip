@@ -1,11 +1,31 @@
-$Id: Changes,v 1.122.2.2 2002/11/24 10:08:25 joern Exp $
+$Id: Changes,v 1.122.2.4 2002/12/03 20:24:31 joern Exp $
 
-Revision history for dvd::rip 0.47 and newer. See Changes.0.46
-for older releases.
+Revision history and release notes for dvd::rip.
+
+0.48.3 Tue 3 Dec 2002, joern
+	Features:
+	- dvd::rip now checks on startup if you're using Perl 5.8
+	  without having PERLIO=stdio set. If yes, dvd::rip sets
+	  the variable for you and restarts. (This bug is already
+	  reported to the Perl developers and hopefully fixed
+	  soon, so dvd::rip can drop this workaround somedays).
+
+	Bugfix:
+	- Adding additional audio tracks didn't work for DVD image
+	  and on-the-fly transcoding. Reported by Matthias Hennemann
+	  <Matthias.Hennemann AT Organik.Uni-Erlangen.DE>
+	- Free diskspace wasn't printed before ripping. Reported
+	  by Florin Andrei.
+	- Fixed a possible bug regarding proper ac3 audio codec
+	  detection which probably depends on the used libdvdread
+	  version. Thanks to Ronny Buchmann <ronny-transcode AT
+	  vlugnet.org> who reported a bug in dvd::rip's automatic file
+	  conversion, which is most likely a consequence of an
+	  failed ac3 detection.
 
 0.48.2 Sun 24 Nov 2002, joern
 	Bugfix:
-	- transcode 0.6.2 changed its progress output when transcoding
+	- transcode 0.6.2 changed its progress output for transcoding
 	  frames ranges. dvd::rip didn't show a valid progress bar
 	  due to that. Thanks for the report to Florin Andrei.
 
@@ -448,3 +468,8 @@ for older releases.
 	  progress is printed anymore. Reported by David Rosky.
 	- Cluster mode: node test didn't work (stalled). Thanks for
 	  the report to Fabio Russo <f.russo AT anthesia.it>.
+
+
+----------------------------------------------------------------------
+-- For older releases please refer to Changes.0.46.                 --
+----------------------------------------------------------------------

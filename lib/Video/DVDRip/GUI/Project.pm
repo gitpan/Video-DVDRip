@@ -1,4 +1,4 @@
-# $Id: Project.pm,v 1.27 2002/10/28 21:43:14 joern Exp $
+# $Id: Project.pm,v 1.27.2.1 2002/12/02 18:22:38 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -117,6 +117,7 @@ sub build {
 	$notebook->signal_connect ("switch-page", sub {
 		my ($nb_wid,$pag_wid,$page_nr) = @_;
 		$self->init_burn_files if $page_nr == 5;
+		$self->comp('progress')->set_idle_label if $page_nr == 1;
 		1;
 	} );
 
