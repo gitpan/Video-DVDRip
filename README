@@ -89,6 +89,8 @@ deb http://marillat.free.fr/ unstable main
    reasonably recent transcode versions directly. The same applies to
    dvd::rip.
 
+   The dvd::rip package is called video-dvdrip.
+
 1.1.2 SuSE packages
 
    Rainer Ley builds dvd::rip SuSE RPM's you can download from the
@@ -145,8 +147,8 @@ deb http://marillat.free.fr/ unstable main
    Local download of the latest stable release: (currently no unstable
    release available)
 
-     Video-DVDRip-0.50.15.tar.gz
-     Video-DVDRip-0.50.15.tar.gz.asc (GnuPG signature, get key)
+     Video-DVDRip-0.50.16.tar.gz
+     Video-DVDRip-0.50.16.tar.gz.asc (GnuPG signature, get key)
 
    CPAN download directory: (list of mirrors)
 
@@ -231,7 +233,7 @@ cd dvdrip; cvs -z3 update
    Tool Comment Mandatory Suggested Minimum Maximum
    transcode dvd::rip is nothing without transcode Yes 0.6.9 0.6.2 -
    ImageMagick Needed for preview image processing Yes 5.5.3 4.0.0 -
-   xvid4conf xvid4 configuration tool No 1.5 1.4 -
+   xvid4conf xvid4 configuration tool No 1.6 1.6 -
    subtitle2pgm Needed for subtitles No 0.3 0.3 -
    rar Needed for compressed subtitles No 2.71 2.71 2.99
    mplayer Needed for subtitle vobsub viewing No 0.90 0.90 -
@@ -417,7 +419,7 @@ chmod u+s /usr/sbin/fping
    generate the Makefile and execute make:
 
 # as a normal user
-tar xfz Video-DVDRip-0.50.15.tar.gz
+tar xfz Video-DVDRip-0.50.16.tar.gz
 cd Video-DVDRip-x.xx
 perl Makefile.PL
 make
@@ -471,7 +473,7 @@ make install
    otherwise some dvd::rip helper binaries may be taken from another
    place.
 
-tar xvfz Video-DVDRip-0.50.15.tar.gz
+tar xvfz Video-DVDRip-0.50.16.tar.gz
 cd Video-DVDRip-x.xx
 perl Makefile.PL && make
 export PATH=.:$PATH
@@ -685,74 +687,21 @@ URL References
   15. http://wwwkeys.de.pgp.net:11371/pks/lookup?op=get&search=0x285CF473
 
 VI. CHANGES
-   n$Id: Changes,v 1.131.2.46 2003/08/24 17:30:07 joern Exp $
+   n$Id: Changes,v 1.131.2.49 2003/10/26 14:36:35 joern Exp $
 
    Revision history and release notes for dvd::rip.
 
-   0.50.15 [stable branch] Sun Aug 24 2003, joern
-	Bugfixes:
-	- mplayer DVD player command didn't work for LPCM tracks.
-	  Thanks to Fabio Russo for the patch. You must re-select
-	  the mplayer command from the Preferences page for this to
-	  take effect.
-	- Free diskspace warning wasn't exact. Thanks for the patch
-	  to Moritz Muehlenhoff <jmm AT informatik.uni-bremen.de>.
-	- Fixed a typo in the --avilimit option (for AVI files >2GB).
-	  Thanks for the report to Jarkko Seppa <Jarkko.Seppa AT oulu.fi>.
-	- Default target size was set to 1406, instead of 1400 (2x700).
+   0.50.16 [stable branch] Sun Oct 26 2003, joern
+	Note:
+	- If you have Perl 5.8.1 you *need* this release. Older
+	  versions of dvd::rip do not work with Perl 5.8.1.
 
 	Features:
-	- Expanded the subtitle selection popup to the maximum of
-	  32 entries, not only the probed entries. With some DVD's the
-	  subtitle probing fails. This way you can select even
-	  "impossible" subtitles, if they weren't detected correctly.
-	  Thanks for the suggestion to Stefan Raspl <stefan.raspl AT
-	  playofmind.net>.
-	- Blank CD-RW (uses the configured cdrecord command and device),
-	  supporting 'fast' and 'all' methods (choose in the preferences).
-	  Not really tested yet due to lack of CD-RW media. Suggested
-	  by <dvdrip AT vikas.mailshell.com>.
-	- New preference "Preferred language". Default audio track
-	  and subtitle are selected accordingly after reading TOC,
-	  resp. the first audio track / subtitle matching the
-	  preferred language will be selected. Note that you still
-	  should review this setting, because the first matching item
-	  found must not be the one you really want. Suggested by
-	  John Washington <washingtonj AT acm.org>. Credits for the
-	  list of available language codes go to Chris Phillips 
-	  <acid_kewpie AT users.sourceforge.net>, the author of lsdvd,
-	  from which I extracted the list.
-	- Video codec list takes the new XviD variants of transcode 0.6.9
-	  into account (xvid, xvid2, xvid3 and xvid4). For earlier
-	  transcode versions still xvid and xvidcvs are listed here.
-	- Support for xvid4conf, a tool to tweak all options of the
-	  new dev-api-4 XviD codec. You need at least transcode 0.6.9
-	  and xvid4conf 1.6 for this to work.
-	  Note: the xvid4 settings will be used for all titles of your
-	  project. Also they don't take effect in cluster mode. This will
-	  change for future dvd::rip/transcode releases.
-
-	New/Changed X?S?VCD|CVD stuff:
-	==============================
-	- Renamed '(S)VCD' container format to 'MPEG', which is in fact
-	  what it is.
-	- Added new MPEG "Codecs": XSVCD, XVCD and CVD
-	  - SVCD and VCD create standard conform streams. You
-	    can't change parameters to non-standard values.
-	  - XSVCD and XVCD allow you to choose arbitrary video and
-	    audio bitrates / samplerates.
-	  - CVD allows you everything (like X(S)VCD), but additionally
-	    dvd::rip checks for correct frame sizes.
-	- Added new Clip & Zoom presets: CVD anamorph and XSVCD
-	  anamorph for PAL and NTSC.
-	- Added new Preference: "Default Container Format", fixing also
-	  a mismatch, if you choosed 'SVCD' or 'VCD' as a default codec,
-	  but dvd::rip still set to 'avi' container format by default.
-	- Audio bitrate 224 was missing in the popup list.
-	- Renamed 'Target format' to 'Select container' and the 'Video
-	  codec' label got renamed to 'MPEG variant' for the MPEG
-	  container"
-
-	Thanks to James L. Paul who urged me to implement the CVD
-	stuff, which hopefully introduced not too many bugs ;)
-
+	- New checkbox "Reuse log" for 2-pass encoding on the
+	  Transcode tab. Once activated an existent 2-pass
+	  logfile will be reused resp. pass 1 is skipped. This
+	  way you can continue a 2-pass transcoding if the 2nd
+	  pass went wrong for some reason. Long awaited feature
+	  requested by many users, including myself ;)
+	- Workaround for transcode filters which declare options
+	  multiple times (as the unsharp filter in transcode

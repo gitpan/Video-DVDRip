@@ -1,4 +1,4 @@
-# $Id: Depend.pm,v 1.2.2.9 2003/08/24 17:18:05 joern Exp $
+# $Id: Depend.pm,v 1.2.2.10 2003/10/26 08:16:49 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -188,7 +188,7 @@ my %TOOLS = (
     	comment		=> "Needed for AVI/OGG burning",
 	optional	=> 1,
 	get_version 	=> sub {
-		qx[cdrecord -version 2>&1] =~ /Cdrecord\s+(\d+\.\d+(\.\d+)?)/i;
+		qx[cdrecord -version 2>&1] =~ /(\d+\.\d+(\.\d+)?)/i;
 		wait;	# saw zombies on a Slackware system without it.
 		return $1;
 	},

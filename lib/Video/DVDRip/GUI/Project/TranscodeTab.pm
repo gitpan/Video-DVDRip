@@ -1,4 +1,4 @@
-# $Id: TranscodeTab.pm,v 1.83.2.11 2003/08/24 16:59:29 joern Exp $
+# $Id: TranscodeTab.pm,v 1.83.2.14 2003/10/26 12:45:13 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -176,6 +176,8 @@ sub create_transcode_tab {
 			return 1 if not $self->selected_title;
 			return 1 if $self->in_transcode_init;
 			$self->selected_title->$method(1);
+			$widgets->{tc_multipass_reuse_log}->set_sensitive(1)
+				if $attr eq 'tc_multipass';
 			1;
 		}, "set_$attr");
 		$widgets->{$attr."_no"}->signal_connect ( "clicked", sub {
@@ -183,9 +185,19 @@ sub create_transcode_tab {
 			return 1 if not $self->selected_title;
 			return 1 if $self->in_transcode_init;
 			$self->selected_title->$method(0);
+			$widgets->{tc_multipass_reuse_log}->set_sensitive(0)
+				if $attr eq 'tc_multipass';
 			1;
 		}, "set_$attr");
 	}
+
+	$widgets->{tc_multipass_reuse_log}->signal_connect ("clicked", sub {
+		my ($widget) = @_;
+		return 1 if not $self->selected_title;
+		return 1 if $self->in_transcode_init;
+		$self->selected_title->set_tc_multipass_reuse_log($widget->get_active);
+		1;
+	});
 
 	$self->transcode_widgets->{tc_exit_afterwards}->signal_connect (
 		"toggled", sub {
@@ -405,11 +417,15 @@ sub create_video_options {
 	my $radio_no = Gtk::RadioButton->new ("No", $radio_yes);
 	$radio_no->show;
 	$hbox->pack_start($radio_no, 0, 1, 0);
-	
+	my $check_multipass_reuse_log = Gtk::CheckButton->new ("Reuse log");
+	$check_multipass_reuse_log->show;
+	$hbox->pack_start($check_multipass_reuse_log, 0, 1, 0);
+
 	$table->attach_defaults ($hbox, 1, 2, $row, $row+1);
 
 	$self->transcode_widgets->{tc_multipass_yes} = $radio_yes;
 	$self->transcode_widgets->{tc_multipass_no}  = $radio_no;
+	$self->transcode_widgets->{tc_multipass_reuse_log} = $check_multipass_reuse_log;
 
 	# Deinterlace
 	++$row;
@@ -1101,9 +1117,12 @@ sub init_transcode_values {
 
 	$widgets->{tc_multipass_yes}->set_active($multipass);
 	$widgets->{tc_multipass_no}->set_active(!$multipass);
+	$widgets->{tc_multipass_reuse_log}->set_sensitive($multipass);
+	$widgets->{tc_multipass_reuse_log}->set_active($title->tc_multipass_reuse_log);
 
 	$deinterlace = 4 if $deinterlace eq '32detect';
-	$deinterlace = 5 if $deinterlace eq 'smart';
+	$deinterlace = 5 if $deinterlace eq 'ivtc';
+	$deinterlace = 6 if $deinterlace eq 'smart';
 
 	$widgets->{tc_deinterlace_popup}->set_history ($deinterlace);
 #	$widgets->{tc_anti_alias_popup}->set_history ($anti_alias);
@@ -1152,7 +1171,14 @@ sub init_transcode_values {
 	$widgets->{tc_video_bitrate}->set_sensitive($bitrate_sensitive);
 	
 	$self->set_in_transcode_init(1);
-	$widgets->{tc_video_bitrate_manual}->set_active($title->tc_video_bitrate_manual);
+	if ( not $manual_sensitive ) {
+		$widgets->{tc_video_bitrate_manual}->set_active(0);
+		$title->set_tc_video_bitrate_manual(0);
+		$self->calc_video_bitrate;
+		
+	} else {
+		$widgets->{tc_video_bitrate_manual}->set_active($title->tc_video_bitrate_manual);
+	}
 	$self->set_in_transcode_init(0);
 
 	if ( $title->tc_video_bitrate_range ) {
@@ -1180,7 +1206,7 @@ sub switch_to_mpeg_encoding {
 
 	my $widgets = $self->transcode_widgets;
 	foreach my $attr ( qw ( tc_video_af6_codec tc_multipass_yes
-				tc_multipass_no) ) {
+				tc_multipass_no tc_multipass_reuse_log ) ) {
 		$widgets->{$attr}->set_sensitive(0);
 	}
 
@@ -1204,13 +1230,15 @@ sub switch_to_divx_encoding {
 
 	my $widgets = $self->transcode_widgets;
 	foreach my $attr ( qw ( tc_video_af6_codec tc_multipass_yes
-				tc_multipass_no) ) {
+				tc_multipass_no ) ) {
 		$widgets->{$attr}->set_sensitive(1);
 	}
 
 	$widgets->{avisplit_button}->set_sensitive(1);
 	$widgets->{cluster_button}->set_sensitive(1);
 	$widgets->{tc_video_codec_label}->set ("Video codec");
+	$widgets->{tc_multipass_reuse_log}->set_sensitive(0)
+		if not $title->tc_multipass;
 
 	if ( $title->is_ogg ) {
 		$widgets->{view_avi_button}->child->set("View OGG");
@@ -1417,17 +1445,24 @@ sub transcode {
 		$job->set_split ($split);
 
 		if ( not $subtitle_test and $title->tc_multipass ) {
-			$job->set_pass (1);
-			$last_job = $exec->add_job ( job => $job );
-
-			$job = Video::DVDRip::Job::TranscodeVideo->new (
-				nr            => ++$nr,
-				title         => $title,
-			);
+			if ( $title->tc_multipass_reuse_log and
+			     -f $title->multipass_log_dir."/divx4.log" ) {
+				$self->log (
+					"Skipping 1st pass as requested by ".
+					"reusing existent multipass logfile."
+				);
+			} else {
+				$job->set_pass (1);
+				$last_job = $exec->add_job ( job => $job );
+				$job = Video::DVDRip::Job::TranscodeVideo->new (
+					nr            => ++$nr,
+					title         => $title,
+				);
+			}
 			$job->set_pass (2);
 			$job->set_split ($split);
 			$job->set_chapter ($chapter);
-			$job->set_depends_on_jobs ( [ $last_job ] );
+			$job->set_depends_on_jobs ( [ $last_job ] ) if $last_job;
 			$last_job = $exec->add_job ( job => $job );
 	
 		} else {

@@ -1,4 +1,4 @@
-# $Id: Title.pm,v 1.137.2.24 2003/08/24 17:00:20 joern Exp $
+# $Id: Title.pm,v 1.137.2.28 2003/10/26 14:21:30 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -78,10 +78,16 @@ sub last_applied_preset		{ shift->{last_applied_preset}		}
 sub preview_frame_nr		{ shift->{preview_frame_nr}		}
 sub files			{ shift->{files}			}
 sub actual_chapter		{
+	# if no actual chapter is set, this method returns the first
+	# chapter, so all functions that are not aware of chapter
+	# mode should do something senseful.
+	# If you want to have the *real* actual chapter, use the
+	# methode ->real_actual_chapter!
 	my $self = shift;
 	$self->{actual_chapter} ||
 	$self->get_first_chapter;
 }
+sub real_actual_chapter		{ shift->{actual_chapter}		}
 sub program_stream_units	{ shift->{program_stream_units}		}
 sub bbox_min_x			{ shift->{bbox_min_x}			}
 sub bbox_min_y			{ shift->{bbox_min_y}			}
@@ -138,6 +144,7 @@ sub tc_start_frame	    	{ shift->{tc_start_frame}		}
 sub tc_end_frame	    	{ shift->{tc_end_frame}			}
 sub tc_fast_resize	    	{ shift->{tc_fast_resize}		}
 sub tc_multipass	    	{ shift->{tc_multipass}			}
+sub tc_multipass_reuse_log	{ shift->{tc_multipass_reuse_log}	}
 sub tc_title_nr	    		{ $_[0]->{tc_title_nr} || $_[0]->{nr}	}
 sub tc_use_chapter_mode    	{ shift->{tc_use_chapter_mode}		}
 sub tc_selected_chapters	{ shift->{tc_selected_chapters}		}
@@ -163,8 +170,8 @@ sub set_tc_clip2_right		{ shift->{tc_clip2_right}	= $_[1]	}
 # implemented below : sub set_tc_video_codec {}
 sub set_tc_video_af6_codec	{ shift->{tc_video_af6_codec}	= $_[1]	}
 sub set_tc_video_bitrate	{ shift->{tc_video_bitrate}  	= $_[1]	}
-sub set_tc_video_bitrate_manual	{ shift->{tc_video_bitrate_manual}= $_[1]	}
-sub set_tc_video_bitrate_range	{ shift->{tc_video_bitrate_range} = $_[1]	}
+sub set_tc_video_bitrate_manual	{ shift->{tc_video_bitrate_manual}= $_[1]}
+sub set_tc_video_bitrate_range	{ shift->{tc_video_bitrate_range} = $_[1]}
 sub set_tc_video_framerate	{ shift->{tc_video_framerate} 	= $_[1]	}
 sub set_tc_fast_bisection	{ shift->{tc_fast_bisection} 	= $_[1]	}
 sub set_tc_psu_core		{ shift->{tc_psu_core} 		= $_[1]	}
@@ -176,6 +183,7 @@ sub set_tc_start_frame		{ shift->{tc_start_frame}    	= $_[1]	}
 sub set_tc_end_frame		{ shift->{tc_end_frame}    	= $_[1]	}
 sub set_tc_fast_resize		{ shift->{tc_fast_resize}    	= $_[1]	}
 sub set_tc_multipass		{ shift->{tc_multipass}    	= $_[1]	}
+sub set_tc_multipass_reuse_log	{ shift->{tc_multipass_reuse_log}= $_[1]}
 sub set_tc_title_nr	    	{ shift->{tc_title_nr}    	= $_[1]	}
 sub set_tc_use_chapter_mode 	{ shift->{tc_use_chapter_mode}	= $_[1]	}
 sub set_tc_selected_chapters	{ shift->{tc_selected_chapters}	= $_[1] }
@@ -889,7 +897,7 @@ sub auto_adjust_clip_zoom {
 
 	my %result_by_ar_err;
 	my $range = 16;
-	while ( keys (%result_by_ar_err) == 0 ) {
+	while ( keys (%result_by_ar_err) == 0 and $range < 1024 ) {
 		foreach my $result ( @{$results} ) {
 			next if abs($target_width-$result->{clip2_width}) > $range;
 			$result_by_ar_err{abs($result->{ar_err})}
@@ -1925,7 +1933,7 @@ sub get_transcode_command {
 			" --psu_mode --nav_seek ".$self->vob_nav_file.
 			" --no_split ";
 	}
-	
+
 	$command .= " -o $avi_file";
 
 	$command .= " --print_status 20";
@@ -2201,7 +2209,7 @@ sub get_mplex_command {
 
 	my $svcd = $video_codec =~ /^(X?SVCD|CVD)$/;
 
-	my $mplex_f  = $svcd ? 4 : 1;
+	my $mplex_f  = $svcd ? 4 : $video_codec eq 'XVCD' ? 2 : 1;
 	my $mplex_v  = $svcd ? "-V" : "";
 	my $vext     = $svcd ? 'm2v' : 'm1v';
 
@@ -2222,12 +2230,19 @@ sub get_mplex_command {
 		}
 	}
 
+	#-- calculate overall bitrate, needed for X(S)VCD.
+	my $bitrate = $self->tc_video_bitrate;
+	foreach my $audio ( @{$self->audio_tracks} ) {
+		next if $audio->tc_target_track == -1;
+		$bitrate += $audio->tc_bitrate;
+	}
+
 	my $nice;
 	$nice = "`which nice` -n ".$self->tc_nice." "
 		if $self->tc_nice =~ /\S/;
 
 	my $command =
-		"${nice}dr_exec mplex -f $mplex_f $mplex_v ".
+		"${nice}dr_exec mplex -f $mplex_f -r $bitrate $mplex_v ".
 		"-o $target_file $avi_file.$vext $avi_file.mpa ".
 		"$add_audio_tracks && echo DVDRIP_SUCCESS";
 	
@@ -2402,6 +2417,8 @@ sub get_take_snapshot_command {
 		" $tmp_dir/snapshot*.ppm gray:$raw_filename &&".
 		" rm -r $tmp_dir && ".
 		"echo DVDRIP_SUCCESS";
+
+	$command =~ s/-x\s+([^,]+),null,null/-x $1,null/;
 
 	return $command;
 }

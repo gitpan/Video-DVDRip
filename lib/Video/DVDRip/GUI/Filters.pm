@@ -1,4 +1,4 @@
-# $Id: Filters.pm,v 1.9 2003/02/10 13:34:36 joern Exp $
+# $Id: Filters.pm,v 1.9.2.1 2003/10/26 12:37:05 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -965,9 +965,12 @@ sub build_filter_settings {
 
 	++$row;
 
+	my %options;
 	foreach my $option ( @{$filter->options} ) {
 
 		next if $option->option_name eq 'pre';
+		next if $options{$option->option_name};
+		$options{$option->option_name} = 1;
 
 		my $setting = $self->build_option_field (
 			option		=> $option,	        

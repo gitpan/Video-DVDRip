@@ -1,19 +1,51 @@
-n$Id: Changes,v 1.131.2.46 2003/08/24 17:30:07 joern Exp $
+n$Id: Changes,v 1.131.2.49 2003/10/26 14:36:35 joern Exp $
 
 Revision history and release notes for dvd::rip.
 
-0.50.15 [stable branch] Sun Aug 24 2003, joern
-	Bugfixes:
-	- mplayer DVD player command didn't work for LPCM tracks.
-	  Thanks to Fabio Russo for the patch. You must re-select
-	  the mplayer command from the Preferences page for this to
-	  take effect.
-	- Free diskspace warning wasn't exact. Thanks for the patch
-	  to Moritz Muehlenhoff <jmm AT informatik.uni-bremen.de>.
-	- Fixed a typo in the --avilimit option (for AVI files >2GB).
-	  Thanks for the report to Jarkko Seppa <Jarkko.Seppa AT oulu.fi>.
-	- Default target size was set to 1406, instead of 1400 (2x700).
+0.50.16 [stable branch] Sun Oct 26 2003, joern
+	Note:
+	- If you have Perl 5.8.1 you *need* this release. Older
+	  versions of dvd::rip do not work with Perl 5.8.1.
 
+	Features:
+	- New checkbox "Reuse log" for 2-pass encoding on the
+	  Transcode tab. Once activated an existent 2-pass
+	  logfile will be reused resp. pass 1 is skipped. This
+	  way you can continue a 2-pass transcoding if the 2nd
+	  pass went wrong for some reason. Long awaited feature
+	  requested by many users, including myself ;)
+	- Workaround for transcode filters which declare options
+	  multiple times (as the unsharp filter in transcode
+	  0.6.10). Reported by Fabio Russo.
+
+	Bugfixes:
+	- Perl 5.8.1 compatability issue fixed. Opening project files
+	  saved with a Perl 5.8.1 dvd::rip didn't work.
+	- Transcode diskspace calculation was wrong in chapter mode.
+	- cdrecord-clone (Debian unstable) is detected correctly now.
+	  Thanks for the report to Ben Handley <ben AT steelgarden.com>
+	  and Christian Marillat <marillat AT free.fr>.
+	- XVCD multiplexing didn't work for higher video bitrates.
+	  Reported by <dvdrip AT vikas.mailshell.com>.
+	- Deinterlacing settings 'smart' and 'inverse telecine' didn't
+	  restore correctly after saving/reopening. Reported by
+	  xavier <list.dvdrip-users AT natch.dyndns.org> and
+	  Jean-Yves Simon <lethalwp AT tiscali.be>.
+	- If the transcode installation lacks filters, which are still
+	  referred in the project file, these referrals are removed to
+	  prevent dvd::rip from later crashing. Reported by <jawashin
+	  AT uiuc.edu>.
+	- Video bitrate 'manual' setting wasn't deactivated when
+	  switching from X(S)VCD to (S)VCD.
+	- Cluster control window: when removing a project the first
+	  project was selected internally but not on the GUI. Reported
+	  by Mark Rose <shifted AT shifted.ca>.
+	- Ripping and snapshot grabbing failed if the title had no
+	  audio at all. Reported by Sean Dwyer <ewe2 AT can.org.au>.
+	- dvd::rip hung if a autoadjust preset was applied on a
+	  completely black frame.
+
+0.50.15 [stable branch] Sun Aug 24 2003, joern
 	Features:
 	- Expanded the subtitle selection popup to the maximum of
 	  32 entries, not only the probed entries. With some DVD's the
@@ -69,7 +101,29 @@ Revision history and release notes for dvd::rip.
 	Thanks to James L. Paul who urged me to implement the CVD
 	stuff, which hopefully introduced not too many bugs ;)
 
+	Bugfixes:
+	- mplayer DVD player command didn't work for LPCM tracks.
+	  Thanks to Fabio Russo for the patch. You must re-select
+	  the mplayer command from the Preferences page for this to
+	  take effect.
+	- Free diskspace warning wasn't exact. Thanks for the patch
+	  to Moritz Muehlenhoff <jmm AT informatik.uni-bremen.de>.
+	- Fixed a typo in the --avilimit option (for AVI files >2GB).
+	  Thanks for the report to Jarkko Seppa <Jarkko.Seppa AT oulu.fi>.
+	- Default target size was set to 1406, instead of 1400 (2x700).
+
 0.50.14 [stable branch] Sun 29 Jun 2003, joern
+	Features:
+	- transcode >= 0.6.6 sets mpeg2enc -I 0 by default, but
+	  older versions doesn't. This speeds up things signifcantly,
+	  because now mpeg2enc skips deinterlace processing (it was
+	  done even for non-interlaced material and wasted time).
+	  dvd::rip now sets -I0, too. Thanks for the hint to
+	  Simone Lehmann
+	- Warn about AVI files >2GB and set transcode option
+	  --avi_limit 9999, otherwise transcode splits automatically
+	  at 2GB.
+
 	Bugfixes:
 	- NTSC A/V sync enhancement: dvd::rip's -x vob,null transcode
 	  option in the 1st pass of a multipass transcoding was 
@@ -92,17 +146,6 @@ Revision history and release notes for dvd::rip.
 	  had 704x480. dvd::rip now sets no resolution at all, because
 	  transcode autodetects the resolution. Thanks for the report to
 	  Francisco J. León <fleona AT cantv.net>.
-
-	Features:
-	- transcode >= 0.6.6 sets mpeg2enc -I 0 by default, but
-	  older versions doesn't. This speeds up things signifcantly,
-	  because now mpeg2enc skips deinterlace processing (it was
-	  done even for non-interlaced material and wasted time).
-	  dvd::rip now sets -I0, too. Thanks for the hint to
-	  Simone Lehmann
-	- Warn about AVI files >2GB and set transcode option
-	  --avi_limit 9999, otherwise transcode splits automatically
-	  at 2GB.
 
 0.50.13 [stable branch] Thu 23 May 2003, joern
 	Features:

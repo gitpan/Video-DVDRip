@@ -1,4 +1,4 @@
-# $Id: Pipe.pm,v 1.10.2.2 2003/02/23 21:39:57 joern Exp $
+# $Id: Pipe.pm,v 1.10.2.3 2003/10/26 08:16:27 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -46,6 +46,8 @@ sub new {
 	my  ($command, $cb_line_read, $cb_finished, $timeout) =
 	@par{'command','cb_line_read','cb_finished','timeout'};
 
+	$timeout ||= 30;
+
 	my $self = {
 		timeout		=> $timeout,
 		command		=> $command,
@@ -80,7 +82,7 @@ sub open {
 			or croak "can't dup STDOUT to STDERR";
 		my $command = $self->command;
 		$command = "dr_exec $command" if $command !~ /dr_exec/;
-		exec ($self->command)
+		exec ($command)
 			or croak "can't exec program: $!";
 	}
 
@@ -107,7 +109,7 @@ sub open {
 	    )
 	);
 
-	$self->log (3, "execute command: $command");
+	$self->log (3, "execute command: $command (timeout=$timeout)");
 
 	return $self;
 }

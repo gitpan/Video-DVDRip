@@ -1,4 +1,4 @@
-# $Id: BitrateCalc.pm,v 1.10.2.3 2003/08/16 15:35:36 joern Exp $
+# $Id: BitrateCalc.pm,v 1.10.2.4 2003/10/26 14:19:39 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -135,8 +135,8 @@ sub calculate_video_bitrate {
 	my $framerate = $title->tc_video_framerate;
 	my $container = $title->tc_container;
 
-	# get sum of frames
-	if ($title->tc_video_bitrate_range) {
+	# reduce sum of frames (if a range was set)
+	if ( $title->tc_video_bitrate_range ) {
 		
 		if ( $title->tc_start_frame ne '' or
 		     $title->tc_end_frame ne '' ) {
@@ -153,10 +153,14 @@ sub calculate_video_bitrate {
 	
 	# get sum of chapter frames (if chapter mode enabled)
 	if ( $title->tc_use_chapter_mode eq 'select' ) {
-		$frames = 0;
-		my $chapters = $title->get_chapters;
-		foreach my $chapter ( @{$chapters} ) {
-			$frames += $title->chapter_frames->{$chapter};
+		if ( not $title->real_actual_chapter ) {
+			$frames = 0;
+			my $chapters = $title->get_chapters;
+			foreach my $chapter ( @{$chapters} ) {
+				$frames += $title->chapter_frames->{$chapter};
+			}
+		} else {
+			$frames = $title->chapter_frames->{$title->actual_chapter};
 		}
 	}
 

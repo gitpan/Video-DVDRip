@@ -1,4 +1,4 @@
-# $Id: Mplex.pm,v 1.5 2003/01/28 20:19:57 joern Exp $
+# $Id: Mplex.pm,v 1.5.2.2 2003/10/26 14:25:05 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -46,7 +46,20 @@ sub init {
 sub get_diskspace_needed {
 	my $self = shift; $self->trace_in;
 
-	return $self->title->tc_target_size * 1024;
+	my $title = $self->title;
+
+	$title->set_actual_chapter($self->chapter);
+
+	my $bc = Video::DVDRip::BitrateCalc->new (
+		title		=> $title,
+		with_sheet	=> 0,
+	);
+
+	$bc->calculate_video_bitrate;
+
+	$title->set_actual_chapter(undef);
+
+	return int(($bc->video_size + $bc->non_video_size)*1024);
 }
 
 sub get_diskspace_freed {

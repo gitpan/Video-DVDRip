@@ -1,4 +1,4 @@
-%define version 0.50.15
+%define version 0.50.16
 %define release 0
 
 Summary: Video-DVDRip module for perl 

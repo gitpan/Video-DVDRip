@@ -1,23 +1,8 @@
-$Id: TODO,v 1.117.2.15 2003/08/16 15:50:30 joern Exp $
+$Id: TODO,v 1.117.2.19 2003/10/26 14:36:35 joern Exp $
 
 KNOWN BUGS:
 ===========
-- cluster mode:
-  In the cluster control, let us say there are 6 tasks, 3 waiting, 3
-  scheduled & being done.  Once they are done, the 3 are marked as
-  finished, now click on the first finished and remove it. The second
-  finished is being marked, remove it, the first task is being removed
-  instead of the finished one.(reported by Lethal Weapon)
-- selecting (S)VCD container type, triggers SVCD video
-  codec, but doesn't set the SVCD type on the burning page.
-  Reported by mark <Xebeque AT gmx.de>
-- Ripping and snapshot grabbing fails if the title has no
-  audio at all. Reported by Sean Dwyer <ewe2 AT can.org.au>.
-- negative cropping isn't visualized in the preview image
-  (all calculations and the transcoding itself work, so
-   it's not that big problem ;)
-- free diskspace calculation doesn't reflect a frame range selection
-  and is wrong in chapter mode
+- Currently no issue the developer would call a "bug" is known ;)
 
 NOTE:
 =====
@@ -28,7 +13,18 @@ may be implemented soon, some eventually never... ;)
 
 TODO:
 =====
+- add support for MPEG2 requantization (needs transcode 0.6.11
+  or better) and basic DVD authoring.
+- extra logfile for dvdrip-master, suggested by
+  Martin Lohmeier <blackm AT ferris.dyndns.info>
+- support lame preset option resp. mp3/vbr audio
+- a preference for default transcode options, suggested by Mark Rose.
+- add eMoviX support, requested by Daniel Laska <dalas AT web.de>
+- ffmpeg: store aspect ratio in AVI file (by ~/.transcode/ffmpeg.cfg),
+  requested by Alessio Sangalli <alesan AT manoweb.com>, 27.08.2003
 - .dvdrip-info file should list filters. Suggested by Götz Waschk.
+- add support for mpeg2enc -q option to the GUI (requested by
+  Simone Lehmann, 18.07.2003)
 - support multiple subtitles in the same vobsub file
 - make frame range transcoding with cluster mode possible:
   transcode the whole thing and cut the desired frames
@@ -48,11 +44,9 @@ TODO:
   <chl AT math.uni-bonn.de>
 - check for fat32 file system and warn, that files may not get
   larger than 2 GB (and suggest to use unix filsystems instead ;)
-  Sugested by Felix Knecht.
+  Suggested by Felix Knecht.
 - detect interlaced material (-J 32detect). Suggested by Rafael
   Kolless <rafael AT mondoria.de>
-- check chapter mode && diskspace calculations
-- add an "uninstall HOWTO" to the FAQ
 - global nice preference, which apply to all started processes.
   It's not necessary to adjust this per project. Suggested by
   Spencer Ogden.
@@ -60,8 +54,6 @@ TODO:
   for full encodings, because the frames/framerate formular doesn't
   work for NTSC movies with mixed frame rates. Reported by
   John Washington <jawashin AT uiuc.edu>.
-- possibility of stopping transcoding after 1st pass, continue
-  the 2nd pass later. Suggested by Christoph Lampert.
 - drop constant 6GB per disc guess for ripping free disc space
   calculation. Use (total disk used/total number of frames)*title's
   number of frames instead. Suggested by Ole Tange.
@@ -69,11 +61,8 @@ TODO:
   suggested by James Dowlearn <alwjdd AT utdallas.edu>
 - on-the-fly/dvd-image mode: rip a small ammount to harddisk, to get ac3
   probing and passthrough working.
-- CVD support, suggested by James L. Paul <james AT mauibay.net>
 - enable (S)VCD interlaced encoding: add -F "-I 1", and remove "-p".
   Suggested by Ian Eure <ieure AT blarg.net>
-- subtitle: enter subtitle id by hand, in case of badly probed DVD.
-  Suggested by Mats Högberg <mitt.namn AT telia.com>.
 - AVI: pause/resume for transcode job (using frame range trancoding
   and avimerge)
 - link ETA compution of a 2-pass transcode together, requested by Ole Tange.

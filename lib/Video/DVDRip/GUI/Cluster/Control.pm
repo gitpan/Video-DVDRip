@@ -1,4 +1,4 @@
-# $Id: Control.pm,v 1.21 2003/01/28 20:19:57 joern Exp $
+# $Id: Control.pm,v 1.21.2.1 2003/10/26 12:55:20 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -803,8 +803,7 @@ sub remove_project {
 	my $first_project = $self->master->projects->[0];
 
 	if ( $first_project and $first_project->id != $project->id ) {
-		$self->set_selected_project ($first_project);
-		$self->set_selected_project_row(0);
+		$self->gtk_widgets->{project_clist}->select_row(0, 0);
 	} else {
 		$self->set_selected_project (undef);
 		$self->set_selected_project_row(undef);
