@@ -1,6 +1,14 @@
-$Id: Changes,v 1.131.2.13 2003/03/03 18:34:48 joern Exp $
+$Id: Changes,v 1.131.2.14 2003/03/04 16:49:47 joern Exp $
 
 Revision history and release notes for dvd::rip.
+
+0.50.7 [stable branch] Tue 4 Mar 2003, joern
+	Bugfixes:
+	- Encoding multiple audio tracks with OGG and PSU core
+	  enabled didn't work. Thanks for the report to Daniel Egger
+	  <degger AT fhm.edu>.
+	- Revoked the mplex change from version 0.50.4, because
+	  several users reported problems with it.
 
 0.50.6 [stable branch] Mon 3 Mar 2003, joern
 	Bugfixes:

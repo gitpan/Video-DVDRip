@@ -8,7 +8,7 @@
 
 package Video::DVDRip;
 
-$VERSION = "0.50.6";
+$VERSION = "0.50.7";
 
 use base Video::DVDRip::Base;
 

@@ -58,7 +58,9 @@ III. DOCUMENTATION
      * 1.4.2 Update dvd::rip
      * 1.4.3 Multiple dvd::rip versions in parallel
 
-     1.5 Download this documentation
+     1.5 Uninstall dvd::rip
+
+     1.6 Download this documentation
      _________________________________________________________________
 
    This chapter describes how you can get and install dvd::rip. You can
@@ -136,7 +138,7 @@ deb http://marillat.free.fr/ unstable main
 
    Local download of the latest stable release:
 
-     Video-DVDRip-0.50.6.tar.gz
+     Video-DVDRip-0.50.7.tar.gz
 
    CPAN download directory: (list of mirrors)
 
@@ -384,7 +386,7 @@ chmod u+s /usr/sbin/fping
    generate the Makefile and execute make:
 
 # as a normal user
-tar xfz Video-DVDRip-0.50.6.tar.gz
+tar xfz Video-DVDRip-0.50.7.tar.gz
 cd Video-DVDRip-x.xx
 perl Makefile.PL
 make
@@ -437,13 +439,40 @@ make install
    otherwise some dvd::rip helper binaries may be taken from another
    place.
 
-tar xvfz Video-DVDRip-0.50.6.tar.gz
+tar xvfz Video-DVDRip-0.50.7.tar.gz
 cd Video-DVDRip-x.xx
 perl Makefile.PL && make
 export PATH=.:$PATH
 ./dvdrip
 
-1.5 Download this documentation
+1.5 Uninstall dvd::rip
+
+   If you didn't use a package manager to install dvd::rip and you want
+   to uninstall it, follow these instructions. This is necessary, if you
+   accidentally mixed several versions on your system, which may result
+   in a broken dvd::rip at all. In this case best thing is to remove all
+   instances and to do a clean installation afterwards.
+
+   dvd::rip mainly consists of a bunch of Perl modules which reside in
+   the Perl library directory of your Perl interpreter. Easiest way to
+   find this directory is to use the locate program. Then a few
+   executables belong to dvd::rip, which also can be found using locate.
+   This is an example session of how this works:
+
+% locate DVDRip.pm
+/usr/local/share/perl/5.8.0/Video/DVDRip.pm
+% rm -r /usr/local/share/perl/5.8.0/Video/DVDRip*
+% locate dvdrip
+/usr/bin/dvdrip
+/usr/bin/dvdrip-master
+% rm /usr/bin/{dvdrip,dvdrip-master,dr_splitpipe,dr_progress,dr_exec}
+
+   In words: find a Perl library directory called Video with DVDRip.pm in
+   it. Remove the DVDRip.pm file and the subdirectory called DVDRip. Then
+   find the location of the binaries and remove them - see the list
+   above. If you find multiple instances this way, remove them all.
+
+1.6 Download this documentation
 
    You can download a static HTML version of this documentation:
 
@@ -583,14 +612,15 @@ URL References
   11. http://www.exit1.org/dvdrip/doc/install.cipp#cvs
 
 VI. CHANGES
-   $Id: Changes,v 1.131.2.13 2003/03/03 18:34:48 joern Exp $
+   $Id: Changes,v 1.131.2.14 2003/03/04 16:49:47 joern Exp $
 
    Revision history and release notes for dvd::rip.
 
-   0.50.6 [stable branch] Mon 3 Mar 2003, joern
+   0.50.7 [stable branch] Tue 4 Mar 2003, joern
 	Bugfixes:
-	- Fixed an evil bug, which overwrote the preferences file
-	  on each startup. Sorry for the inconvenience. I also lost
-	  my preferences due to it... Thanks for the report to
-	  Matthias Saou <matthias AT rpmforge.net>.
+	- Encoding multiple audio tracks with OGG and PSU core
+	  enabled didn't work. Thanks for the report to Daniel Egger
+	  <degger AT fhm.edu>.
+	- Revoked the mplex change from version 0.50.4, because
+	  several users reported problems with it.
 

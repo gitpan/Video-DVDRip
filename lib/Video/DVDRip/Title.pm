@@ -1,4 +1,4 @@
-# $Id: Title.pm,v 1.137.2.5 2003/03/03 11:43:47 joern Exp $
+# $Id: Title.pm,v 1.137.2.6 2003/03/04 16:49:22 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -1927,9 +1927,9 @@ sub get_transcode_audio_command {
 
 	if ( $self->is_ogg ) {
 		if ( $audio_info->tc_audio_codec eq 'vorbis' ) {
-			$command .= ",ogg -m $audio_file";
+			$command .= ",ogg -m $audio_file -o /dev/null";
 		} else {
-			$command .= " -m $audio_file";
+			$command .= " -m $audio_file -o /dev/null";
 		}
 
 	} elsif ( $self->tc_container eq 'vcd' ) {
@@ -2020,7 +2020,7 @@ sub get_transcode_audio_command {
 	if ( $self->tc_psu_core ) {
 		$command .=
 			" --psu_mode --nav_seek ".$self->vob_nav_file.
-			" --no_split ";
+			" --no_split";
 	}
 
 	$command .= " --print_status 20";
@@ -2132,7 +2132,7 @@ sub get_mplex_command {
 	my $avi_file = $self->target_avi_file;
 	my $size     = $self->tc_disc_size;
 
-	my $mplex_f  = $video_codec eq 'SVCD' ? 5 : 1;
+	my $mplex_f  = $video_codec eq 'SVCD' ? 4 : 1;
 	my $mplex_v  = $video_codec eq 'SVCD' ? "-V" : "";
 	my $vext     = $video_codec eq 'SVCD' ? 'm2v' : 'm1v';
 
