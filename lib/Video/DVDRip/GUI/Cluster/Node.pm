@@ -1,4 +1,4 @@
-# $Id: Node.pm,v 1.11 2003/01/28 20:19:57 joern Exp $
+# $Id: Node.pm,v 1.12 2004/04/11 23:36:20 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -9,6 +9,7 @@
 #-----------------------------------------------------------------------
 
 package Video::DVDRip::GUI::Cluster::Node;
+use Locale::TextDomain qw (video.dvdrip);
 
 use base Video::DVDRip::GUI::Window;
 

@@ -1,4 +1,4 @@
-# $Id: Main.pm,v 1.62.2.2 2003/08/17 06:48:51 joern Exp $
+# $Id: Main.pm,v 1.64 2004/04/11 23:36:20 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -9,6 +9,7 @@
 #-----------------------------------------------------------------------
 
 package Video::DVDRip::GUI::Main;
+use Locale::TextDomain qw (video.dvdrip);
 
 use base Video::DVDRip::GUI::Component;
 
@@ -62,7 +63,7 @@ sub start {
 		}
 
 		$self->log (
-			"Detected transcode version: ".$self->version ("transcode")
+			__x("Detected transcode version: {version}", version => $self->version ("transcode"))
 		);
 
 		# Open Cluster Control window, if requested
@@ -73,7 +74,7 @@ sub start {
 
 		if ( ($select_title or $function) and not $project
 		      and $function ne 'preferences' ) {
-			print STDERR "Opening project file failed. Aborting.\n";
+			print STDERR __"Opening project file failed. Aborting.\n";
 			exit 1;
 		}
 
@@ -93,7 +94,7 @@ sub start {
 				     ->{content_clist}
 				     ->select_row ($select_title-1, 1);
 			} else {
-				print STDERR "Can't select title $select_title. Aborting.\n";
+				print STDERR __x("Can't select title {title}. Aborting.\n", title => $select_title);
 				exit 1;
 			}
 		}
@@ -268,80 +269,80 @@ sub create_menubar {
 	my $win = $self->gtk_win;
 	
 	my @menu_items = (
-		{ path        => '/_File',
+		{ path        => __"/_File",
                   type        => '<Branch>' },
 
-                { path        => '/File/_New Project',
+                { path        => __"/File/_New Project",
 		  accelerator => '<control>n',
                   callback    => sub { $self->new_project } },
-                { path        => '/File/_Open Project...',
+                { path        => __"/File/_Open Project...",
 		  accelerator => '<control>o',
                   callback    => sub { $self->open_project } },
-                { path        => '/File/_Save Project',
+                { path        => __"/File/_Save Project",
 		  accelerator => '<control>s',
                   callback    => sub { $self->save_project } },
-                { path        => '/File/Save Project As...',
+                { path        => __"/File/Save Project As...",
                   callback    => sub { $self->save_project_as } },
-                { path        => '/File/_Close Project',
+                { path        => __"/File/_Close Project",
 		  accelerator => '<control>w',
                   callback    => sub { $self->close_project } },
 
-		{ path	      => '/File/sep_quit',
+		{ path	      => __"/File/sep_quit",
 		  type	      => '<Separator>' },
-                { path        => '/File/_Exit',
+                { path        => __"/File/_Exit",
 		  accelerator => '<control>Q',
                   callback    => sub { $self->exit_program } },
 
-		{ path        => '/_Edit',
+		{ path        => __"/_Edit",
                   type        => '<Branch>' },
 
-                { path        => '/_Edit/Edit _Preferences...',
+                { path        => __"/_Edit/Edit _Preferences...",
 		  accelerator => '<control>p',
                   callback    => sub { $self->edit_preferences } },
 
-		{ path        => '/_Operate',
+		{ path        => __"/_Operate",
                   type        => '<Branch>' },
 
-                { path        => '/_Operate/Transcode and split',
+                { path        => __"/_Operate/Transcode and split",
                   callback    => sub {
 		  	return 1 if not $self->project_opened;
 		  	$self->comp('project')->transcode ( split => 1 )
 		} },
-                { path        => '/_Operate/Transcode',
+                { path        => __"/_Operate/Transcode",
                   callback    => sub {
 		  	return 1 if not $self->project_opened;
 		  	$self->comp('project')->transcode
 		} },
-                { path        => '/_Operate/Split target file',
+                { path        => __"/_Operate/Split target file",
                   callback    => sub {
 		  	return 1 if not $self->project_opened;
 		  	$self->comp('project')->avisplit
 		} },
-                { path        => '/_Operate/View target file',
+                { path        => __"/_Operate/View target file",
                   callback    => sub {
 		  	return 1 if not $self->project_opened;
 		  	$self->comp('project')->view_avi
 		} },
-                { path        => '/_Operate/Add project to cluster',
+                { path        => __"/_Operate/Add project to cluster",
                   callback    => sub {
 		  	return 1 if not $self->project_opened;
 		  	$self->comp('project')->add_to_cluster
 		} },
-		{ path	      => '/_Operate/sep_vobsub',
+		{ path	      => __"/_Operate/sep_vobsub",
 		  type	      => '<Separator>' },
-                { path        => '/_Operate/Create splitted _vobsub(s)',
+                { path        => __"/_Operate/Create splitted _vobsub(s)",
                   callback    => sub {
 		  	return 1 if not $self->project_opened;
 		  	$self->comp('project')->create_splitted_vobsub
 		} },
-                { path        => '/_Operate/Create non-splitted _vobsub(s)',
+                { path        => __"/_Operate/Create non-splitted _vobsub(s)",
                   callback    => sub {
 		  	return 1 if not $self->project_opened;
 		  	$self->comp('project')->create_non_splitted_vobsub
 		} },
-		{ path	      => '/_Operate/sep_info',
+		{ path	      => __"/_Operate/sep_info",
 		  type	      => '<Separator>' },
-                { path        => '/_Operate/Create dvdrip-info file',
+                { path        => __"/_Operate/Create dvdrip-info file",
                   callback    => sub {
 		  	return 1 if not $self->project_opened;
 			my $title = $self->comp('project')->selected_title;
@@ -352,9 +353,9 @@ sub create_menubar {
 			)->write;
 			1;
 		} },
-		{ path	      => '/_Operate/sep_wav',
+		{ path	      => __"/_Operate/sep_wav",
 		  type	      => '<Separator>' },
-                { path        => '/_Operate/Create WAV from selected audio track',
+                { path        => __"/_Operate/Create WAV from selected audio track",
                   callback    => sub {
 		  	return 1 if not $self->project_opened;
 		  	$self->comp('project')->create_wav;
@@ -362,21 +363,21 @@ sub create_menubar {
 		} },
 
 
-		{ path        => '/_Cluster',
+		{ path        => __"/_Cluster",
                   type        => '<Branch>' },
 
-                { path        => '/_Cluster/Contro_l...',
+                { path        => __"/_Cluster/Contro_l...",
 		  accelerator => '<control>m',
                   callback    => sub { $self->cluster_control } },
 
-		{ path        => '/_Debug',
+		{ path        => __"/_Debug",
                   type        => '<Branch>' },
 
-                { path        => '/_Debug/Show _Transcode commands...',
+                { path        => __"/_Debug/Show _Transcode commands...",
 		  accelerator => '<control>t',
                   callback    => sub { $self->show_transcode_commands } },
 
-                { path        => '/_Debug/Check _dependencies...',
+                { path        => __"/_Debug/Check _dependencies...",
 		  accelerator => '<control>d',
                   callback    => sub { $self->show_dependencies } },
 	);
@@ -490,7 +491,7 @@ sub open_project_file {
 
 	if ( not -r $filename ) {
 		$self->message_window (
-			message => "File '$filename' not found or not readable."
+			message => __x("File '{filename}' not found or not readable.", filename => $filename)
 		);
 		return 1;
 	}
@@ -601,9 +602,9 @@ sub unsaved_project_open {
 	return if not $self->comp('project')->project->changed;
 
 	$self->confirm_window (
-		message => "Do you want to save this project first?",
-		yes_label => "Yes",
-		no_label => "No",
+		message => __"Do you want to save this project first?",
+		yes_label => __"Yes",
+		no_label => __"No",
 		yes_callback => sub {
 			if ( $self->save_project ) {
 				$self->close_project ( dont_ask => 1 );
@@ -665,8 +666,8 @@ sub cluster_control {
 
 	} else {
 		$self->message_window (
-			message => "You must first configure a cluster control daemon\n".
-				   "in the Preferences dialog.",
+			message => __"You must first configure a cluster control daemon\n".
+                                    "in the Preferences dialog.",
 		);
 	}
 
@@ -681,7 +682,7 @@ sub show_transcode_commands {
 
 	my $commands = "";
 	
-	$commands .= "Probe Command:\n".
+	$commands .= __"Probe Command:\n".
 		     "==============\n".
 		     $title->get_probe_command()."\n";
 
@@ -692,18 +693,18 @@ sub show_transcode_commands {
 			"get_rip_command" :
 			"get_rip_and_scan_command";
 	
-		$commands .= "Rip Command:\n".
+		$commands .= __"Rip Command:\n".
 			    "============\n".
 			    $title->$rip_method()."\n";
 	} else {
-		$commands .= "Scan Command:\n".
+		$commands .= __"Scan Command:\n".
 			    "============\n".
 			    $title->get_scan_command()."\n";
 	}
 
 	$commands .= "\n\n";
 	
-	$commands .= "Grab Preview Image Command:\n".
+	$commands .= __"Grab Preview Image Command:\n".
 		    "===========================\n";
 
 	eval {
@@ -715,13 +716,12 @@ sub show_transcode_commands {
 	
 	if ( $@ ) {
 		$commands .=
-			"You must first rip the selected title ".
-			"to see this command.\n";
+			__"You must first rip the selected title to see this command.\n";
 	}
 	
 	$commands .= "\n\n";
 	
-	$commands .= "Transcode Command:\n".
+	$commands .= __"Transcode Command:\n".
 		     "==================\n";
 
 	if ( $title->tc_multipass ) {
@@ -747,7 +747,7 @@ sub show_transcode_commands {
 	my $add_audio_tracks = $title->get_additional_audio_tracks;
 
 	if ( keys %{$add_audio_tracks} ) {
-		$commands .= "Additional audio tracks commands:\n".
+		$commands .= __"Additional audio tracks commands:\n".
 			     "============================\n";
 
 		my ($avi_nr, $vob_nr);
@@ -765,7 +765,7 @@ sub show_transcode_commands {
 		$commands .= "\n\n";
 	}
 
-	$commands .= "View DVD Command:\n".
+	$commands .= __"View DVD Command:\n".
 		     "=================\n".
 		     $title->get_view_dvd_command(
 		     	command_tmpl => $self->config('play_dvd_command')
@@ -773,7 +773,7 @@ sub show_transcode_commands {
 
 	$commands .= "\n\n";
 
-	$commands .= "View Files Command:\n".
+	$commands .= __"View Files Command:\n".
 		     "===================\n".
 		     $title->get_view_avi_command(
 		     	command_tmpl => $self->config('play_file_command'),
@@ -794,13 +794,13 @@ sub show_transcode_commands {
 
 	$commands .= "\n\n";
 	
-	$commands .= "CD image creation command:\n".
+	$commands .= __"CD image creation command:\n".
 		     "========================\n".
 		     $create_image_command;
 
 	$commands .= "\n\n";
 	
-	$commands .= "CD burning command:\n".
+	$commands .= __"CD burning command:\n".
 		     "==================\n".
 		     $burn_command;
 
@@ -810,7 +810,7 @@ sub show_transcode_commands {
 	
 	if ( $wav_command ) {
 	
-		$commands .= "WAV creation command:\n".
+		$commands .= __"WAV creation command:\n".
 			     "====================\n".
 			     $wav_command;
 
@@ -842,9 +842,7 @@ sub dependencies_ok {
 	$self->show_dependencies;
 	$self->message_window (
 		message =>
-			"One or several mandatory tools are\n".
-			"missing or too old. You must install them\n".
-			"before you can proceed with dvd::rip."
+			__"One or several mandatory tools are\nmissing or too old. You must install them\nbefore you can proceed with dvd::rip."
 	);
 
 	return 0;

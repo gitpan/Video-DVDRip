@@ -1,4 +1,4 @@
-# $Id: BitrateCalc.pm,v 1.10.2.4 2003/10/26 14:19:39 joern Exp $
+# $Id: BitrateCalc.pm,v 1.12 2004/04/11 23:36:19 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -9,6 +9,7 @@
 #-----------------------------------------------------------------------
 
 package Video::DVDRip::BitrateCalc;
+use Locale::TextDomain qw (video.dvdrip);
 
 use base Video::DVDRip::Base;
 use strict;
@@ -170,14 +171,14 @@ sub calculate_video_bitrate {
 	if ( $frames and $framerate ) {	
 		
 		$self->add_to_sheet ({
-			label    => "Number of frames",
+			label    => __"Number of frames",
 			operator => "",
 			value    => $frames,
 			unit     => "",
 		});
 
 		$self->add_to_sheet ({
-			label    => "Frames per second",
+			label    => __"Frames per second",
 			operator => "/",
 			value    => $framerate,
 			unit     => "fps",
@@ -186,7 +187,7 @@ sub calculate_video_bitrate {
 		$runtime = $frames / $framerate;
 		
 		$self->add_to_sheet ({
-			label    => "Runtime",
+			label    => __"Runtime",
 			operator => "=",
 			value    => $runtime,
 			unit     => "s",
@@ -200,7 +201,7 @@ sub calculate_video_bitrate {
 		# Number of discs
 		my $disc_cnt = $title->tc_disc_cnt;
 		$self->add_to_sheet ({
-			label    => "Number of discs",
+			label    => __"Number of discs",
 			operator => "",
 			value    => $disc_cnt,
 			unit     => "",
@@ -209,7 +210,7 @@ sub calculate_video_bitrate {
 		# Size of a disc
 		my $disc_size = $title->tc_disc_size;
 		$self->add_to_sheet ({
-			label    => "Disc size",
+			label    => __"Disc size",
 			operator => "*",
 			value    => $disc_size,
 			unit     => "MB",
@@ -221,7 +222,7 @@ sub calculate_video_bitrate {
 	}
 
 	$self->add_to_sheet ({
-		label    => "Target size",
+		label    => __"Target size",
 		operator => "=",
 		value    => $target_size,
 		unit     => "MB",
@@ -231,7 +232,7 @@ sub calculate_video_bitrate {
 	if ( $container eq 'vcd' and $title->tc_disc_cnt * $title->tc_disc_size == $title->tc_target_size ) {
 		my $addition = sprintf ("%.2f", (2324/2048-1) * $target_size);
 		$self->add_to_sheet ({
-			label    => "VCD sector size addition (factor: 2324/2048)",
+			label    => __"VCD sector size addition (factor: 2324/2048)",
 			operator => "+",
 			value    => $addition,
 			unit     => "MB",
@@ -240,7 +241,7 @@ sub calculate_video_bitrate {
 
 		my $disc_overhead = sprintf ("%.2f", $VCD_DISC_OVERHEAD * $title->tc_disc_cnt / 1024 / 1024);
 		$self->add_to_sheet ({
-			label    => "VCD per disc overhead (600 sectors)",
+			label    => __"VCD per disc overhead (600 sectors)",
 			operator => "-",
 			value    => $disc_overhead,
 			unit     => "MB",
@@ -248,7 +249,7 @@ sub calculate_video_bitrate {
 		$target_size -= $disc_overhead;
 
 		$self->add_to_sheet ({
-			label    => "(X)(S)VCD/CVD target size",
+			label    => __"(X)(S)VCD/CVD target size",
 			operator => "=",
 			value    => $target_size,
 			unit     => "MB",
@@ -262,9 +263,9 @@ sub calculate_video_bitrate {
 	if ( $self->audio_size ) {
 		# audio size is known already, no need to calculate it.
 		$audio_size = sprintf ("%.2f", $self->audio_size / 1024 / 1024);
-		$self->log ("Audio size is given with $audio_size MB");
+		$self->log (__x("Audio size is given with {audio_size} MB", audio_size => $audio_size));
 		$self->add_to_sheet ({
-			label    => "Audio size",
+			label    => __"Audio size",
 			operator => "+",
 			value    => $audio_size,
 			unit     => "MB",
@@ -290,21 +291,23 @@ sub calculate_video_bitrate {
 			my $comment;
 
 			if ( $container eq 'avi' ) {
-				$comment = " (incl. $AVI_AUDIO_OVERHEAD byte".
-					   " AVI overhead per frame)";
+				$comment = " ".
+					   __x("(incl. {avi_overhead} byte".
+					       " AVI overhead per frame)",
+					       avi_overhead => $AVI_AUDIO_OVERHEAD);
 			}
 
 			if ( $audio->tc_audio_codec eq 'vorbis' ) {
 				if ( $audio->tc_vorbis_quality_enable ) {
-					$comment = " (assume nominal bitrate for this quality)";
+					$comment = " ".__"(assume nominal bitrate for this quality)";
 				} else {
-					$comment = " (exact bitrate match assumed)";
+					$comment = " ".__"(exact bitrate match assumed)";
 				}
 			}
 
 			$self->add_to_sheet ({
-				label    => "Audio track #".
-					    $audio->tc_target_track.$comment,
+				label    => __x("Audio track #{nr}",
+						nr => $audio->tc_target_track).$comment,
 				operator => "-",
 				value    => $track_size,
 				unit     => "MB",
@@ -322,7 +325,8 @@ sub calculate_video_bitrate {
 		$container_overhead = sprintf ("%.2f", $AVI_VIDEO_OVERHEAD * $frames / 1024 / 1024);
 
 		$self->add_to_sheet ({
-			label    => "AVI video overhead ($AVI_VIDEO_OVERHEAD bytes per frame)",
+			label    => __x("AVI video overhead ({avi_overhead} bytes per frame)",
+					avi_overhead => $AVI_VIDEO_OVERHEAD),
 			operator => "-",
 			value    => $container_overhead,
 			unit     => "MB",
@@ -332,8 +336,8 @@ sub calculate_video_bitrate {
 		$container_overhead = sprintf ("%.2f", $OGG_SIZE_OVERHEAD * $target_size);
 
 		$self->add_to_sheet ({
-			label    => "OGG overhead (".($OGG_SIZE_OVERHEAD*100).
-				    "\% of target size)",
+			label    => __x("OGG overhead ({ogg_overhead} percent of target size)",
+					ogg_overhead => $OGG_SIZE_OVERHEAD*100),
 			operator => "-",
 			value    => $container_overhead,
 			unit     => "MB",
@@ -347,7 +351,7 @@ sub calculate_video_bitrate {
 		# vobsub size is known already, no need to calculate it.
 		$vobsub_size = sprintf ("%.2f", $self->vobsub_size / 1024 / 1024);
 		$self->add_to_sheet ({
-			label    => "vobsub size",
+			label    => __"vobsub size",
 			operator => "-",
 			value    => $vobsub_size,
 			unit     => "MB",
@@ -358,7 +362,7 @@ sub calculate_video_bitrate {
 			next if not $subtitle->tc_vobsub;
 			$vobsub_size += 1;
 			$self->add_to_sheet ({
-				label    => "vobsub size subtitle #".$subtitle->id,
+				label    => __x("vobsub size subtitle #{nr}", nr => $subtitle->id),
 				operator => "-",
 				value    => 1,
 				unit     => "MB",
@@ -371,7 +375,7 @@ sub calculate_video_bitrate {
 	my $video_size     = $target_size - $non_video_size;
 
 	$self->add_to_sheet ({
-		label    => "Space left for video",
+		label    => __"Space left for video",
 		operator => "=",
 		value    => $video_size,
 		unit     => "MB",
@@ -383,34 +387,35 @@ sub calculate_video_bitrate {
 	my $comment = "(rounded)";
 	if ( $video_bitrate > $self->max_video_rate ) {
 		$video_bitrate = $self->max_video_rate;
-		$comment = " (too high, set to ".$self->max_video_rate.")";
+		$comment = " ".__x("(too high, set to {max_video_rate})",
+				   max_video_rate => $self->max_video_rate);
 	}
 	
 	if ( $title->tc_video_codec =~ /^(X?SVCD|CVD|XVCD)$/ and
 	     $video_bitrate + $audio_bitrate > $self->max_svcd_sum_rate ) {
 		$video_bitrate = $self->max_svcd_sum_rate - $audio_bitrate;
-		$comment = " (too high, limited)";
+		$comment = " ".__"(too high, limited)";
 	}
 
 	if ( $title->tc_video_codec =~ /^(X?SVCD|CVD|XVCD)$/ and
 	     $video_bitrate > $self->max_svcd_video_rate ) {
 		$video_bitrate = $self->max_svcd_video_rate;
-		$comment = " (too high, limited)";
+		$comment = " ".__"(too high, limited)";
 	}
 
 	if ( $title->tc_video_codec =~ /^X?VCD$/ and
 	     not $title->tc_video_bitrate_manual ) {
 		$video_bitrate = $self->vcd_video_rate;
-		$comment = " (VCD has fixed rate)";
+		$comment = " ".__"(VCD has fixed rate)";
 	}
 
 	if ( $title->tc_video_bitrate_manual ) {
 		$video_bitrate = $title->tc_video_bitrate;
-		$comment = " (manual setting)";
+		$comment = " ".__"(manual setting)";
 	}
 
 	$self->add_to_sheet ({
-		label    => "Resulting video bitrate$comment",
+		label    => __("Resulting video bitrate").$comment,
 		operator => "~",
 		value    => $video_bitrate,
 		unit     => "kbit/s",
@@ -421,7 +426,7 @@ sub calculate_video_bitrate {
 	$video_size = sprintf ("%.2f", $video_bitrate * $runtime * 1000 / 1024 / 1024 / 8);
 
 	$self->add_to_sheet ({
-		label    => "Resulting video size",
+		label    => __"Resulting video size",
 		operator => "~",
 		value    => $video_size,
 		unit     => "MB",

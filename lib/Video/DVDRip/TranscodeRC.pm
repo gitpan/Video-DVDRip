@@ -1,4 +1,4 @@
-# $Id: TranscodeRC.pm,v 1.8 2003/02/10 13:38:13 joern Exp $
+# $Id: TranscodeRC.pm,v 1.9 2004/04/11 23:36:19 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -9,6 +9,7 @@
 #-----------------------------------------------------------------------
 
 package Video::DVDRip::TranscodeRC;
+use Locale::TextDomain qw (video.dvdrip);
 
 use Carp;
 use strict;
@@ -117,7 +118,7 @@ sub send {
 	$self->set_sent ( $line );
 
 	print $socket $line, "\n"
-		or croak "can't send command to transcode";
+		or croak __"can't send command to transcode";
 
 	$DEBUG && print "[socket] send - $line\n";
 	
@@ -237,7 +238,7 @@ sub preview {
 	my %par = @_;
 	my ($command, $options) = @par{'command','options'};
 
-	croak "Unknown preview command '$command'"
+	croak __x("Unknown preview command '{command}'", command => $command)
 		if not exists $preview_commands{$command};
 
 	$options = " $options" if $options ne '';

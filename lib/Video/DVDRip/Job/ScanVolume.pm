@@ -1,4 +1,4 @@
-# $Id: ScanVolume.pm,v 1.4 2003/02/08 11:29:21 joern Exp $
+# $Id: ScanVolume.pm,v 1.5 2004/04/11 23:36:20 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -9,6 +9,7 @@
 #-----------------------------------------------------------------------
 
 package Video::DVDRip::Job::ScanVolume;
+use Locale::TextDomain qw (video.dvdrip);
 
 use base Video::DVDRip::Job;
 
@@ -29,11 +30,14 @@ sub info {
 
         my $chapter = $self->chapter;
 
-	my $info = "Volume scanning - title #".$self->title->nr;
+	my $info = __"Volume scanning";
+	$info .= " - ".__x("title #{title}", title => $self->title->nr);
+
         if ( $chapter ) {
-                $info .= ", chapter #$chapter";
+                $info .= ", ".__x("chapter #{chapter}", chapter => $chapter);
         }
-	$info .= ", audio track #".$self->title->audio_channel;
+
+	$info .= ", ".__x("audio track #{nr}", nr => $self->title->audio_channel);
 
 	return $info;
 }

@@ -7,8 +7,9 @@
 #-----------------------------------------------------------------------
 
 package Video::DVDRip;
+use Locale::TextDomain qw (video.dvdrip);
 
-$VERSION = "0.50.18";
+$VERSION = "0.52.0";
 
 use base Video::DVDRip::Base;
 
@@ -23,27 +24,27 @@ require 5.006;
 );
 
 %Video::DVDRip::deinterlace_filters = (
-	0          => "No deinterlacing",
-	1          => "Interpolate scanlines (fast)",
-	2          => "Handled by encoder (may segfault)",
-	3          => "Zoom to full frame (slow)",
-	5          => "Interpolate scanlines / blend frames (pp=lb)",
-	'32detect' => "Automatic deinterlacing of single frames",
-	'smart'    => "Smart deinterlacing",
-	'ivtc'     => "Inverse telecine",
+	0          => __"No deinterlacing",
+	1          => __"Interpolate scanlines (fast)",
+	2          => __"Handled by encoder (may segfault)",
+	3          => __"Zoom to full frame (slow)",
+	5          => __"Interpolate scanlines / blend frames (pp=lb)",
+	'32detect' => __"Automatic deinterlacing of single frames",
+	'smart'    => __"Smart deinterlacing",
+	'ivtc'     => __"Inverse telecine",
 );
 
 %Video::DVDRip::antialias_filters = (
-	0 => "No antialiasing",
-	1 => "Process de-interlace effects",
-	2 => "Process resize effects",
-	3 => "Process full frame (slow)",
+	0 => __"No antialiasing",
+	1 => __"Process de-interlace effects",
+	2 => __"Process resize effects",
+	3 => __"Process full frame (slow)",
 );
 
 %Video::DVDRip::audio_filters = (
-	'rescale'   => "None, volume rescale only",
-	'a52drc'    => "Range compression (liba52 filter)",
-	'normalize' => "Normalizing (mplayer filter)",
+	'rescale'   => __"None, volume rescale only",
+	'a52drc'    => __"Range compression (liba52 filter)",
+	'normalize' => __"Normalizing (mplayer filter)",
 );
 
 $Video::DVDRIP::scratch_width   = 1024;

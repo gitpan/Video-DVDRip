@@ -1,4 +1,4 @@
-# $Id: Webserver.pm,v 1.1.2.2 2003/05/01 11:34:38 joern Exp $
+# $Id: Webserver.pm,v 1.3 2004/04/11 23:36:19 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -9,6 +9,7 @@
 #-----------------------------------------------------------------------
 
 package Video::DVDRip::Cluster::Webserver;
+use Locale::TextDomain qw (video.dvdrip);
 
 use base qw ( Video::DVDRip::Base );
 
@@ -90,6 +91,7 @@ sub new_http_client {
 
 
 package Video::DVDRip::Cluster::Webserver::Client;
+use Locale::TextDomain qw (video.dvdrip);
 
 use FileHandle;
 use constant NICE => -1;
@@ -456,7 +458,7 @@ sub send_html_footer {
 <p class="page_footer">
 dvd::rip cluster control daemon -
 &copy; 2003 Jörn Reder, All Rights Reserverd -
-$Id: Webserver.pm,v 1.1.2.2 2003/05/01 11:34:38 joern Exp $
+$Id: Webserver.pm,v 1.3 2004/04/11 23:36:19 joern Exp $
 </p>
 </body></html>
 __EOF

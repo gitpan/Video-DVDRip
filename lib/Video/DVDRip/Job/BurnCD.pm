@@ -1,4 +1,4 @@
-# $Id: BurnCD.pm,v 1.6.2.3 2003/08/01 09:01:34 joern Exp $
+# $Id: BurnCD.pm,v 1.8 2004/04/11 23:36:20 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -9,6 +9,7 @@
 #-----------------------------------------------------------------------
 
 package Video::DVDRip::Job::BurnCD;
+use Locale::TextDomain qw (video.dvdrip);
 
 use base Video::DVDRip::Job;
 
@@ -41,20 +42,20 @@ sub info {
 	my $test_mode = "";
 	$test_mode = "(simulation) " if $self->test_mode;
 
-	my $what = $self->erase_cdrw ? "Erase CD-RW" : "Burn CD";
+	my $what = $self->erase_cdrw ? __"Erase CD-RW" : __"Burn CD";
 
 	my $info;
 	if ( $self->wait_for_start == -1 ) {
 		$info = "$what $test_mode";
 
 	} elsif ( $self->wait_for_start == -2 ) {
-		$info = "$what $test_mode- waiting 10 seconds";
+		$info = __x("{what} {test_mode}- waiting 10 seconds", what => $what, test_mode => $test_mode);
 
 	} elsif ( $self->wait_for_start ) {
-		$info = "$what $test_mode- starting in ".$self->wait_for_start. " seconds";
+		$info = __x("{what} {test_mode}- starting in {wait} seconds", what => $what, test_mode => $test_mode, wait => $self->wait_for_start);
 
 	} elsif ( $self->fixating ) {
-		$info = "Fixating CD $test_mode";
+		$info = __x("Fixating CD {test_mode}", test_mode => $test_mode);
 
 	} else {
 		$info = "$what $test_mode";
@@ -96,10 +97,10 @@ sub parse_output {
 
 	if ( $line =~ m!(\d+)\s+seconds.! ) {
 		if ( $self->title->burn_cd_type ne 'iso' ) {
-#print "DAO WAITING 10 SECONDS\n";
+#print "DAO WARTE 10 SEKUNDEN\n";
 			$self->set_wait_for_start (-2);
 		} else {
-#print "CDR WAITING $1 SECONDS\n";
+#print "CDR WARTE $1 SEKUNDEN\n";
 			$self->set_wait_for_start ( $1 );
 		}
 		if ( $1 == 0 ) {
@@ -111,18 +112,18 @@ sub parse_output {
 	if ( ( $self->title->burning_an_image or 
 	       ( ( not $self->title->burning_an_image ) and $self->title->config('burn_estimate_size') ) ) and
 	     $line =~ m!(\d+)\s+of\s+(\d+)\s+MB!i ) {
-#print "IMAGE: PROGRESS: $1 of $2\n";
+#print "ABBILD: FORTSCHRITT: $1 of $2\n";
 		$self->set_progress_cnt ( int(10000*$1/$2) );
 		$self->set_fixating(1) if $1 >= $2;
-#print "IMAGE: fixating" if $1 >= $2;
+#print "ABBILD: fixiere" if $1 >= $2;
 		$self->set_wait_for_start ( 0 );
 
 	} elsif ( ( not $self->title->burning_an_image ) and ( not $self->title->config('burn_estimate_size') ) and 
 	          $line =~ m!:\s+(\d+)\s+MB! ) {
 		$self->set_progress_cnt ( int(10000*$1/$self->max_size) );
-#print "FLY: PROGRESS: $1 of ".$self->max_size,"\n";
+#print "FLY: FORTSCHRITT: $1 of ".$self->max_size,"\n";
 		$self->set_fixating(1) if $1 >= $self->max_size;
-#print "FLY: fixating" if $1 >= $self->max_size;
+#print "FLY: fixiere" if $1 >= $self->max_size;
 		$self->set_wait_for_start ( 0 );
 	}
 

@@ -1,4 +1,4 @@
-# $Id: Base.pm,v 1.31.2.6 2003/03/31 08:45:13 joern Exp $
+# $Id: Base.pm,v 1.34 2004/12/11 15:20:14 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -9,6 +9,7 @@
 #-----------------------------------------------------------------------
 
 package Video::DVDRip::Base;
+use Locale::TextDomain qw (video.dvdrip);
 
 use Video::DVDRip::Config;
 use Video::DVDRip::FilterList;
@@ -165,6 +166,8 @@ sub system {
 	my %par = @_;
 	my  ($command, $err_ignore, $return_rc) =
 	@par{'command','err_ignore','return_rc'};
+	
+	$self->log ("Executing command: $command");
 	
 	$self->print_debug ("executing command: $command");
 

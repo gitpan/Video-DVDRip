@@ -1,4 +1,4 @@
-# $Id: InfoFile.pm,v 1.8.2.1 2003/03/03 11:40:25 joern Exp $
+# $Id: InfoFile.pm,v 1.10 2004/04/11 23:36:19 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -9,6 +9,7 @@
 #-----------------------------------------------------------------------
 
 package Video::DVDRip::InfoFile;
+use Locale::TextDomain qw (video.dvdrip);
 
 use base Video::DVDRip::Base;
 

@@ -1,4 +1,4 @@
-# $Id: ExtractPS1.pm,v 1.3.2.1 2003/02/15 09:39:05 joern Exp $
+# $Id: ExtractPS1.pm,v 1.5 2004/04/11 23:36:20 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -9,6 +9,7 @@
 #-----------------------------------------------------------------------
 
 package Video::DVDRip::Job::ExtractPS1;
+use Locale::TextDomain qw (video.dvdrip);
 
 use base Video::DVDRip::Job;
 
@@ -27,7 +28,7 @@ sub info {
 
 	my $sid = $self->subtitle->id;
 
-	my $info = "Extract subtitle #$sid from title #".$self->title->nr;
+	my $info = __x("Extract subtitle #{sid} from title #{title}", sid => $sid, title => $self->title->nr);
 	
 	return $info;
 }
@@ -55,8 +56,8 @@ sub command {
 
 	if ( -f $ps1_file ) {
 		$self->log (
-			"PS1 file '$ps1_file' already exists. ".
-			"Skip extraction."
+			__x("PS1 file '{filename}' already exists. ".
+                           "Skip extraction.", filename => $ps1_file)
 		);
 
 		$self->set_progress_cnt (10000);

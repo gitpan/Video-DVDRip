@@ -1,4 +1,4 @@
-# $Id: Mplex.pm,v 1.5.2.2 2003/10/26 14:25:05 joern Exp $
+# $Id: Mplex.pm,v 1.7 2004/04/11 23:36:20 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -9,6 +9,7 @@
 #-----------------------------------------------------------------------
 
 package Video::DVDRip::Job::Mplex;
+use Locale::TextDomain qw (video.dvdrip);
 
 use base Video::DVDRip::Job;
 
@@ -28,7 +29,8 @@ sub type {
 sub info {
 	my $self = shift;
 
-	my $info = "Multiplexing MPEG - title #".$self->title->nr;
+	my $info = __("Multiplexing MPEG");
+	$info .= " - ".__x("title #{title}", title => $self->title->nr);
 
 	return $info;
 }

@@ -1,4 +1,4 @@
-# $Id: CreateWav.pm,v 1.4 2003/01/28 20:19:57 joern Exp $
+# $Id: CreateWav.pm,v 1.5 2004/04/11 23:36:20 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -9,6 +9,7 @@
 #-----------------------------------------------------------------------
 
 package Video::DVDRip::Job::CreateWav;
+use Locale::TextDomain qw (video.dvdrip);
 
 use base Video::DVDRip::Job::TranscodeVideo;
 
@@ -25,12 +26,14 @@ sub type {
 sub info {
 	my $self = shift; $self->trace_in;
 
-	my $info = "Dumping WAV - title #".$self->title->nr;
+	my $info = __"Dumping WAV";
+	$info .= " - ".__x("title #{title}", title => $self->title->nr);
+
 	my $nr   = $self->title->audio_track->tc_nr;
 	
-	$info .= ", track #$nr";
-	$info .= ", chapter #".
-		 $self->chapter if defined $self->chapter;
+	$info .= ", ".__x("track #{nr}", nr => $nr);
+	$info .= ", ".__x("chapter #{chapter}", chapter => $self->chapter)
+		if defined $self->chapter;
 	
 	return $info;
 }

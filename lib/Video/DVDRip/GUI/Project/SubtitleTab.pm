@@ -1,4 +1,4 @@
-# $Id: SubtitleTab.pm,v 1.14.2.7 2003/07/28 16:48:33 joern Exp $
+# $Id: SubtitleTab.pm,v 1.16 2004/04/11 23:36:20 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -9,6 +9,7 @@
 #-----------------------------------------------------------------------
 
 package Video::DVDRip::GUI::Project;
+use Locale::TextDomain qw (video.dvdrip);
 
 use Carp;
 use strict;
@@ -88,7 +89,7 @@ sub create_subtitle_select {
 	my ($popup_menu, $popup, $item, %popup_entries, $button);
 
 	# Frame
-	$frame = Gtk::Frame->new ("Subtitle selection");
+	$frame = Gtk::Frame->new (__"Subtitle selection");
 	$frame->show;
 
 	# Frame HBox
@@ -110,7 +111,7 @@ sub create_subtitle_select {
 	$row = 0;
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new ("Select subtitle");
+	$label = Gtk::Label->new (__"Select subtitle");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 	$hsize_group->add ($hbox);
@@ -125,7 +126,7 @@ sub create_subtitle_select {
 	$popup->show;
 	$popup->set_usize (150,undef);
 	$popup->set_menu($popup_menu);
-	$item = Gtk::MenuItem->new ("No subtitles available");
+	$item = Gtk::MenuItem->new (__"No subtitles available");
 	$item->show;
 	$popup_menu->append($item);
 	$popup->set_history(0);
@@ -135,14 +136,13 @@ sub create_subtitle_select {
 
 	$table->attach ($hbox, 1, 2, $row, $row+1, 'fill','expand',0,0);
 
-	my $selected = "Activated:";
+	my $activated = __("Activated").":"; 
+	my $selected  = $activated;
 
-	if ( $selected eq 'Activated:' ) {
-		$selected = "subtitle2pgm is missing or too old"
-			if not $self->has("subtitle2pgm");
-	}
+	$selected = __"subtitle2pgm is missing or too old"
+		if not $self->has("subtitle2pgm");
 
-	if ( $selected ne 'Activated:' ) {
+	if ( $selected ne $activated ) {
 		$widgets->{selection_popup}->hide;
 	}
 
@@ -172,7 +172,7 @@ sub create_subtitle_preview {
 	my ($popup_menu, $popup, $item, %popup_entries, $button, $sw);
 
 	# Frame
-	$frame = Gtk::Frame->new ("Preview");
+	$frame = Gtk::Frame->new (__"Preview");
 	$frame->show;
 
 	# Frame HBox
@@ -196,7 +196,7 @@ sub create_subtitle_preview {
 	$hbox->show;
 	$table->attach ($hbox, 0, 1, $row, $row+1, 'fill','fill',0,0);
 
-	$button = Gtk::Button->new ("    Grab    ");
+	$button = Gtk::Button->new (__"Grab");
 	$button->show;
 	$hbox->pack_start ($button, 0, 1, 0);
 	$widgets->{preview_button} = $button;
@@ -233,7 +233,7 @@ sub create_subtitle_preview {
 		1;
 	});
 
-	$label = Gtk::Label->new ("  image(s), starting at  ");
+	$label = Gtk::Label->new ("  ".__"image(s), starting at"."  ");
 	$label->show;
 	$hbox->pack_start ($label, 0, 1, 0);
 
@@ -253,7 +253,7 @@ sub create_subtitle_preview {
 		     ->set_tc_preview_timecode ( $_[0]->get_text );
 	});
 
-	$label = Gtk::Label->new (" (timecode nn:nn:nn or frame number) ");
+	$label = Gtk::Label->new (" ".__"(timecode nn:nn:nn or frame number)"." ");
 	$label->show;
 	$hbox->pack_start ($label, 0, 1, 0);
 
@@ -292,7 +292,7 @@ sub create_subtitle_render {
 	my ($popup_menu, $popup, $item, %popup_entries, $checkbox, $button);
 
 	# Frame
-	$frame = Gtk::Frame->new ("Render subtitle on movie");
+	$frame = Gtk::Frame->new (__"Render subtitle on movie");
 	$frame->show;
 
 	# Frame HBox
@@ -315,7 +315,7 @@ sub create_subtitle_render {
 	$row = 0;
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new ("Activate this subtitle");
+	$label = Gtk::Label->new (__"Activate this subtitle");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 	$table->attach ($hbox, 0, 1, $row, $row+1, ['fill','expand'],'expand',0,0);
@@ -323,7 +323,7 @@ sub create_subtitle_render {
 
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$checkbox = Gtk::CheckButton->new ("for rendering");
+	$checkbox = Gtk::CheckButton->new (__"for rendering");
 	$checkbox->show;
 	$hbox->pack_start ($checkbox, 0, 1, 0);
 	$table->attach ($hbox, 1, 2, $row, $row+1, ['fill','expand'],'expand',0,0);
@@ -346,7 +346,7 @@ sub create_subtitle_render {
 	++$row;
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new ("Vertical offset");
+	$label = Gtk::Label->new (__"Vertical offset");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 	$table->attach ($hbox, 0, 1, $row, $row+1, ['fill','expand'],'expand',0,0);
@@ -363,7 +363,7 @@ sub create_subtitle_render {
 	$entry->set_usize($ENTRY_SIZE,undef);
 	$entry->show;
 	$hbox->pack_start ($entry, 0, 1, 0);
-	$label = Gtk::Label->new ("rows");
+	$label = Gtk::Label->new (__"rows");
 	$label->show;
 	$hbox->pack_start ($label, 0, 1, 0);
 	$table->attach ($hbox, 1, 2, $row, $row+1, ['fill','expand'],'expand',0,0);
@@ -375,7 +375,7 @@ sub create_subtitle_render {
 	++$row;
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new ("Time shift");
+	$label = Gtk::Label->new (__"Time shift");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 	$table->attach ($hbox, 0, 1, $row, $row+1, ['fill','expand'],'expand',0,0);
@@ -404,7 +404,7 @@ sub create_subtitle_render {
 	++$row;
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$checkbox = Gtk::CheckButton->new ("Postprocessing");
+	$checkbox = Gtk::CheckButton->new (__"Postprocessing");
 	$checkbox->show;
 	$hbox->pack_start($checkbox, 0, 1, 0);
 
@@ -447,14 +447,14 @@ sub create_subtitle_render {
 	$row = 0;
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new ("Colors");
+	$label = Gtk::Label->new (__"Colors");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 	$table->attach ($hbox, 2, 3, $row, $row+1, ['fill','expand'],'expand',0,0);
 
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$checkbox = Gtk::CheckButton->new ("Enable manipulation");
+	$checkbox = Gtk::CheckButton->new (__"Enable manipulation");
 	$checkbox->show;
 	$hbox->pack_start ($checkbox, 0, 1, 0);
 
@@ -478,7 +478,7 @@ sub create_subtitle_render {
 	++$row;
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new ("Gray A/B");
+	$label = Gtk::Label->new (__"Gray A/B");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 	$table->attach ($hbox, 2, 3, $row, $row+1, ['fill','expand'],'expand',0,0);
@@ -611,14 +611,14 @@ sub create_subtitle_render {
 	++$row;
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new ("Suggest");
+	$label = Gtk::Label->new (__"Suggest");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 	$table->attach ($hbox, 2, 3, $row, $row+1, ['fill','expand'],'expand',0,0);
 
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$button = Gtk::Button->new (" Values for letterbox ");
+	$button = Gtk::Button->new (__"Values for letterbox");
 	$button->show;
 	$hbox->pack_start ($button, 1, 1, 0);
 	$table->attach ($hbox, 3, 5, $row, $row+1, ['fill','expand'],'expand',0,0);
@@ -632,7 +632,7 @@ sub create_subtitle_render {
 
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$button = Gtk::Button->new (" Values for full size movie ");
+	$button = Gtk::Button->new (__"Values for full size movie");
 	$button->show;
 	$hbox->pack_start ($button, 1, 1, 0);
 	$table->attach ($hbox, 5, 7, $row, $row+1, ['fill','expand'],'expand',0,0);
@@ -649,7 +649,7 @@ sub create_subtitle_render {
 	$row = 0;
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new ("Test image count");
+	$label = Gtk::Label->new (__"Test image count");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 	$table->attach ($hbox, 5, 6, $row, $row+1, ['fill','expand'],'expand',0,0);
@@ -674,7 +674,7 @@ sub create_subtitle_render {
 	++$row;
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new ("Test transcode");
+	$label = Gtk::Label->new (__"Test transcode");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 	$table->attach ($hbox, 5, 6, $row, $row+1, ['fill','expand'],'expand',0,0);
@@ -698,14 +698,14 @@ sub create_subtitle_render {
 	++$row;
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new ("Test view");
+	$label = Gtk::Label->new (__"Test view");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 	$table->attach ($hbox, 5, 6, $row, $row+1, ['fill','expand'],'expand',0,0);
 
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$button = Gtk::Button->new (" View ");
+	$button = Gtk::Button->new (__"View");
 	$button->set_usize (80, undef);
 	$button->show;
 	$hbox->pack_start ($button, 0, 1, 0);
@@ -747,7 +747,7 @@ sub create_subtitle_vobsub {
 	my ($popup_menu, $popup, $item, %popup_entries, $button, $checkbox);
 
 	# Frame
-	$frame = Gtk::Frame->new ("Create vobsub file");
+	$frame = Gtk::Frame->new (__"Create vobsub file");
 	$frame->show;
 
 	# Frame HBox
@@ -769,7 +769,7 @@ sub create_subtitle_vobsub {
 	$row = 0;
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new ("Create now");
+	$label = Gtk::Label->new (__"Create now");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 	$table->attach ($hbox, 0, 1, $row, $row+1, 'fill','expand',0,0);
@@ -777,7 +777,7 @@ sub create_subtitle_vobsub {
 
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$button = Gtk::Button->new (" Create now ");
+	$button = Gtk::Button->new (__"Create now");
 	$button->set_usize (80, undef);
 	$button->show;
 	$hbox->pack_start ($button, 0, 1, 0);
@@ -786,7 +786,7 @@ sub create_subtitle_vobsub {
 
 	$widgets->{create_now_button} = $button;
 
-	$button = Gtk::Button->new (" View vobsub ");
+	$button = Gtk::Button->new (__"View vobsub");
 	$button->show;
 	$hbox->pack_start ($button, 0, 1, 0);
 	$button->signal_connect ("clicked", sub { $self->view_vobsub } );
@@ -795,7 +795,7 @@ sub create_subtitle_vobsub {
 
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new ("     Only useful for single-CD-rips.");
+	$label = Gtk::Label->new ("   ".__"Only useful for single-CD-rips.");
 	$label->show;
 	$hbox->pack_start ($label, 0, 1, 0);
 	$table->attach ($hbox, 2, 3, $row, $row+1, 'fill','expand',0,0);
@@ -804,7 +804,7 @@ sub create_subtitle_vobsub {
 	++$row;
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new ("Create later");
+	$label = Gtk::Label->new (__"Create later");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 	$table->attach ($hbox, 0, 1, $row, $row+1, 'fill','expand',0,0);
@@ -812,14 +812,14 @@ sub create_subtitle_vobsub {
 
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$checkbox = Gtk::CheckButton->new ("after transcoding");
+	$checkbox = Gtk::CheckButton->new (__"after transcoding");
 	$checkbox->show;
 	$hbox->pack_start ($checkbox, 0, 1, 0);
 	$table->attach ($hbox, 1, 2, $row, $row+1, 'fill','expand',0,0);
 
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new ("     This considers splitted files correctly.");
+	$label = Gtk::Label->new ("   ".__"This considers splitted files correctly.");
 	$label->show;
 	$hbox->pack_start ($label, 0, 1, 0);
 	$table->attach ($hbox, 2, 3, $row, $row+1, 'fill','expand',0,0);
@@ -889,13 +889,13 @@ sub init_subtitle_values {
 		for ( my $i=0; $i < 32; ++$i ) {
 			next if exists $popup_entries{$i};
 			$popup_entries{$i} =
-				sprintf ("[ %02d - %s ]",  $i, "probably unused");
+				sprintf ("[ %02d - %s ]",  $i, __"probably unused");
 		}
 	} else {
 		%popup_entries = (
 			-1 => $title->is_ripped ?
-				"No subtitles available" :
-				"Title isn't ripped"
+				__"No subtitles available" :
+				__"Title isn't ripped"
 		);
 	}
 
@@ -944,17 +944,17 @@ sub set_selected_label {
 				       values %{$title->subtitles} ) {
 			if ( $subtitle->tc_render ) {
 				$selected_label .=
-					$subtitle->id." ".$subtitle->lang." (render); ";
+					$subtitle->id." ".$subtitle->lang." (".__("render")."); ";
 			} elsif ( $subtitle->tc_vobsub ) {
 				$selected_label .=
-					$subtitle->id." ".$subtitle->lang." (vobsub); ";
+					$subtitle->id." ".$subtitle->lang." (".__("vobsub")."); ";
 			}
 		}
 	}
 
 	$selected_label =~ s/; $//;
 
-	$selected_label ||= "No subtitles activated.";
+	$selected_label ||= __"No subtitles activated.";
 
 	$widgets->{select}->{selection_label}->set($selected_label);
 
@@ -1090,7 +1090,7 @@ sub grab_subtitle_preview_images {
 
 	if ( not $self->has ( "subtitle2pgm" ) ) {
 		$self->message_window (
-			message => "Sorry, you need subtitle2pgm for this to work."
+			message => __"Sorry, you need subtitle2pgm for this to work."
 		);
 		return 1;
 	}
@@ -1224,7 +1224,7 @@ sub subtitle_test_transcode {
 	if ( not $subtitle->preview_images or
 	     @{$subtitle->preview_images} == 0 ) {
 		$self->message_window (
-			message => "Please grab preview images first."
+			message => __"Please grab preview images first."
 		);
 		return 1;
 	}
@@ -1252,7 +1252,7 @@ sub subtitle_test_view {
 
 	if ( @files == 0 or not -f $files[0] ) {
 		$self->message_window (
-			message => "You need to transcode the subtitles first."
+			message => __"You need to transcode the subtitles first."
 		);
 		return 1;
 	}
@@ -1310,8 +1310,8 @@ sub create_vobsub_now {
 	if ( not -f $subtitle->ifo_file ) {
 		$self->message_window (
 			message =>
-				"Need IFO files in place.\n".
-				"You must re-read TOC from DVD."
+				__"Need IFO files in place.\n".
+                                 "You must re-read TOC from DVD."
 		);
 		return 1;
 	}
@@ -1352,21 +1352,21 @@ sub view_vobsub {
 
 	if ( not $self->has ( "mplayer" ) ) {
 		$self->message_window (
-			message => "You need Mplayer to view vobsub files."
+			message => __"You need Mplayer to view vobsub files."
 		);
 		return 1;
 	}
 
 	if ( $title->project->rip_mode ne 'rip' ) {
 		$self->message_window (
-			message => "This is only supported for ripped movies."
+			message => __"This is only supported for ripped movies."
 		);
 		return 1;
 	}
 
 	if ( not $subtitle->vobsub_file_exists ) {
 		$self->message_window (
-			message => "What about creating the vobsub file first?"
+			message => __"What about creating the vobsub file first?"
 		);
 		return 1;
 	}
@@ -1394,8 +1394,7 @@ sub create_splitted_vobsub {
 	if ( @{$files} == 0 ) {
 		$self->message_window (
 			message =>
-				"No splitted target files available.\n".
-				"First transcode and split the movie."
+				__"No splitted target files available.\nFirst transcode and split the movie."
 		);
 		
 		return 1;
@@ -1406,8 +1405,7 @@ sub create_splitted_vobsub {
 		if ( not -f $subtitle->ifo_file ) {
 			$self->message_window (
 				message =>
-					"Need IFO files in place.\n".
-					"You must re-read TOC from DVD."
+					__"Need IFO files in place.\nYou must re-read TOC from DVD."
 			);
 			return 1;
 		}
@@ -1476,8 +1474,7 @@ sub create_non_splitted_vobsub {
 		if ( not -f $subtitle->ifo_file ) {
 			$self->message_window (
 				message =>
-					"Need IFO files in place.\n".
-					"You must re-read TOC from DVD."
+					__"Need IFO files in place.\nYou must re-read TOC from DVD."
 			);
 			return 1;
 		}

@@ -1,4 +1,4 @@
-# $Id: GrabPreviewFrame.pm,v 1.3 2003/01/28 20:19:57 joern Exp $
+# $Id: GrabPreviewFrame.pm,v 1.4 2004/04/11 23:36:20 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -9,6 +9,7 @@
 #-----------------------------------------------------------------------
 
 package Video::DVDRip::Job::GrabPreviewFrame;
+use Locale::TextDomain qw (video.dvdrip);
 
 use base Video::DVDRip::Job;
 
@@ -28,9 +29,9 @@ sub type {
 sub info {
 	my $self = shift;
 
-	my $info =
-		"Grabbing preview - title #".$self->title->nr.", frame #".
-		$self->title->preview_frame_nr;
+	my $info =__"Grabbing preview";
+	$info .= " - ".__x("title #{title}", title => $self->title->nr);
+	$info .= " ,".__x("frame #{frame}", frame => $self->title->preview_frame_nr);
 
 	return $info;
 }
@@ -77,7 +78,7 @@ sub parse_output {
 			$self->set_operation_successful (1);
 		} else {
 			$self->set_error_message (
-				"transcode can't find this frame."
+				__"transcode can't find this frame."
 			);
 			$self->abort_job;
 		}

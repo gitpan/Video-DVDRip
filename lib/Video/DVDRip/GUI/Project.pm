@@ -1,4 +1,4 @@
-# $Id: Project.pm,v 1.31.2.1 2003/04/29 20:23:18 joern Exp $
+# $Id: Project.pm,v 1.33 2004/04/11 23:36:20 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -9,6 +9,7 @@
 #-----------------------------------------------------------------------
 
 package Video::DVDRip::GUI::Project;
+use Locale::TextDomain qw (video.dvdrip);
 
 use base Video::DVDRip::GUI::Component;
 
@@ -106,25 +107,25 @@ sub build {
 	$self->gtk_tabs->{logging}   = $logging_tab;
 	$self->gtk_tabs->{title}     = $title_tab;
 
-	$label = Gtk::Label->new ("Storage");
+	$label = Gtk::Label->new (__"Storage");
 	$notebook->append_page ($storage_tab, $label);
 
-	$label = Gtk::Label->new ("RIP Title");
+	$label = Gtk::Label->new (__"RIP Title");
 	$notebook->append_page ($title_tab, $label);
 
-	$label = Gtk::Label->new (" Clip & Zoom ");
+	$label = Gtk::Label->new (__"Clip & Zoom");
 	$notebook->append_page ($adjust_tab, $label);
 
-	$label = Gtk::Label->new ("Subtitles");
+	$label = Gtk::Label->new (__"Subtitles");
 	$notebook->append_page ($subtitle_tab, $label);
 
-	$label = Gtk::Label->new ("Transcode");
+	$label = Gtk::Label->new (__"Transcode");
 	$notebook->append_page ($transcode_tab, $label);
 
-	$label = Gtk::Label->new ("Burn");
+	$label = Gtk::Label->new (__"Burn");
 	$notebook->append_page ($burn_tab, $label);
 
-	$label = Gtk::Label->new ("Logging");
+	$label = Gtk::Label->new (__"Logging");
 	$notebook->append_page ($logging_tab, $label);
 
 	$vbox->pack_start ($notebook, 1, 1, 0);
@@ -154,9 +155,9 @@ sub build {
 	$self->set_comp ( project => $self );
 
 	if ( $self->project->filename ) {
-		$self->log ("Open project from file '".$self->project->filename."'");
+		$self->log (__x("Open project from file '{filename}'", filename => $self->project->filename));
 	} else {
-		$self->log ("Create new project.");
+		$self->log (__"Create new project.");
 	}
 
 	return $vbox;
@@ -198,7 +199,7 @@ sub close {
 	my $self = shift;
 	return if $self->closed;
 
-	$self->log ("Project closed.");
+	$self->log (__"Project closed.");
 	$self->set_closed(1);
 	
 	1;

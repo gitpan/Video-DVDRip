@@ -1,4 +1,4 @@
-# $Id: Control.pm,v 1.21.2.1 2003/10/26 12:55:20 joern Exp $
+# $Id: Control.pm,v 1.23 2004/04/11 23:36:20 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -9,6 +9,7 @@
 #-----------------------------------------------------------------------
 
 package Video::DVDRip::GUI::Cluster::Control;
+use Locale::TextDomain qw (video.dvdrip);
 
 use base Video::DVDRip::GUI::Window;
 
@@ -66,7 +67,7 @@ sub build {
 
 	# build window -----------------------------------------------
 	my $win = Gtk::Window->new ( -toplevel );
-	$win->set_title($self->config('program_name'). " Cluster Control");
+	$win->set_title($self->config('program_name')." ".__"Cluster Control");
 	$win->signal_connect("destroy" => sub {
 		$self->set_comp (cluster => undef);
 		$self->rpc_server->disconnect if $self->rpc_server;
@@ -97,7 +98,7 @@ sub build {
 	my ($frame, $vbox, $hbox, $button, $clist, $sw);
 
 	# Project Queue ----------------------------------------------
-	$frame = Gtk::Frame->new ("Project Queue");
+	$frame = Gtk::Frame->new (__"Project Queue");
 	$frame->show;
 	$dialog_vbox->pack_start($frame, 0, 1, 0);
 	$vbox = Gtk::VBox->new;
@@ -111,7 +112,7 @@ sub build {
 
 	$clist = Gtk::CList->new_with_titles (
 		"#",
-		"Project", "State", "Progress"
+		__"Project", __"State", __"Progress"
 	);
 	$clist->show,
 	$sw->add ($clist);
@@ -128,33 +129,33 @@ sub build {
 	$hbox->show;
 	$vbox->pack_start ($hbox, 0, 1, 0);
 	
-	$button = Gtk::Button->new_with_label (" Edit Project ");
+	$button = Gtk::Button->new_with_label (__"Edit Project");
 	$button->show;
 	$button->signal_connect ("clicked", sub { $self->edit_project } );
 	$hbox->pack_start ($button, 0, 1, 0);
 
-	$button = Gtk::Button->new_with_label (" Move Up ");
+	$button = Gtk::Button->new_with_label (__"Move Up");
 	$button->show;
 	$button->signal_connect ("clicked", sub { $self->move_up_project } );
 	$hbox->pack_start ($button, 0, 1, 0);
 
-	$button = Gtk::Button->new_with_label (" Move Down ");
+	$button = Gtk::Button->new_with_label (__"Move Down");
 	$button->show;
 	$button->signal_connect ("clicked", sub { $self->move_down_project } );
 	$hbox->pack_start ($button, 0, 1, 0);
 
-	$button = Gtk::Button->new_with_label (" Schedule Project ");
+	$button = Gtk::Button->new_with_label (__"Schedule Project");
 	$button->show;
 	$button->signal_connect ("clicked", sub { $self->schedule_project } );
 	$hbox->pack_start ($button, 0, 1, 0);
 
-	$button = Gtk::Button->new_with_label (" Remove Project ");
+	$button = Gtk::Button->new_with_label (__"Remove Project");
 	$button->show;
 	$button->signal_connect ( "clicked", sub { $self->remove_project } );
 	$hbox->pack_start ($button, 0, 1, 0);
 
 	# List of jobs ----------------------------------------------
-	$frame = Gtk::Frame->new ("Jobs of the selected project");
+	$frame = Gtk::Frame->new (__"Jobs of the selected project");
 	$frame->show;
 	$dialog_vbox->pack_start($frame, 0, 1, 0);
 	$vbox = Gtk::VBox->new;
@@ -167,7 +168,7 @@ sub build {
 	$sw->set_policy( 'automatic', 'automatic' );
 	$clist = Gtk::CList->new_with_titles (
 		"#",
-		"Info", "Dependencies", "State", "Progress"
+		__"Info", __"Dependencies", __"State", __"Progress"
 	);
 	$clist->show,
 	$sw->add ($clist);
@@ -185,13 +186,13 @@ sub build {
 	$hbox->show;
 	$vbox->pack_start ($hbox, 0, 1, 0);
 	
-	$button = Gtk::Button->new_with_label (" Reset Job ");
+	$button = Gtk::Button->new_with_label (__"Reset Job");
 	$button->show;
 	$button->signal_connect ( "clicked", sub { $self->reset_job } );
 	$hbox->pack_start ($button, 0, 1, 0);
 
 	# List of nodes ----------------------------------------------
-	$frame = Gtk::Frame->new ("Registered Nodes");
+	$frame = Gtk::Frame->new (__"Registered Nodes");
 	$frame->show;
 	$dialog_vbox->pack_start($frame, 0, 1, 0);
 	$vbox = Gtk::VBox->new;
@@ -204,7 +205,7 @@ sub build {
 	$sw->set_policy( 'automatic', 'automatic' );
 	$clist = Gtk::CList->new_with_titles (
 		"#",
-		"Name", "Job", "Progress"
+		__"Name", __"Job", __"Progress"
 	);
 	$clist->show,
 	$sw->add ($clist);
@@ -221,38 +222,38 @@ sub build {
 	$hbox->show;
 	$vbox->pack_start ($hbox, 0, 1, 0);
 	
-	$button = Gtk::Button->new_with_label (" Add Node ");
+	$button = Gtk::Button->new_with_label (__"Add Node");
 	$button->show;
 	$button->signal_connect ( "clicked", sub { $self->new_node } );
 	$hbox->pack_start ($button, 0, 1, 0);
 
-	$button = Gtk::Button->new_with_label (" Edit Node ");
+	$button = Gtk::Button->new_with_label (__"Edit Node");
 	$button->show;
 	$button->signal_connect ( "clicked", sub { $self->edit_node } );
 	$hbox->pack_start ($button, 0, 1, 0);
 
-	$button = Gtk::Button->new_with_label (" Stop Node ");
+	$button = Gtk::Button->new_with_label (__"Stop Node");
 	$button->show;
 	$button->signal_connect ( "clicked", sub { $self->stop_node } );
 	$hbox->pack_start ($button, 0, 1, 0);
 
-	$button = Gtk::Button->new_with_label (" Start Node ");
+	$button = Gtk::Button->new_with_label (__"Start Node");
 	$button->show;
 	$button->signal_connect ( "clicked", sub { $self->start_node } );
 	$hbox->pack_start ($button, 0, 1, 0);
 
-	$button = Gtk::Button->new_with_label (" Remove Node ");
+	$button = Gtk::Button->new_with_label (__"Remove Node");
 	$button->show;
 	$button->signal_connect ( "clicked", sub { $self->remove_node } );
 	$hbox->pack_start ($button, 0, 1, 0);
 
-	$button = Gtk::Button->new_with_label (" Shutdown Daemon ");
+	$button = Gtk::Button->new_with_label (__"Shutdown Daemon");
 	$button->show;
 	$button->signal_connect ( "clicked", sub { $self->shutdown_daemon } );
 	$hbox->pack_start ($button, 0, 1, 0);
 
 	# Log info ---------------------------------------------------
-	$frame = Gtk::Frame->new ("Log Output from Cluster Control Daemon");
+	$frame = Gtk::Frame->new (__"Log Output from Cluster Control Daemon");
 	$frame->show;
 	$dialog_vbox->pack_start($frame, 1, 1, 1);
 	$vbox = Gtk::VBox->new;
@@ -314,7 +315,7 @@ sub connect_master {
 	if ( not $rpc_server ) {
 		if ( not $self->config ('cluster_master_local') ) {
 			$self->message_window (
-				message => "Can't connect to master daemon on $server:$port."
+				message => __x("Can't connect to master daemon on {server}:{port}.", server => $server, port => $port)
 			);
 			return;
 		}
@@ -711,7 +712,7 @@ sub remove_node {
 	
 	if ( not $confirmed ) {
 		$self->confirm_window (
-			message => "Do you want to remove the selected node?",
+			message => __"Do you want to remove the selected node?",
 			yes_callback => sub { $self->remove_node ( confirmed => 1 ) },
 		);
 		return;
@@ -832,7 +833,7 @@ sub shutdown_daemon {
 	my $self = shift;
 	
 	$self->confirm_window (
-		message => "Do you really want to shutdown\nthe Cluster Control Daemon?",
+		message => __"Do you really want to shutdown\nthe Cluster Control Daemon?",
 		yes_callback => sub {
 			$self->master->shutdown;
 			$self->gtk_window_widget->destroy;

@@ -1,6 +1,7 @@
-# $Id: Text.pm,v 1.2 2003/02/05 22:17:07 joern Exp $
+# $Id: Text.pm,v 1.3 2004/04/11 23:36:20 joern Exp $
 
 package Video::DVDRip::GUI::Setting::Text;
+use Locale::TextDomain qw (video.dvdrip);
 
 use strict;
 use Carp;

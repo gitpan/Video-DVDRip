@@ -1,4 +1,4 @@
-# $Id: Config.pm,v 1.20 2003/02/10 11:57:54 joern Exp $
+# $Id: Config.pm,v 1.21 2004/04/11 23:36:20 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -9,6 +9,7 @@
 #-----------------------------------------------------------------------
 
 package Video::DVDRip::GUI::Config;
+use Locale::TextDomain qw (video.dvdrip);
 
 use base Video::DVDRip::GUI::Window;
 
@@ -34,7 +35,7 @@ sub build {
 	my %page2params;
 
 	my $win = Gtk::Window->new ( -toplevel );
-	$win->set_title($self->config('program_name'). " Preferences");
+	$win->set_title($self->config('program_name')." ".__"Preferences");
 	$win->signal_connect("destroy" => sub {
 		$self->set_comp (config => undef);
 	});
@@ -48,7 +49,7 @@ sub build {
 	$vbox->set_border_width(10);
 	$win->add($vbox);
 
-	my $frame = Gtk::Frame->new (" Global Preferences ");
+	my $frame = Gtk::Frame->new (__"Global Preferences");
 	$frame->show;
 	$vbox->pack_start($frame, 0, 1, 0);
 
@@ -126,14 +127,14 @@ sub build {
 	$align->add ($hbox);
 	$frame_vbox->pack_start ($align, 0, 1, 0);
 
-	my $button = Gtk::Button->new_with_label (" Check all settings ");
+	my $button = Gtk::Button->new_with_label (__"Check all settings");
 	$button->show;
 	$button->signal_connect ( "clicked", sub { $self->check_params ( all_pages => 1 ) } );
 	$hbox->pack_start ($button, 0, 1, 0);
 
 	# Check current settings button
 
-	$button = Gtk::Button->new_with_label (" Check settings on this page ");
+	$button = Gtk::Button->new_with_label (__"Check settings on this page");
 	$button->show;
 	$button->signal_connect ( "clicked", sub { $self->check_params } );
 	$hbox->pack_start ($button, 0, 1, 0);
@@ -154,7 +155,7 @@ sub build {
 	$hbox->pack_start ($button, 0, 1, 0);
 
 	# Check output
-	my $text_frame = Gtk::Frame->new (" Check results ");
+	my $text_frame = Gtk::Frame->new (__"Check results");
 	$text_frame->show;
 	$frame_vbox->pack_start ($text_frame, 0, 1, 0);
 
@@ -248,7 +249,7 @@ sub check_params {
 			if ( $config_object->can ($method) ) {
 				$result = $config_object->$method($option);
 			} else {
-				$result = "not tested : Ok";
+				$result = __"not tested : Ok";
 			}
 			$text->insert ( undef, ($result =~ /NOT/ ? $red : $green), undef, $result."\n" );
 		}

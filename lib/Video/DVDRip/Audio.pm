@@ -1,4 +1,4 @@
-# $Id: Audio.pm,v 1.10.2.3 2004/04/18 14:19:58 joern Exp $
+# $Id: Audio.pm,v 1.13 2004/04/25 16:01:58 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -9,6 +9,7 @@
 #-----------------------------------------------------------------------
 
 package Video::DVDRip::Audio;
+use Locale::TextDomain qw (video.dvdrip);
 
 use base Video::DVDRip::Base;
 

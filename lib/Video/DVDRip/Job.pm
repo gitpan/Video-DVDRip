@@ -1,4 +1,4 @@
-# $Id: Job.pm,v 1.10.2.3 2003/03/03 11:40:39 joern Exp $
+# $Id: Job.pm,v 1.14 2004/04/13 21:53:19 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -9,6 +9,7 @@
 #-----------------------------------------------------------------------
 
 package Video::DVDRip::Job;
+use Locale::TextDomain qw (video.dvdrip);
 
 use base Video::DVDRip::Base;
 
@@ -151,7 +152,7 @@ sub start_job {
 
 	my $nr = $self->nr;
 
-	$self->log ( "Starting job ($nr): ".$self->info );
+	$self->log ( __x("Starting job ({nr}): ", nr => $nr).$self->info );
 
 	$self->init if $self->can('init');
 
@@ -215,7 +216,7 @@ sub commit_job {
 		$self->set_error_message($@);
 		$self->log ("Job aborted: $@");
 	} else {
-		$self->log ("Successfully finished job ($nr): ".$self->info);
+		$self->log (__x("Successfully finished job ({nr}): ", nr => $nr).$self->info);
 	}
 
 	$self->pipe->close if $self->pipe;
@@ -255,7 +256,7 @@ sub abort_job {
 
 	$self->set_job_aborted (1);
 
-	$self->log ("Aborting job: ".$self->info);
+	$self->log (__"Aborting job:"." ".$self->info);
 
 	$self->rollback if $self->can('rollback');
 
@@ -300,14 +301,15 @@ sub calc_progress {
 	my $fps	 = "";
 
 	if ( $cnt == $max ) {
-		return  $self->info." - Elapsed: ".
-			$self->format_time ( time => $time );
+		return  $self->info." - ".
+			__x("Elapsed: {time}",
+			    time => $self->format_time ( time => $time ));
 	}
 
-	return $self->info." (no progress information available)"
+	return $self->info." ".__"(no progress information available)"
 		if not $self->progress_show_fps and
 		   not $self->progress_show_percent;
-	return $self->info.": Initializing" if $cnt == 0;
+	return $self->info.": ".__"Initializing" if $cnt == 0;
 
 	if ( not $self->progress_called ) {
 		$self->set_progress_start_time (time);
@@ -318,7 +320,8 @@ sub calc_progress {
 		if $self->progress_show_fps and $time;
 
 	my $elapsed;
-	$elapsed = ", elapsed ".$self->format_time( time => $time )
+	$elapsed = ", ".__x("elapsed {time}",
+			    time => $self->format_time( time => $time ))
 		if $self->progress_show_elapsed;
 
 	my $info = $self->progress_info;
@@ -336,7 +339,10 @@ sub calc_progress {
 		if ( $int_percent > $self->last_percent_logged + 10 ) {
 			$int_percent = int($int_percent/10)*10;
 			$self->set_last_percent_logged($int_percent);
-		     	$self->log ($self->info.": $int_percent% done.");
+		     	$self->log (
+				$self->info.": ".
+				__x("{percent} percent done.", percent => $int_percent)
+			);
 		}
 	} else {
 		$eta = ", ETA: unknown";

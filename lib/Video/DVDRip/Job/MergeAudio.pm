@@ -1,4 +1,4 @@
-# $Id: MergeAudio.pm,v 1.10 2003/01/28 20:19:57 joern Exp $
+# $Id: MergeAudio.pm,v 1.11 2004/04/11 23:36:20 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -9,6 +9,7 @@
 #-----------------------------------------------------------------------
 
 package Video::DVDRip::Job::MergeAudio;
+use Locale::TextDomain qw (video.dvdrip);
 
 # That's Perl! The job classes inherit from this class,
 # which is decided at *runtime* - this way standard and
@@ -38,12 +39,14 @@ sub type {
 sub info {
 	my $self = shift;
 
-	my $info    = "Merging audio - title #".$self->title->nr;
+	my $info    = __"Merging audio";
+	$info .= " - ".__x("title #{title}", title => $self->title->nr);
+
 	my $nr      = $self->vob_nr;
 	my $chapter = $self->chapter;
 	
-	$info .= ", audio track #$nr";
-	$info .= ", chapter $chapter" if $chapter;
+	$info .= ", ".__x("audio track #{nr}", nr => $nr);
+	$info .= ", ".__x("chapter {chapter}", chapter => $chapter) if $chapter;
 	
 	return $info;
 }

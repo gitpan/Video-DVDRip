@@ -1,4 +1,4 @@
-# $Id: Probe.pm,v 1.3.2.1 2003/03/31 12:59:52 joern Exp $
+# $Id: Probe.pm,v 1.5 2004/04/11 23:36:20 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -9,6 +9,7 @@
 #-----------------------------------------------------------------------
 
 package Video::DVDRip::Job::Probe;
+use Locale::TextDomain qw (video.dvdrip);
 
 use base Video::DVDRip::Job;
 
@@ -22,7 +23,8 @@ sub type {
 sub info {
 	my $self = shift;
 
-	my $info = "Probing - title #".$self->title->nr;
+	my $info = __"Probing";
+	$info .= " - ".__x("title #{title}", title => $self->title->nr);
 
 	return $info;
 }

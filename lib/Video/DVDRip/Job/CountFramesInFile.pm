@@ -1,4 +1,4 @@
-# $Id: CountFramesInFile.pm,v 1.3.2.1 2003/03/03 11:40:55 joern Exp $
+# $Id: CountFramesInFile.pm,v 1.5 2004/04/11 23:36:20 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -9,6 +9,7 @@
 #-----------------------------------------------------------------------
 
 package Video::DVDRip::Job::CountFramesInFile;
+use Locale::TextDomain qw (video.dvdrip);
 
 use base Video::DVDRip::Job;
 
@@ -32,11 +33,12 @@ sub info {
 
 	my $info;
 	if ( not $self->actual_file ) {
-		$info = "Count frames in target file(s), ".
-			"title #".$self->title->nr;
+		$info = __"Count frames in target file(s)";
+		$info .= " - ".__x("title #{title}", title => $self->title->nr);
+
 	} else {
-		$info = "Count frames of ".basename($self->actual_file->{name}).
-			", title #".$self->title->nr;
+		$info = __x("Count frames of {file}", file => basename($self->actual_file->{name}));
+		$info .= ", ".__x("title #{title}", title => $self->title->nr);
 	}
 
 	return $info;
@@ -75,7 +77,7 @@ sub parse_output {
 
 	if ( $line =~ /frames=\s*(\d+)/ ) {
 		$self->actual_file->{frames} = $1;
-		$self->log ("File ".$self->actual_file->{name}." has $1 frames.");
+		$self->log (__x("File {file} has {frames} frames.", file => $self->actual_file->{name}, frames => $1));
 	}
 
 	$self->set_operation_successful (1)

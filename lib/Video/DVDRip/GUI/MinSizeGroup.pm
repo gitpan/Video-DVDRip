@@ -1,6 +1,7 @@
-# $Id: MinSizeGroup.pm,v 1.2 2002/10/06 11:46:16 joern Exp $
+# $Id: MinSizeGroup.pm,v 1.3 2004/04/11 23:36:20 joern Exp $
 
 package Video::DVDRip::GUI::MinSizeGroup;
+use Locale::TextDomain qw (video.dvdrip);
 
 use strict;
 use Carp;

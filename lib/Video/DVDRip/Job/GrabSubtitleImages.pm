@@ -1,4 +1,4 @@
-# $Id: GrabSubtitleImages.pm,v 1.3 2003/01/28 20:19:57 joern Exp $
+# $Id: GrabSubtitleImages.pm,v 1.4 2004/04/11 23:36:20 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -9,6 +9,7 @@
 #-----------------------------------------------------------------------
 
 package Video::DVDRip::Job::GrabSubtitleImages;
+use Locale::TextDomain qw (video.dvdrip);
 
 use base Video::DVDRip::Job;
 
@@ -25,7 +26,8 @@ sub type {
 sub info {
 	my $self = shift;
 
-	my $info = "Grab subtitle images - title #".$self->title->nr;
+	my $info = __"Grab subtitle images";
+	$info .= " - ".__x("title #{title}", title => $self->title->nr);
 
 	return $info;
 }

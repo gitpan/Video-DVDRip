@@ -1,4 +1,4 @@
-# $Id: Server.pm,v 1.13 2003/01/28 20:19:57 joern Exp $
+# $Id: Server.pm,v 1.15 2004/04/13 20:47:01 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -9,6 +9,7 @@
 #-----------------------------------------------------------------------
 
 package Video::DVDRip::RPC::Server;
+use Locale::TextDomain qw (video.dvdrip);
 
 use base Video::DVDRip::Base;
 
@@ -79,7 +80,7 @@ sub new {
 sub start {
 	my $self = shift;
 
-	$self->log ($self->name." started");
+	$self->log (__x("{name} started", name => $self->name));
 
 	# setup rpc listener
 	my $proto = getprotobyname('tcp');
@@ -102,7 +103,8 @@ sub start {
 		desc => "rpc listener port $port"
 	);
 
-	$self->log ("Started rpc listener on TCP port ".$self->port);
+	$self->log (__x("Started rpc listener on TCP port {port}",
+			port => $self->port));
 
 	# setup log listener
 	$proto = getprotobyname('tcp');
@@ -125,11 +127,12 @@ sub start {
 		desc => "log listener port $port"
 	);
 
-	$self->log ("Started log listener on TCP port $port");
+	$self->log (__x("Started log listener on TCP port {port}",
+		    port => $port));
 
 	Event::loop();
 
-	$self->log ("Server stopped");
+	$self->log (__"Server stopped");
 
 	1;
 }
@@ -229,6 +232,7 @@ sub log {
 }
 
 package Video::DVDRip::RPC::Server::Client;
+use Locale::TextDomain qw (video.dvdrip);
 
 @Video::DVDRip::RPC::Server::Client::ISA = qw ( Video::DVDRip::Base );
 
@@ -272,7 +276,10 @@ sub new {
 
 	if ( $sock ) {
 
-		$self->log (2, "Got connection from $ip:$port. Connection ID is $cid");
+		$self->log (2,
+			__x("Got connection from {ip}:{port}. Connection ID is {cid}",
+			    ip => $ip, port => $port, cid => $cid)
+		);
 	
 		$self->{watcher} = Event->io (
 			fd   => $sock,
@@ -295,7 +302,7 @@ sub disconnect {
 
 	$self->server->set_clients_connected ( $self->server->clients_connected - 1 );
 
-	$self->log(2, "Client disconnected");
+	$self->log(2, __"Client disconnected");
 
 	1;
 }
@@ -422,9 +429,12 @@ sub create_new_object {
 	};
 
 	# log and return
-	$self->log (3, "Created new object ".
-		    "($class->$class_method) ".
-		    "with oid=$oid");
+	$self->log (3,
+		__x("Created new object {object} with oid {oid}",
+		    object => "$class->$class_method",
+		    oid    => $oid)
+	);
+
 	return {
 		ok  => 1,
 		oid => $oid,
@@ -460,13 +470,13 @@ sub load_class {
 			$load_class_info->{filename} = $filename;
 		}
 	
-		$self->log (3, "Class '$class' ($load_class_info->{filename}) changed on disk. Reloading...")
+		$self->log (4, "Class '$class' ($load_class_info->{filename}) changed on disk. Reloading...")
 			if $mtime > $load_class_info->{mtime};
 
 		do $load_class_info->{filename};
 
 		if ( $@ ) {
-			$self->log ("Can't load class '$class': $@");
+			$self->log (__x("Can't load class '{class}': {error}", class => $class, error => $@));
 			$load_class_info->{mtime} = 0;
 
 			return {
@@ -475,7 +485,7 @@ sub load_class {
 			};
 
 		} else {
-			$self->log (3, "Class '$class' successfully loaded");
+			$self->log (3, __x("Class {class}' successfully loaded", class => $class));
 			$load_class_info->{mtime} = time;
 		}
 	}
@@ -680,6 +690,7 @@ sub resolve_object_params {
 
 
 package Video::DVDRip::RPC::Server::LogClient;
+use Locale::TextDomain qw (video.dvdrip);
 
 use Carp;
 use Socket;
@@ -720,7 +731,9 @@ sub new {
 		desc => "log reader $cid"
 	);
 
-	$self->log (2, "Got logger connection from $ip:$port. Connection ID is $cid");
+	$self->log (2,
+		__x("Got logger connection from {ip}:{port}. Connection ID is {cid}",
+		    ip => $ip, port => $port, cid => $cid));
 	
 	return $self;
 }
@@ -734,7 +747,7 @@ sub disconnect {
 	$self->server->set_log_clients_connected ( $self->server->log_clients_connected - 1 );
 	delete $self->server->logging_clients->{$self->cid};
 
-	$self->log(2, "Log client disconnected");
+	$self->log(2, __x("Log client disconnected"));
 
 	1;
 }

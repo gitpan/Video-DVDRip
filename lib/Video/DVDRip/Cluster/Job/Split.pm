@@ -1,4 +1,4 @@
-# $Id: Split.pm,v 1.7 2003/01/28 20:19:57 joern Exp $
+# $Id: Split.pm,v 1.8 2004/04/11 23:36:20 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -9,6 +9,7 @@
 #-----------------------------------------------------------------------
 
 package Video::DVDRip::Cluster::Job::Split;
+use Locale::TextDomain qw (video.dvdrip);
 
 use base Video::DVDRip::Job::Split;
 

@@ -1,4 +1,4 @@
-# $Id: BurnTab.pm,v 1.13.2.3 2003/08/16 15:42:48 joern Exp $
+# $Id: BurnTab.pm,v 1.15 2004/04/11 23:36:20 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -9,6 +9,7 @@
 #-----------------------------------------------------------------------
 
 package Video::DVDRip::GUI::Project;
+use Locale::TextDomain qw (video.dvdrip);
 
 use Carp;
 use strict;
@@ -101,7 +102,7 @@ sub create_burn_cd_type {
 	my ($popup_menu, $popup, $item, %popup_entries);
 
 	# Frame
-	$frame = Gtk::Frame->new ("CD type selection");
+	$frame = Gtk::Frame->new (__"CD type selection");
 	$frame->show;
 
 	# Frame HBox
@@ -121,26 +122,26 @@ sub create_burn_cd_type {
 	$row = 0;
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new ("Select a CD type    ");
-	$label->show;
-	$hbox->pack_start($label, 0, 1, 0);
+#	$label = Gtk::Label->new (__"Select a CD type");
+#	$label->show;
+#	$hbox->pack_start($label, 0, 1, 0);
 	$table->attach ($hbox, 0, 1, $row, $row+1, 'fill','expand',0,0);
 	# $hsize_group->add ($hbox);
 
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
 	my $ogg = $self->config('ogg_file_ext');
-	my $radio_iso = Gtk::RadioButton->new ("ISO 9660 (.avi and .$ogg files)   ");
+	my $radio_iso = Gtk::RadioButton->new (__x("ISO 9660 (.avi and .{ogg_ext} files)", ogg_ext => $ogg)."   ");
 	$radio_iso->show;
 	$radio_iso->set_sensitive(0) if not $self->has ("mkisofs") or
 					not $self->has ("cdrecord");
 	$hbox->pack_start($radio_iso, 0, 1, 0);
-	my $radio_svcd = Gtk::RadioButton->new ("(X)SVCD/CVD (.mpg files)   ", $radio_iso);
+	my $radio_svcd = Gtk::RadioButton->new (__("(X)SVCD/CVD (.mpg files)")."   ", $radio_iso);
 	$radio_svcd->show;
 	$radio_svcd->set_sensitive(0) if not $self->has ("vcdimager") or
 					 not $self->has ("cdrdao");
 	$hbox->pack_start($radio_svcd, 0, 1, 0);
-	my $radio_vcd = Gtk::RadioButton->new ("(X)VCD (.mpg files)   ", $radio_iso);
+	my $radio_vcd = Gtk::RadioButton->new (__("(X)VCD (.mpg files)")."   ", $radio_iso);
 	$radio_vcd->show;
 	$radio_vcd->set_sensitive(0) if not $self->has ("vcdimager") or
 					not $self->has ("cdrdao");
@@ -188,7 +189,7 @@ sub create_burn_files {
 	my ($popup_menu, $popup, $item, %popup_entries, $button);
 
 	# Frame
-	$frame = Gtk::Frame->new ("File selection");
+	$frame = Gtk::Frame->new (__"File selection");
 	$frame->show;
 
 	# Frame VBox
@@ -202,7 +203,7 @@ sub create_burn_files {
 	$sw->set_policy( 'automatic', 'automatic' );
 
 	my $clist = Gtk::CList->new_with_titles (
-		"Filename", "Size (MB)"
+		__"Filename", __"Size (MB)"
 	);
 	$clist->show,
 #	$clist->set_usize (undef, 150);
@@ -233,7 +234,7 @@ sub create_burn_files {
 	$row = 1;
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new ("MB selected");
+	$label = Gtk::Label->new (__"MB selected");
 	$label->show;
 	$hbox->pack_start($label, 0, 0, 0);
 	$table->attach ($hbox, 0, 1, $row, $row+1, 'fill',[],0,0);
@@ -250,7 +251,7 @@ sub create_burn_files {
 
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new ("     Free diskspace");
+	$label = Gtk::Label->new (__"Free diskspace");
 	$label->show;
 	$hbox->pack_start($label, 0, 0, 0);
 	$table->attach ($hbox, 2, 3, $row, $row+1, 'fill',[],0,0);
@@ -275,7 +276,7 @@ sub create_burn_files {
 #	$table->attach_defaults ($align, 4, 5, $row, $row+1);
 
 	# Delete Button
-	$button = Gtk::Button->new (" Delete selected file ");
+	$button = Gtk::Button->new (__"Delete selected file");
 	$button->show;
 	$button->set_sensitive(0);
 	$hbox->pack_start ($button, 0, 0, 0);
@@ -284,7 +285,7 @@ sub create_burn_files {
 	$button->signal_connect ("clicked", sub { $self->ask_delete_selected_burn_file } );
 
 	# View Button
-	$button = Gtk::Button->new (" View selected file ");
+	$button = Gtk::Button->new (__"View selected file");
 	$button->show;
 	$button->set_sensitive(0);
 	$hbox->pack_start ($button, 0, 0, 0);
@@ -306,7 +307,7 @@ sub create_burn_label {
 	my ($popup_menu, $popup, $item, %popup_entries, $checkbox);
 
 	# Frame
-	$frame = Gtk::Frame->new ("Label information");
+	$frame = Gtk::Frame->new (__"Label information");
 	$frame->show;
 
 	# Frame HBox
@@ -346,7 +347,7 @@ sub create_burn_label {
 	++$row;
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new ("Abstract");
+	$label = Gtk::Label->new (__"Abstract");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 	$table->attach ($hbox, 0, 1, $row, $row+1, 'fill','expand',0,0);
@@ -376,7 +377,7 @@ sub create_burn_label {
 		1;
 	});
 
-	$label = Gtk::Label->new ("   Number");
+	$label = Gtk::Label->new (__"Number");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 
@@ -423,7 +424,7 @@ sub create_burn_options {
 	my ($popup_menu, $popup, $item, %popup_entries);
 
 	# Frame
-	$frame = Gtk::Frame->new ("General options");
+	$frame = Gtk::Frame->new (__"General options");
 	$frame->show;
 
 	# Frame HBox
@@ -443,7 +444,7 @@ sub create_burn_options {
 	$row = 0;
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new ("Test mode");
+	$label = Gtk::Label->new (__"Test mode");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 	$table->attach ($hbox, 0, 1, $row, $row+1, 'fill','expand',0,0);
@@ -451,7 +452,7 @@ sub create_burn_options {
 
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	my $checkbox = Gtk::CheckButton->new ("Simulate burning");
+	my $checkbox = Gtk::CheckButton->new (__"Simulate burning");
 	$checkbox->show;
 	$hbox->pack_start ($checkbox, 1, 1, 0);
 	$table->attach ($hbox, 1, 2, $row, $row+1, 'fill','expand',0,0);
@@ -470,7 +471,7 @@ sub create_burn_options {
 	++$row;
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new ("Writing speed");
+	$label = Gtk::Label->new (__"Writing speed");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 	$table->attach ($hbox, 0, 1, $row, $row+1, 'fill','expand',0,0);
@@ -515,7 +516,7 @@ sub create_burn_operate {
 	my ($button, $button_box, $frame_vbox);
 
 	# Frame
-	$frame = Gtk::Frame->new ("Operate");
+	$frame = Gtk::Frame->new (__"Operate");
 	$frame->show;
 
 	# Frame VBox
@@ -530,7 +531,7 @@ sub create_burn_operate {
 	$frame_vbox->pack_start ($button_box, 0, 1, 0);
 
 	# Burn Button
-	$button = Gtk::Button->new_with_label ("  Burn selected file(s)  ");
+	$button = Gtk::Button->new_with_label (__"Burn selected file(s)");
 	$button->show;
 	$button->signal_connect ("clicked", sub { $self->burn_cd } );
 	$button_box->pack_start ($button, 0, 1, 0);
@@ -538,7 +539,7 @@ sub create_burn_operate {
 	$widgets->{burn_button} = $button;
 
 	# Image Button
-	$button = Gtk::Button->new_with_label ("  Create CD image from selected file(s) ");
+	$button = Gtk::Button->new_with_label (__"Create CD image from selected file(s)");
 	$button->show;
 	$button->signal_connect ("clicked", sub { $self->create_cd_image } );
 	$button_box->pack_start ($button, 0, 1, 0);
@@ -551,19 +552,19 @@ sub create_burn_operate {
 	$frame_vbox->pack_start ($button_box, 0, 1, 0);
 
 	# Eject Button
-	$button = Gtk::Button->new_with_label (" Open burner tray ");
+	$button = Gtk::Button->new_with_label (__"Open burner tray");
 	$button->show;
 	$button->signal_connect ("clicked", sub { $self->eject_media } );
 	$button_box->pack_start ($button, 0, 1, 0);
 
 	# Insert Button
-	$button = Gtk::Button->new_with_label (" Close burner tray ");
+	$button = Gtk::Button->new_with_label (__"Close burner tray");
 	$button->show;
 	$button->signal_connect ("clicked", sub { $self->insert_media } );
 	$button_box->pack_start ($button, 0, 1, 0);
 
 	# Blank CD-RW button
-	$button = Gtk::Button->new_with_label (" Blank CD-RW ");
+	$button = Gtk::Button->new_with_label (__"Blank CD-RW");
 	$button->show;
 	$button->signal_connect ("clicked", sub { $self->burn_cd ( erase_cdrw => 1 ) } );
 	$button_box->pack_start ($button, 0, 1, 0);
@@ -751,8 +752,8 @@ sub ask_delete_selected_burn_file {
 	my $filename = basename($path);
 
 	$self->confirm_window (
-		message => "Do you want to delete the file $filename?",
-		yes_label => "Yes",
+		message => __x("Do you want to delete the file {filename}?", filename => $filename),
+		yes_label => __"Yes",
 		yes_callback => sub {
 			$self->delete_selected_burn_file (
 				filename => $path
@@ -768,7 +769,7 @@ sub delete_selected_burn_file {
 	my %par = @_;
 	my ($filename) = @par{'filename'};
 
-	$self->log ("Deleting file $filename");
+	$self->log (__x("Deleting file {filename}", filename => $filename));
 	
 	unlink ($filename);
 	

@@ -1,8 +1,10 @@
-$Id: TODO,v 1.117.2.20 2004/04/10 09:44:34 joern Exp $
+$Id: TODO,v 1.120 2004/10/10 13:51:06 joern Exp $
 
 KNOWN BUGS:
 ===========
 
+- xvid4.conf is ignored in cluster mode. Reported by
+  Ron <ron AT ron-kitten.net>
 - shutting down dvd::rip on the logging tab is slow. Reported
   by Christoph Lampert.
 - vobsub creation fails on vfat partitions. Reported by
@@ -10,25 +12,17 @@ KNOWN BUGS:
 - creating vobsub after transcoding doesn't work for (S)VCD
   (it's useless anyway, but dvd::rip should warn about this).
   Thanks to Kai Bartels <kaba AT picturesafe.de>.
-
 - NTSC frame rate issue, reported by Frank Sigi' Luithle
   <sigi AT fsinfo.cs.uni-sb.de>:
-
   I just found that auto-corrected frame-rates from wrongly detected NTSC
   movies are not transferred into the FPS drop-down in the 'Transcode' tab.
-
   According to Changelog for 0.50.11 this was a workaround for a transcode
   bug.  Actually the correct frame-rate is shown in the 'Rip' tab, so the
   workaround seems to be OK.  Unfortunately the incorrect framerate still
   appears under 'Video framerate' in the 'Transcode' tab.
-
   If one forgets to correct this by hand, one gets incorrectly encoded videos
   (in my case audio lag was the result).  This is quite annoying since you
   wouldn't find out until the final video is encoded...
-
-- Rip button not always greyed out in "DVD image" mode (e.g. when
-  chapter selection changes). Reported by Geoffrey Trexler <skynet AT
-  charter.net>
 
 NOTE:
 =====
@@ -39,6 +33,11 @@ may be implemented soon, some eventually never... ;)
 
 TODO:
 =====
+- make transcode's -H option configurable to solve A/V sync
+  problems with some material. Suggested by Wayne Hogue
+  <mythtv AT chiphead.net>
+- integration of HTML base help into dvd::rip, suggested by
+  Jacques Ferré <ferre-jacques AT wanadoo.fr>
 - open a HOWTO section in the documentation, starting with
   Gunnar's <gunix AT comhem.se> HOWTO for a quick rip including
   subtitles.

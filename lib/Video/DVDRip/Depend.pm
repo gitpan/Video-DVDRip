@@ -1,4 +1,4 @@
-# $Id: Depend.pm,v 1.2.2.10 2003/10/26 08:16:49 joern Exp $
+# $Id: Depend.pm,v 1.5 2005/01/04 13:44:40 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -9,6 +9,7 @@
 #-----------------------------------------------------------------------
 
 package Video::DVDRip::Depend;
+use Locale::TextDomain qw (video.dvdrip);
 
 @ISA = qw ( Video::DVDRip::Base );
 
@@ -21,7 +22,7 @@ my $ORDER = 0;
 my %TOOLS = (
     transcode => {
     	order		=> ++$ORDER,
-    	comment 	=> "dvd::rip is nothing without transcode",
+    	comment 	=> __"dvd::rip is nothing without transcode",
 	optional	=> 0,
 	get_version 	=> sub {
 		qx[transcode -v 2>&1] =~ /v(\d+\.\d+\.\d+(\.\d+)?)/i;
@@ -30,7 +31,7 @@ my %TOOLS = (
 	},
 	convert 	=> 'default',
 	min 		=> "0.6.2",
-	suggested 	=> "0.6.9",
+	suggested 	=> "0.6.14",
 	installed	=> undef,	# set by ->new
 	installed_num	=> undef,	# set by ->new
 	min_num		=> undef,	# set by ->new
@@ -39,7 +40,7 @@ my %TOOLS = (
     },
     ImageMagick => {
     	order		=> ++$ORDER,
-    	comment		=> "Needed for preview image processing",
+    	comment		=> __"Needed for preview image processing",
 	optional	=> 0,
 	get_version 	=> sub {
 		qx[convert -version 2>&1] =~ /ImageMagick\s+(\d+\.\d+(\.\d+)?)/i;
@@ -52,7 +53,7 @@ my %TOOLS = (
     },
     xvid4conf => {
     	order		=> ++$ORDER,
-    	comment		=> "xvid4 configuration tool",
+    	comment		=> __"xvid4 configuration tool",
 	optional	=> 1,
 	get_version 	=> sub {
 		qx[xvid4conf -v 2>&1] =~ /(\d+\.\d+(\.\d+)?)/i;
@@ -65,7 +66,7 @@ my %TOOLS = (
     },
     subtitle2pgm => {
      	order		=> ++$ORDER,
-   	comment		=> "Needed for subtitles",
+   	comment		=> __"Needed for subtitles",
 	optional	=> 1,
 	get_version 	=> sub {
 		qx[subtitle2pgm -h  2>&1] =~ /version\s+(\d+\.\d+(\.\d+)?)/i;
@@ -78,7 +79,7 @@ my %TOOLS = (
     },
     rar => {
      	order		=> ++$ORDER,
-   	comment		=> "Needed for compressed subtitles",
+   	comment		=> __"Needed for compressed subtitles",
 	optional	=> 1,
 	get_version 	=> sub {
 		my $self = shift;
@@ -94,7 +95,7 @@ my %TOOLS = (
     },
     mplayer => {
      	order		=> ++$ORDER,
-   	comment		=> "Needed for subtitle vobsub viewing",
+   	comment		=> __"Needed for subtitle vobsub viewing",
 	optional	=> 1,
 	get_version 	=> sub {
 		qx[mplayer --help 2>&1] =~ /MPlayer\s+(\d+\.\d+(\.\d+)?)/i;
@@ -107,7 +108,7 @@ my %TOOLS = (
     },
     ogmtools => {
     	order		=> ++$ORDER,
-    	comment		=> "Needed for OGG/Vorbis",
+    	comment		=> __"Needed for OGG/Vorbis",
 	optional	=> 1,
 	get_version 	=> sub {
 		qx[ogmmerge -V 2>&1] =~ /v(\d+\.\d+(\.\d+)?)/i;
@@ -120,7 +121,7 @@ my %TOOLS = (
     },
     dvdxchap => {
     	order		=> ++$ORDER,
-    	comment		=> "For chapter progress bar (ogmtools)",
+    	comment		=> __"For chapter progress bar (ogmtools)",
 	optional	=> 1,
 	get_version 	=> sub {
 		qx[dvdxchap -V 2>&1] =~ /v(\d+\.\d+(\.\d+)?)/i;
@@ -133,7 +134,7 @@ my %TOOLS = (
     },
     mjpegtools => {
     	order		=> ++$ORDER,
-    	comment		=> "Needed for (S)VCD encoding",
+    	comment		=> __"Needed for (S)VCD encoding",
 	optional	=> 1,
 	get_version 	=> sub {
 		qx[mplex --help 2>&1] =~ /version\s+(\d+\.\d+(\.\d+)?)/i;
@@ -146,7 +147,7 @@ my %TOOLS = (
     },
     cdrdao => {
     	order		=> ++$ORDER,
-    	comment		=> "Needed for (S)VCD burning",
+    	comment		=> __"Needed for (S)VCD burning",
 	optional	=> 1,
 	get_version 	=> sub {
 		qx[cdrdao show-toc -h 2>&1] =~ /version\s+(\d+\.\d+\.\d+(\.\d+)?)/i;
@@ -159,7 +160,7 @@ my %TOOLS = (
     },
     vcdimager => { 
     	order		=> ++$ORDER,
-    	comment		=> "Needed for (S)VCD burning",
+    	comment		=> __"Needed for (S)VCD burning",
 	optional	=> 1,
 	get_version 	=> sub {
 		qx[vcdimager -V 2>&1] =~ /vcdimager.*?\s+(\d+\.\d+(\.\d+)?)/i;
@@ -172,7 +173,7 @@ my %TOOLS = (
     },
     mkisofs => {
     	order		=> ++$ORDER,
-    	comment		=> "Needed for AVI/OGG burning",
+    	comment		=> __"Needed for AVI/OGG burning",
 	optional	=> 1,
 	get_version 	=> sub {
 		qx[mkisofs -version 2>&1] =~ /mkisofs\s+(\d+\.\d+(\.\d+)?)/i;
@@ -185,7 +186,7 @@ my %TOOLS = (
     },
     cdrecord => {
     	order		=> ++$ORDER,
-    	comment		=> "Needed for AVI/OGG burning",
+    	comment		=> __"Needed for AVI/OGG burning",
 	optional	=> 1,
 	get_version 	=> sub {
 		qx[cdrecord -version 2>&1] =~ /(\d+\.\d+(\.\d+)?)/i;
@@ -198,7 +199,7 @@ my %TOOLS = (
     },
     xine => {
     	order		=> ++$ORDER,
-    	comment		=> "Can be used to view DVD's/files",
+    	comment		=> __"Can be used to view DVD's/files",
 	optional	=> 1,
 	get_version 	=> sub {
 		qx[xine -version 2>&1] =~ /v(\d+\.\d+(\.\d+)?)/i;
@@ -211,7 +212,7 @@ my %TOOLS = (
     },
     fping => {
     	order		=> ++$ORDER,
-    	comment		=> "Only for cluster mode master",
+    	comment		=> __"Only for cluster mode master",
 	optional	=> 1,
 	get_version 	=> sub {
 		qx[/usr/sbin/fping -v 2>&1] =~ /Version\s+(\d+\.\d+(\.\d+)?)/i;

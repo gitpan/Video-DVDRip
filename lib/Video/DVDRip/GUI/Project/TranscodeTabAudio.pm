@@ -1,4 +1,4 @@
-# $Id: TranscodeTabAudio.pm,v 1.13.2.4 2003/08/17 06:57:13 joern Exp $
+# $Id: TranscodeTabAudio.pm,v 1.16 2004/10/10 12:47:04 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -9,6 +9,7 @@
 #-----------------------------------------------------------------------
 
 package Video::DVDRip::GUI::Project;
+use Locale::TextDomain qw (video.dvdrip);
 
 use Carp;
 use strict;
@@ -32,7 +33,7 @@ sub create_audio_options {
 	my $widgets = $self->transcode_widgets;
 
 	# Frame
-	$frame = Gtk::Frame->new ("Audio options");
+	$frame = Gtk::Frame->new (__"Audio options");
 	$frame->show;
 
 	# Frame HBox
@@ -54,7 +55,7 @@ sub create_audio_options {
 	# Select a DVD audio channel
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new ("DVD audio track");
+	$label = Gtk::Label->new (__"DVD audio track");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 
@@ -62,7 +63,7 @@ sub create_audio_options {
 
 	$popup_menu = Gtk::Menu->new;
 	$popup_menu->show;
-	$item = Gtk::MenuItem->new ("No Audio");
+	$item = Gtk::MenuItem->new (__"No Audio");
 	$item->show;
 	$popup_menu->append($item);
 	$popup = Gtk::OptionMenu->new;
@@ -83,7 +84,7 @@ sub create_audio_options {
 	++$row;
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new ("Target track");
+	$label = Gtk::Label->new (__"Target track");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 
@@ -97,7 +98,7 @@ sub create_audio_options {
 	$popup->set_menu($popup_menu);
 
 	%popup_entries = (
-		'-' => "Don't add this track",
+		__"Don't add this track",
 	);
 	
 	my $i = 0;
@@ -153,11 +154,11 @@ sub create_audio_options {
 		return 1 if $self->in_transcode_init;
 		$title->audio_track->set_tc_audio_codec ( $page2codec{$to_page} );
 		if ( $title->is_ogg ) {
-			$widgets->{view_avi_button}->child->set("View OGG");
-			$widgets->{avisplit_button}->child->set("Split OGG");
+			$widgets->{view_avi_button}->child->set(__"View OGG");
+			$widgets->{avisplit_button}->child->set(__"Split OGG");
 		} else {
-			$widgets->{view_avi_button}->child->set("View AVI");
-			$widgets->{avisplit_button}->child->set("Split AVI");
+			$widgets->{view_avi_button}->child->set(__"View AVI");
+			$widgets->{avisplit_button}->child->set(__"Split AVI");
 		}
 		$self->calc_video_bitrate;
 		1;
@@ -320,9 +321,9 @@ sub create_audio_ac3_tab {
 	++$row;
 	++$row;
 	$label = Gtk::Label->new (
-		"AC3 sound is passed through. Bit- and\n".
-		"samplerate are detected from the source,\n".
-		"so you can't change them here."
+		__"AC3 sound is passed through. Bit- and\n".
+                 "samplerate are detected from the source,\n".
+                 "so you can't change them here."
 	);
 	$label->show;
 	$label->set_justify ("left");
@@ -374,9 +375,9 @@ sub create_audio_pcm_tab {
 	++$row;
 	++$row;
 	$label = Gtk::Label->new (
-		"PCM sound is passed through. Bit- and\n".
-		"samplerate are detected from the source,\n".
-		"so you can't change them here."
+		__"PCM sound is passed through. Bit- and\n".
+                 "samplerate are detected from the source,\n".
+                 "so you can't change them here."
 	);
 	$label->show;
 	$label->set_justify ("left");
@@ -617,7 +618,7 @@ sub create_audio_volume_rescale {
 	# Volume Rescale
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new ("Volume rescale");
+	$label = Gtk::Label->new (__"Volume rescale");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 	$table->attach ($hbox, 0, 1, $row, $row+1, 'fill','expand',0,0);
@@ -655,7 +656,7 @@ sub create_audio_volume_rescale {
 		1;
 	});
 
-	$button = Gtk::Button->new (" Scan value ");
+	$button = Gtk::Button->new (__"Scan value");
 	$button->show;
 	$hbox->pack_start($button, 0, 1, 0);
 
@@ -678,7 +679,7 @@ sub create_audio_mp3_quality {
 	# MP3 Encoder Quality
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new ("Quality");
+	$label = Gtk::Label->new (__"Quality");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 	$table->attach ($hbox, 0, 1, $row, $row+1, 'fill','expand',0,0);
@@ -692,16 +693,16 @@ sub create_audio_mp3_quality {
 	$popup->set_usize (195,undef);
 
 	%popup_entries = (
-		0 => "0 - best but slower",
+		0 => "0 - ".__"best but slower",
 		1 => "1",
 		2 => "2",
 		3 => "3",
 		4 => "4",
-		5 => "5 - medium",
+		5 => "5 - ".__"medium",
 		6 => "6",
 		7 => "7",
 		8 => "8",
-		9 => "9 - low but faster",
+		9 => "9 - ".__"low but faster",
 	);
 	
 	foreach my $key ( sort keys %popup_entries ) {
@@ -740,7 +741,7 @@ sub create_audio_vorbis_quality {
 	# Vorbis Encoder Quality
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new ("Quality");
+	$label = Gtk::Label->new (__"Quality");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 	$table->attach ($hbox, 0, 1, $row, $row+1, 'fill','expand',0,0);
@@ -750,12 +751,12 @@ sub create_audio_vorbis_quality {
 	$hbox->show;
 	$entry = Video::DVDRip::CheckedCombo->new (
 		is_number	=> 1,
-		is_min		=> 0,
+		is_min		=> -1,
 		is_max		=> 10,
 		may_fractional  => 1,
 	);
 	$entry->show;
-	$entry->set_popdown_strings (0,1.00,2.00,3.00,4.00,5.00,6.00,7.00,8.00,9.00,10.00);
+	$entry->set_popdown_strings (-1,0,1.00,2.00,3.00,4.00,5.00,6.00,7.00,8.00,9.00,10.00);
 	$entry->set_usize(60,undef);
 	$hbox->pack_start($entry, 0, 1, 0);
 
@@ -771,7 +772,7 @@ sub create_audio_vorbis_quality {
 
 	$table->attach_defaults ($hbox, 1, 2, $row, $row+1);
 
-	my $checkbox = Gtk::CheckButton->new ("Use quality mode");
+	my $checkbox = Gtk::CheckButton->new (__"Use quality mode");
 	$checkbox->show;
 	$hbox->pack_start($checkbox, 0, 1, 0);
 

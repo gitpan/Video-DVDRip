@@ -1,6 +1,7 @@
-# $Id: Checkbox.pm,v 1.1 2003/01/27 14:16:58 joern Exp $
+# $Id: Checkbox.pm,v 1.2 2004/04/11 23:36:20 joern Exp $
 
 package Video::DVDRip::GUI::Setting::Checkbox;
+use Locale::TextDomain qw (video.dvdrip);
 
 use strict;
 use Carp;

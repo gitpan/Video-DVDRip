@@ -1,6 +1,7 @@
-# $Id: Window.pm,v 1.3 2003/02/08 10:41:55 joern Exp $
+# $Id: Window.pm,v 1.4 2004/04/11 23:36:20 joern Exp $
 
 package Video::DVDRip::GUI::Window;
+use Locale::TextDomain qw (video.dvdrip);
 
 @ISA = qw ( Video::DVDRip::GUI::Component );
 

@@ -1,4 +1,4 @@
-# $Id: CreateVobsub.pm,v 1.3.2.2 2004/04/10 09:42:39 joern Exp $
+# $Id: CreateVobsub.pm,v 1.5 2004/04/11 23:36:20 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -9,6 +9,7 @@
 #-----------------------------------------------------------------------
 
 package Video::DVDRip::Job::CreateVobsub;
+use Locale::TextDomain qw (video.dvdrip);
 
 use base Video::DVDRip::Job;
 
@@ -32,9 +33,10 @@ sub info {
 
 	my $sid = $self->subtitle->id;
 
-	my $info = "Create vobsub of subtitle #$sid, title #".$self->title->nr;
+	my $info = __x("Create vobsub of subtitle #{sid}, title #{title}", sid => $sid, title => $self->title->nr);
 	
-	$info .= ", part #".$self->file_nr if defined $self->file_nr;
+	$info .= ", ".__x("part #{file_nr}", file_nr => $self->file_nr)
+		if defined $self->file_nr;
 
 	return $info;
 }

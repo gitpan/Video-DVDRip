@@ -1,4 +1,4 @@
-# $Id: ClipZoomTab.pm,v 1.38.2.2 2003/02/19 21:24:09 joern Exp $
+# $Id: ClipZoomTab.pm,v 1.41 2004/04/12 09:48:49 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -9,6 +9,7 @@
 #-----------------------------------------------------------------------
 
 package Video::DVDRip::GUI::Project;
+use Locale::TextDomain qw (video.dvdrip);
 
 use Carp;
 use strict;
@@ -42,7 +43,7 @@ sub create_adjust_tab {
 
 	my $title = $self->selected_title;
 
-	$frame = Gtk::Frame->new ("Preview images");
+	$frame = Gtk::Frame->new (__"Preview images");
 	$frame->show;
 	$vbox->pack_start ( $frame, 1, 1, 0);
 
@@ -56,7 +57,7 @@ sub create_adjust_tab {
 	$hbox->show;
 	$box->pack_start($hbox, 0, 1, 0);
 
-	$label = Gtk::Label->new ("Grab preview frame #");
+	$label = Gtk::Label->new (__"Grab preview frame #");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 	
@@ -73,12 +74,12 @@ sub create_adjust_tab {
 	$hbox->pack_start($entry, 0, 1, 0);
 	$self->adjust_widgets->{preview_frame_nr} = $entry;
 
-	$button = Gtk::Button->new_with_label (" Grab frame ");
+	$button = Gtk::Button->new_with_label (__"Grab frame");
 	$button->show;
 	$button->signal_connect ("clicked", sub { $self->grab_preview_frame } );
 	$hbox->pack_start($button, 0, 1, 0);
 
-	$button = Gtk::Button->new_with_label (" Show video from here ");
+	$button = Gtk::Button->new_with_label (__"Show video from here");
 	$button->show;
 	$button->signal_connect ("clicked", sub { $self->preview_video } );
 	$hbox->pack_start($button, 0, 1, 0);
@@ -120,7 +121,7 @@ sub create_adjust_tab {
 
 	$self->adjust_widgets->{image_clip1} = $image;
 
-	$label = Gtk::Label->new ("After 1st clipping");
+	$label = Gtk::Label->new (__"After 1st clipping");
 	$label->show;
 	$box->pack_start ($label, 0, 1, 0);
 	$label = Gtk::Label->new ("");
@@ -157,7 +158,7 @@ sub create_adjust_tab {
 
 	$self->adjust_widgets->{image_zoom} = $image;
 	
-	$label = Gtk::Label->new ("After zoom");
+	$label = Gtk::Label->new (__"After zoom");
 	$label->show;
 	$box->pack_start ($label, 0, 1, 0);
 	$label = Gtk::Label->new ("");
@@ -194,7 +195,7 @@ sub create_adjust_tab {
 
 	$self->adjust_widgets->{image_clip2} = $image;
 	
-	$label = Gtk::Label->new ("After 2nd clipping");
+	$label = Gtk::Label->new (__"After 2nd clipping");
 	$label->show;
 	$box->pack_start ($label, 0, 1, 0);
 	$label = Gtk::Label->new ("");
@@ -204,7 +205,7 @@ sub create_adjust_tab {
 
 	# Adjust Size and Clipping Parameters ------------------------------
 
-	$frame = Gtk::Frame->new ("Adjust clip and zoom parameters");
+	$frame = Gtk::Frame->new (__"Adjust clip and zoom parameters");
 	$frame->show;
 	$vbox->pack_start ( $frame, 0, 1, 0);
 
@@ -224,7 +225,7 @@ sub create_adjust_tab {
 	my $row = 0;
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new ("Presets");
+	$label = Gtk::Label->new (__"Presets");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 	$table->attach_defaults ($hbox, 0, 1, $row, $row+1);
@@ -251,13 +252,14 @@ sub create_adjust_tab {
 	$popup = Gtk::OptionMenu->new;
 	$popup->show;
 	$popup->set_menu($popup_menu);
-	
+	$popup->set_usize(120,undef);
+
 	$table->attach_defaults ($popup, 1, 2, $row, $row+1);
 
 	$self->adjust_widgets->{preset_popup}      = $popup;
 	$self->adjust_widgets->{preset_popup_menu} = $popup_menu;
 
-	$button = Gtk::Button->new_with_label ("Apply preset values");
+	$button = Gtk::Button->new_with_label (__"Apply preset values");
 	$button->show;
 	$button->signal_connect ("clicked", sub {
 		my $title = $self->selected_title;
@@ -267,7 +269,7 @@ sub create_adjust_tab {
 			name => $title->preset
 		);
 		return if not $preset;
-		$self->log ("Applied preset '".$preset->title."'.");
+		$self->log (__x("Applied preset '{preset}'.", preset => $preset->title ));
 		$title->apply_preset ( preset => $preset );
 		$self->make_previews;
 		$self->init_adjust_values;
@@ -278,7 +280,7 @@ sub create_adjust_tab {
 	++$row;
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new ("1st clipping");
+	$label = Gtk::Label->new (__"1st clipping");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 	$table->attach_defaults ($hbox, 0, 1, $row, $row+1);
@@ -287,7 +289,7 @@ sub create_adjust_tab {
 	$hbox->show;
 	$table->attach_defaults ($hbox, 1, 2, $row, $row+1);
 
-	$label = Gtk::Label->new("Top");
+	$label = Gtk::Label->new(__"Top");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 
@@ -303,7 +305,7 @@ sub create_adjust_tab {
 
 	$self->adjust_widgets->{tc_clip1_top}      = $entry;
 
-	$label = Gtk::Label->new("Bottom");
+	$label = Gtk::Label->new(__"Bottom");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 
@@ -319,7 +321,7 @@ sub create_adjust_tab {
 
 	$self->adjust_widgets->{tc_clip1_bottom}      = $entry;
 
-	$label = Gtk::Label->new("Left");
+	$label = Gtk::Label->new(__"Left");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 
@@ -335,7 +337,7 @@ sub create_adjust_tab {
 
 	$self->adjust_widgets->{tc_clip1_left}      = $entry;
 
-	$label = Gtk::Label->new("Right");
+	$label = Gtk::Label->new(__"Right");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 
@@ -351,7 +353,7 @@ sub create_adjust_tab {
 
 	$self->adjust_widgets->{tc_clip1_right}      = $entry;
 
-	$button = Gtk::Button->new_with_label (" Generate preview images ");
+	$button = Gtk::Button->new_with_label (__"Generate preview images");
 
 	$button->show;
 	$button->signal_connect ("clicked", sub {
@@ -364,7 +366,7 @@ sub create_adjust_tab {
 	++$row;
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new ("Zoom");
+	$label = Gtk::Label->new (__"Zoom");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 	$table->attach_defaults ($hbox, 0, 1, $row, $row+1);
@@ -373,7 +375,7 @@ sub create_adjust_tab {
 	$hbox->show;
 	$table->attach_defaults ($hbox, 1, 2, $row, $row+1);
 
-	$label = Gtk::Label->new("Width");
+	$label = Gtk::Label->new(__"Width");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 
@@ -389,7 +391,7 @@ sub create_adjust_tab {
 
 	$self->adjust_widgets->{tc_zoom_width}      = $entry;
 
-	$label = Gtk::Label->new("Height");
+	$label = Gtk::Label->new(__"Height");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 
@@ -416,14 +418,14 @@ sub create_adjust_tab {
 	
 	$table->attach_defaults ($hbox, 2, 3, $row, $row+1);
 
-	$button = Gtk::Button->new_with_label (" Calc height ");
+	$button = Gtk::Button->new_with_label (__"Calc height");
 	$button->show;
 	$button->signal_connect ("clicked", sub {
 		$self->calc_zoom ( height => 1 );
 	});
 	$hbox->pack_start ($button, 0, 1, 0);
 	
-	$button = Gtk::Button->new_with_label (" Calc width ");
+	$button = Gtk::Button->new_with_label (__"Calc width");
 	$button->show;
 	$button->signal_connect ("clicked", sub {
 		$self->calc_zoom ( width => 1 );
@@ -434,17 +436,17 @@ sub create_adjust_tab {
 	++$row;
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new ("Use fast resizing");
+	$label = Gtk::Label->new (__"Use fast resizing");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 	$table->attach_defaults ($hbox, 0, 1, $row, $row+1);
 	
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	my $radio_yes = Gtk::RadioButton->new ("Yes");
+	my $radio_yes = Gtk::RadioButton->new (__"Yes");
 	$radio_yes->show;
 	$hbox->pack_start($radio_yes, 0, 1, 0);
-	my $radio_no = Gtk::RadioButton->new ("No", $radio_yes);
+	my $radio_no = Gtk::RadioButton->new (__"No", $radio_yes);
 	$radio_no->show;
 	$hbox->pack_start($radio_no, 0, 1, 0);
 	$table->attach_defaults ($hbox, 1, 2, $row, $row+1);
@@ -455,14 +457,14 @@ sub create_adjust_tab {
 	# fast bisection
 
 if ( 0 ) {
-	$label = Gtk::Label->new ("Fast frame bisection");
+	$label = Gtk::Label->new (__"Fast frame bisection");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 
-	$radio_yes = Gtk::RadioButton->new ("Yes");
+	$radio_yes = Gtk::RadioButton->new (__"Yes");
 	$radio_yes->show;
 	$hbox->pack_start($radio_yes, 0, 1, 0);
-	$radio_no = Gtk::RadioButton->new ("No", $radio_yes);
+	$radio_no = Gtk::RadioButton->new (__"No", $radio_yes);
 	$radio_no->show;
 	$hbox->pack_start($radio_no, 0, 1, 0);
 
@@ -470,7 +472,7 @@ if ( 0 ) {
 	$self->adjust_widgets->{tc_fast_bisection_no}  = $radio_no;
 }
 
-	$button = Gtk::Button->new_with_label (" Open zoom calculator ");
+	$button = Gtk::Button->new_with_label (__"Open zoom calculator");
 
 	$button->show;
 	$button->signal_connect ("clicked", sub {
@@ -482,7 +484,7 @@ if ( 0 ) {
 	++$row;
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new ("2nd clipping");
+	$label = Gtk::Label->new (__"2nd clipping");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 	$table->attach_defaults ($hbox, 0, 1, $row, $row+1);
@@ -491,7 +493,7 @@ if ( 0 ) {
 	$hbox->show;
 	$table->attach_defaults ($hbox, 1, 2, $row, $row+1);
 
-	$label = Gtk::Label->new("Top");
+	$label = Gtk::Label->new(__"Top");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 
@@ -507,7 +509,7 @@ if ( 0 ) {
 
 	$self->adjust_widgets->{tc_clip2_top}      = $entry;
 
-	$label = Gtk::Label->new("Bottom");
+	$label = Gtk::Label->new(__"Bottom");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 
@@ -523,7 +525,7 @@ if ( 0 ) {
 
 	$self->adjust_widgets->{tc_clip2_bottom}   = $entry;
 
-	$label = Gtk::Label->new("Left");
+	$label = Gtk::Label->new(__"Left");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 
@@ -539,7 +541,7 @@ if ( 0 ) {
 
 	$self->adjust_widgets->{tc_clip2_left}     = $entry;
 
-	$label = Gtk::Label->new("Right");
+	$label = Gtk::Label->new(__"Right");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 
@@ -555,7 +557,7 @@ if ( 0 ) {
 
 	$self->adjust_widgets->{tc_clip2_right}      = $entry;
 
-	$button = Gtk::Button->new_with_label (" Move 2nd clipping to 1st ");
+	$button = Gtk::Button->new_with_label (__"Move 2nd clipping to 1st");
 
 	$button->show;
 	$button->signal_connect ("clicked", sub {
@@ -785,7 +787,7 @@ sub show_preview_labels {
 			$warn_width   ||= "!" if $title->tc_clip2_left %2 or
 						 $title->tc_clip2_right %2;
 		}
-		$text = sprintf ("Size: %d%sx%d%s\nEff. ratio: %s, phys. ratio: %s",
+		$text = sprintf (__"Size: %d%sx%d%s\nEff. ratio: %s, phys. ratio: %s",
 			$width, $warn_width, $height, $warn_height,
 			$ratio, $phys_ratio
 		);
@@ -817,7 +819,7 @@ sub grab_preview_frame {
 
 	if ( not $title->is_ripped ) {
 		$self->message_window (
-			message => "You first have to rip this title."
+			message => __"You first have to rip this title."
 		);
 		return 1;
 	}
@@ -869,21 +871,21 @@ sub preview_video {
 
 	if ( not $title->is_ripped ) {
 		$self->message_window (
-			message => "You first have to rip this title."
+			message => __"You first have to rip this title."
 		);
 		return 1;
 	}
 
 	if ( $title->project->rip_mode ne 'rip' ) {
 		$self->message_window (
-			message => "This function is only avaiable for ripped DVD's."
+			message => __"This function is only avaiable for ripped DVD's."
 		);
 		return 1;
 	}
 
 	if ( $frame_nr > $title->frames or $frame_nr !~ /^\d+/ ) {
 		$self->message_window (
-			message => "Illegal frame number. Maximum is ".
+			message => __"Illegal frame number. Maximum is ".
 				   ($title->frames-1)
 		);
 		return 1;
@@ -893,7 +895,7 @@ sub preview_video {
 		command_tmpl => $self->config('play_stdin_command'),
 	);
 
-	$self->log ("Executing command for video preview: $command");
+	$self->log (__x("Executing command for video preview: {command}", command => $command));
 
 	system ("$command &");
 
@@ -936,7 +938,7 @@ sub open_preview_window {
 		$self->make_previews if $type ne 'zoom';
 		$self->show_preview_images;
 	} );
-	$win->set_title ("Adjust $type");
+	$win->set_title (__x("Adjust {type}", type => $type));
 	$win->show;
 	
 	my $vbox = Gtk::VBox->new;
@@ -1012,15 +1014,14 @@ sub move_clip2_to_clip1 {
 
 	if ( not $title->is_ripped ) {
 		$self->message_window (
-			message => "You first have to rip this title."
+			message => __"You first have to rip this title."
 		);
 		return 1;
 	}
 
 	if ( $title->tc_fast_resize ) {
 		$self->message_window (
-			message => "This is not possible because\n".
-				   "fast resizing is enabled."
+			message => __"This is not possible because\nfast resizing is enabled."
 		);
 		return 1;
 	}
@@ -1033,9 +1034,7 @@ sub move_clip2_to_clip1 {
 	if ( $clip1_top or $clip1_bottom or $clip1_left or $clip1_right ) {
 		$self->message_window (
 			message =>
-				"2nd clipping parameters can only be\n".
-				"moved to 1st clipping parameters, if\n".
-				"1st clipping is not defined."
+				__"2nd clipping parameters can only be\nmoved to 1st clipping parameters, if\n1st clipping is not defined."
 		);
 		return 1;
 	}
@@ -1119,7 +1118,7 @@ sub calc_zoom {
 
 	if ( not $title->is_ripped ) {
 		$self->message_window (
-			message => "You first have to rip this title."
+			message => __"You first have to rip this title."
 		);
 		return 1;
 	}
@@ -1143,7 +1142,7 @@ sub zoom_calculator {
 
 	if ( not $title->is_ripped ) {
 		$self->message_window (
-			message => "You first have to rip this title."
+			message => __"You first have to rip this title."
 		);
 		return 1;
 	}

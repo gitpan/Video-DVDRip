@@ -1,4 +1,5 @@
 package Video::DVDRip::CPAN::Scanf;
+use Locale::TextDomain qw (video.dvdrip);
 
 # This is the unmodified String::Scanf module from Jarkko Hietaniemi
 # which is just included into this distribution to keep the dependencies
@@ -159,7 +160,7 @@ sub _format_to_re {
 		my ($w, $f) = ($3, $4);
 		$f =~ s/^[hl]//;
 		if ($f =~ /^[pnSC]$/) {
-		    croak "'$f' not supported";
+		    croak __x("'{function}' not supported", function => $f);
 		} elsif ($f =~ /^[di]$/) {
 		    $e = "[-+]?$dx";
 		} elsif ($f eq 'x') {

@@ -1,4 +1,4 @@
-# $Id: Depend.pm,v 1.2 2003/02/10 11:58:09 joern Exp $
+# $Id: Depend.pm,v 1.3 2004/04/11 23:36:20 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -9,6 +9,7 @@
 #-----------------------------------------------------------------------
 
 package Video::DVDRip::GUI::Depend;
+use Locale::TextDomain qw (video.dvdrip);
 
 use base Video::DVDRip::GUI::Window;
 
@@ -29,7 +30,7 @@ sub build {
 
 	# build window -----------------------------------------------
 	my $win = Gtk::Window->new ( -toplevel );
-	$win->set_title($self->config('program_name'). " Dependency check");
+	$win->set_title($self->config('program_name')." ".__"Dependency check");
 	$win->border_width(0);
 	$win->realize;
 	$win->set_default_size ( 700, 420 );
@@ -55,7 +56,7 @@ sub build {
 	$frame_hbox->show;
 	$dialog_vbox->pack_start($frame_hbox, 0, 1, 0);
 	
-	$frame = Gtk::Frame->new ("Required tools");
+	$frame = Gtk::Frame->new (__"Required tools");
 	$frame->show;
 	$dialog_vbox->pack_start($frame, 1, 1, 0);
 	$vbox = Gtk::VBox->new;
@@ -69,12 +70,12 @@ sub build {
 
 	$clist = Gtk::CList->new_with_titles (
 		"Name",
-		"Comment",
-		"Mandatory",
-		"Suggested",
+		__"Comment",
+		__"Mandatory",
+		__"Suggested",
 		"Minimum",
 		"Maximum",
-		"Installed",
+		__"Installed",
 		"Ok",
 	);
 	$clist->set_column_width( 0, 80 );
@@ -92,9 +93,7 @@ sub build {
 	$self->gtk_widgets->{depend_clist} = $clist;
 
 	$label = Gtk::Label->new (
-		"- Mandatory tools must be present with the minimum version listed.\n".
-		"- Non mandatory tools may be missing or too old - features are disabled then.\n".
-		"- Suggested numbers are the versions the author works with, so they are well tested."
+		__"- Mandatory tools must be present with the minimum version listed.\n- Non mandatory tools may be missing or too old - features are disabled then.\n- Suggested numbers are the versions the author works with, so they are well tested."
 	);
 	$label->set_justify ("left");
 	$label->show;
@@ -146,12 +145,12 @@ sub init_depend_list {
 		$clist->append (
 			$tool,
 			$def->{comment},
-			($def->{optional} ? "No" : "Yes"),
+			($def->{optional} ? __"No" : __"Yes"),
 			$def->{suggested},
 			$def->{min},
 			($def->{max} || "-"),
 			$def->{installed},
-			($def->{installed_ok} ? "Yes" : "No"),
+			($def->{installed_ok} ? __"Yes" : __"No"),
 		);
 		$clist->set_row_style($i, $highlighted) if not $def->{installed_ok};
 		++$i;

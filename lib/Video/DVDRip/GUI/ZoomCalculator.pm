@@ -1,4 +1,4 @@
-# $Id: ZoomCalculator.pm,v 1.13.2.1 2003/05/23 19:51:35 joern Exp $
+# $Id: ZoomCalculator.pm,v 1.15 2004/04/11 23:36:20 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -9,6 +9,7 @@
 #-----------------------------------------------------------------------
 
 package Video::DVDRip::GUI::ZoomCalculator;
+use Locale::TextDomain qw (video.dvdrip);
 
 use base Video::DVDRip::GUI::Window;
 
@@ -60,7 +61,7 @@ sub build {
 
 	# build window -----------------------------------------------
 	my $win = Gtk::Window->new ( -toplevel );
-	$win->set_title($self->config('program_name'). " Zoom Calculator");
+	$win->set_title($self->config('program_name')." ".__"Zoom Calculator");
 	$win->border_width(0);
 	$win->realize;
 	$win->set_default_size ( 620, 540 );
@@ -87,7 +88,7 @@ sub build {
 	
 	# Left Parameter Frame -----------------------
 	
-	$frame = Gtk::Frame->new ("Parameters");
+	$frame = Gtk::Frame->new (__"Parameters");
 	$frame->show;
 	$par_frames_hbox->pack_start($frame, 0, 1, 0);
 	
@@ -108,7 +109,7 @@ sub build {
 	$row = 0;
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new ("Fast resize alignment");
+	$label = Gtk::Label->new (__"Fast resize alignment");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 	$table->attach ($hbox, 0, 1, $row, $row+1, 'fill','expand',0,0);
@@ -120,7 +121,7 @@ sub build {
 	$popup->set_menu($popup_menu);
 
 	%popup_entries = (
-		0  => "No Fast Resizing",
+		0  => __"No Fast Resizing",
 		8  => 8,
 		16 => 16,
 		32 => 32,
@@ -147,7 +148,7 @@ sub build {
 	++$row;
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new ("Result frame align");
+	$label = Gtk::Label->new (__"Result frame align");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 	$table->attach ($hbox, 0, 1, $row, $row+1, 'fill','expand',0,0);
@@ -181,7 +182,7 @@ sub build {
 	++$row;
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new ("Achieve result align");
+	$label = Gtk::Label->new (__"Achieve result align");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 	$table->attach ($hbox, 0, 1, $row, $row+1, 'fill','expand',0,0);
@@ -193,8 +194,8 @@ sub build {
 	$popup->set_menu($popup_menu);
 
 	%popup_entries = (
-		"clip2" => "Using clip2",
-		"zoom"  => "Using zoom",
+		"clip2" => __"Using clip2",
+		"zoom"  => __"Using zoom",
 	);
 	foreach my $key ( sort keys %popup_entries ) {
 		$item = Gtk::MenuItem->new ($popup_entries{$key});
@@ -218,7 +219,7 @@ sub build {
 	++$row;
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new ("Auto clipping");
+	$label = Gtk::Label->new (__"Auto clipping");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 	$table->attach ($hbox, 0, 1, $row, $row+1, 'fill','expand',0,0);
@@ -230,9 +231,9 @@ sub build {
 	$popup->set_menu($popup_menu);
 
 	%popup_entries = (
-		"clip1" => "Yes - use clip1",
-		"clip2" => "Yes - use clip2",
-		"no"	=> "No - take existent clip1",
+		"clip1" => __"Yes - use clip1",
+		"clip2" => __"Yes - use clip2",
+		"no"	=> __"No - take existent clip1",
 	);
 	foreach my $key ( sort keys %popup_entries ) {
 		$item = Gtk::MenuItem->new ($popup_entries{$key});
@@ -259,7 +260,7 @@ sub build {
 
 	# Results ----------------------------------------------------
 
-	$frame = Gtk::Frame->new ("Zoom Calculations");
+	$frame = Gtk::Frame->new (__"Zoom Calculations");
 	$frame->show;
 	$dialog_vbox->pack_start($frame, 1, 1, 0);
 	$vbox = Gtk::VBox->new;
@@ -272,12 +273,12 @@ sub build {
 	$sw->set_policy( 'automatic', 'automatic' );
 
 	$clist = Gtk::CList->new_with_titles (
-		"Result size    ",
+		__"Result size",
 		"BPP     ",
 		"Eff. AR    ",
-		"AR error    ",
+		__"AR error",
 		"Clip1 (t/b/l/r)      ",
-		"Zoom size    ",
+		__"Zoom size",
 		"Clip2 (t/b/l/r)      ",
 	);
 	$clist->show,
@@ -290,17 +291,17 @@ sub build {
 	$hbox->show;
 	$vbox->pack_start ($hbox, 0, 1, 0);
 	
-	$button = Gtk::Button->new_with_label (" Cancel ");
+	$button = Gtk::Button->new_with_label (__"Cancel");
 	$button->show;
 	$button->signal_connect ("clicked", sub { $win->destroy } );
 	$hbox->pack_start ($button, 0, 1, 0);
 
-	$button = Gtk::Button->new_with_label (" Refresh ");
+	$button = Gtk::Button->new_with_label (__"Refresh");
 	$button->show;
 	$button->signal_connect ("clicked", sub { $self->init_calc_list } );
 	$hbox->pack_start ($button, 0, 1, 0);
 
-	$button = Gtk::Button->new_with_label (" Apply ");
+	$button = Gtk::Button->new_with_label (__"Apply");
 	$button->show;
 	$button->signal_connect ("clicked", sub { $self->apply_values } );
 	$hbox->pack_start ($button, 0, 1, 0);
@@ -329,7 +330,7 @@ sub create_video_bitrate_calc {
 	my $title = $self->title;
 
 	# Frame
-	$frame = Gtk::Frame->new ("Video bitrate calculation");
+	$frame = Gtk::Frame->new (__"Video bitrate calculation");
 	$frame->show;
 
 	# Frame HBox
@@ -349,7 +350,7 @@ sub create_video_bitrate_calc {
 	$row = 0;
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new ("Target media");
+	$label = Gtk::Label->new (__"Target media");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 	$table->attach ($hbox, 0, 1, $row, $row+1, 'fill','expand',0,0);
@@ -364,10 +365,10 @@ sub create_video_bitrate_calc {
 	$popup->set_menu($popup_menu);
 
 	%popup_entries = (
-		1 => "one",
-		2 => "two",
-		3 => "three",
-		4 => "four",
+		1 => __"one",
+		2 => __"two",
+		3 => __"three",
+		4 => __"four",
 	);
 
 	$i = 0;
@@ -436,7 +437,7 @@ sub create_video_bitrate_calc {
 	++$row;
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new ("Target size");
+	$label = Gtk::Label->new (__"Target size");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 	$table->attach ($hbox, 0, 1, $row, $row+1, 'fill','expand',0,0);
@@ -470,7 +471,7 @@ sub create_video_bitrate_calc {
 
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	my $checkbox = Gtk::CheckButton->new ("Use range");
+	my $checkbox = Gtk::CheckButton->new (__"Use range");
 	$checkbox->set_active($title->tc_video_bitrate_range);
 	$checkbox->show;	
 	$hbox->pack_start ($checkbox, 0, 1, 0);
@@ -489,7 +490,7 @@ sub create_video_bitrate_calc {
 	++$row;
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new ("Video bitrate");
+	$label = Gtk::Label->new (__"Video bitrate");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 	$table->attach ($hbox, 0, 1, $row, $row+1, 'fill','expand',0,0);
@@ -529,7 +530,7 @@ sub create_video_bitrate_calc {
 	
 	$hbox = Gtk::HBox->new;
 	$hbox->show;	
-	my $checkbox = Gtk::CheckButton->new ("Manual");
+	my $checkbox = Gtk::CheckButton->new (__"Manual");
 	$checkbox->set_active($title->tc_video_bitrate_manual);
 	$checkbox->show;
 	$hbox->pack_start ($checkbox, 0, 1, 0);

@@ -1,4 +1,4 @@
-# $Id: Split.pm,v 1.6 2003/01/28 20:19:57 joern Exp $
+# $Id: Split.pm,v 1.7 2004/04/11 23:36:20 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -9,6 +9,7 @@
 #-----------------------------------------------------------------------
 
 package Video::DVDRip::Job::Split;
+use Locale::TextDomain qw (video.dvdrip);
 
 # That's Perl! The job classes inherit from this class,
 # which is decided at *runtime* - this way standard and
@@ -34,12 +35,12 @@ sub info {
 
 	my $info;
 	if ( $self->ogg_pass ) {
-		$info = "split OGG pass ".$self->ogg_pass;
+		$info = __x("split OGG pass {pass}", pass => $self->ogg_pass);
 	} else {
-		$info = "split AVI";
+		$info = __"split AVI";
 	}
 	
-	$info .= " - title #".$self->title->nr;
+	$info .= " - ".__x("title #{title}", title => $self->title->nr);
 
 	return $info;
 }

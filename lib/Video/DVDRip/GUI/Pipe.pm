@@ -1,4 +1,4 @@
-# $Id: Pipe.pm,v 1.8.2.3 2003/02/23 21:40:43 joern Exp $
+# $Id: Pipe.pm,v 1.10 2004/04/11 23:36:20 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -9,6 +9,7 @@
 #-----------------------------------------------------------------------
 
 package Video::DVDRip::GUI::Pipe;
+use Locale::TextDomain qw (video.dvdrip);
 
 use base Video::DVDRip::GUI::Base;
 
@@ -77,7 +78,7 @@ sub open {
 			or croak "can't exec program: $!";
 	}
 
-	$self->log ("Executing command: ".$self->command);
+	$self->log (__x("Executing command: {command}", command => $self->command));
 
 	$self->set_fh ( $fh );
 	$self->set_pid ( $pid );
@@ -112,7 +113,7 @@ sub progress {
 	my ($pid) = ( $buffer =~ /DVDRIP_JOB_PID=(\d+)/ );
 	if ( defined $pid ) {
 		$self->set_pid ( $pid );
-		$self->log ("Job has PID $pid");
+		$self->log (__x("Job has PID {pid}", pid => $pid));
 		$buffer =~ s/DVDRIP_JOB_PID=(\d+)//;
 	}
 
@@ -161,7 +162,7 @@ sub cancel {
 	my $pid = $self->pid;
 
 	if ( $pid ) {
-		$self->log ("Aborting command. Sending signal 1 to PID $pid...");
+		$self->log (__x("Aborting command. Sending signal 1 to PID {pid}...", pid => $pid));
 		kill 1, $pid;
 	}
 

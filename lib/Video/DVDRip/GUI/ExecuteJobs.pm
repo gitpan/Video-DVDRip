@@ -1,4 +1,4 @@
-# $Id: ExecuteJobs.pm,v 1.13.2.4 2004/04/18 14:19:59 joern Exp $
+# $Id: ExecuteJobs.pm,v 1.16 2004/04/25 16:01:58 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -9,6 +9,7 @@
 #-----------------------------------------------------------------------
 
 package Video::DVDRip::GUI::ExecuteJobs;
+use Locale::TextDomain qw (video.dvdrip);
 
 use base Video::DVDRip::GUI::Base;
 
@@ -108,22 +109,20 @@ sub execute_jobs {
 		$max_diskspace_needed = int ($max_diskspace_needed/1024);
 		$free = int($free/1024);
 
-		$self->log ("This task needs about $max_diskspace_needed MB, $free MB are free.");
+		$self->log (__x("This task needs about {needed} MB, {free} MB are free.", needed => $max_diskspace_needed, free => $free));
 
 		my $max_diskspace_needed_plus_spare = $max_diskspace_needed + 100;
 		if ( $max_diskspace_needed_plus_spare > $free ) {
 			$self->confirm_window (
 			    message =>
-				"Warning: diskspace is low. This task needs\n".
-				"about $max_diskspace_needed_plus_spare MB, but only $free MB are available.\n".
-				"Do you want to continue anyway?",
+				__x("Warning: diskspace is low. This task needs\nabout {needed} MB, but only {free} MB are available.\nDo you want to continue anyway?", needed => $max_diskspace_needed_plus_spare, free => $free),
 			    yes_callback => sub {
 			    	$self->execute_jobs (
 				    no_diskspace_check => 1,
 				);
 			    },
-			    yes_label => "Yes",
-			    no_label => "No",
+			    yes_label => __"Yes",
+			    no_label => __"No",
 			    no_callback => sub {
 			    	$self->set_cancelled(1);
 				$self->finished;
@@ -239,20 +238,17 @@ sub job_aborted {
 	} else {
 		$self->long_message_window (
 			message =>
-				"Job '".$job->info."' failed.\n\n".
-				"Executed command: ".$job->command."\n\n".
-				"Last output was:\n\n".
+				__x("Job '{job}' failed.\n\nExecuted command: {command}\n\nLast output was:\n\n", job => $job->info, command => $job->command ).
 				$job->pipe->output
 		);
 		$self->log (
-			"You should analyze the last output of ".
-			"this job to see what's going wrong here:"
+			__"You should analyze the last output of this job to see what's going wrong here:"
 		);
 		my $output = $job->pipe->output;
 		$output =~ s/^\s+//;
 		$output =~ s/\s+$//;
-		$self->log ("---- job output start ----\n\n".$output."\n");
-		$self->log ("---- job output end ----");
+		$self->log (__"---- job output start ----")."\n\n\n";
+		$self->log (__"---- job output end ----");
 	}
 
 	1;

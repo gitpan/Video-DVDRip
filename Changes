@@ -1,6 +1,102 @@
-$Id: Changes,v 1.131.2.52 2004/04/18 14:28:15 joern Exp $
+$Id: Changes,v 1.147 2005/01/04 13:44:59 joern Exp $
 
 Revision history and release notes for dvd::rip.
+
+0.52.0 [stable branch] Tue Jan 4 2005, joern
+	Notes:
+	- This is just a stable release of 0.51.4. Only change
+	  is that the suggested transcode minimum version is 0.6.14.
+	- For changes since the last stable release 0.50.18 please
+	  refer to the change log entries of the 0.51 branch.
+
+0.51.4 [unstable branch] Sat Dec 13 2004, joern
+	Bugfix:
+	- The central dvd::rip tools dr_splitpipe and dr_progress
+	  where broken due to changes to the Makefile. Thanks for
+	  the reports to Lukas Postupa <postupa AT gmx.de> and
+	  Christian Marillat.
+
+0.51.3 [unstable branch] Sat Dec 11 2004, joern
+	Features:
+	- Set transcode -M 2 as default for NTSC movies to improve
+	  A/V sync unless the user provides -M on its own using
+	  the transcode options entry. Suggested by Peter Hutnick
+	  <hutnick AT gmail.com>. Note: default is -M 1, so enter
+	  this to transcode's option entry if the new -M 2 doesn't
+	  work for you.
+	- More generic Makefile for the dvd::rip parts written in C.
+	  Thanks for the patch to Mike Frysinger <vapier AT gentoo.org>.
+
+	Bugfixes:
+	- Cluster mode / OGM: PSU chunks were not deleted afterwards
+	  even if the user requsted that. Thanks for the patch to
+	  Jonathan Hall <flimzy AT flimzy.com>.
+	- Increased portion of data to be analyzed for detailed
+	  audio characteristics after ripping. Should fix problems
+	  with wrong detection of AC3 bitrates and switching off
+	  AC3 passthrough. Thanks to Nicholas E Andrade <neandrad
+	  AT ieng9.ucsd.edu> who helped figuring that out.
+
+0.51.2 [unstable branch] Fri Oct 29 2004, joern
+	Notes:
+	- If you want to use transcode 0.6.13, you need this
+	  dvd::rip release. Older releases doesn't work.
+	- Unfortunately transcode 0.6.13 has a bug which
+	  affects most operations of dvd::rip. You need
+	  to recompile transcode with a tiny patch, which
+	  is contained in dvd::rip's tarball:
+
+	  patches/transcode-0.6.13-bitstream.patch
+
+	Features:
+	- Deinterlace preset 'smartdeinter' now uses transcode's
+	  smartyuv filter instead of smartdeinter. It's much faster,
+	  assembly optimized and works in YUV colorspace.
+	- Bojan Bozeovic added a Serbian translation.
+
+	transcode 0.6.13 compatability:
+	- Previews were flipped and wrongly colored. Thanks for
+	  the patch to Robin Hill <robin AT robinhill.me.uk>.
+	- transcode's colorspace default setting changed from
+	  RGB to YUV, this required according changes in dvd::rip.
+
+0.51.1 [unstable branch] Sun Oct 10 2004, joern
+	Notes:
+	- A new dependency: the Perl module Locale::TextDomain,
+	  often packaged as libintl-perl resp. libintl-xs-perl
+	  in many distribtions.
+
+	Bugfixes:
+	- Merging multiple PSU's with OGG/Vorbis in cluster mode
+	  didn't work. Thanks for the reports to Daniel Baughman
+	  <danrb AT codenet.net>, Sybren <sybren AT thirdtower.com>
+	  and Henning <einpfundhirn AT web.de>.
+	- backup.rip creation failed if project's tmp/ directory
+	  was missing. Thanks for the report to Felix Knecht.
+	- Gray out RIP button in DVD Image and DVD on-the-fly modes,
+	  because makes no sense here. Thanks for the report to
+	  Geoffrey Trexler <skynet AT charter.net>
+	- dvdrip --help didn't work with recent Perl versions
+
+	Features:
+	- Full localization support (l10n). A lot of work for
+	  this was done by Oliver Kramer, who translated dvd::rip
+	  to German and send me a patch, which turned dvd::rip
+	  into a German version. I used this patch to extract
+	  all messages from dvd::rip source code and converted
+	  it to a patch, which added gettext() like calls, instead
+	  of a hardcoded German translation. Read l10n/README
+	  if you're interested in maintaining translations
+	  and contact me.
+	- Translations and their maintainers in this release:
+            Czech:    Ales Tosovsky <tosovsky AT wo.cz>
+            French:   Sebastien Corot <scorot AT libertysurf.fr>
+	    German:   Jörn Reder <joern AT zyn.de>
+            Spanish:  Sergio Cambra <runico AT users.berlios.de>
+	  The file l10/MAINTAINERS will always list all
+	  actual translation maintainers.
+	- Support for Vorbis quality of -1, suggested by
+	  Bennett Perkins <bennett.perkins AT optusnet.com.au>.
 
 0.50.18 [stable branch] Sun Apr 18 2004, joern
 	Bugfixes:

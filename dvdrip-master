@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# $Id: dvdrip-master,v 1.20.4.4 2003/04/29 20:32:16 joern Exp $
+# $Id: dvdrip-master,v 1.22 2004/04/11 23:36:19 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -14,6 +14,12 @@ package Video::DVDRip;
 use strict;
 use lib 'lib';
 use Getopt::Std;
+
+#-- l10n stuff
+use POSIX qw(setlocale);
+use Locale::Messages qw (LC_MESSAGES);
+use Locale::TextDomain ("video.dvdrip");
+setlocale(LC_MESSAGES,"");
 
 BEGIN {
 	# That's Perl! The job classes inherit from this class,

@@ -1,4 +1,4 @@
-# $Id: Preview.pm,v 1.8 2003/02/10 13:34:36 joern Exp $
+# $Id: Preview.pm,v 1.9 2004/04/11 23:36:20 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -9,6 +9,7 @@
 #-----------------------------------------------------------------------
 
 package Video::DVDRip::GUI::Preview;
+use Locale::TextDomain qw (video.dvdrip);
 
 use Carp;
 use strict;
@@ -126,7 +127,7 @@ sub open {
 		error_cb => sub {
 			my ($line) = @_;
 			$self->long_message_window (
-				message => "Error executing a transcode socket command:\n\n".
+				message => __"Error executing a transcode socket command:\n\n".
 					   $line
 			);
 			1;

@@ -1,4 +1,4 @@
-# $Id: TranscodeVideo.pm,v 1.10.2.4 2003/10/26 14:25:05 joern Exp $
+# $Id: TranscodeVideo.pm,v 1.12 2004/04/11 23:36:20 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -9,6 +9,7 @@
 #-----------------------------------------------------------------------
 
 package Video::DVDRip::Job::TranscodeVideo;
+use Locale::TextDomain qw (video.dvdrip);
 
 # That's Perl! The job classes inherit from this class,
 # which is decided at *runtime* - this way standard and
@@ -46,17 +47,20 @@ sub type {
 sub info {
 	my $self = shift; $self->trace_in;
 
-	my $info = "Transcoding video - title #".$self->title->nr;
+	my $info = __("Transcoding video");
+
+	$info .= " - ".__x("title #{title}", title => $self->title->nr);
+
 	my $chapter = $self->chapter;
 	
 	if ( $chapter ) {
-		$info .= ", chapter #$chapter";
+		$info .= ", ".__x("chapter #{chapter}", chapter => $chapter)
 	}
 
 	if ( $self->single_pass ) {
-		$info .= ", single pass";
+		$info .= ", ".__"single pass";
 	} else {
-		$info .= ", pass ".$self->pass;
+		$info .= ", ".__x("pass {pass}", pass => $self->pass);
 	}
 
 	return $info;

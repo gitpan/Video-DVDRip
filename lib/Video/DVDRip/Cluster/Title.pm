@@ -1,4 +1,4 @@
-# $Id: Title.pm,v 1.38.2.4 2004/04/10 09:18:03 joern Exp $
+# $Id: Title.pm,v 1.42 2004/12/11 15:01:34 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -9,6 +9,7 @@
 #-----------------------------------------------------------------------
 
 package Video::DVDRip::Cluster::Title;
+use Locale::TextDomain qw (video.dvdrip);
 
 use base Video::DVDRip::Title;
 
@@ -347,7 +348,7 @@ sub get_merge_psu_command {
 		"${nice}dr_exec ";
 
 	if ( $self->is_ogg ) {
-		$command .="ogmcat -v -v";
+		$command .="ogmcat -v -v ";
 	} else {
 		$command .="avimerge ";
 	}
@@ -357,7 +358,7 @@ sub get_merge_psu_command {
 	$command .= "$audio_video_psu_dir/*.$ext";
 
 	$command .= " && echo DVDRIP_SUCCESS";
-	$command .= " && rm $audio_video_psu_dir/*.avi"
+	$command .= " && rm $audio_video_psu_dir/*.$ext"
 		if $self->with_cleanup;
 
 	return $command;

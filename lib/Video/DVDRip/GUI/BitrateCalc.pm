@@ -1,4 +1,4 @@
-# $Id: BitrateCalc.pm,v 1.4.2.1 2003/02/11 21:59:55 joern Exp $
+# $Id: BitrateCalc.pm,v 1.6 2004/04/11 23:36:20 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -9,6 +9,7 @@
 #-----------------------------------------------------------------------
 
 package Video::DVDRip::GUI::BitrateCalc;
+use Locale::TextDomain qw (video.dvdrip);
 
 use base Video::DVDRip::GUI::Window;
 
@@ -31,7 +32,7 @@ sub build {
 
 	# build window -----------------------------------------------
 	my $win = Gtk::Window->new ( -toplevel );
-	$win->set_title($self->config('program_name'). " Storage and bitrate calculation details");
+	$win->set_title($self->config('program_name')." ".__"Storage and bitrate calculation details");
 	$win->border_width(0);
 	$win->realize;
 	$win->set_default_size ( 580, 330 );
@@ -57,7 +58,7 @@ sub build {
 	$frame_hbox->show;
 	$dialog_vbox->pack_start($frame_hbox, 0, 1, 0);
 	
-	$frame = Gtk::Frame->new ("Bitrate calculation details");
+	$frame = Gtk::Frame->new (__"Bitrate calculation details");
 	$frame->show;
 	$dialog_vbox->pack_start($frame, 1, 1, 0);
 	$vbox = Gtk::VBox->new;
@@ -70,10 +71,10 @@ sub build {
 	$sw->set_policy( 'automatic', 'automatic' );
 
 	$clist = Gtk::CList->new_with_titles (
-		"Description",
-		"Operator",
-		"Value",
-		"Unit",
+		__"Description",
+		__"Operator",
+		__"Value",
+		__"Unit",
 	);
 	$clist->set_column_width( 0, 310 );
 	$clist->set_column_width( 1, 60 );

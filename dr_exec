@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# $Id: dr_exec,v 1.1.2.1 2003/02/23 21:42:32 joern Exp $
+# $Id: dr_exec,v 1.2 2004/04/10 14:31:53 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern@zyn.de> All Rights Reserved

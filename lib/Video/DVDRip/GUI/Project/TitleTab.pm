@@ -1,4 +1,4 @@
-# $Id: TitleTab.pm,v 1.56.2.3 2003/04/26 15:43:50 joern Exp $
+# $Id: TitleTab.pm,v 1.59 2004/10/10 13:46:24 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -9,6 +9,7 @@
 #-----------------------------------------------------------------------
 
 package Video::DVDRip::GUI::Project;
+use Locale::TextDomain qw (video.dvdrip);
 
 use Carp;
 use strict;
@@ -41,20 +42,20 @@ sub create_title_tab {
 	$vbox->show;
 	
 	# 1. Read Content Button / Frame
-	my $frame = Gtk::Frame->new ("Read content");
+	my $frame = Gtk::Frame->new (__"Read content");
 	$frame->show;
 
 	my $hbox = Gtk::HBox->new;
 	$hbox->set_border_width(5);
 	$hbox->show;
 
-	my $button = Gtk::Button->new_with_label (" Read DVD table of contents ");
+	my $button = Gtk::Button->new_with_label (__"Read DVD table of contents");
 	$button->show;
 	$button->signal_connect ("clicked", sub { $self->ask_read_dvd_toc } );
 
 	$self->rip_title_widgets->{read_dvd_toc_button} = $button;
 
-#	my $label = Gtk::Label->new ("Press button, if list is empty or disc has changed.");
+#	my $label = Gtk::Label->new ("Knopf drücken, falls Liste leer oder DVD gewechselt.");
 #	$label->show;
 
 	$hbox->pack_start ( $button, 0, 1, 0);
@@ -62,7 +63,7 @@ sub create_title_tab {
 
         # Eject Button
         $button = Gtk::Button->new_with_label (
-                " Open DVD tray"
+                __"Open DVD tray"
         );
         $button->show;
         $button->signal_connect ("clicked",
@@ -74,7 +75,7 @@ sub create_title_tab {
 
         # Insert Button
         $button = Gtk::Button->new_with_label (
-                " Close DVD tray "
+                __"Close DVD tray"
         );
         $button->show;
         $button->signal_connect ("clicked",
@@ -88,7 +89,7 @@ sub create_title_tab {
 	$vbox->pack_start ( $frame, 0, 1, 0);
 
 	# 2. TOC List / Frame
-	$frame = Gtk::Frame->new ("DVD table of contents");
+	$frame = Gtk::Frame->new (__"DVD table of contents");
 	$frame->show;
 	$vbox->pack_start ( $frame, 1, 1, 0);
 
@@ -106,7 +107,7 @@ sub create_title_tab {
 	$sw->set_policy( 'automatic', 'automatic' );
 
 	my $clist = Gtk::CList->new_with_titles (
-		"Title", "Technical information"
+		__"Title", __"Technical information"
 	);
 	$clist->show,
 #	$clist->set_usize (450, 372);
@@ -135,10 +136,7 @@ sub create_title_tab {
 	my $label_hbox = Gtk::HBox->new;
 	$label_hbox->show;
 	$label = Gtk::Label->new (
-		"Select audio track for volume\n".
-		"scanning.\n".
-		"(Does not affect ripping, all\n".
-		"audio tracks are ripped)"
+		__"Select audio track for volume\nscanning.\n(Does not affect ripping, all\naudio tracks are ripped)"
 	);
 	$label->show;
 	$label->set_justify('left');
@@ -147,7 +145,7 @@ sub create_title_tab {
 	
 	my $audio_popup_menu = Gtk::Menu->new;
 	$audio_popup_menu->show;
-	my $item = Gtk::MenuItem->new ("No Audio");
+	my $item = Gtk::MenuItem->new (__"No Audio");
 	$item->show;
 	$audio_popup_menu->append($item);
 	my $audio_popup = Gtk::OptionMenu->new;
@@ -166,9 +164,7 @@ sub create_title_tab {
 	$label_hbox = Gtk::HBox->new;
 	$label_hbox->show;
 	$label = Gtk::Label->new (
-		"Select viewing angle\n".
-		"(You must rip again if you\n".
-		"change this)"
+		__"Select viewing angle\n(You must rip again if you\nchange this)"
 	);
 	$label->show;
 	$label->set_justify('left');
@@ -177,7 +173,7 @@ sub create_title_tab {
 	
 	my $view_angle_popup_menu = Gtk::Menu->new;
 	$view_angle_popup_menu->show;
-	$item = Gtk::MenuItem->new ("Angle 1");
+	$item = Gtk::MenuItem->new (__"Angle 1");
 	$item->show;
 	$view_angle_popup_menu->append($item);
 	my $view_angle_popup = Gtk::OptionMenu->new;
@@ -195,21 +191,21 @@ sub create_title_tab {
 	# Chapter mode ripping
 	$label_hbox = Gtk::HBox->new;
 	$label_hbox->show;
-	$label = Gtk::Label->new ("Specify chapter mode");
+	$label = Gtk::Label->new (__"Specify chapter mode");
 	$label->show;
 	$label_hbox->pack_start ($label, 0, 1, 0);
 	$audio_vbox->pack_start ($label_hbox, 0, 1, 0);
 
 	my $radio_hbox = Gtk::HBox->new;
 	$radio_hbox->show;
-	my $radio_no = Gtk::RadioButton->new ("No");
+	my $radio_no = Gtk::RadioButton->new (__"No");
 	$radio_no->show;
 	$radio_hbox->pack_start($radio_no, 0, 1, 0);
 	$audio_vbox->pack_start($radio_hbox, 0, 1, 0);
-	my $radio_all = Gtk::RadioButton->new ("All", $radio_no);
+	my $radio_all = Gtk::RadioButton->new (__"All", $radio_no);
 	$radio_all->show;
 	$radio_hbox->pack_start($radio_all, 0, 1, 0);
-	my $radio_select = Gtk::RadioButton->new ("Selection", $radio_no);
+	my $radio_select = Gtk::RadioButton->new (__"Selection", $radio_no);
 	$radio_select->show;
 	$radio_hbox->pack_start($radio_select, 0, 1, 0);
 
@@ -222,7 +218,7 @@ sub create_title_tab {
 	$sw->set_policy( 'automatic', 'automatic' );
 	$sw->set_usize(undef, 138);
 
-	my $chapter_clist = Gtk::CList->new_with_titles ( "Chapter Selection" );
+	my $chapter_clist = Gtk::CList->new_with_titles ( __"Chapter Selection" );
 	$sw->add( $chapter_clist );
 	$chapter_clist->set_selection_mode( 'extended' );
 	$chapter_clist->set_shadow_type( 'none' );
@@ -239,7 +235,7 @@ sub create_title_tab {
 	$hbox->show;
 	$list_vbox->pack_start($hbox, 0, 0, 0);
 
-	$button = Gtk::Button->new_with_label ("View\nselected title/chapter(s)");
+	$button = Gtk::Button->new_with_label (__"View\nselected title/chapter(s)");
 	$button->show;
 	$hbox->pack_start ($button, 1, 1, 0);
 	$button->signal_connect ("clicked",
@@ -249,7 +245,7 @@ sub create_title_tab {
 	$self->rip_title_widgets->{view_title_button} = $button;
 
 	$button = Gtk::Button->new_with_label (
-		"RIP\nselected title(s)/chapter(s)"
+		__"RIP\nselected title(s)/chapter(s)"
 	);
 	$button->show;
 	$button->signal_connect ("clicked",
@@ -267,8 +263,9 @@ sub create_title_tab {
 			return 1 if not $self->selected_title;
 			$self->selected_title->set_tc_use_chapter_mode(0);
 			$self->init_chapter_list ( without_radio => 1 );
-			$self->rip_title_widgets->{rip_button}->set_sensitive(1);
-			$self->rip_title_widgets->{rip_button}->set_sensitive(1);
+			$self->rip_title_widgets->{rip_button}->set_sensitive(
+				$self->project->rip_mode eq 'rip'
+			);
 			$self->set_render_vobsub_sensitive;
 			1;
 		}
@@ -333,17 +330,14 @@ sub cb_select_title {
 	my $rip_mode = $self->project->rip_mode;
 	
 	if ( $rip_mode eq 'rip' ) {
-		$self->rip_title_widgets->{view_title_button}->set_sensitive(1);
 		$self->rip_title_widgets->{rip_button}->set_sensitive(1);
+		$self->rip_title_widgets->{view_title_button}->set_sensitive(1);
 
 	} elsif ( $rip_mode eq 'dvd' or $rip_mode eq 'dvd_image' ) {
+		$self->rip_title_widgets->{rip_button}->set_sensitive(0);
 		$self->rip_title_widgets->{view_title_button}->set_sensitive(
 			$rip_mode eq 'dvd'
 		);
-		$self->rip_title_widgets->{rip_button}->set_sensitive(
-			not $title->tc_use_chapter_mode
-		) if $title;
-
 	}
 	
 	1;
@@ -376,7 +370,7 @@ sub init_audio_popup {
 
 	my $item;
 	foreach my $angle ( 1 .. $title->viewing_angles ) {
-		$item = Gtk::MenuItem->new ( "Angle $angle" );
+		$item = Gtk::MenuItem->new ( __x("Angle {angle}", angle => $angle));
 		$item->show;
 		$item->signal_connect (
 			"select", sub {
@@ -470,7 +464,7 @@ sub fill_audio_popup {
 	}
 
 	if ( $title->audio_channel == -1 ) {
-		$item = Gtk::MenuItem->new ("No audio");
+		$item = Gtk::MenuItem->new (__"No audio");
 		$item->show;
 		$audio_popup_menu->append($item);
 		$audio_popup->set_history(0);
@@ -532,7 +526,7 @@ sub fill_target_audio_popup {
 	my %history;
 	my $history = 0;
 	for (my $i=-1; $i < @{$title->audio_tracks}; ++$i ) {
-		$text = $i == -1 ? "Skip / Deactivate this track" : "Track #$i";
+		$text = $i == -1 ? __"Skip / Deactivate this track" : __x("Track #{track}", track => $i);
 		$history{$i} = $history;
 		$item = Gtk::MenuItem->new ($text);
 		push @items, $item;
@@ -630,8 +624,8 @@ sub init_title_labels {
 		my $audio = $title->audio_tracks
 			          ->[$audio_channel];
 		$audio_label =
-			"Viewing angle #".$title->tc_viewing_angle.", ".
-			"Audio track: #$audio_channel - ".
+			__("Viewing angle")." #".$title->tc_viewing_angle.", ".
+			__("Audio track").": #$audio_channel - ".
 			$audio->lang." ".$audio->type." ".
 			$audio->sample_rate." ".$audio->channels."Ch";
 	} else {
@@ -642,7 +636,7 @@ sub init_title_labels {
 
 	foreach my $label ( @{$self->gtk_title_labels} ) {
 		$label->set_text (
-			"DVD title #$nr - ".
+			__x("DVD title #{nr}", nr => $nr)." - ".
 			$self->get_title_info (title => $title).
 			"\n".$audio_label
 		);
@@ -657,13 +651,13 @@ sub ask_read_dvd_toc {
 	if ( $self->project->content->titles ) {
 		$self->confirm_window (
 			message =>
-				"If you re-read the TOC, all settings in\n".
-				"this project get lost. Probably you want\n".
-				"to save the project to another file before\n".
-				"you proceeed.\n\n".
-				"Do you want to re-read the TOC now?",
+				__"If you re-read the TOC, all settings in\n".
+                                  "this project get lost. Probably you want\n".
+                                  "to save the project to another file before\n".
+                                  "you proceeed.\n\n".
+                                  "Do you want to re-read the TOC now?",
 			yes_callback => sub { $self->read_dvd_toc },
-			yes_label => "Yes",
+			yes_label => __"Yes",
 			
 		);
 	} else {
@@ -727,9 +721,9 @@ sub read_dvd_toc {
 		if ( $@ ) {
 			$self->long_message_window (
 				message =>
-					"Failed to copy the IFO files. vobsub creation won't work properly.\n".
-					"(Did you specify the mount point of your DVD drive in the Preferences?)\n".
-					"The error message is:\n".
+					__"Failed to copy the IFO files. vobsub creation won't work properly.\n".
+                                         "(Did you specify the mount point of your DVD drive in the Preferences?)\n".
+                                         "The error message is:\n".
 					$self->stripped_exception
 					
 			);
@@ -816,10 +810,10 @@ sub get_title_info {
 
 	return $length.", ".
 	       uc($title->video_mode).", ".
-	       $title->chapters." Chp, ".
+	       $title->chapters." ".__("Chp").", ".
 	       "$fps fps, ".
 	       $title->aspect_ratio.", ".
-	       $title->frames." frames, ".
+	       $title->frames." ".__("frames").", ".
 	       $title->width."x".$title->height.
 	       ($title->tc_use_chapter_mode ? ", Chapter Mode" : "");
 }
@@ -828,7 +822,7 @@ sub get_title_info {
 sub create_selected_title {
 	my $self = shift; $self->trace_in;
 
-	my $frame = Gtk::Frame->new ("Selected DVD title");
+	my $frame = Gtk::Frame->new (__"Selected DVD title");
 	$frame->show;
 
 	my $hbox = Gtk::HBox->new;
@@ -874,7 +868,7 @@ sub rip_title {
 
 	if ( not $self->selected_title ) {
 		$self->message_window (
-			message => "Please select at least one title."
+			message => __"Please select at least one title."
 		);
 		return;
 	}
@@ -942,7 +936,7 @@ sub view_title {
 
 	if ( not $title ) {
 		$self->message_window (
-			message => "Please select a title."
+			message => __"Please select a title."
 		);
 		return;
 	}
@@ -951,7 +945,7 @@ sub view_title {
 		my $chapters = $title->tc_selected_chapters;
 		if ( not $chapters or not @{$chapters} ) {
 			$self->message_window (
-				message => "No chapters selected."
+				message => __"No chapters selected."
 			);
 			return;
 		}

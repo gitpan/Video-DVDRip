@@ -1,4 +1,4 @@
-# $Id: Base.pm,v 1.22 2003/02/08 10:38:29 joern Exp $
+# $Id: Base.pm,v 1.23 2004/04/11 23:36:20 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -9,6 +9,7 @@
 #-----------------------------------------------------------------------
 
 package Video::DVDRip::GUI::Base;
+use Locale::TextDomain qw (video.dvdrip);
 
 use base Video::DVDRip::Base;
 
@@ -74,7 +75,7 @@ sub cb_commit_file_dialog {
 	
 	if ( -f $filename and $confirm ) {
 		$self->confirm_window (
-			message => "Overwrite existing file '$filename'?",
+			message => __x("Overwrite existing file '{filename}'?", filename => $filename),
 			yes_callback => sub { &$cb($filename); $dialog->destroy },
 			position => 'mouse'
 		);
@@ -106,10 +107,10 @@ sub confirm_window {
 	$hbox->pack_start ($label, 0, 1, 0);
 	$confirm->vbox->pack_start ($hbox, 1, 1, 0);
 	$confirm->border_width(10);
-	$confirm->set_title ("Confirmation");
+	$confirm->set_title (__"Confirmation");
 
 	if ( not $omit_cancel ) {
-		my $cancel = Gtk::Button->new ("Cancel");
+		my $cancel = Gtk::Button->new (__"Cancel");
 		$confirm->action_area->pack_start ( $cancel, 1, 1, 0 );
 		$cancel->signal_connect( "clicked", sub { $confirm->destroy } );
 		$cancel->show;
@@ -151,7 +152,7 @@ sub message_window {
 	$hbox->pack_start ($label, 0, 1, 0);
 	$dialog->vbox->pack_start ($hbox, 1, 1, 0);
 	$dialog->border_width(10);
-	$dialog->set_title ("Video::DVDRip Message");
+	$dialog->set_title (__"dvd::rip Message");
 	$dialog->set_default_size (250, 150);
 
 	my $ok = Gtk::Button->new ("Ok");
@@ -253,10 +254,10 @@ sub create_dialog {
 		} elsif ( $field->{type} eq 'switch' ) {
 			$hbox = Gtk::HBox->new;
 			$hbox->show;
-			my $radio_yes = Gtk::RadioButton->new ("Yes");
+			my $radio_yes = Gtk::RadioButton->new (__"Yes");
 			$radio_yes->show;
 			$hbox->pack_start($radio_yes, 0, 1, 0);
-			my $radio_no = Gtk::RadioButton->new ("No", $radio_yes);
+			my $radio_no = Gtk::RadioButton->new (__"No", $radio_yes);
 			$radio_no->show;
 			$hbox->pack_start($radio_no, 0, 1, 0);
 
@@ -331,7 +332,7 @@ sub long_message_window {
 	my ($message) = @par{'message'};
 
 	my $win = Gtk::Window->new;
-	$win->set_title ("Video::DVDRip Message");
+	$win->set_title (__"dvd::rip Message");
 	$win->set_default_size (620, 400);
 	$win->set_position ("center");
 

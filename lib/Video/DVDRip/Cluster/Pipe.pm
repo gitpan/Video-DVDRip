@@ -1,4 +1,4 @@
-# $Id: Pipe.pm,v 1.10.2.3 2003/10/26 08:16:27 joern Exp $
+# $Id: Pipe.pm,v 1.12 2004/04/11 23:36:19 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -9,6 +9,7 @@
 #-----------------------------------------------------------------------
 
 package Video::DVDRip::Cluster::Pipe;
+use Locale::TextDomain qw (video.dvdrip);
 
 use base Video::DVDRip::Base;
 
@@ -109,7 +110,10 @@ sub open {
 	    )
 	);
 
-	$self->log (3, "execute command: $command (timeout=$timeout)");
+	$self->log (3,
+		__x("execute command: {command} (timeout={timeout})",
+		    command =>$command, timeout => $timeout)
+	);
 
 	return $self;
 }
@@ -144,7 +148,7 @@ sub output_tail {
 sub timeout_expired {
 	my $self = shift;
 
-	$self->log ("Command cancelled due to timeout");
+	$self->log (__"Command cancelled due to timeout");
 
 	kill 15, $self->pid;
 	$self->cancel;
@@ -188,7 +192,7 @@ sub input {
 	my ($pid) = ( $line_buffer =~ /DVDRIP_JOB_PID=(\d+)/ );
 	if ( defined $pid ) {
 		$self->set_pid ( $pid );
-		$self->log ("Job has PID $pid");
+		$self->log (__x("Job has PID {pid}", pid => $pid));
 		$line_buffer =~ s/DVDRIP_JOB_PID=(\d+)//;
 		$rc =~ s/DVDRIP_JOB_PID=(\d+)//;
 	}
@@ -228,7 +232,7 @@ sub cancel {
 	my $pid = $self->pid;
 
 	if ( $pid ) {
-		$self->log ("Aborting command. Sending signal 1 to PID $pid...");
+		$self->log (__x("Aborting command. Sending signal 1 to PID {pid}...", pid => $pid));
 		kill 1, $pid;
 	}
 

@@ -146,11 +146,24 @@
   Neverstopdreaming <neverstopdreaming AT tiscali.it>
   James Broberg <jbrobergAT cs.rmit.edu.au>
   TOSOVSKY Ales <tosovsky AT znalecka.cz>
+  Daniel Baughman <danrb AT codenet.net>
+  Sybren <sybren AT thirdtower.com>
+  Bennett Perkins <bennett.perkins AT optusnet.com.au>
+  Oliver Kramer <kontakt AT oliver-kramer.de>
+  Nathan L. Adams <adamsn79 AT bellsouth.net>
+  Geoffrey Trexler <skynet AT charter.net>
+  Stephen D. Leedle <LeedleSt AT gmx.de>
+  Robin Hill <robin AT robinhill.me.uk>
+  Peter Hutnick <hutnick AT gmail.com>.
+  Mike Frysinger <vapier AT gentoo.org>
+  Jonathan Hall <flimzy AT flimzy.com>
+  Nicholas E Andrade <neandrad AT ieng9.ucsd.edu>
+  Lukas Postupa <postupa AT gmx.de>
 
   (please contact me if you're missing your name here)
 
 * Special thanks to Florin Andrei, who revised the documentation
-  and corrected many of my grammatical sins. ;)
+  and corrected many of my english grammatical sins. ;)
 
 * This special section lists all guys who donated DVD's,
   especially for improving NTSC operation of dvd::rip:
@@ -161,3 +174,6 @@
 * Chris Phillips <acid_kewpie AT users.sourceforge.net>,
   the author of lsdvd, from which I extracted the list of
   ISO-639 language codes.
+
+* Guido Flohr <guido AT imperia.net> for Locale::TextDomain,
+  which provides the l10n framework used by dvd::rip.

@@ -1,4 +1,4 @@
-# $Id: Filters.pm,v 1.9.2.1 2003/10/26 12:37:05 joern Exp $
+# $Id: Filters.pm,v 1.11 2004/04/11 23:36:20 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -9,6 +9,7 @@
 #-----------------------------------------------------------------------
 
 package Video::DVDRip::GUI::Filters;
+use Locale::TextDomain qw (video.dvdrip);
 
 use base Video::DVDRip::GUI::Window;
 
@@ -77,7 +78,7 @@ sub build {
 
 	# build window -----------------------------------------------
 	my $win = Gtk::Window->new ( -toplevel );
-	$win->set_title($self->config('program_name'). " Configure filters");
+	$win->set_title($self->config('program_name')." ".__"Configure filters");
 	$win->border_width(0);
 	$win->realize;
 	$win->set_default_size ( undef, 550 );
@@ -190,7 +191,7 @@ sub build_available_filters {
 	my ($popup_menu, $popup, $item, %popup_entries, $button);
 
 	# Frame
-	$frame = Gtk::Frame->new ("Available filters");
+	$frame = Gtk::Frame->new (__"Available filters");
 	$frame->show;
 
 	# Frame HBox
@@ -208,7 +209,7 @@ sub build_available_filters {
 	$sw->set_policy( 'automatic', 'automatic' );
 
 	my $clist = Gtk::CList->new_with_titles (
-		 "Name", "Description"
+		 __"Name", __"Description"
 	);
 	$clist->set_usize ( undef, 160 );
  	$clist->set_column_width( 0, 80 );
@@ -232,7 +233,7 @@ sub build_available_filters {
 	$widgets->{available_filters_clist} = $clist;
 	
 	$label = Gtk::Label->new (
-		"Double click to add a filter.\n",
+		__"Double click to add a filter.\n",
 	);
 #	$label->set_justify('left');
 	$label->show;
@@ -254,7 +255,7 @@ sub build_selected_filters {
 	my ($popup_menu, $popup, $item, %popup_entries, $button);
 
 	# Frame
-	$frame = Gtk::Frame->new ("Selected filters");
+	$frame = Gtk::Frame->new (__"Selected filters");
 	$frame->show;
 
 	# Frame HBox
@@ -272,7 +273,7 @@ sub build_selected_filters {
 	$sw->set_policy( 'automatic', 'automatic' );
 
 	my $clist = Gtk::CList->new_with_titles (
-		 "Name", "Description", "id"
+		 __"Name", __"Description", __"id"
 	);
 	$clist->set_usize ( undef, 160 );
  	$clist->set_column_width( 0, 80 );
@@ -301,8 +302,7 @@ sub build_selected_filters {
 	$widgets->{selected_filters_clist} = $clist;
 
 	$label = Gtk::Label->new (
-		"Double click to remove a filter.\n".
-		"Change order using drag 'n drop.",
+		__"Double click to remove a filter.\nChange order using drag 'n drop.",
 	);
 	$label->show;
 	$hbox = Gtk::HBox->new;
@@ -323,7 +323,7 @@ sub build_filter_options {
 	my ($popup_menu, $popup, $item, %popup_entries, $button, $sep);
 
 	# Frame
-	$frame = Gtk::Frame->new ("Filter Options");
+	$frame = Gtk::Frame->new (__"Filter Options");
 	$frame->show;
 
 	# Frame HBox
@@ -403,7 +403,7 @@ sub build_toolbar {
 	$top_hbox->show;
 
 	# Frame
-	$frame = Gtk::Frame->new ("Preview settings");
+	$frame = Gtk::Frame->new (__"Preview settings");
 	$frame->show;
 	$top_hbox->pack_start ($frame, 0, 1, 0);
 
@@ -475,11 +475,11 @@ if ( 0 ) {
 		);
 	});
 	$tip = Gtk::Tooltips->new;
-	$tip->set_tip ($button, "Visually select frame range", undef);
+	$tip->set_tip ($button, __"Visually select frame range", undef);
 	$frame_hbox->pack_start ($button, 0, 1, 0);
 }
 	# Frame
-	$frame = Gtk::Frame->new ("Preview control");
+	$frame = Gtk::Frame->new (__"Preview control");
 	$frame->show;
 	$top_hbox->pack_start ($frame, 0, 1, 0);
 
@@ -492,17 +492,17 @@ if ( 0 ) {
 	my $button_box = $frame_hbox;
 
 	my @buttons = (
-	   play  	=> ">:Open preview window and play:1",
-	   apply	=> "A:Apply filter chain:0",
-	   slower 	=> "-:Decrease preview speed:0",
-	   faster 	=> "+:Increase preview speed:0",
-	   pause 	=> "||:Pause/Resume:0",
-	   undo		=> "U:Undo - view previous buffer:0",
-	   slow_rewind	=> "<<:Step backward one frame:0",
-	   slow_forward	=> ">>:Step forward one frame:0",
-	   fast_rewind 	=> "<<<:Step backward several frames:0",
-	   fast_forward	=> ">>>:Step forward several frames:0",
-	   stop  	=> "O:Stop playing and close preview window:0", 
+	   play  	=> ">:".__("Open preview window and play").":1",
+	   apply	=> "A:".__("Apply filter chain").":0",
+	   slower 	=> "-:".__("Decrease preview speed").":0",
+	   faster 	=> "+:".__("Increase preview speed").":0",
+	   pause 	=> "||:".__("Pause/Resume").":0",
+	   undo		=> "U:".__("Undo - view previous buffer").":0",
+	   slow_rewind	=> "<<:".__("Step backward one frame").":0",
+	   slow_forward	=> ">>:".__("Step forward one frame").":0",
+	   fast_rewind 	=> "<<<:".__("Step backward several frames").":0",
+	   fast_forward	=> ">>>:".__("Step forward several frames").":0",
+	   stop  	=> "O:".__("Stop playing and close preview window").":0",
 	);
 
 	while ( @buttons ) {
@@ -821,8 +821,7 @@ sub reorder_selected_filter {
 	if ( not $self->preview->closed ) {
 		$self->message_window (
 			message =>
-				"You can't change the filter order\n".
-				"while the preview window is open."
+				__"You can't change the filter order\nwhile the preview window is open."
 		);
 		$success = 0;
 	} else {
@@ -857,7 +856,7 @@ sub update_filter_info {
 	);
 
 	if ( not $filter_id and not $filter_name ) {
-		my $label = Gtk::Label->new ("No filter selected.");
+		my $label = Gtk::Label->new (__"No filter selected.");
 		$label->show;
 		$widgets->{filter_info_vbox}->pack_start ($label, 0, 1, 0);
 		$widgets->{filter_info_widget} = $label;
@@ -955,8 +954,8 @@ sub build_filter_settings {
 		row		=> $row++,
 		object		=> "filter_setting",
 		attr		=> "enabled",
-		label		=> "Enable filter",
-		tooltip		=> "Disable filter temporarily",
+		label		=> __"Enable filter",
+		tooltip		=> __"Disable filter temporarily",
 	);
 
 	my $sep = Gtk::HSeparator->new;
@@ -997,7 +996,7 @@ sub build_filter_settings {
 	}
 
 	if ( not @{$filter->options} ) {
-		my $label = Gtk::Label->new ("This filter has no options");
+		my $label = Gtk::Label->new (__"This filter has no options");
 		$label->show;
 		my $hbox = Gtk::HBox->new;
 		$hbox->show;

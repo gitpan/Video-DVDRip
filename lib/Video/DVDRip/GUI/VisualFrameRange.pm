@@ -1,4 +1,4 @@
-# $Id: VisualFrameRange.pm,v 1.2 2003/01/28 20:19:57 joern Exp $
+# $Id: VisualFrameRange.pm,v 1.3 2004/04/11 23:36:20 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -9,6 +9,7 @@
 #-----------------------------------------------------------------------
 
 package Video::DVDRip::GUI::VisualFrameRange;
+use Locale::TextDomain qw (video.dvdrip);
 
 use base Video::DVDRip::GUI::Window;
 
@@ -25,7 +26,7 @@ sub build {
 
 	# build window -----------------------------------------------
 	my $win = Gtk::Window->new ( -toplevel );
-	$win->set_title($self->config('program_name'). " Select a frame range");
+	$win->set_title($self->config('program_name')." ".__"Select a frame range");
 	$win->border_width(0);
 	$win->realize;
 #	$win->set_default_size ( 600, undef );
@@ -47,7 +48,7 @@ sub build {
 
 	# Parameter Widgets ------------------------------------------
 	
-	$frame = Gtk::Frame->new ("Select a frame range");
+	$frame = Gtk::Frame->new (__"Select a frame range");
 	$frame->show;
 	$dialog_vbox->pack_start ( $frame, 0, 1, 0);
 	
@@ -73,7 +74,7 @@ sub build {
 	$hbox->set_border_width ( 5 );
 	$vbox->pack_start ($hbox, 0, 1, 0);
 
-	$label = Gtk::Label->new ("Start frame");
+	$label = Gtk::Label->new (__"Start frame");
 	$label->show;
 	$hbox->pack_start ($label, 0, 1, 0);
 
@@ -83,7 +84,7 @@ sub build {
 	$entry->set_usize (50, undef);
 	$hbox->pack_start ($entry, 0, 1, 0);
 	
-	$label = Gtk::Label->new ("End frame");
+	$label = Gtk::Label->new (__"End frame");
 	$label->show;
 	$hbox->pack_start ($label, 0, 1, 0);
 
@@ -93,15 +94,15 @@ sub build {
 	$entry->set_usize (50, undef);
 	$hbox->pack_start ($entry, 0, 1, 0);
 	
-	$button = Gtk::Button->new (" Set start ");
+	$button = Gtk::Button->new (__"Set start");
 	$button->show;
 	$hbox->pack_start ($button, 0, 1, 0);
 
-	$button = Gtk::Button->new (" Set end ");
+	$button = Gtk::Button->new (__"Set end");
 	$button->show;
 	$hbox->pack_start ($button, 0, 1, 0);
 	
-	$button = Gtk::Button->new (" Close window ");
+	$button = Gtk::Button->new (__"Close window");
 	$button->show;
 	$hbox->pack_start ($button, 0, 1, 0);
 	

@@ -1,4 +1,4 @@
-# $Id: Node.pm,v 1.25.2.2 2003/04/26 15:43:04 joern Exp $
+# $Id: Node.pm,v 1.27 2004/04/11 23:36:19 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -9,6 +9,7 @@
 #-----------------------------------------------------------------------
 
 package Video::DVDRip::Cluster::Node;
+use Locale::TextDomain qw (video.dvdrip);
 
 use base Video::DVDRip::Base;
 
@@ -234,7 +235,7 @@ sub stop {
 	my $job = $self->assigned_job;
 
 	$self->set_state ('stopped');
-	$self->log ("Node '".$self->name."' stopped");
+	$self->log (__x("Node '{node}' stopped", node => $self->name));
 	$self->save;
 
 	$job->cancel if $job;
@@ -249,7 +250,7 @@ sub start {
 		if $self->state ne 'stopped' and
 		   $self->state ne 'aborted';
 
-	$self->log ("Node '".$self->name."' started");
+	$self->log (__x("Node '{node}' started", node => $self->name));
 
 	$self->set_alive ( 0 );
 	$self->set_state ( $self->is_master ? 'idle' : 'unknown');
@@ -286,7 +287,7 @@ sub run_tests {
 	if ( $self->state eq 'offline' ) {
 		$self->set_test_finished(1);
 		$self->set_test_result (
-			"Node is offline. Can't test its configuration."
+			__"Node is offline. Can't test its configuration."
 		);
 		return;
 	}

@@ -1,4 +1,4 @@
-# $Id: ProbeTitleCount.pm,v 1.1.2.1 2003/03/31 12:58:04 joern Exp $
+# $Id: ProbeTitleCount.pm,v 1.3 2004/04/11 23:36:20 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -9,6 +9,7 @@
 #-----------------------------------------------------------------------
 
 package Video::DVDRip::Job::ProbeTitleCount;
+use Locale::TextDomain qw (video.dvdrip);
 
 use base Video::DVDRip::Job;
 
@@ -25,7 +26,7 @@ sub type {
 sub info {
 	my $self = shift;
 
-	my $info = "Determine number of titles";
+	my $info = __"Determine number of titles";
 
 	return $info;
 }

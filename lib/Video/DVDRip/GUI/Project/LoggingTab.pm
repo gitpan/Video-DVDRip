@@ -1,4 +1,4 @@
-# $Id: LoggingTab.pm,v 1.6.2.2 2003/02/15 09:38:09 joern Exp $
+# $Id: LoggingTab.pm,v 1.8 2004/04/11 23:36:20 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -9,6 +9,7 @@
 #-----------------------------------------------------------------------
 
 package Video::DVDRip::GUI::Project;
+use Locale::TextDomain qw (video.dvdrip);
 
 use Video::DVDRip::GUI::Logger;
 
@@ -26,7 +27,7 @@ sub create_logging_tab {
 	$vbox->set_border_width(5);
 	$vbox->show;
 	
-	my $frame = Gtk::Frame->new ("Log messages");
+	my $frame = Gtk::Frame->new (__"Log messages");
 	$frame->show;
 
 	my $hbox = Gtk::HBox->new;
@@ -57,7 +58,7 @@ sub create_logging_tab {
 	$frame->add ($hbox);
 	$vbox->pack_start ( $frame, 1, 1, 0);
 
-	my $button = Gtk::Button->new (" Nuke log file ");
+	my $button = Gtk::Button->new (__"Nuke log file");
 	$button->show;
 	$hbox = Gtk::HBox->new;
 	$hbox->show;

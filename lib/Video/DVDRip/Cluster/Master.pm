@@ -1,4 +1,4 @@
-# $Id: Master.pm,v 1.30 2003/01/28 20:19:57 joern Exp $
+# $Id: Master.pm,v 1.32 2004/04/13 20:47:01 joern Exp $
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
 # All Rights Reserved. See file COPYRIGHT for details.
@@ -8,6 +8,7 @@
 #-----------------------------------------------------------------------
 
 package Video::DVDRip::Cluster::Master;
+use Locale::TextDomain qw (video.dvdrip);
 
 use base Video::DVDRip::Base;
 
@@ -90,7 +91,7 @@ sub set_node_check_watcher	{ shift->{node_check_watcher}	= $_[1] }
 
 		}
 
-		$self->log ("Master daemon activated");
+		$self->log (__"Master daemon activated");
 
 		$self->load;
 
@@ -118,15 +119,6 @@ sub check_prerequisites {
 
 	croak "/usr/sbin/fping is not suid root"
 		if not $suid or $uid != 0;
-
-	# search for pstree
-	my @path = split(":", $ENV{PATH});
-	my $found = 0;
-	foreach my $path ( @path ) {
-		$found = 1, last if -x "$path/pstree";
-	}
-
-	croak "pstree not found in PATH" if not $found;
 
 	1;
 }
@@ -167,7 +159,7 @@ sub disable_node_check {
 	$self->node_check_watcher->cancel;
 	$self->set_node_check_watcher(undef);
 
-	$self->log ("Node check watcher disabled");
+	$self->log (__"Node check watcher disabled");
 
 	1;
 }
@@ -197,7 +189,7 @@ sub node_check {
 		},
 		cb_finished => sub {
 			if ( $buffer =~ /^\s*$/ ) {
-				$self->log ("Warning: node check fping reported nothing");
+				$self->log (__"Warning: node check fping reported nothing");
 				return;
 			}
 			my $node_name;
@@ -212,29 +204,29 @@ sub node_check {
 				$node_name = $node->hostname;
 				if ( $buffer =~ /^$node_name\s+is\s+alive/m ) {
 					if ( not $node->alive and $node->answered_last_ping == 2 ) {
-						$self->log ("Node '$node_name' is now online.");
+						$self->log (__x("Node '{node_name}' is now online.", node_name => $node_name));
 						$node->set_alive(1);
 					}
 					if ( not $node->alive and $node->answered_last_ping == 1 ) {
-						$self->log ("Node '$node_name' is still reachable. Will be online in 10 seconds.");
+						$self->log (__x("Node '{node_name}' is still reachable. Will be online in 10 seconds.", node_name => $node_name));
 						$node->set_answered_last_ping ( 2 );
 					}
 					if ( not $node->alive and not $node->answered_last_ping ) {
-						$self->log ("Node '$node_name' is now reachable. Will be online in 20 seconds.");
+						$self->log (__x("Node '{node_name}' is now reachable. Will be online in 20 seconds.", node_name => $node_name));
 						$node->set_answered_last_ping ( 1 );
 					}
 					if ( $node->alive == 0.5 ) {
-						$self->log ("Node '$node_name' is Ok again");
+						$self->log (__x("Node '{node_name}' is Ok again", node_name => $node_name));
 						$node->set_alive(1);
 					}
 				} else {
 					$node->set_answered_last_ping ( 0 );
 					if ( $node->alive == 0.5 ) {
-						$self->log ("Warning: Node '$node_name' is unreachable")
+						$self->log (__x("Warning: Node '{node_name}' is unreachable", node_name => $node_name))
 							if $node->alive or $node->state eq 'unknown';
 						$node->set_alive(0);
 					} elsif ( $node->alive ) {
-						$self->log ("Warning: Node '$node_name' possibly offline");
+						$self->log (__x("Warning: Node '{node_name}' possibly offline", node_name => $node_name));
 						$node->set_alive(0.5);
 					} else {
 						$node->set_alive(0);
@@ -322,7 +314,7 @@ sub load_nodes {
 	
 	my @nodes;
 	foreach my $file ( <$dir/*> ) {
-		$self->log ("Loading node file '$file'");
+		$self->log (__x("Loading node file '{file}'", file => $file));
 		my $node = Video::DVDRip::Cluster::Node->new_from_file (
 			filename  => $file,
 		);
@@ -345,7 +337,7 @@ sub load_projects {
 	my @projects;	
 	foreach my $filename ( @{$project_order} ) {
 		next if not -r $filename;
-		$self->log ("Loading project file '$filename'");
+		$self->log (__x("Loading project file '{filename}'", filename => $filename));
 		my $project = Video::DVDRip::Cluster::Project->new_from_file (
 			filename  => $filename,
 		);
@@ -366,8 +358,8 @@ sub add_node {
 	
 	my $filename = $self->node_dir.'/'.$node->name.'.node';
 
-	croak "msg: Node must have a name" if $node->name eq '';
-	croak "msg: Node with this name already exists" if -f $filename;
+	croak "msg: ".__"Node must have a name" if $node->name eq '';
+	croak "msg: ".__"Node with this name already exists" if -f $filename;
 	
 	$node->set_state ("idle") if $node->is_master;
 	
@@ -375,7 +367,10 @@ sub add_node {
 	$node->set_filename ($filename);
 	$node->save;
 	
-	$self->log ("Node '".$node->name."' saved to '$filename'");
+	$self->log (
+		__x("Node '{node_name}' saved to '{filename}'",
+		node_name => $node->name, filename => $filename)
+	);
 	
 	1;
 }
@@ -453,7 +448,7 @@ sub add_project {
 	# save changes to project
 	$project->save;
 
-	$self->log ("Project with filename '$filename' added");
+	$self->log (__x("Project with filename '{filename}' added", filename => $filename));
 	
 	# save new state
 	$self->save;
@@ -543,7 +538,7 @@ sub remove_project {
 	unlink $project->filename;
 	splice @{$self->projects}, $i, 1;
 
-	$self->log ("Project ".$project->label." removed");
+	$self->log (__x("Project {project} removed", project => $project->label));
 
 	1;
 }
@@ -772,7 +767,7 @@ sub shutdown {
 		desc     => "dvd::rip shutdown timer"
 	);
 
-	$self->log ("Cluster control daemon will shutdown in 2 seconds...");
+	$self->log (__"Cluster control daemon will shutdown in 2 seconds...");
 
 	1;
 	

@@ -1,4 +1,4 @@
-# $Id: Project.pm,v 1.30 2003/01/28 20:19:57 joern Exp $
+# $Id: Project.pm,v 1.31 2004/04/11 23:36:19 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -9,6 +9,7 @@
 #-----------------------------------------------------------------------
 
 package Video::DVDRip::Cluster::Project;
+use Locale::TextDomain qw (video.dvdrip);
 
 use base Video::DVDRip::Project;
 
@@ -175,7 +176,7 @@ sub new {
 sub create_job_plan {
 	my $self = shift; $self->trace_in;
 
-	$self->log ("Creating job plan");
+	$self->log (__"Creating job plan");
 
 	my $title     = $self->title;
 	my $multipass = $title->tc_multipass;

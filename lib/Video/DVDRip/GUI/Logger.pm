@@ -1,4 +1,4 @@
-# $Id: Logger.pm,v 1.5 2003/01/28 20:19:57 joern Exp $
+# $Id: Logger.pm,v 1.6 2004/04/11 23:36:20 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -9,6 +9,7 @@
 #-----------------------------------------------------------------------
 
 package Video::DVDRip::GUI::Logger;
+use Locale::TextDomain qw (video.dvdrip);
 
 use Carp;
 use strict;
@@ -64,7 +65,7 @@ sub nuke {
 
 	unlink $self->project->logfile;
 	
-	$self->log ("Logfile nuked.");
+	$self->log (__"Logfile nuked.");
 	
 	1;
 }

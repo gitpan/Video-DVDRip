@@ -1,4 +1,4 @@
-# $Id: StorageTab.pm,v 1.21.2.1 2003/07/28 12:42:14 joern Exp $
+# $Id: StorageTab.pm,v 1.23 2004/04/11 23:36:20 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -9,6 +9,7 @@
 #-----------------------------------------------------------------------
 
 package Video::DVDRip::GUI::Project;
+use Locale::TextDomain qw (video.dvdrip);
 
 use Carp;
 use strict;
@@ -44,7 +45,7 @@ sub create_storage_tab {
 sub create_storage_frame {
 	my $self = shift; $self->trace_in;
 	
-	my $frame = Gtk::Frame->new ("Storage path information");
+	my $frame = Gtk::Frame->new (__"Storage path information");
 	$frame->show;
 
 	my $hbox = Gtk::HBox->new;
@@ -52,11 +53,11 @@ sub create_storage_frame {
 	$hbox->show;
 
 	my ($dialog, $widgets) = $self->create_dialog (
-		{ label => "Project name",
+		{ label => __"Project name",
 		  value => $self->project->name,
 		  type  => 'text'
 		},
-		{ label => "VOB directory",
+		{ label => __"VOB directory",
 		  value => $self->project->vob_dir,
 		  type  => 'text',
 		  onchange => sub {
@@ -76,7 +77,7 @@ sub create_storage_frame {
 		  	$self->project->set_vob_dir ($text)
 		  },
 		},
-		{ label => "AVI directory",
+		{ label => __"AVI directory",
 		  value => $self->project->avi_dir,
 		  type  => 'text',
 		  onchange => sub {
@@ -96,7 +97,7 @@ sub create_storage_frame {
 		  	$self->project->set_avi_dir ($text)
 		  },
 		},
-		{ label => "Temporary directory",
+		{ label => __"Temporary directory",
 		  value => $self->project->snap_dir,
 		  type  => 'text',
 		  onchange => sub {
@@ -173,7 +174,7 @@ sub create_storage_frame {
 sub create_source_frame {
 	my $self = shift; $self->trace_in;
 	
-	my $frame = Gtk::Frame->new ("Data source mode selection");
+	my $frame = Gtk::Frame->new (__"Data source mode selection");
 	$frame->show;
 
 	my $frame_hbox = Gtk::HBox->new;
@@ -199,7 +200,7 @@ sub create_source_frame {
 	$hbox->pack_start($radio, 0, 1, 0);
 	$table->attach ($hbox, 0, 1, $row, $row+1, 'fill','expand',0,0);
 
-	$label = Gtk::Label->new ("Rip data from DVD to harddisk before encoding");
+	$label = Gtk::Label->new (__"Rip data from DVD to harddisk before encoding");
 	$label->show;
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
@@ -214,10 +215,7 @@ sub create_source_frame {
 	$hbox->show;
 	$label = Gtk::Label->new (
 		"\n".
-		"Use one of the following modes only, if ripping is no option for you.\n".
-		"Many interesting features are disabled for them:\n".
-		"No AC3, no subtitles, no PSU core for NTSC A/V sync optimization and\n".
-		"also preview grabbing and frame range transcoding is rather slow."
+		__"Use one of the following modes only, if ripping is no option for you.\nMany interesting features are disabled for them:\nNo AC3, no subtitles, no PSU core for NTSC A/V sync optimization and\nalso preview grabbing and frame range transcoding is rather slow."
 	);
 
 	$label->set_justify('left');
@@ -235,7 +233,7 @@ sub create_source_frame {
 	$hbox->pack_start($radio, 0, 1, 0);
 	$table->attach ($hbox, 0, 1, $row, $row+1, 'fill','expand',0,0);
 
-	$label = Gtk::Label->new ("Encode DVD on the fly");
+	$label = Gtk::Label->new (__"Encode DVD on the fly");
 	$label->show;
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
@@ -250,7 +248,7 @@ sub create_source_frame {
 	$radio->show;
 	$table->attach ($radio, 0, 1, $row, $row+1, 'fill','expand',0,0);
 
-	$label = Gtk::Label->new ("Use existing DVD image located in this directory:");
+	$label = Gtk::Label->new (__"Use existing DVD image located in this directory:");
 	$label->show;
 	$hbox = Gtk::HBox->new;
 	$hbox->show;

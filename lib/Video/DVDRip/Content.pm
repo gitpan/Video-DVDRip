@@ -1,4 +1,4 @@
-# $Id: Content.pm,v 1.16.2.3 2003/12/16 21:26:10 joern Exp $
+# $Id: Content.pm,v 1.18 2004/04/11 23:36:19 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -9,6 +9,7 @@
 #-----------------------------------------------------------------------
 
 package Video::DVDRip::Content;
+use Locale::TextDomain qw (video.dvdrip);
 
 use base Video::DVDRip::Base;
 

@@ -1,4 +1,4 @@
-# $Id: RemoveVOBs.pm,v 1.4 2003/01/28 20:19:57 joern Exp $
+# $Id: RemoveVOBs.pm,v 1.5 2004/04/11 23:36:20 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -9,6 +9,7 @@
 #-----------------------------------------------------------------------
 
 package Video::DVDRip::Cluster::Job::RemoveVOBs;
+use Locale::TextDomain qw (video.dvdrip);
 
 use base Video::DVDRip::Cluster::Job;
 

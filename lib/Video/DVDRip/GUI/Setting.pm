@@ -1,6 +1,7 @@
-# $Id: Setting.pm,v 1.1 2003/01/27 14:16:58 joern Exp $
+# $Id: Setting.pm,v 1.2 2004/04/11 23:36:20 joern Exp $
 
 package Video::DVDRip::GUI::Setting;
+use Locale::TextDomain qw (video.dvdrip);
 
 use strict;
 use Carp;
@@ -226,6 +227,7 @@ sub connect_signals {
 }
 
 package Video::DVDRip::GUI::Setting::ObjectAccessor;
+use Locale::TextDomain qw (video.dvdrip);
 
 sub name			{ shift->{name}				}
 sub part_of			{ shift->{part_of}			}
@@ -427,5 +429,6 @@ sub update_object_settings {
 }
 
 package Video::DVDRip::GUI::Setting::Group;
+use Locale::TextDomain qw (video.dvdrip);
 
 1;

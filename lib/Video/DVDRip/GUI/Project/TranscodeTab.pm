@@ -1,4 +1,4 @@
-# $Id: TranscodeTab.pm,v 1.83.2.15 2004/04/10 09:42:06 joern Exp $
+# $Id: TranscodeTab.pm,v 1.85 2004/04/11 23:36:20 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -9,6 +9,7 @@
 #-----------------------------------------------------------------------
 
 package Video::DVDRip::GUI::Project;
+use Locale::TextDomain qw (video.dvdrip);
 
 use Video::DVDRip::GUI::MinSizeGroup;
 use Video::DVDRip::GUI::Project::TranscodeTabAudio;
@@ -148,9 +149,9 @@ sub create_transcode_tab {
 				     $value > 2048 and not $big_target_size_warned_today ) {
 					$self->message_window (
 						message =>
-							"Warning: AVI files shouldn't get bigger than 2 GB.\n".
-							"Some players can't play them and you can't seek\n".
-							"within the files. Better use OGG for such big files."
+							__"Warning: AVI files shouldn't get bigger than 2 GB.\n".
+                                                         "Some players can't play them and you can't seek\n".
+                                                         "within the files. Better use OGG for such big files."
 					);
 					$big_target_size_warned_today = 1;
 				}
@@ -221,7 +222,7 @@ sub create_container_options {
 	my ($popup_menu, $popup, $item, %popup_entries);
 
 	# Frame
-	$frame = Gtk::Frame->new ("Container options");
+	$frame = Gtk::Frame->new (__"Container options");
 	$frame->show;
 
 	# Frame HBox
@@ -241,7 +242,7 @@ sub create_container_options {
 	$row = 0;
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new ("Select container");
+	$label = Gtk::Label->new (__"Select container");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 	$hsize_group->add ($hbox);
@@ -299,7 +300,7 @@ sub create_video_options {
 	my ($popup_menu, $popup, $item, %popup_entries, $button);
 
 	# Frame
-	$frame = Gtk::Frame->new ("Video options");
+	$frame = Gtk::Frame->new (__"Video options");
 	$frame->show;
 
 	# Frame HBox
@@ -319,7 +320,7 @@ sub create_video_options {
 	$row = 0;
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new ("Video codec");
+	$label = Gtk::Label->new (__"Video codec");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 	$table->attach ($hbox, 0, 1, $row, $row+1, 'fill','expand',0,0);
@@ -333,7 +334,7 @@ sub create_video_options {
 	$entry->set_usize(80,undef);
 	$hbox->pack_start($entry, 0, 1, 0);
 
-	$button = Gtk::Button->new (" Configure... ");
+	$button = Gtk::Button->new (__"Configure...");
 	$button->show;
 	$hbox->pack_start ($button, 0, 1, 0);
 
@@ -373,7 +374,7 @@ sub create_video_options {
 	++$row;
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new ("Video framerate");
+	$label = Gtk::Label->new (__"Video framerate");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 	$table->attach ($hbox, 0, 1, $row, $row+1, 'fill','expand',0,0);
@@ -403,7 +404,7 @@ sub create_video_options {
 	++$row;
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new ("2-pass encoding");
+	$label = Gtk::Label->new (__"2-pass encoding");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 	$table->attach ($hbox, 0, 1, $row, $row+1, 'fill','expand',0,0);
@@ -411,13 +412,13 @@ sub create_video_options {
 
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	my $radio_yes = Gtk::RadioButton->new ("Yes");
+	my $radio_yes = Gtk::RadioButton->new (__"Yes");
 	$radio_yes->show;
 	$hbox->pack_start($radio_yes, 0, 1, 0);
-	my $radio_no = Gtk::RadioButton->new ("No", $radio_yes);
+	my $radio_no = Gtk::RadioButton->new (__"No", $radio_yes);
 	$radio_no->show;
 	$hbox->pack_start($radio_no, 0, 1, 0);
-	my $check_multipass_reuse_log = Gtk::CheckButton->new ("Reuse log");
+	my $check_multipass_reuse_log = Gtk::CheckButton->new (__"Reuse log");
 	$check_multipass_reuse_log->show;
 	$hbox->pack_start($check_multipass_reuse_log, 0, 1, 0);
 
@@ -431,7 +432,7 @@ sub create_video_options {
 	++$row;
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new ("Deinterlace mode");
+	$label = Gtk::Label->new (__"Deinterlace mode");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 	$table->attach ($hbox, 0, 1, $row, $row+1, 'fill','expand',0,0);
@@ -471,13 +472,13 @@ sub create_video_options {
 	++$row;
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new ("Filters");
+	$label = Gtk::Label->new (__"Filters");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 	$table->attach ($hbox, 0, 1, $row, $row+1, 'fill','expand',0,0);
 	$hsize_group->add ($hbox);
 
-	$button = Gtk::Button->new ("  Configure filters & preview...  ");
+	$button = Gtk::Button->new (__"Configure filters & preview...");
 	$button->show;
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
@@ -488,7 +489,7 @@ sub create_video_options {
 
 	if ( $self->version ("transcode") < 603 ) {
 		$button->set_sensitive(0);
-		$button->child->set (" Needs transcode 0.6.3 ");
+		$button->child->set (__"Needs transcode 0.6.3");
 	}
 
 	return $frame;
@@ -503,7 +504,7 @@ sub create_video_bitrate_calc {
 	my ($popup_menu, $popup, $item, %popup_entries);
 
 	# Frame
-	$frame = Gtk::Frame->new ("Video bitrate calculation");
+	$frame = Gtk::Frame->new (__"Video bitrate calculation");
 	$frame->show;
 
 	# Frame HBox
@@ -523,7 +524,7 @@ sub create_video_bitrate_calc {
 	$row = 0;
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new ("Target media");
+	$label = Gtk::Label->new (__"Target media");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 	$table->attach ($hbox, 0, 1, $row, $row+1, 'fill','expand',0,0);
@@ -540,10 +541,10 @@ sub create_video_bitrate_calc {
 	$popup->set_menu($popup_menu);
 
 	%popup_entries = (
-		1 => "one",
-		2 => "two",
-		3 => "three",
-		4 => "four",
+		1 => __"one",
+		2 => __"two",
+		3 => __"three",
+		4 => __"four",
 	);
 
 	foreach my $key ( sort keys %popup_entries ) {
@@ -610,7 +611,7 @@ sub create_video_bitrate_calc {
 	++$row;
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new ("Target size");
+	$label = Gtk::Label->new (__"Target size");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 	$table->attach ($hbox, 0, 1, $row, $row+1, 'fill','expand',0,0);
@@ -639,7 +640,7 @@ sub create_video_bitrate_calc {
 	
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	my $checkbox = Gtk::CheckButton->new ("Use range");
+	my $checkbox = Gtk::CheckButton->new (__"Use range");
 	$checkbox->show;
 	$hbox->pack_start ($checkbox, 0, 1, 0);
 	$checkbox->signal_connect (
@@ -661,7 +662,7 @@ sub create_video_bitrate_calc {
 	++$row;
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new ("Video bitrate");
+	$label = Gtk::Label->new (__"Video bitrate");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 	$table->attach ($hbox, 0, 1, $row, $row+1, 'fill','expand',0,0);
@@ -689,7 +690,7 @@ sub create_video_bitrate_calc {
 
 	$hbox = Gtk::HBox->new;
 	$hbox->show;	
-	my $checkbox = Gtk::CheckButton->new ("Manual");
+	my $checkbox = Gtk::CheckButton->new (__"Manual");
 	$checkbox->show;
 	$hbox->pack_start ($checkbox, 0, 1, 0);
 	$checkbox->signal_connect (
@@ -723,7 +724,7 @@ sub create_transcode_operate {
 	my ($button, $button_box);
 
 	# Frame
-	$frame = Gtk::Frame->new ("Operate");
+	$frame = Gtk::Frame->new (__"Operate");
 	$frame->show;
 
 	# Frame HBox
@@ -739,19 +740,19 @@ sub create_transcode_operate {
 	$frame_hbox->pack_start ($button_box, 1, 0, 1);
 
 	# Transcode and split Button
-	$button = Gtk::Button->new_with_label ("Transcode + Split");
+	$button = Gtk::Button->new_with_label (__"Transcode + Split");
 	$button->show;
 	$button->signal_connect ("clicked", sub { $self->transcode ( split => 1 ) } );
 	$button_box->add ($button);
 
 	# Transcode only Button
-	$button = Gtk::Button->new_with_label ("Transcode");
+	$button = Gtk::Button->new_with_label (__"Transcode");
 	$button->show;
 	$button->signal_connect ("clicked", sub { $self->transcode } );
 	$button_box->add ($button);
 
 	# Split only Button
-	$button = Gtk::Button->new_with_label ("Split AVI");
+	$button = Gtk::Button->new_with_label (__"Split AVI");
 	$button->show;
 	$button->signal_connect ("clicked", sub { $self->avisplit } );
 	$button_box->add ($button);
@@ -759,7 +760,7 @@ sub create_transcode_operate {
 	$self->transcode_widgets->{avisplit_button} = $button;
 
 	# View AVI Button
-	$button = Gtk::Button->new_with_label ("View AVI");
+	$button = Gtk::Button->new_with_label (__"View AVI");
 	$button->show;
 	$button->signal_connect ("clicked", sub { $self->view_avi } );
 	$button_box->add ($button);
@@ -767,7 +768,7 @@ sub create_transcode_operate {
 	$self->transcode_widgets->{view_avi_button} = $button;
 
 	# Add Project To Cluster Button
-	$button = Gtk::Button->new_with_label ("Add to cluster");
+	$button = Gtk::Button->new_with_label (__"Add to cluster");
 	$button->show;
 	$button->signal_connect ("clicked", sub { $self->add_to_cluster } );
 	$button_box->add ($button);
@@ -786,7 +787,7 @@ sub create_general_options {
 	my ($popup_menu, $popup, $item, %popup_entries);
 
 	# Frame
-	$frame = Gtk::Frame->new ("General options");
+	$frame = Gtk::Frame->new (__"General options");
 	$frame->show;
 
 	# Frame HBox
@@ -806,7 +807,7 @@ sub create_general_options {
 	$row = 0;
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new ("Frame range");
+	$label = Gtk::Label->new (__"Frame range");
 	$label->set_line_wrap(1);
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
@@ -859,7 +860,7 @@ sub create_general_options {
 	++$row;
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new ("transcode options");
+	$label = Gtk::Label->new (__"transcode options");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 	$table->attach ($hbox, 0, 1, $row, $row+1, 'fill','expand',0,0);
@@ -878,7 +879,7 @@ sub create_general_options {
 	++$row;
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new ("Process nice level");
+	$label = Gtk::Label->new (__"Process nice level");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 	$table->attach ($hbox, 0, 1, $row, $row+1, 'fill','expand',0,0);
@@ -904,7 +905,7 @@ sub create_general_options {
 	++$row;
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new ("Preview window");
+	$label = Gtk::Label->new (__"Preview window");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 	$table->attach ($hbox, 0, 1, $row, $row+1, 'fill','expand',0,0);
@@ -912,10 +913,10 @@ sub create_general_options {
 
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	my $radio_yes = Gtk::RadioButton->new ("Yes");
+	my $radio_yes = Gtk::RadioButton->new (__"Yes");
 	$radio_yes->show;
 	$hbox->pack_start($radio_yes, 0, 1, 0);
-	my $radio_no = Gtk::RadioButton->new ("No", $radio_yes);
+	my $radio_no = Gtk::RadioButton->new (__"No", $radio_yes);
 	$radio_no->show;
 	$hbox->pack_start($radio_no, 0, 1, 0);
 	
@@ -928,7 +929,7 @@ sub create_general_options {
 	++$row;
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new ("Use PSU core");
+	$label = Gtk::Label->new (__"Use PSU core");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 	$table->attach ($hbox, 0, 1, $row, $row+1, 'fill','expand',0,0);
@@ -936,10 +937,10 @@ sub create_general_options {
 
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$radio_yes = Gtk::RadioButton->new ("Yes");
+	$radio_yes = Gtk::RadioButton->new (__"Yes");
 	$radio_yes->show;
 	$hbox->pack_start($radio_yes, 0, 1, 0);
-	$radio_no = Gtk::RadioButton->new ("No", $radio_yes);
+	$radio_no = Gtk::RadioButton->new (__"No", $radio_yes);
 	$radio_no->show;
 	$hbox->pack_start($radio_no, 0, 1, 0);
 	
@@ -953,7 +954,7 @@ sub create_general_options {
 	++$row;
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new ("Execute afterwards");
+	$label = Gtk::Label->new (__"Execute afterwards");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 	$table->attach ($hbox, 0, 1, $row, $row+1, 'fill','expand',0,0);
@@ -969,7 +970,7 @@ sub create_general_options {
 
 	$self->transcode_widgets->{tc_execute_afterwards} = $entry;
 
-	my $checkbox = Gtk::CheckButton->new ("And exit");
+	my $checkbox = Gtk::CheckButton->new (__"And exit");
 	$checkbox->show;
 	$hbox->pack_start ($checkbox, 1, 1, 0);
 	$self->transcode_widgets->{tc_exit_afterwards} = $checkbox;
@@ -986,7 +987,7 @@ sub create_calculated_storage {
 	my ($popup_menu, $popup, $item, %popup_entries, $button);
 
 	# Frame
-	$frame = Gtk::Frame->new ("Calculated storage");
+	$frame = Gtk::Frame->new (__"Calculated storage");
 	$frame->show;
 
 	# Frame HBox
@@ -1015,14 +1016,14 @@ sub create_calculated_storage {
 
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new ("Non video");
+	$label = Gtk::Label->new (__"Non video");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 	$table->attach_defaults ($hbox, 1, 2, $row, $row+1);
 
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new ("Total");
+	$label = Gtk::Label->new (__"Total");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 	$table->attach_defaults ($hbox, 2, 3, $row, $row+1);
@@ -1216,8 +1217,8 @@ sub switch_to_mpeg_encoding {
 
 	$widgets->{avisplit_button}->set_sensitive(0);
 	$widgets->{cluster_button}->set_sensitive(0);
-	$widgets->{view_avi_button}->child->set("View MPEG");
-	$widgets->{tc_video_codec_label}->set ("MPEG Variant");
+	$widgets->{view_avi_button}->child->set(__"View MPEG");
+	$widgets->{tc_video_codec_label}->set (__"MPEG Variant");
 
 	$_->hide foreach @{$widgets->{tc_mpeg_hide}};
 
@@ -1238,16 +1239,16 @@ sub switch_to_divx_encoding {
 
 	$widgets->{avisplit_button}->set_sensitive(1);
 	$widgets->{cluster_button}->set_sensitive(1);
-	$widgets->{tc_video_codec_label}->set ("Video codec");
+	$widgets->{tc_video_codec_label}->set (__"Video codec");
 	$widgets->{tc_multipass_reuse_log}->set_sensitive(0)
 		if not $title->tc_multipass;
 
 	if ( $title->is_ogg ) {
-		$widgets->{view_avi_button}->child->set("View OGG");
-		$widgets->{avisplit_button}->child->set("Split OGG");
+		$widgets->{view_avi_button}->child->set(__"View OGG");
+		$widgets->{avisplit_button}->child->set(__"Split OGG");
 	} else {
-		$widgets->{view_avi_button}->child->set("View AVI");
-		$widgets->{avisplit_button}->child->set("Split AVI");
+		$widgets->{view_avi_button}->child->set(__"View AVI");
+		$widgets->{avisplit_button}->child->set(__"Split AVI");
 	}
 
 	1;
@@ -1353,7 +1354,7 @@ sub transcode {
 
 	if ( not $title->is_ripped ) {
 		$self->message_window (
-			message => "You first have to rip this title."
+			message => __"You first have to rip this title."
 		);
 		return 1;
 	}
@@ -1361,7 +1362,7 @@ sub transcode {
 	if ( $title->tc_psu_core and
 	    ($title->tc_start_frame or $title->tc_end_frame) ) {
 		$self->message_window (
-			message => "You can't select a frame range with psu core."
+			message => __"You can't select a frame range with psu core."
 		);
 		return 1;
 	}
@@ -1369,29 +1370,29 @@ sub transcode {
 	if ( $title->tc_psu_core and
 	     $title->project->rip_mode ne 'rip' ) {
 		$self->message_window (
-			message => "PSU core only available for ripped DVD's."
+			message => __"PSU core only available for ripped DVD's."
 		);
 		return 1;
 	}
 
 	if ( $title->tc_use_chapter_mode and not @{$chapters} ) {
 		$self->message_window (
-			message => "No chapters selected."
+			message => __"No chapters selected."
 		);
 		return 1;
 	}
 
 	if ( $title->tc_use_chapter_mode and $split ) {
 		$self->message_window (
-			message => "Splitting AVI files in\n".
-				   "chapter mode makes no sense."
+			message => __"Splitting AVI files in\n".
+                                    "chapter mode makes no sense."
 		);
 		return 1;
 	}
 
 	if ( $title->get_first_audio_track == -1 ) {
 		$self->message_window (
-			message => "WARNING: no target audio track #0"
+			message => __"WARNING: no target audio track #0"
 		);
 	}
 
@@ -1399,8 +1400,8 @@ sub transcode {
 		if ( $title->tc_video_codec =~ /^X?VCD$/ ) {
 			$self->message_window (
 				message =>
-					"Having more than one audio track ".
-					"isn't possible on a (X)VCD."
+					__"Having more than one audio track ".
+                                         "isn't possible on a (X)VCD."
 			);
 			return 1;
 		}
@@ -1408,9 +1409,9 @@ sub transcode {
 		     keys %{$title->get_additional_audio_tracks} > 1 ) {
 			$self->message_window (
 				message =>
-					"WARNING: Having more than two audio tracks\n".
-					"on a (X)SVCD/CVD is not standard conform. You may\n".
-					"encounter problems on hardware players."
+					__"WARNING: Having more than two audio tracks\n".
+                                         "on a (X)SVCD/CVD is not standard conform. You may\n".
+                                         "encounter problems on hardware players."
 			);
 		}
 	}
@@ -1419,9 +1420,9 @@ sub transcode {
 	if ( $svcd_warning = $title->check_svcd_geometry ) {
 		$self->message_window (
 			message =>
-				"WARNING: $svcd_warning\n".
-				"You better cancel now and select the appropriate\n".
-				"preset on the Clip & Zoom page.",
+			       __x("WARNING {warning}\n", warning => $svcd_warning).
+                               __"You better cancel now and select the appropriate\n".
+                                 "preset on the Clip & Zoom page.",
 		);
 	}
 
@@ -1450,8 +1451,8 @@ sub transcode {
 			if ( $title->tc_multipass_reuse_log and
 			     -f $title->multipass_log_dir."/divx4.log" ) {
 				$self->log (
-					"Skipping 1st pass as requested by ".
-					"reusing existent multipass logfile."
+					__"Skipping 1st pass as requested by ".
+                                         "reusing existent multipass logfile."
 				);
 			} else {
 				$job->set_pass (1);
@@ -1579,8 +1580,8 @@ sub transcode_multipass_with_vbr_audio {
 	my %par = @_;
 	my ($split) = @par{'split'};
 
-	$self->log ("This title is transcoded with vbr audio ".
-		    "and video bitrate optimization.");
+	$self->log (__"This title is transcoded with vbr audio ".
+                     "and video bitrate optimization.");
 
 	my $title    = $self->selected_title;
 	my $chapters = $title->get_chapters;
@@ -1634,9 +1635,9 @@ sub transcode_multipass_with_vbr_audio {
 	# 3. after 1st pass: calculate video bitrate (real audio size known)
 	$last_job->set_cb_finished (sub {
 		$title->set_tc_video_bitrate ( $bc->calculate_video_bitrate );
-		$self->log ("Adjusted video bitrate to ".
+		$self->log (__"Adjusted video bitrate to ".
 			    $title->tc_video_bitrate.
-			    " after vbr audio transcoding");
+			    __" after vbr audio transcoding");
 		$self->init_transcode_values;
 		1;
 	});
@@ -1737,15 +1738,15 @@ sub avisplit {
 	
 	if ( $title->tc_use_chapter_mode ) {
 		$self->message_window (
-			message => "Splitting an AVI file in\n".
-				   "Chapter Mode makes no sense."
+			message => __"Splitting an AVI file in\n".
+                                    "Chapter Mode makes no sense."
 		);
 		return 1;
 	}
 
 	if ( not -f $title->avi_file ) {
 		$self->message_window (
-			message => "You first have to transcode this title."
+			message => __"You first have to transcode this title."
 		);
 		return 1;
 	}
@@ -1797,7 +1798,7 @@ sub scan_rescale_volume {
 
 	if ( not $title->is_ripped ) {
 		$self->message_window (
-			message => "You first have to rip this title."
+			message => __"You first have to rip this title."
 		);
 		return 1;
 	}
@@ -1849,21 +1850,21 @@ sub add_to_cluster {
 
 	if ( $title->tc_use_chapter_mode ) {
 		$self->message_window (
-			message => "Titles in chapter mode are not supported"
+			message => __"Titles in chapter mode are not supported"
 		);
 		return 1;
 	}
 
 	if ( $title->tc_psu_core ) {
 		$self->message_window (
-			message => "PSU core mode currently not supported"
+			message => __"PSU core mode currently not supported"
 		);
 		return 1;
 	}
 
 	if ( $title->project->rip_mode ne 'rip' ) {
 		$self->message_window (
-			message => "Cluster mode is only supported\nfor ripped DVD's."
+			message => __"Cluster mode is only supported\nfor ripped DVD's."
 		);
 		return 1;
 	}
@@ -1871,21 +1872,21 @@ sub add_to_cluster {
 
 	if ( not $title->is_ripped ) {
 		$self->message_window (
-			message => "You first have to rip this title."
+			message => __"You first have to rip this title."
 		);
 		return 1;
 	}
 
 	if ( $title->get_first_audio_track < 0 ) {
 		$self->message_window (
-			message => "You have no target audio track selected."
+			message => __"You have no target audio track selected."
 		);
 		return 1;
 	}
 
 	if ( $title->tc_container eq 'vcd' ) {
 		$self->message_window (
-			message => "MPEG processing is not supported for cluster mode."
+			message => __"MPEG processing is not supported for cluster mode."
 		);
 		return 1;
 	}
@@ -1894,8 +1895,8 @@ sub add_to_cluster {
 	     $title->tc_end_frame ne '' ) {
 		$self->message_window (
 			message =>
-				"WARNING: your frame range setting\n".
-				"is ignored in cluster mode"
+				__"WARNING: your frame range setting\n".
+                                 "is ignored in cluster mode"
 		);
 	}
 

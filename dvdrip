@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# $Id: dvdrip,v 1.16.2.8 2003/06/25 20:47:33 joern Exp $
+# $Id: dvdrip,v 1.19 2004/10/10 13:45:50 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -14,6 +14,12 @@ package Video::DVDRip;
 use strict;
 use lib 'lib';
 use Getopt::Std;
+
+#-- l10n stuff
+use POSIX qw(setlocale);
+use Locale::Messages qw (LC_MESSAGES);
+use Locale::TextDomain ("video.dvdrip");
+setlocale(LC_MESSAGES,"");
 
 # That's Perl! The job classes derive from this class,
 # which is decided at *runtime* - this way standard and
@@ -36,8 +42,7 @@ BEGIN {
 	$has_dvdrip_rc = -f "$ENV{HOME}/.dvdriprc";
 }
 
-my $USAGE = <<'_USAGE';
-
+my $USAGE = __"
 Usage: dvdrip [-c] [-d level] [-p file] [-f function [-t title-nr]] [file]
        dvdrip --version | -version | -v
 
@@ -55,7 +60,7 @@ Usage: dvdrip [-c] [-d level] [-p file] [-f function [-t title-nr]] [file]
        -p preferences filename (Default: ~/.dvdriprc)
           A new file is created, if it doesn't exist.
 
-_USAGE
+";
 
 main: {
 	if ( $ARGV[0] =~ /^-(v|-?version)$/ ) {
@@ -63,6 +68,10 @@ main: {
 		require Video::DVDRip;
 		print $Video::DVDRip::VERSION,"\n";
 		exit 0;
+	}
+
+	if ( $ARGV[0] =~ /^-(h|-?help)$/ ) {
+		usage();
 	}
 
 	# get options

@@ -33,6 +33,7 @@ III. DOCUMENTATION
      * 1.1.4 RedHat packages
      * 1.1.5 gentoo packages
      * 1.1.6 FreeBSD port
+     * 1.1.7 OpenBSD port
 
      1.2 Source download
      * 1.2.1 dvd::rip tarball download
@@ -42,15 +43,26 @@ III. DOCUMENTATION
      * 1.3.1 Brief overview
      * 1.3.2 Perl 5.6.0 or better
      * 1.3.3 Perl Gtk Module
-     * 1.3.4 transcode
-     * 1.3.5 Image Magick
-     * 1.3.6 xvid4conf
-     * 1.3.7 ogmtools
-     * 1.3.8 subtitleripper
-     * 1.3.9 mplayer and/or xine (with a DVD plugin)
-     * 1.3.10 CD burning tools
-     * 1.3.11 rar (for vobsub compression)
-     * 1.3.12 Additional requirements for cluster mode
+
+     * 1.3.3.1 Additional notes on building Perl Gtk (e.g. on Slackware)
+
+     1.3.4 transcode
+
+     1.3.5 Image Magick
+
+     1.3.6 xvid4conf
+
+     1.3.7 ogmtools
+
+     1.3.8 subtitleripper
+
+     1.3.9 mplayer and/or xine (with a DVD plugin)
+
+     1.3.10 CD burning tools
+
+     1.3.11 rar (for vobsub compression)
+
+     1.3.12 Additional requirements for cluster mode
 
      1.4 Install from source
      * 1.4.1 Install dvd::rip
@@ -77,19 +89,20 @@ III. DOCUMENTATION
 1.1.1 Debian packages
 
    Christian Marillat builds video related Debian packages and publishes
-   them on his website http://marillat.free.fr/. You can use apt-get to
+   them on his website http://hpisi.nerim.net/. You can use apt-get to
    install the packages if you add one of the following entries
    (depending on your distribution) to your /etc/apt/sources.list file:
 
-deb http://marillat.free.fr/ testing main
-deb http://marillat.free.fr/ unstable main
+deb ftp://ftp.nerim.net/debian-marillat stable main
+deb ftp://ftp.nerim.net/debian-marillat testing main
+deb ftp://ftp.nerim.net/debian-marillat unstable main
 
    You will find all packages to compile transcode on your own (if you
    need always the very latest versions), or can get binaries of
    reasonably recent transcode versions directly. The same applies to
    dvd::rip.
 
-   The dvd::rip package is called video-dvdrip.
+   The dvd::rip package is called dvdrip.
 
 1.1.2 SuSE packages
 
@@ -130,8 +143,13 @@ deb http://marillat.free.fr/ unstable main
    port which dvd::rip depends on is very minimalistic, it is recommended
    to look at the Makefile of the transcode port, enable all the options
    you need for dvd::rip and install the transcode port from source.
+   Thanks to Michael Nottebrock, who maintains the FreeBSD port.
 
-   (Thanks to Michael Nottebrock, who maintains the FreeBSD port)
+1.1.7 OpenBSD port
+
+   Since June 2004 we have also an official OpenBSD port of dvd::rip. You
+   find it under graphics/dvdrip. Thanks to the maintainer Waldemar
+   Brodkorb.
 
 1.2 Source download
 
@@ -143,8 +161,8 @@ deb http://marillat.free.fr/ unstable main
    Local download of the latest stable release: (currently no unstable
    release available)
 
-     Video-DVDRip-0.50.18.tar.gz
-     Video-DVDRip-0.50.18.tar.gz.asc (GnuPG signature, get key)
+     Video-DVDRip-0.52.0.tar.gz
+     Video-DVDRip-0.52.0.tar.gz.asc (GnuPG signature, get key)
 
    CPAN download directory: (list of mirrors)
 
@@ -272,6 +290,48 @@ cd dvdrip; cvs -z3 update
    to be installed on your system. So first make sure, that gdk-pixbuf is
    installed. Then install Perl Gtk and everything should work as
    expected.
+
+1.3.3.1 Additional notes on building Perl Gtk (e.g. on Slackware)
+
+   Stephen D. Leedle <LeedleSt AT gmx.de> sent me these instructions,
+   which describe how to build the Perl Gtk module on Slackware - but
+   this should work for other distributions / operation systems which
+   lack a complete Perl Gtk package also.
+
+   First install the Perl modules XML::Parser and XML::Writer. If your
+   distribution doesn't ship them, download the tarballs from here:
+
+     http://www.cpan.org/modules/by-module/XML/XML-Parser-2.34.tar.gz
+     http://www.cpan.org/modules/by-module/XML/XML-Writer-0.520.tar.gz
+
+   They are neccessary for compiling the Gtk Perl module. Extract each of
+   both packages, descend into the directories, do following:
+
+perl Makefile.PL
+make
+make test # (If You're keen on this, there might be no test...)
+make install
+# (The same procedure for the second one.)
+
+   Get the source code for the Perl Gtk module as described above. Unpack
+   and descend into directory and enter the following:
+
+perl Makefile.PL --without-guessing # this option is important
+make
+make test # (Again, the test is not mandatory)
+make install
+
+   Now, the trick is following: by adding the --without-guessing option
+   we got only very basic Gtk-Perl stuff. So we need to manually compile
+   the Gtk::Gdk::Pixbuf module. Descend into the
+   Gtk-Perl-0.7009/GdkPixBuf directory, and do again:
+
+perl Makefile.PL
+make
+make test
+make install
+
+   Now install the dvd::rip program as neccessary and hopefully - enjoy!
 
 1.3.4 transcode
 
@@ -417,7 +477,7 @@ chmod u+s /usr/sbin/fping
    generate the Makefile and execute make:
 
 # as a normal user
-tar xfz Video-DVDRip-0.50.18.tar.gz
+tar xfz Video-DVDRip-0.52.0.tar.gz
 cd Video-DVDRip-x.xx
 perl Makefile.PL
 make
@@ -471,7 +531,7 @@ make install
    otherwise some dvd::rip helper binaries may be taken from another
    place.
 
-tar xvfz Video-DVDRip-0.50.18.tar.gz
+tar xvfz Video-DVDRip-0.52.0.tar.gz
 cd Video-DVDRip-x.xx
 perl Makefile.PL && make
 export PATH=.:$PATH
@@ -574,7 +634,7 @@ URL References
    6. http://www.exit1.org/archive/dvdrip-users/
    7. http://www.gmane.org/
    8. http://news.gmane.org/thread.php?group=gmane.comp.video.dvdrip.user
-   9. http://www.theorie.physik.uni-goettingen.de/mailman/listinfo/transcode-users
+   9. http://lists.exit1.org/mailman/listinfo/transcode-users
 
 V.  SUPPORT
 
@@ -701,13 +761,14 @@ URL References
   15. http://wwwkeys.de.pgp.net:11371/pks/lookup?op=get&search=0x285CF473
 
 VI. CHANGES
-   $Id: Changes,v 1.131.2.52 2004/04/18 14:28:15 joern Exp $
+   $Id: Changes,v 1.147 2005/01/04 13:44:59 joern Exp $
 
    Revision history and release notes for dvd::rip.
 
-   0.50.18 [stable branch] Sun Apr 18 2004, joern
-	Bugfixes:
-	- ac3 passthrough was broken. Thanks for reporting
-	  to James Broberg <jbrobergAT cs.rmit.edu.au> and
-	  TOSOVSKY Ales <tosovsky AT znalecka.cz>
+   0.52.0 [stable branch] Tue Jan 4 2005, joern
+	Notes:
+	- This is just a stable release of 0.51.4. Only change
+	  is that the suggested transcode minimum version is 0.6.14.
+	- For changes since the last stable release 0.50.18 please
+	  refer to the change log entries of the 0.51 branch.
 

@@ -1,4 +1,4 @@
-# $Id: Config.pm,v 1.42.2.11 2003/08/24 16:58:15 joern Exp $
+# $Id: Config.pm,v 1.44 2004/04/11 23:36:19 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -9,6 +9,7 @@
 #-----------------------------------------------------------------------
 
 package Video::DVDRip::Config;
+use Locale::TextDomain qw (video.dvdrip);
 
 use base Video::DVDRip::Base;
 
@@ -37,12 +38,12 @@ my %CONFIG_PARAMETER = (
 		value => "dvd::rip",
 	},
 	main_window_width => {
-		label => "Startup window width",
+		label => __"Startup window width",
 		type  => 'number',
 		value => 660,
 	},
 	main_window_height => {
-		label => "Startup window height",
+		label => __"Startup window height",
 		type  => 'number',
 		value => 650,
 	},
@@ -51,27 +52,27 @@ my %CONFIG_PARAMETER = (
 		value => 4.2,
 	},
 	dvd_device => {
-		label => "DVD device",
+		label => __"DVD device",
 		type => 'file',
 		value => "/dev/dvd",
 	},
 	dvd_mount_point => {
-		label => "DVD mount point",
+		label => __"DVD mount point",
 		type => 'dir',
 		value => "/cdrom",
 	},
 	writer_device => {
-		label => "Writer device file",
+		label => __"Writer device file",
 		type => 'file',
 		value => "/dev/cdrom",
 	},
 	eject_command => {
-		label => "Eject Command",
+		label => __"Eject Command",
 		type => 'string',
 		value => "eject",
 	},
 	play_dvd_command => {
-		label => "DVD player command",
+		label => __"DVD player command",
 		type  => 'string',
 		value => 'mplayer <dvd://%t -aid %(%a+%b) -chapter %c -dvdangle %m>',
 		presets => [
@@ -80,7 +81,7 @@ my %CONFIG_PARAMETER = (
 		],
 	},
 	play_file_command => {
-		label => "File player command",
+		label => __"File player command",
 		type  => 'string',
 		value => 'mplayer <%f>',
 		presets => [
@@ -89,7 +90,7 @@ my %CONFIG_PARAMETER = (
 		],
 	},
 	play_stdin_command => {
-		label => "STDIN player command",
+		label => __"STDIN player command",
 		type  => 'string',
 		value => 'xine stdin://mpeg2 -g -pq -a %a',
 		presets => [
@@ -98,7 +99,7 @@ my %CONFIG_PARAMETER = (
 		],
 	},
 	rar_command => {
-		label => "rar command (for vobsub compression)",
+		label => __"rar command (for vobsub compression)",
 		type  => 'string',
 		value => 'rar',
 		presets => [
@@ -106,17 +107,17 @@ my %CONFIG_PARAMETER = (
 		],
 	},
 	base_project_dir => {
-		label => "Default data base directory",
+		label => __"Default data base directory",
 		type => 'dir',
 		value => "/CHANGE_ME",
 	},
 	dvdrip_files_dir => {
-		label => "Default directory for .rip project files",
+		label => __"Default directory for .rip project files",
 		type => 'dir',
 		value => "/CHANGE_ME",
 	},
 	ogg_file_ext => {
-		label => "OGG file extension",
+		label => __"OGG file extension",
 		type  => 'string',
 		value => 'ogm',
 		presets => [
@@ -125,27 +126,27 @@ my %CONFIG_PARAMETER = (
 		],
 	},
 	cluster_master_local => {
-		label => "Start cluster control daemon locally",
+		label => __"Start cluster control daemon locally",
 		type  => 'switch',
 		value => 1,
 	},
 	cluster_master_server => {
-		label => "Hostname of server with daemon",
+		label => __"Hostname of server with daemon",
 		type  => 'string',
 		value => "",
 	},
 	cluster_master_port => {
-		label => "TCP port number of daemon",
+		label => __"TCP port number of daemon",
 		type  => 'number',
 		value => 28646,
 	},
 	show_tooltips => {
-		label => "Show tooltips",
+		label => __"Show tooltips",
 		type  => 'switch',
 		value => 1,
 	},
 	default_video_codec => {
-		label => "Default video codec",
+		label => __"Default video codec",
 		type  => 'string',
 		value => 'divx4',
 		presets => [
@@ -156,37 +157,35 @@ my %CONFIG_PARAMETER = (
 		],
 	},
 	default_container => {
-		label => "Default container format",
+		label => __"Default container format",
 		type  => 'string',
 		value => 'avi',
 		presets => [ "avi", "ogg", "mpeg" ],
 	},
 	burn_cdrecord_device => {
-		label => "cdrecord device (n,n,n or filename)",
+		label => __"cdrecord device (n,n,n or filename)",
 		type  => 'string',
 		value => '0,X,0',
 	},
 	burn_writing_speed => {
-		label => "Writing speed",
+		label => __"Writing speed",
 		type  => 'string',
 		value => '16',
 		presets => [1,2,4,8,12,16,20,24,30,40],
 	},
 	burn_test_mode => {
-		label => "Simulate burning",
+		label => __"Simulate burning",
 		type  => 'switch',
 		value => 0,
 	},
 	burn_estimate_size => {
-		label => "Estimate ISO size",
+		label => __"Estimate ISO size",
 		type  => 'switch',
 		value => 0,
-		tooltip => "Estimate the size before start writing. ".
-			   "Necessary for some TEAC drives for burning ".
-			   "ISO discs on-the-fly",
+		tooltip => __"Estimate the size before start writing. Necessary for some TEAC drives for burning ISO discs on-the-fly",
 	},
 	burn_cdrecord_cmd => {
-		label => "cdrecord command",
+		label => __"cdrecord command",
 		type  => 'string',
 		value => '/usr/lib/xcdroast-0.98/bin/xcdrwrap CDRECORD',
 		presets => [
@@ -195,25 +194,25 @@ my %CONFIG_PARAMETER = (
 		],
 	},
 	burn_mkisofs_cmd => {
-		label => "mkisofs command",
+		label => __"mkisofs command",
 		type  => 'string',
 		value => 'mkisofs',
 		presets => ['mkisofs'],
 	},
 	burn_vcdimager_cmd => {
-		label => "vcdimager command",
+		label => __"vcdimager command",
 		type  => 'string',
 		value => 'vcdimager',
 		presets => ['vcdimager'],
 	},
 	burn_cdrdao_cmd => {
-		label => "cdrdao command",
+		label => __"cdrdao command",
 		type  => 'string',
 		value => 'cdrdao',
 		presets => ['cdrdao'],
 	},
 	burn_cdrdao_driver => {
-		label => "cdrdao driver",
+		label => __"cdrdao driver",
 		type  => 'string',
 		value => '',
 		presets => [
@@ -224,22 +223,22 @@ my %CONFIG_PARAMETER = (
 		],
 	},
 	burn_cdrdao_overburn => {
-		label => "Overburning",
+		label => __"Overburning",
 		type  => 'switch',
 		value => 1,
 	},
 	burn_cdrdao_eject => {
-		label => "Eject disc after write",
+		label => __"Eject disc after write",
 		type  => 'switch',
 		value => 1,
 	},
 	burn_cdrdao_buffers => {
-		label => "Buffersize",
+		label => __"Buffersize",
 		type  => 'string',
 		value => '',
 	},
 	burn_blank_method => {
-		label => "CD-RW blank method",
+		label => __"CD-RW blank method",
 		type  => 'string',
 		value => 'fast - minimally blank the entire disk',
 		presets => [
@@ -257,7 +256,7 @@ my %CONFIG_PARAMETER = (
 	},
 
 	preferred_lang => {
-		label => "Preferred language",
+		label => __"Preferred language",
 		type  => 'string',
 		value => '<none>',
 		presets => [
@@ -303,31 +302,31 @@ my %CONFIG_PARAMETER = (
 );
 
 my @CONFIG_ORDER = (
-	"Filesystem" => [qw(
+	__"Filesystem" => [qw(
 		dvd_device         dvd_mount_point
 		base_project_dir   dvdrip_files_dir
 		ogg_file_ext
 	)],
-	"Commands" => [qw(
+	__"Commands" => [qw(
 		play_dvd_command   play_file_command
 		play_stdin_command rar_command
 	)],
-	"CD burning" => [qw(
+	__"CD burning" => [qw(
 		writer_device        burn_cdrecord_device
 		burn_cdrecord_cmd    burn_cdrdao_cmd
 		burn_mkisofs_cmd     burn_vcdimager_cmd
 		burn_writing_speed   burn_estimate_size
 		burn_blank_method
 	)],
-	"cdrdao options" => [qw(
+	__"cdrdao options" => [qw(
 		burn_cdrdao_driver   burn_cdrdao_overburn
 		burn_cdrdao_eject    burn_cdrdao_buffers
 	)],
-	"Cluster options" => [qw(
+	__"Cluster options" => [qw(
 		cluster_master_local cluster_master_server
 		cluster_master_port  
 	)],
-	"Miscellaneous options" => [qw(
+	__"Miscellaneous options" => [qw(
 		default_video_codec  default_container
 		main_window_width    main_window_height
 		preferred_lang       show_tooltips
@@ -344,7 +343,7 @@ sub new {
 	my @presets = (
 		Video::DVDRip::Preset->new (
 			name => "nopreset",
-			title => "- No Modifications -",
+			title => __"- No Modifications -",
 			tc_clip1_top	=> 0,
 			tc_clip1_bottom	=> 0,
 			tc_clip1_left	=> 0,
@@ -360,49 +359,49 @@ sub new {
 		),
 		Video::DVDRip::Preset->new (
 			name => "auto_big",
-			title => "Autoadjust, Big Frame Size, HQ Resize",
+			title => __"Autoadjust, Big Frame Size, HQ Resize",
 			tc_fast_resize  => 0,
 			auto => 1,
 			frame_size => 'big',
 		),
 		Video::DVDRip::Preset->new (
 			name => "auto_medium",
-			title => "Autoadjust, Medium Frame Size, HQ Resize",
+			title => __"Autoadjust, Medium Frame Size, HQ Resize",
 			tc_fast_resize  => 0,
 			auto => 1,
 			frame_size => 'medium',
 		),
 		Video::DVDRip::Preset->new (
 			name => "auto_small",
-			title => "Autoadjust, Small Frame Size, HQ Resize",
+			title => __"Autoadjust, Small Frame Size, HQ Resize",
 			tc_fast_resize  => 0,
 			auto => 1,
 			frame_size => 'small',
 		),
 		Video::DVDRip::Preset->new (
 			name => "auto_big_fast",
-			title => "Autoadjust, Big Frame Size, Fast Resize",
+			title => __"Autoadjust, Big Frame Size, Fast Resize",
 			tc_fast_resize  => 1,
 			auto => 1,
 			frame_size => 'big',
 		),
 		Video::DVDRip::Preset->new (
 			name => "auto_medium_fast",
-			title => "Autoadjust, Medium Frame Size, Fast Resize",
+			title => __"Autoadjust, Medium Frame Size, Fast Resize",
 			tc_fast_resize  => 1,
 			auto => 1,
 			frame_size => 'medium',
 		),
 		Video::DVDRip::Preset->new (
 			name => "auto_small_fast",
-			title => "Autoadjust, Small Frame Size, Fast Resize",
+			title => __"Autoadjust, Small Frame Size, Fast Resize",
 			tc_fast_resize  => 1,
 			auto => 1,
 			frame_size => 'small',
 		),
 		Video::DVDRip::Preset->new (
 			name => "vcd_pal_43",
-			title => "VCD 4:3, PAL",
+			title => __"VCD 4:3, PAL",
 			tc_clip1_top	=> 0,
 			tc_clip1_bottom	=> 0,
 			tc_clip1_left	=> 0,
@@ -418,7 +417,7 @@ sub new {
 		),
 		Video::DVDRip::Preset->new (
 			name => "vcd_pal_16_9",
-			title => "VCD 16:9, PAL",
+			title => __"VCD 16:9, PAL",
 			tc_clip1_top	=> 0,
 			tc_clip1_bottom	=> 0,
 			tc_clip1_left	=> 48,
@@ -434,7 +433,7 @@ sub new {
 		),
 		Video::DVDRip::Preset->new (
 			name => "svcd_pal_16_9_4_3",
-			title => "SVCD 16:9 -> 4:3 letterbox, PAL",
+			title => __"SVCD 16:9 -> 4:3 letterbox, PAL",
 			tc_clip1_top	=> 0,
 			tc_clip1_bottom	=> 0,
 			tc_clip1_left	=> 0,
@@ -450,7 +449,7 @@ sub new {
 		),
 		Video::DVDRip::Preset->new (
 			name => "svcd_pal",
-			title => "SVCD anamorph, PAL",
+			title => __"SVCD anamorph, PAL",
 			tc_clip1_top	=> 0,
 			tc_clip1_bottom	=> 0,
 			tc_clip1_left	=> 0,
@@ -466,7 +465,7 @@ sub new {
 		),
 		Video::DVDRip::Preset->new (
 			name => "xsvcd_pal",
-			title => "XSVCD anamorph, PAL",
+			title => __"XSVCD anamorph, PAL",
 			tc_clip1_top	=> 0,
 			tc_clip1_bottom	=> 0,
 			tc_clip1_left	=> 0,
@@ -482,7 +481,7 @@ sub new {
 		),
 		Video::DVDRip::Preset->new (
 			name => "cvd_pal",
-			title => "CVD anamorph, PAL",
+			title => __"CVD anamorph, PAL",
 			tc_clip1_top	=> 0,
 			tc_clip1_bottom	=> 0,
 			tc_clip1_left	=> 0,
@@ -498,7 +497,7 @@ sub new {
 		),
 		Video::DVDRip::Preset->new (
 			name => "vcd_ntsc_43",
-			title => "VCD 4:3, NTSC",
+			title => __"VCD 4:3, NTSC",
 			tc_clip1_top	=> 0,
 			tc_clip1_bottom	=> 0,
 			tc_clip1_left	=> 0,
@@ -514,7 +513,7 @@ sub new {
 		),
 		Video::DVDRip::Preset->new (
 			name => "vcd_ntsc_16_9",
-			title => "VCD 16:9, NTSC",
+			title => __"VCD 16:9, NTSC",
 			tc_clip1_top	=> 0,
 			tc_clip1_bottom	=> 0,
 			tc_clip1_left	=> 32,
@@ -530,7 +529,7 @@ sub new {
 		),
 		Video::DVDRip::Preset->new (
 			name => "svcd_ntsc_16_9_4_3",
-			title => "SVCD 16:9 -> 4:3 letterbox, NTSC",
+			title => __"SVCD 16:9 -> 4:3 letterbox, NTSC",
 			tc_clip1_top	=> 0,
 			tc_clip1_bottom	=> 0,
 			tc_clip1_left	=> 0,
@@ -546,7 +545,7 @@ sub new {
 		),
 		Video::DVDRip::Preset->new (
 			name => "svcd_ntsc",
-			title => "SVCD anamorph, NTSC",
+			title => __"SVCD anamorph, NTSC",
 			tc_clip1_top	=> 0,
 			tc_clip1_bottom	=> 0,
 			tc_clip1_left	=> 0,
@@ -562,7 +561,7 @@ sub new {
 		),
 		Video::DVDRip::Preset->new (
 			name => "xsvcd_ntsc",
-			title => "XSVCD anamorph, NTSC",
+			title => __"XSVCD anamorph, NTSC",
 			tc_clip1_top	=> 0,
 			tc_clip1_bottom	=> 0,
 			tc_clip1_left	=> 0,
@@ -578,7 +577,7 @@ sub new {
 		),
 		Video::DVDRip::Preset->new (
 			name => "cvd_ntsc",
-			title => "CVD anamorph, NTSC",
+			title => __"CVD anamorph, NTSC",
 			tc_clip1_top	=> 0,
 			tc_clip1_bottom	=> 0,
 			tc_clip1_left	=> 0,
@@ -662,7 +661,7 @@ sub save {
 	my $fh = FileHandle->new;
 
 	open ($fh, "> $filename") or die "can't write $filename";
-	print $fh q{# $Id: Config.pm,v 1.42.2.11 2003/08/24 16:58:15 joern Exp $},"\n";
+	print $fh q{# $Id: Config.pm,v 1.44 2004/04/11 23:36:19 joern Exp $},"\n";
 	print $fh "# This file was generated by Video::DVDRip Version $Video::DVDRip::VERSION\n\n";
 
 	print $fh ${$data_sref};
@@ -788,10 +787,10 @@ sub _executable {
 	}
 	
 	if ( -x $file ) {
-		return "$file executable : Ok";
+		return __x("{file} executable : Ok", file => $file);
 	} else {
-		return "$file not found : NOT Ok" if not -e $file;
-		return "$file not executable : NOT Ok";
+		return __x("{file} not found : NOT Ok", file => $file) if not -e $file;
+		return __x("{file} not executable : NOT Ok", file => $file);
 	}
 }
 
@@ -804,10 +803,10 @@ sub _writable {
 	return "has whitespace : NOT Ok" if $value =~ /\s/;
 
 	if ( not -w $value ) {
-		return "$value not found : NOT Ok" if not -e $value;
-		return "$value not writable : NOT Ok";
+		return __x("{file} not found : NOT Ok", file => $value) if not -e $value;
+		return __x("{file} not writable : NOT Ok", file => $value);
 	} else {
-		return "$value writable : Ok";
+		return __x("{file} writable : Ok", file => $value);
 	}
 }
 
@@ -818,9 +817,9 @@ sub _numeric {
 	my $value = $self->get_value ($name);
 
 	if ( $value =~ /^\d+$/ ) {
-		return "$value is numeric : Ok";
+		return __x("{value} is numeric : Ok", value => $value);
 	} else {
-		return "$value isn't numeric : NOT Ok";
+		return __x("{value} isn't numeric : NOT Ok", value => $value);
 	}
 }
 
@@ -830,7 +829,7 @@ sub _numeric_or_empty {
 	
 	my $value = $self->get_value ($name);
 
-	return "is empty : Ok" if $value eq '';
+	return __"is empty : Ok" if $value eq '';
 	return $self->_numeric ($name);
 }
 
@@ -843,9 +842,9 @@ sub _cdrecord_device {
 	if ( $value =~ /^\d+,\d+,\d+$/ ) {
 		return "$value has format n,n,n : Ok";
 	} elsif ( -e $value ) {
-		return "$value exists : Ok\n";
+		return __x("{value} exists : Ok", value => $value)."\n";
 	} else {
-		return "$value has not format n,n,n and is no file : NOT Ok";
+		return __x("{value} has not format n,n,n and is no file : NOT Ok", value => $value);
 	}
 }
 
@@ -856,9 +855,9 @@ sub _exists {
 	my $value = $self->get_value ($name);
 
 	if ( -e $value ) {
-		return "$value exists : Ok";
+		return __x("{value} exists : Ok", value => $value);
 	} else {
-		return "$value doesn't exist : NOT Ok";
+		return __x("{value} doesn't exist : NOT Ok", value => $value);
 	}
 }
 
@@ -869,10 +868,10 @@ sub _one_of_these {
 	my $value = $self->get_value ($name);
 
 	foreach my $val ( @{$lref} ) {
-		return "'$value' is known : Ok" if $val eq $value;
+		return __x("'{value}' is known : Ok", value => $value) if $val eq $value;
 	}
 
-	return "'$value' unknown: NOT Ok";	
+	return __x("'{value}' unknown: NOT Ok", value => $value);	
 }
 
 

@@ -1,4 +1,4 @@
-# $Id: Title.pm,v 1.137.2.30 2004/04/18 14:19:58 joern Exp $
+# $Id: Title.pm,v 1.144 2004/12/11 15:20:47 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -9,6 +9,7 @@
 #-----------------------------------------------------------------------
 
 package Video::DVDRip::Title;
+use Locale::TextDomain qw (video.dvdrip);
 
 use base Video::DVDRip::Base;
 
@@ -330,8 +331,8 @@ sub set_tc_video_codec {
 sub audio_track {
 	my $self = shift;
 	if ( $self->audio_channel == -1 ) {
-		# no audio track selected. create a dummy object
-		print STDERR "Warning: audio track accessed, but no track selected.\n";
+		# no audio track selected. create a dummy object.
+		# (probably this title has no audio at all)
 		return Video::DVDRip::Audio->new;
 	}
 	return $self->audio_tracks->[$self->audio_channel];
@@ -343,7 +344,7 @@ sub set_tc_container {
 
 	return $container if $container eq $self->tc_container;
 
-	$self->log ("Set container format to '$container'");
+	$self->log (__x("Set container format to '{container}'", container => $container));
 	$self->{tc_container} = $container;
 
 	return if not defined $self->audio_tracks;
@@ -356,13 +357,13 @@ sub set_tc_container {
 			next if $audio->tc_target_track == -1;
 			if ( $audio->tc_audio_codec eq 'vorbis' ) {
 				push @messages,
-					"Set codec of audio track #".$audio->tc_nr.
-					" to 'mp3', 'vorbis' not supported by AVI";
+					__x("Set codec of audio track #{nr} to 'mp3', ".
+                                           "'vorbis' not supported by AVI", nr => $audio->tc_nr);
 				$audio->set_tc_audio_codec ('mp3');
 			} elsif ( $audio->tc_audio_codec eq 'mp2' ) {
 				push @messages,
-					"Set codec of audio track #".$audio->tc_nr.
-					" to 'mp3', 'mp2' not supported by AVI";
+					__x("Set codec of audio track #{nr} to 'mp3', ".
+                                           "'mp2' not supported by AVI", nr => $audio->tc_nr);
 				$audio->set_tc_audio_codec ('mp3');
 			}
 		}
@@ -370,9 +371,9 @@ sub set_tc_container {
 		# no (S)VCD here
 		if ( $self->tc_video_codec =~ /^(X?S?VCD|CVD)$/ ) {
 			push @messages,
-				"Set video codec to 'xvid', '".
+				__"Set video codec to 'xvid', '".
 				$self->tc_video_codec.
-				"' not supported by AVI";
+				__"' not supported by AVI";
 			$self->set_tc_video_codec ("xvid");
 		}
 
@@ -382,10 +383,10 @@ sub set_tc_container {
 			next if $audio->tc_target_track == -1;
 			if ( $audio->tc_audio_codec ne 'mp2' ) {
 				push @messages,
-					"Set codec of audio track #".$audio->tc_nr.
-					" to 'mp2', '".
+					__x("Set codec of audio track #{nr} to 'mp2', '",
+                                           nr => $audio->tc_nr).
 					$audio->tc_audio_codec.
-					"' not supported by (S)VCD/CVD";
+					__"' not supported by (S)VCD/CVD";
 				$audio->set_tc_audio_codec ('mp2');
 			}
 		}
@@ -393,9 +394,9 @@ sub set_tc_container {
 		# only (S)VCD here
 		if ( $self->tc_video_codec !~ /^(X?S?VCD|CVD)$/ ) {
 			push @messages,
-				"Set video codec to 'SVCD', '".
+				__"Set video codec to 'SVCD', '".
 				$self->tc_video_codec.
-				"' not supported by AVI";
+				__"' not supported by AVI";
 			$self->set_tc_video_codec ("SVCD");
 		}
 		
@@ -406,10 +407,10 @@ sub set_tc_container {
 			if ( $audio->tc_audio_codec eq 'mp2' or
 			     $audio->tc_audio_codec eq 'pcm' ) {
 				push @messages,
-					"Set codec of audio track #".$audio->tc_nr.
-					" to 'vorbis', '".
+					__x("Set codec of audio track #{nr} to 'vorbis', '",
+                                           nr => $audio->tc_nr).
 					$audio->tc_audio_codec.
-					"' not supported by OGG";
+					__"' not supported by OGG";
 				$audio->set_tc_audio_codec ('vorbis');
 			}
 		}
@@ -418,7 +419,7 @@ sub set_tc_container {
 		if ( $self->tc_video_codec =~ /^(X?S?VCD|CVD)$/ ) {
 			$self->set_tc_video_codec ("xvid");
 			push @messages,
-				"Set video codec to 'xvid', (S)VCD/CVD not supported by OGG";
+				__"Set video codec to 'xvid', (S)VCD/CVD not supported by OGG";
 		}
 	}
 	
@@ -552,7 +553,7 @@ sub create_vob_dir {
 	
 	if ( not -d $vob_dir ) {
 		mkpath ([ $vob_dir ], 0, 0755)
-			or croak "Can't mkpath directory '$vob_dir'";
+			or croak __x("Can't mkpath directory '{dir}'", dir => $vob_dir);
 	}
 	
 	1;
@@ -635,7 +636,7 @@ sub create_avi_dir {
 
 	if ( not -d $avi_dir ) {
 		mkpath ([ $avi_dir ], 0, 0755)
-			or croak "Can't mkpath directory '$avi_dir'";
+			or croak __x("Can't mkpath directory '{dir}'", dir => $avi_dir);
 	}
 	
 	1;
@@ -799,7 +800,7 @@ sub calc_program_stream_units {
 
 	my $fh = FileHandle->new;
 	open ($fh, $vob_nav_file) or
-		croak "Can't read VOB navigation file '$vob_nav_file'";
+		croak __x("Can't read VOB navigation file '{filename}'", filename => $vob_nav_file);
 
 	my $current_unit = 0;
 	my (@program_stream_units, $unit, $frame, $last_frame);
@@ -829,7 +830,7 @@ sub calc_program_stream_units {
 
 	$self->set_program_stream_units (\@program_stream_units);
 
-	$self->log ("Program stream units calculated");
+	$self->log (__"Program stream units calculated");
 
 	1;
 }
@@ -871,7 +872,7 @@ sub auto_adjust_clip_zoom {
 	my  ($frame_size, $fast_resize) =
 	@par{'frame_size','fast_resize'};
 
-	croak "invalid parameter for frame_size ('$frame_size')"
+	croak __x("invalid parameter for frame_size ('{frame_size}')", frame_size => $frame_size)
 		if not $frame_size =~ /^(big|medium|small)$/;
 
 	my %width_presets;
@@ -1275,7 +1276,7 @@ sub set_chapter_length {
 
 	my $fh = FileHandle->new;
 	open ($fh, $vob_nav_file) or
-		croak "Can't read VOB navigation file '$vob_nav_file'";
+		croak __x("Can't read VOB navigation file '{vob_nav_file}'", vob_nav_file => $vob_nav_file);
 
 	my ($frames, $block_offset, $frame_offset);
 	++$frames while <$fh>;
@@ -1436,7 +1437,14 @@ sub get_probe_audio_command {
 	my $nr      = $self->tc_title_nr;
 	my $vob_dir = $self->vob_dir;
 
-	return "dr_exec tcprobe -H 10 -i $vob_dir && echo DVDRIP_SUCCESS";
+	my $probe_mb    = 25;
+	my $vob_size_mb = $self->get_vob_size;
+
+	$probe_mb = $vob_size_mb - 1 if $probe_mb > $vob_size_mb;
+
+	my $h_option = $probe_mb <= 0 ? "" : "-H $probe_mb";
+
+	return "dr_exec tcprobe $h_option -i $vob_dir && echo DVDRIP_SUCCESS";
 }
 
 sub probe_audio {
@@ -1503,10 +1511,10 @@ sub suggest_transcode_options {
 	if ( $self->video_mode eq 'ntsc' and $rip_mode eq 'rip' and
 	     @{$self->program_stream_units} > 1 ) {
 		$self->set_tc_psu_core (1);
-		$self->log ("Enabled PSU core. Movie is NTSC and has more than one PSU.");
+		$self->log (__"Enabled PSU core. Movie is NTSC and has more than one PSU.");
 
 	} elsif ( $self->video_mode eq 'ntsc' and $rip_mode eq 'rip' ) {
-		$self->log ("Not enabling PSU core, because this movie has only one PSU.");
+		$self->log (__"Not enabling PSU core, because this movie has only one PSU.");
 	}
 
 	$self->calc_video_bitrate;
@@ -1787,10 +1795,20 @@ sub get_transcode_command {
 		}
 	}
 
-	$command .= " -V "
-		if $self->tc_use_yuv_internal and
-		   ( $self->version ("transcode") >= 603 or
-		     $self->tc_deinterlace ne 'smart' );
+	if ( $self->version("transcode") >= 613 ) {
+		$command .= " --use_rgb -k "
+			if not $self->tc_use_yuv_internal;
+
+	} elsif ( $self->version("transcode") >= 608 ) {
+		$command .= " -V "
+			if $self->tc_use_yuv_internal and
+			   $self->tc_deinterlace ne 'smart'
+
+	} else {
+		$command .= " -V "
+			if $self->tc_use_yuv_internal and
+			   $self->version ("transcode") >= 603;
+	}
 
 	$command .= " -C ".$self->tc_anti_alias
 		if $self->tc_anti_alias;
@@ -1801,7 +1819,11 @@ sub get_transcode_command {
 		$command .= " -J 32detect=force_mode=3";
 
 	} elsif ( $self->tc_deinterlace eq 'smart' ) {
-		$command .= " -J smartdeinter=threshold=10:Blend=1:diffmode=2:highq=1";
+		if (  $self->version("transcode") >= 608 ) {
+			$command .= " -J smartyuv=threshold=10:Blend=1:diffmode=2:highq=1";
+		} else {
+			$command .= " -J smartdeinter=threshold=10:Blend=1:diffmode=2:highq=1";
+		}
 
 	} elsif ( $self->tc_deinterlace eq 'ivtc' ) {
 		$fr = 23.976;
@@ -1817,8 +1839,10 @@ sub get_transcode_command {
 		$command .= " -f $fr";
 	}
 
-	if ( $self->video_mode eq 'ntsc' ) {
-		$command .= " -M 0" if $self->tc_deinterlace eq 'ivtc';
+	if ( $self->video_mode eq 'ntsc' and $self->tc_options !~ /-M/ ) {
+		my $m = " -M 2";
+		$m = " -M 0" if $self->tc_deinterlace eq 'ivtc';
+		$command .= $m;
 	}
 
 	$command .= " -J preview=xv" if $self->tc_preview;
@@ -1854,11 +1878,11 @@ sub get_transcode_command {
 			$self->get_fast_resize_options;
 
 		if ( $err_div32 ) {
-			croak "When using fast resize: Clip1 and Zoom size must be divisible by $multiple_of";
+			croak __x("When using fast resize: Clip1 and Zoom size must be divisible by {multiple_of}", multiple_of => $multiple_of);
 		}
 
 		if ( $err_shrink_expand ) {
-			croak "When using fast resize: Width and height must both shrink or expand";
+			croak __"When using fast resize: Width and height must both shrink or expand";
 		}
 
 		if ( $width_n * $height_n >= 0 ) {
@@ -2333,10 +2357,10 @@ sub get_frame_grab_options {
 	my ($frame) = @par{'frame'};
 
 	if ( $self->project->rip_mode ne 'rip' or not $self->has_vob_nav_file ) {
-		$self->log ("Fast VOB navigation only available for ripped DVD's, ".
-			    "falling back to slow method.")
+		$self->log (__"Fast VOB navigation only available for ripped DVD's, ".
+                             "falling back to slow method.")
 			if $self->project->rip_mode ne 'rip';
-		$self->log ("VOB navigation file is missing. Slow navigation method used.")
+		$self->log (__"VOB navigation file is missing. Slow navigation method used.")
 			if $self->project->rip_mode eq 'rip' and not $self->has_vob_nav_file;
 		return {
 			c => $frame."-".($frame+1),
@@ -2355,7 +2379,7 @@ sub get_frame_grab_options {
 
 	my $fh = FileHandle->new;
 	open ($fh, $vob_nav_file) or
-		croak "msg:Can't read VOB navigation file '$vob_nav_file'";
+		croak "msg:".__x("Can't read VOB navigation file '{vob_nav_file}'", vob_nav_file => $vob_nav_file);
 
 	my ($found, $block_offset, $frame_offset);
 
@@ -2365,8 +2389,8 @@ sub get_frame_grab_options {
 		if ( $frames == $frame ) {
 			s/^\s+//;
 			s/\s+$//;
-			croak "msg:VOB navigation file '$vob_nav_file' is ".
-			      "corrupted."
+			croak "msg:".__x("VOB navigation file '{vob_nav_file}' is corrupted.",
+                                        vob_nav_file => $vob_nav_file)
 				if !/^\d+\s+\d+\s+\d+\s+\d+\s+\d+\s+\d+$/;
 			($block_offset, $frame_offset) =
 				(split (/\s+/, $_))[4,5];
@@ -2378,8 +2402,9 @@ sub get_frame_grab_options {
 	
 	close $fh;
 	
-	croak "msg:Can't find frame $frame in VOB navigation file ".
-	      "'$vob_nav_file' (which has only $frames frames). "
+	croak "msg:".__x("Can't find frame {frame} in VOB navigation file ".
+                        "'{vob_nav_file}' (which has only {frames} frames). ",
+                        frame => $frame, vob_nav_file => $vob_nav_file, frames => $frames)
 		if not $found;
 	
 	return {
@@ -2407,7 +2432,7 @@ sub get_take_snapshot_command {
 	       "cd $tmp_dir; ".
 	       "dr_exec transcode ".
 	       " -H 10".
-	       " -z -k".
+	       ($self->version ("transcode") < 613 ? "-z -k" : "").
 	       " -o snapshot".
 	       " -y ppm,null";
 
@@ -2746,7 +2771,7 @@ sub get_view_avi_command {
 				 glob ("${filename}*".$ext);
 	}
 
-	croak "msg:You first have to transcode this title."
+	croak "msg:".__"You first have to transcode this title."
 		if not @filenames;
 
 	my @opts = ( {} );
@@ -2910,7 +2935,7 @@ sub get_create_image_command {
 	my %par = @_;
 	my ($on_the_fly) = @par{'on_the_fly'};
 
-	croak "msg:No files for image creation selected."
+	croak "msg:".__"No files for image creation selected."
 		if not  $self->burn_files_selected or not
 			keys %{$self->burn_files_selected};
 
@@ -2919,13 +2944,13 @@ sub get_create_image_command {
 		    sort { $a->{path} cmp $b->{path} }
 		    values %{$self->burn_files_selected};
 
-	die "No burn files selected."      if not @files;
-	die "File is already an CD image." if $is_image;
+	die __"No burn files selected."      if not @files;
+	die __"File is already an CD image." if $is_image;
 
 	my $cd_type = $self->burn_cd_type;
 	
 	if ( $cd_type ne 'iso' and $on_the_fly ) {
-		croak "Can't burn (S)VCD on the fly";
+		croak __"Can't burn (S)VCD on the fly";
 	}
 
 	my $image_file = $self->cd_image_file;
@@ -2976,7 +3001,7 @@ sub get_create_image_command {
 sub get_burn_command {
 	my $self = shift;
 	
-	croak "msg:No files for burning selected."
+	croak "msg:".__"No files for burning selected."
 		if not  $self->burn_files_selected or not
 			keys %{$self->burn_files_selected};
 	
@@ -2987,7 +3012,7 @@ sub get_burn_command {
 		    sort { $a->{path} cmp $b->{path} }
 		    values %{$self->burn_files_selected};
 
-	die "No burn files selected." if not @files;
+	die "msg:".__"No burn files selected." if not @files;
 
 	my $command;
 	if ( $cd_type eq 'iso' ) {
@@ -3186,9 +3211,9 @@ sub get_subtitle_test_transcode_command {
 	
 	my $subtitle = $self->selected_subtitle;
 
-	croak "msg:No subtitle selected"
+	croak "msg:".__"No subtitle selected"
 		if not $subtitle;
-	croak "msg:You must grab preview images first"
+	croak "msg:".__"You must grab preview images first"
 		if not @{$subtitle->preview_images};
 
 	# Safe attribues which will be modified for preview
@@ -3298,9 +3323,9 @@ sub get_subtitle_height {
 	my $subtitle = $self->get_render_subtitle;
 	return 1 if not $subtitle;
 
-	croak "msg:No subtitle selected"
+	croak "msg:".__"No subtitle selected"
 		if not $subtitle;
-	croak "msg:You must grab preview images first"
+	croak "msg:".__"You must grab preview images first"
 		if not @{$subtitle->preview_images};
 
 	my $height;
@@ -3317,7 +3342,7 @@ sub suggest_subtitle_on_black_bars {
 	my $subtitle = $self->get_render_subtitle;
 	return 1 if not $subtitle;
 
-	croak "msg:No subtitle selected" if not $subtitle;
+	croak "msg:".__"No subtitle selected" if not $subtitle;
 
 	my $clip2_top    = 0;
 	my $clip2_bottom = 0;
@@ -3351,7 +3376,7 @@ sub suggest_subtitle_on_movie {
 	my $subtitle = $self->get_render_subtitle;
 	return 1 if not $subtitle;
 
-	croak "msg:No subtitle selected" if not $subtitle;
+	croak "msg:".__"No subtitle selected" if not $subtitle;
 
 	my $clip2_bottom = $self->tc_clip2_bottom;
 	my $zoom_height = $self->tc_zoom_height;
@@ -3603,9 +3628,11 @@ sub check_svcd_geometry {
 	$mode = uc($mode);
 	
 	if ( $width  != $should_width or $height != $should_height ) {
-		return	"Your frame size isn't conform to the standard,\n".
-			"which is ${should_width}x${should_height} for $codec/$mode, but you ".
-			"configured ${width}x${height}."
+		return	__x("Your frame size isn't conform to the standard,\n".
+                           "which is {should_width}x{should_height} for {codec}/{mode}, ".
+                           "but you configured {width}x{height}.",
+                           should_width => $should_width, should_height => $should_height,
+                           codec => $codec, mode => $mode, width => $width, height => $height)
 	}
 
 	return;

@@ -1,8 +1,9 @@
 package Video::DVDRip::CheckedEntry;
+use Locale::TextDomain qw (video.dvdrip);
 
-# use strict;
+use strict;
 
-use base Gtk::Entry;
+use base qw(Gtk::Entry);
 
 sub is_number			{ shift->{is_number}			}
 sub is_min			{ shift->{is_min}			}
@@ -34,6 +35,8 @@ sub new {
 	@par{'may_negative','is_frame_or_timecode','cond'};
 
 	my $self = bless $class->SUPER::new ($max_length), $class;
+
+	$may_negative = 1 if $is_min < 0;
 
 	$self->set_is_number ($is_number);
 	$self->set_may_empty ($may_empty);
@@ -97,9 +100,12 @@ sub check_value {
 
 	if ( $restore ) {
 		Video::DVDRip::GUI::Base->message_window (
-			message =>
-				"'$val' is an illegal value here.\n".
-				"Old value '".$self->old_val."' was restored."
+			message => __x(
+				"'{new_val}' is an illegal value here.\n".
+				"Old value '{old_val}' was restored.",
+				new_val => $val,
+				old_val => $self->old_val
+			)
 		);
 		$val = $self->old_val;
 		$val || 0 if not $self->may_empty;
@@ -111,8 +117,9 @@ sub check_value {
 }
 
 package Video::DVDRip::CheckedCombo;
+use Locale::TextDomain qw (video.dvdrip);
 
-use base Gtk::Combo;
+use base qw(Gtk::Combo);
 
 sub new {
 	my $class = shift;
@@ -126,6 +133,8 @@ sub new {
 
 	my $entry = $self->entry;
 	bless $entry, "Video::DVDRip::CheckedEntry";
+
+	$may_negative = 1 if $is_min < 0;
 
 	$entry->set_is_number ($is_number);
 	$entry->set_is_min ($is_min);

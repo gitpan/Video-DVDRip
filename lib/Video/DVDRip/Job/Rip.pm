@@ -1,4 +1,4 @@
-# $Id: Rip.pm,v 1.9.2.1 2003/05/23 19:51:53 joern Exp $
+# $Id: Rip.pm,v 1.11 2004/04/11 23:36:20 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -9,6 +9,7 @@
 #-----------------------------------------------------------------------
 
 package Video::DVDRip::Job::Rip;
+use Locale::TextDomain qw (video.dvdrip);
 
 use base Video::DVDRip::Job;
 
@@ -25,9 +26,10 @@ sub type {
 sub info {
 	my $self = shift;
 
-	my $info = "Ripping - title #".$self->title->nr;
+	my $info = __"Ripping";
+	$info .= " - ".__x("title #{title}", title => $self->title->nr);
 
-	$info .= ", chapter ".$self->chapter if $self->chapter;
+	$info .= ", ".__x("chapter {chapter}", chapter => $self->chapter) if $self->chapter;
 
 	return $info;
 }
