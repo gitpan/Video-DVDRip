@@ -1,7 +1,7 @@
-# $Id: Base.pm,v 1.8 2001/11/24 12:08:38 joern Exp $
+# $Id: Base.pm,v 1.10 2002/01/03 17:40:00 joern Exp $
 
 #-----------------------------------------------------------------------
-# Copyright (C) 2001 Jörn Reder <joern@zyn.de> All Rights Reserved
+# Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
 # 
 # This module is part of Video::DVDRip, which is free software; you can
 # redistribute it and/or modify it under the same terms as Perl itself.
@@ -12,6 +12,8 @@ package Video::DVDRip::Base;
 use Carp;
 use strict;
 use FileHandle;
+use IO::Pipe;
+use Fcntl;
 
 sub debug_level			{ shift->{debug_level}		}
 
@@ -120,10 +122,36 @@ sub system {
 sub popen {
 	my $self = shift;
 	my %par = @_;
+	my  ($command, $callback) =
+	@par{'command','callback'};
+
+	return $self->popen_with_callback (@_) if $callback;
+	
+	$self->print_debug ("executing command: $command");
+	$self->log ("Executing command: $command");
+
+	my $fh = FileHandle->new;
+	open ($fh, "($command) 2>&1 |")
+		or croak "can't fork $command";
+
+	my $flags = '';
+	fcntl($fh, F_GETFL, $flags)
+		or die "Can't get flags: $!\n";
+	$flags |= O_NONBLOCK;
+	fcntl($fh, F_SETFL, $flags)
+	    	or die "Can't set flags: $!\n";
+
+	return $fh;
+}
+
+sub popen_with_callback {
+	my $self = shift;
+	my %par = @_;
 	my  ($command, $callback, $catch_output) =
 	@par{'command','callback','catch_output'};
 	
 	$self->print_debug ("executing command: $command");
+	$self->log ("Executing command: $command");
 
 	my $fh = FileHandle->new;
 	open ($fh, "($command) 2>&1 |")
@@ -144,10 +172,40 @@ sub popen {
 	return $output;
 }
 
+sub format_time {
+	my $self = shift;
+	my %par = @_;
+	my ($time) = @par{'time'};
+	
+	my ($h, $m, $s);
+	$h = int($time/3600);
+	$m = int(($time-$h*3600)/60);
+	$s = $time % 60;
+	
+	return sprintf ("%02d:%02d:%02d", $h, $m, $s);
+}
+
 sub stripped_exception {
 	my $text = $@;
 	$text =~ s/\s+at\s+.*?line\s+\d+//;
 	return $text;
+}
+
+my $logger;
+
+sub logger { $logger }
+
+sub set_logger {
+	my $self = shift;
+	my ($set_logger) = @_;
+	return $logger = $set_logger;
+}
+
+sub log {
+	shift;
+	return if not defined $logger;
+	$logger->log(@_);
+	1;
 }
 
 1;

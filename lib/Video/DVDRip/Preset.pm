@@ -1,7 +1,7 @@
-# $Id: Preset.pm,v 1.2 2001/12/09 00:21:52 joern Exp $
+# $Id: Preset.pm,v 1.3 2002/01/03 17:40:00 joern Exp $
 
 #-----------------------------------------------------------------------
-# Copyright (C) 2001 Jörn Reder <joern@zyn.de> All Rights Reserved
+# Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
 # 
 # This module is part of Video::DVDRip, which is free software; you can
 # redistribute it and/or modify it under the same terms as Perl itself.

@@ -1,7 +1,7 @@
-# $Id: Base.pm,v 1.10 2001/11/25 12:26:21 joern Exp $
+# $Id: Base.pm,v 1.11 2002/01/03 17:40:00 joern Exp $
 
 #-----------------------------------------------------------------------
-# Copyright (C) 2001 Jörn Reder <joern@zyn.de> All Rights Reserved
+# Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
 # 
 # This module is part of Video::DVDRip, which is free software; you can
 # redistribute it and/or modify it under the same terms as Perl itself.

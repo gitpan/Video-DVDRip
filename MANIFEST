@@ -23,7 +23,9 @@ lib/Video/DVDRip/Scan.pm
 lib/Video/DVDRip/Project.pm
 lib/Video/DVDRip/Title.pm
 lib/Video/DVDRip/Config.pm
+contrib/fast_resize.ksp
 tools/genreadme
+tools/genscreenshots
 tools/add_changes
 Changes
 README

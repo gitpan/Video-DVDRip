@@ -1,7 +1,7 @@
-# $Id: TranscodeTab.pm,v 1.18 2001/12/15 20:10:30 joern Exp $
+# $Id: TranscodeTab.pm,v 1.24 2002/01/04 12:20:26 joern Exp $
 
 #-----------------------------------------------------------------------
-# Copyright (C) 2001 Jörn Reder <joern@zyn.de> All Rights Reserved
+# Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
 # 
 # This module is part of Video::DVDRip, which is free software; you can
 # redistribute it and/or modify it under the same terms as Perl itself.
@@ -14,7 +14,6 @@ use strict;
 
 sub transcode_widgets		{ shift->{transcode_widgets}		}	# href
 sub set_transcode_widgets	{ shift->{transcode_widgets}	= $_[1] }
-
 
 #---------------------------------------------------------------------
 # Build Transcode Tab
@@ -51,27 +50,8 @@ sub create_transcode_tab {
 	$table->set_col_spacings ( 10 );
 	$frame_hbox->pack_start ($table, 0, 1, 0);
 
-	# Viewing Angle
-	my $row = 0;
-	$hbox = Gtk::HBox->new;
-	$hbox->show;
-	$label = Gtk::Label->new ("Viewing Angle");
-	$label->show;
-	$hbox->pack_start($label, 0, 1, 0);
-	$table->attach_defaults ($hbox, 0, 1, $row, $row+1);
-
-	$hbox = Gtk::HBox->new;
-	$hbox->show;
-	$entry = Gtk::Entry->new;
-	$entry->show;
-	$entry->set_usize(40,undef);
-	$hbox->pack_start($entry, 0, 1, 0);
-	$table->attach_defaults ($hbox, 1, 2, $row, $row+1);
-
-	$self->transcode_widgets->{tc_viewing_angle} = $entry;
-
 	# Video Codec
-	++$row;
+	my $row = 0;
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
 	$label = Gtk::Label->new ("Video Codec");
@@ -283,34 +263,6 @@ sub create_transcode_tab {
 	$self->transcode_widgets->{tc_use_yuv_internal_yes} = $radio_yes;
 	$self->transcode_widgets->{tc_use_yuv_internal_no}  = $radio_no;
 	
-	# Enable Chapter Mode
-
-	# currently disabled. chapters mode must take effect on ripping,
-	# not transcoding
-	if ( 0 ) {
-		++$row;
-		$hbox = Gtk::HBox->new;
-		$hbox->show;
-		$label = Gtk::Label->new ("Enable Chapter Mode");
-		$label->show;
-		$hbox->pack_start($label, 0, 1, 0);
-		$table->attach_defaults ($hbox, 0, 1, $row, $row+1);
-
-		$hbox = Gtk::HBox->new;
-		$hbox->show;
-		my $radio_yes = Gtk::RadioButton->new ("Yes");
-		$radio_yes->show;
-		$hbox->pack_start($radio_yes, 0, 1, 0);
-		my $radio_no = Gtk::RadioButton->new ("No", $radio_yes);
-		$radio_no->show;
-		$hbox->pack_start($radio_no, 0, 1, 0);
-
-		$table->attach_defaults ($hbox, 1, 2, $row, $row+1);
-
-		$self->transcode_widgets->{tc_use_chapter_mode_yes} = $radio_yes;
-		$self->transcode_widgets->{tc_use_chapter_mode_no}  = $radio_no;
-	}
-	
 	# Volume Rescale
 	++$row;
 	$hbox = Gtk::HBox->new;
@@ -410,6 +362,7 @@ sub create_transcode_tab {
 	$self->transcode_widgets->{tc_disc_size_popup} = $popup;
 
 	# Calculated Storage -----------------------------------------
+
 	$storage_hbox = Gtk::HBox->new;
 	$storage_hbox->show;
 	$vbox->pack_start ( $storage_hbox, 0, 1, 0);
@@ -608,7 +561,7 @@ sub create_transcode_tab {
 
 	# connect changed signals
 	my $widgets = $self->transcode_widgets;
-	foreach my $attr (qw ( tc_viewing_angle tc_video_codec
+	foreach my $attr (qw ( tc_video_codec
 			       tc_video_af6_codec tc_video_bitrate
 			       tc_audio_bitrate tc_volume_rescale
 			       tc_start_frame tc_end_frame )) {
@@ -632,21 +585,6 @@ sub create_transcode_tab {
 		}
 	);
 	
-	if ( 0 ) {
-		$self->transcode_widgets->{tc_use_chapter_mode_yes}->signal_connect (
-			"clicked", sub {
-				return 1 if not $self->selected_title;
-				$self->selected_title->set_tc_use_chapter_mode(1);
-			}
-		);
-		$self->transcode_widgets->{tc_use_chapter_mode_no}->signal_connect (
-			"clicked", sub {
-				return 1 if not $self->selected_title;
-				$self->selected_title->set_tc_use_chapter_mode(0);
-			}
-		);
-	}
-
 	$self->transcode_widgets->{tc_multipass_yes}->signal_connect (
 		"clicked", sub {
 			return 1 if not $self->selected_title;
@@ -670,9 +608,9 @@ sub init_transcode_values {
 	return 1 if not $title;
 
 	my $widgets = $self->transcode_widgets;
-	return 1 if not defined $widgets->{tc_viewing_angle};
+	return 1 if not defined $widgets->{tc_video_codec};
 
-	foreach my $attr (qw ( tc_viewing_angle tc_video_codec
+	foreach my $attr (qw ( tc_video_codec
 			       tc_video_af6_codec tc_video_bitrate
 			       tc_audio_bitrate tc_volume_rescale
 			       tc_start_frame tc_end_frame )) {
@@ -690,11 +628,6 @@ sub init_transcode_values {
 
 	$widgets->{tc_use_yuv_internal_yes}->set_active($yuv);
 	$widgets->{tc_use_yuv_internal_no}->set_active(!$yuv);
-
-	if ( 0 ) {
-		$widgets->{tc_use_chapter_mode_yes}->set_active($chapter_mode);
-		$widgets->{tc_use_chapter_mode_no}->set_active(!$chapter_mode);
-	}
 
 	$widgets->{tc_multipass_yes}->set_active($multipass);
 	$widgets->{tc_multipass_no}->set_active(!$multipass);
@@ -767,6 +700,9 @@ sub transcode {
 	return 1 if not $title;
 	return 1 if $self->comp('progress')->is_active;
 
+	return $self->transcode_chapters ( split => $split )
+		if $title->tc_use_chapter_mode;
+
 	if ( not $title->is_ripped ) {
 		$self->message_window (
 			message => "You first have to rip this title."
@@ -774,13 +710,60 @@ sub transcode {
 		return 1;
 	}
 
-	if ( $title->tc_use_chapter_mode and $split ) {
-		$self->message_window (
-			message => "Splitting an AVI file transcoded in\n".
-				   "Chapter Mode makes no sense."
+	my $pass = 1;
+	my $multipass = $title->tc_multipass;
+
+	my $open_callback = sub {
+		return $title->transcode_async_start ( pass => $pass );
+	};
+
+	my $frames = 0;
+	my $sum_frames = 0;
+
+	my $progress_callback = sub {
+		my %par = @_;
+		my ($buffer) = @par{'buffer'};
+		$buffer =~ /\[\d{6}-(\d+)\],\s+(.*?)\[.*?$/;
+		$frames = $1 if $1;
+		return $sum_frames + $frames;
+	};
+
+	my $close_callback = sub {
+		my %par = @_;
+		my ($output, $progress) = @par{'output','progress'};
+
+		$title->transcode_async_stop (
+			fh     => $progress->fh,
+			output => $output,
 		);
-		return 1;
-	}
+
+		if ( $multipass and $pass == 1 ) {
+			++$pass;
+			$progress->set_label (
+				"Transcoding title #".$title->nr." (Pass 2/2)"
+			);
+			$progress->init_pipe (
+				fh => $title->transcode_async_start ( pass => 2 )
+			);
+			$sum_frames += $frames;
+			$frames = 0;
+			return 'continue';
+
+		} else {
+			return $split ? sub {
+				$self->avisplit ( title => $title )
+			} : 'finished';
+		}
+	};
+
+	my $cancel_callback = sub {
+		my %par = @_;
+		my ($progress) = @par{'progress'};
+
+		system ("killall -2 transcode");
+		sleep 2;
+		close ($progress->fh);
+	};
 
 	my $max_value;
 	if ( $title->tc_start_frame ne '' and
@@ -790,88 +773,193 @@ sub transcode {
 		$max_value = $title->frames;
 	}
 
-	my $fh = $title->transcode_async_start ( pass => 1 );
+	$max_value *= 2 if $multipass;
 
-	use FileHandle;
-	my $DEBUG = FileHandle->new;
-	open ($DEBUG, "> transcode.".$title->project->name.".".$title->nr.".log");
-
-	my $multipass = $title->tc_multipass;
-	my $pass = 1;
-
-	my $label_prefix;
+	my $label;
 	if ( $multipass ) {
-		$label_prefix = "Analyzing Video (Pass 1/2):";
+		$label = "Analyzing title #".$title->nr." (Pass 1/2)";
 	} else {
-		$label_prefix = "Transcoding Video:";
+		$label = "Transcoding title #".$title->nr;
 	}
 
-	$label_prefix =~ s/:$/ (split afterwards):/ if $split;
-
-	my $log = $label_prefix;
-	$log =~ s/:$//;
-	$self->log ("Start $log title #".$title->nr.".");
-	$self->log ("Command: ".$title->get_transcode_command ( pass => 1 ));
-
-	my $log_percent = 5;
-	$self->comp('progress')->open_continious_progress (
-		max_value => $max_value,
-		label     => "Transcoding Video",
-		fh        => $fh,
-		get_progress_callback => sub {
-			my %par = @_;
-			my ($buffer) = @par{'buffer'};
-			print $DEBUG $buffer;
-			$buffer =~ /\[\d{6}-(\d+)\],\s+(.*?)\[.*?$/;
-			my $value = $1;
-			my $label = "$label_prefix $2";
-			$label =~ s/ +/ /g;
-			$label =~ s/,\s*$//;
-			$label =~ s/\%/%%/g;
-			$label =~ /(\d+(\.\d+)?)\s*\%/;
-			if ( $1 > $log_percent ) {
-				$self->log("Processed $log_percent \%...");
-				$log_percent += 5;
-			}
-			return ($value, $label);
-		},
-		finished_callback => sub {
-			my %par = @_;
-			my ($output) = @par{'output'};
-			
-			$title->transcode_async_stop (
-				fh     => $fh,
-				output => $output,
-			);
-			
-			if ( $multipass and $pass == 1 ) {
-				++$pass;
-				$fh = $title->transcode_async_start ( pass => 2 );
-				$self->comp('progress')->set_fh ($fh);
-				$label_prefix = "Transcoding Video (Pass 2/2):";
-				$self->log (
-					"Start Transcoding Video (Pass 2/2) title #".
-					$title->nr."."
-				);
-				return 1;	# 1 signals reuse of progress
-
-			} else {
-				$self->log ("Finished Transcoding.");
-				close $DEBUG;
-				return $split ? sub {
-					$self->avisplit ( title => $title )
-				} : undef;
-			}
-		},
-		cancel_callback => sub {
-			system ("killall -2 transcode");
-			sleep 2;
-			close $fh;
-			close $DEBUG;
-			$self->log ("User cancelled operation.");
-		},
+	$self->comp('progress')->open (
+		label             => $label,
+		need_output       => 0,
+		show_fps	  => 1,
+		show_percent      => 1,
+		show_eta          => 1,
+		max_value         => $max_value,
+		open_callback     => $open_callback,
+		progress_callback => $progress_callback,
+		cancel_callback   => $cancel_callback,
+		close_callback    => $close_callback,
 	);
+
+	1;
+}
+
+sub transcode_chapters {
+	my $self = shift;
+	my %par = @_;
+	my ($split) = @par{'split'};
+
+	my $title = $self->selected_title;
+	return 1 if not $title;
+	return 1 if $self->comp('progress')->is_active;
+
+	my $chapter_mode = $title->tc_use_chapter_mode;
+	croak "Title is not in chapter mode" if not $chapter_mode;
+
+	if ( $title->tc_use_chapter_mode and $split ) {
+		$self->message_window (
+			message => "Splitting an AVI file in\n".
+				   "Chapter Mode makes no sense."
+		);
+		return 1;
+	}
+
+	if ( not $title->is_ripped ) {
+		$self->message_window (
+			message => "You first have to rip this title."
+		);
+		return 1;
+	}
+
+	my @chapters = @{$title->get_chapters};
+
+	if ( not @chapters ) {
+		$self->message_window (
+			message => "No chapters selected."
+		);
+		return;
+	}
+
+	my $cnt = 1;
+
+	my $pass = 1;
+	my $multipass = $title->tc_multipass;
 	
+	my $frames = 0;
+	my $sum_frames = 0;
+
+	my $chapter = shift @chapters;
+
+	$title->set_actual_chapter($chapter);
+
+	my $open_callback = sub {
+		return $title->transcode_async_start ( pass => $pass );
+	};
+
+	my $progress_callback = sub {
+		return $cnt if $chapter_mode eq 'select';
+		my %par = @_;
+		my ($buffer) = @par{'buffer'};
+		$buffer =~ /\[\d{6}-(\d+)\]/;
+		$frames = $1 if $1;
+		return $sum_frames+$frames;
+	};
+
+	my $close_callback = sub {
+		my %par = @_;
+		my ($output, $progress) = @par{'output','progress'};
+
+		$title->transcode_async_stop (
+			fh     => $progress->fh,
+			output => $output,
+		);
+
+		$sum_frames += $frames;
+		$frames = 0;
+	
+		if ( $multipass and $pass == 1 ) {
+			++$pass;
+			$progress->set_label (
+				"Transcoding chapter $chapter of title #".
+				$title->nr." (Pass 2/2)"
+			);
+			$progress->init_pipe (
+				fh => $title->transcode_async_start ( pass => 2 )
+			);
+			return 'continue';
+
+		} else {
+			$chapter = shift @chapters;
+			return 'finished' if not defined $chapter;
+
+			$pass = 1;
+			$title->set_actual_chapter($chapter);
+
+			if ( $multipass ) {
+				$progress->set_label (
+					"Analyzing chapter $chapter of title #".
+					$title->nr." (Pass 1/2)"
+				);
+			} else {
+				$progress->set_label (
+					"Transcoding chapter $chapter of title #".
+					$title->nr
+				);
+			}
+
+			$progress->init_pipe (
+				fh => $title->transcode_async_start ( pass => 2 )
+			);
+
+			return 'continue';
+		}
+	};
+
+	my $cancel_callback = sub {
+		my %par = @_;
+		my ($progress) = @par{'progress'};
+
+		system ("killall -2 transcode");
+		sleep 2;
+		close ($progress->fh);
+		$title->set_actual_chapter(undef);
+	};
+
+	my $max_value;
+	if ( $title->tc_start_frame ne '' and
+	     $title->tc_end_frame ne '' ) {
+		$max_value = $title->tc_end_frame;
+		$self->log (
+			"Frame selection detected: only the first ".
+			"chapter will be processed"
+		);
+		@chapters = ();
+
+	} elsif ( $chapter_mode eq 'select' ) {
+		$max_value = @chapters + 1;
+
+	} else {
+		$max_value = $title->frames;
+	}
+
+	$max_value *= 2 if $multipass;
+
+	my $label;
+	if ( $multipass ) {
+		$label = "Analyzing chapter $chapter of title #".
+			 $title->nr." (Pass 1/2)";
+	} else {
+		$label = "Transcoding chapter $chapter of title #".
+			 $title->nr;
+	}
+
+	$self->comp('progress')->open (
+		label             => $label,
+		need_output       => 0,
+		show_percent      => ($chapter_mode ne 'select'),
+		show_fps	  => ($chapter_mode ne 'select'),
+		show_eta	  => ($chapter_mode ne 'select'),
+		max_value         => $max_value,
+		open_callback     => $open_callback,
+		progress_callback => $progress_callback,
+		cancel_callback   => $cancel_callback,
+		close_callback    => $close_callback,
+	);
+
 	1;
 }
 
@@ -886,6 +974,14 @@ sub avisplit {
 	
 	my $filename = $title->avi_file;
 
+	if ( $title->tc_use_chapter_mode ) {
+		$self->message_window (
+			message => "Splitting an AVI file in\n".
+				   "chapter mode is currently not supported."
+		);
+		return 1;
+	}
+
 	if ( not -f $filename ) {
 		$self->message_window (
 			message => "You first have to transcode this title."
@@ -893,45 +989,42 @@ sub avisplit {
 		return 1;
 	}
 
-	if ( $title->tc_use_chapter_mode ) {
-		$self->message_window (
-			message => "Splitting an AVI file transcoded in\n".
-				   "Chapter Mode makes no sense."
-		);
+	my $open_callback = sub {
+		return $title->split_async_start;
+	};
+
+	my $progress_callback = sub {
+		my %par = @_;
+		my ($buffer) = @par{'buffer'};
+		$buffer =~ /\(\d{6}-(\d+)\),\s+(.*?)\[.*?$/;
+		return $1;
+	};
+
+	my $close_callback = sub {
+		my %par = @_;
+		my ($progress) = @par{'progress'};
+		$title->split_async_stop ( fh => $progress->fh );
+		return 'finished';
+	};
+
+	my $cancel_callback = sub {
+		my %par = @_;
+		my ($progress) = @par{'progress'};
+		close ($progress->fh );
 		return 1;
-	}
+	};
 
-	my $fh = $title->split_async_start;
-
-	$self->log ("Start splitting title #".$title->nr.".");
-	$self->log ("Command: ".$title->get_split_command );
-
-	my $log_percent = 0;
-	my $max_value = $title->frames;
-	$self->comp('progress')->open_continious_progress (
-		max_value => $max_value,
-		label     => "Splitting AVI",
-		fh        => $fh,
-		get_progress_callback => sub {
-			my %par = @_;
-			my ($buffer) = @par{'buffer'};
-			$buffer =~ /\(\d{6}-(\d+)\),\s+(.*?)\[.*?$/;
-			my $progress = $1;
-			if ( int((100 * $progress / $max_value)/10+1)*10 > $log_percent ) {
-				$self->log("Splitted $log_percent \%...");
-				$log_percent = int((100 * $progress / $max_value)/10+1)*10;
-			}
-			return $progress;
-		},
-		finished_callback => sub {
-			$title->split_async_stop ( fh => $fh );
-			$self->log ("Finished splitting AVI.");
-			return;
-		},
-		cancel_callback => sub {
-			close $fh;
-			$self->log ("User cancelled operation.");
-		},
+	$self->comp('progress')->open (
+		label             => "Splitting AVI of title #".$title->nr,
+		need_output       => 0,
+		show_fps	  => 1,
+		show_percent      => 1,
+		show_eta          => 1,
+		max_value         => $title->frames,
+		open_callback     => $open_callback,
+		progress_callback => $progress_callback,
+		cancel_callback   => $cancel_callback,
+		close_callback    => $close_callback,
 	);
 
 	1;
@@ -946,21 +1039,27 @@ sub view_avi {
 	return 1 if not $title;
 	return 1 if $self->comp('progress')->is_active;
 
-	my $filename = $title->avi_file;
-
 	if ( $title->tc_use_chapter_mode ) {
-
-		if ( not -f $filename ) {
+		my $chapters = $title->get_chapters;
+		my (@filenames, $filename);
+		foreach my $chapter ( @{$chapters} ) {
+			$title->set_actual_chapter ($chapter);
+			$filename = $title->avi_file;
+			push @filenames, $filename if -f $filename;
+		}
+		$title->set_actual_chapter(undef);
+		
+		if ( not @filenames ) {
 			$self->message_window (
 				message => "You first have to transcode this title."
 			);
 			return 1;
 		}
 
-		system ("xine $filename -p &");
+		system ("xine ".join(" ", @filenames)." -p &");
 
 	} else {
-	
+		my $filename = $title->avi_file;
 		$filename =~ s/\.avi$//;
 		system ("xine ${filename}* -p &");
 

@@ -1,7 +1,7 @@
-# $Id: Config.pm,v 1.10 2001/11/25 14:42:47 joern Exp $
+# $Id: Config.pm,v 1.12 2002/01/03 17:40:01 joern Exp $
 
 #-----------------------------------------------------------------------
-# Copyright (C) 2001 Jörn Reder <joern@zyn.de> All Rights Reserved
+# Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
 # 
 # This module is part of Video::DVDRip, which is free software; you can
 # redistribute it and/or modify it under the same terms as Perl itself.
@@ -55,7 +55,13 @@ sub build {
 	foreach my $field ( @{$config_object->order} ) {
 		my %field = %{$config_object->config->{$field}};
 		$field{onchange} = sub {
-			my $value = shift->get_text;
+			my $value = $_[0]->get_text;
+			if ( $field{type} eq 'file' or $field{type} eq 'dir' ) {
+				if ( $value !~ m!^/! ) {
+					$value = "/$value";
+					$_[0]->set_text($value);
+				}
+			}
 			$config_object->set_value (
 				$field, $value
 			);

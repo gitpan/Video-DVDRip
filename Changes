@@ -1,6 +1,83 @@
-$Id: Changes,v 1.14 2001/12/18 22:44:51 joern Exp $
+$Id: Changes,v 1.21 2002/01/04 15:50:04 joern Exp $
 
 Revision history for Perl extension Video::DVDRip
+
+0.28 Fri Jan 04 2002, joern
+	Features:
+	- I added a contrib directory to the distribution, currently
+	  containing a KSpread file which helps calculating fast resize
+	  values. I'm planning to integrate a native and quite more usable
+	  version of this sheet to dvd::rip, but maybe this helps someone
+	  while this feature is not finished. On the other hand the
+	  presets are working well for most DVDs, so this is currently
+	  a nice to have feature for me.
+
+	Bugfixes:
+	- avisplit progress bar missed percentage and ETA.
+	- fast resize option did not always complain about illegal
+	  values, thanks to Christian Lambert <clambert AT csd.sgi.com>
+	  for the bug report.
+
+0.28_03 Thu Jan 03 2002, joern
+	Features:
+	- Full viewing angle support, requested by Certron DiSoni
+	  <certron_80 AT yahoo.com>. You can select the viewing
+	  channel after reading the TOC. Only the selected angle
+	  will be ripped from the DVD. This way I was able to rip
+	  german Star Wars Episode I, with the german intro.
+
+	Bugfixes:
+	- transcode progress bar missed percentage and ETA.
+
+0.28_02 Thu Jan 03 2002, joern
+	Again a pre-release due to major changes in the progress module
+	and chapter mode code. Please test it. Thanks.
+
+	Features:
+	- enhanced chapter mode suggested by Tim Currie <jtcurrie AT
+	  mediaone.net>: dvd::rip now shows a multi selection list
+	  of avaiable chapters per title. Now you can decide which
+	  chapters should be ripped and transcoded. Currently no progress
+	  bar is shown in the chapter selection mode, only the elapsed
+	  time will be printed. Also avisplit is currently not available
+	  in chapter mode. I'm not shure, if transcode reports the correct
+	  number of chapters. Often the higher chapters are empty or
+	  at least *very* short.
+	- major code cleanup in the progress bar module. Among other things
+	  a Gtk input handler is used instead of a Gtk idle function.
+	  This way the GUI responses much better. Also all calculations
+	  (elapsed time, ETA, fps) are done by dvd::rip now and available
+	  for all tasks.
+
+	Bugfixes:
+	- fixed chapter mode transcoding progress bar / logging problem
+	- dvd::rip failed if the project path was not absolute. Thanks to
+	  George Farris <george AT gmsys.com> for the report.
+
+0.28_01 Fri Dec 28 2001, joern
+	This is a pre release for testing the new Chapter Mode feature.
+	Please use this version only, if you're interested in this feature
+	or if you want to test it in general. Also non-Chapter-Mode ripping
+	may be affected or buggy.
+
+	Features:
+	- Chapter Mode, suggested by Norbert Preining.
+	  You have to enable this on the RIP Title Tab before ripping,
+	  because each chapter will be ripped into a separate directory.
+	  Transcoding in chapter mode will lead to one AVI file for
+	  each chapter. The progress bar guesses sometimes wrong, but the
+	  result should be Ok. Splitting in Chapter Mode is not supported
+	  and makes no sense in general.
+	- removed the tcprobe-random-title-permutation workaround,
+	  because this tcprobe bug is fixed in transcode 0.5.3
+
+	Bugfixes:
+	- dvd::rip didn't work with transcode 0.5.3 due to changes
+	  of tcprobe output. Thanks to Thomas Speck <thomas-speck
+	  AT gmx.de> for his bug report. This release has a workaround
+	  fixing this problem. Another solution is to patch transcode
+	  0.5.3 with a patch published by Thomas Östreich on his
+	  transcode homepage.
 
 0.27 Tue Dec 18 2001, joern
 	Bugfix:

@@ -1,7 +1,7 @@
-# $Id: Project.pm,v 1.15 2001/12/15 00:16:23 joern Exp $
+# $Id: Project.pm,v 1.18 2002/01/03 17:40:01 joern Exp $
 
 #-----------------------------------------------------------------------
-# Copyright (C) 2001 Jörn Reder <joern@zyn.de> All Rights Reserved
+# Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
 # 
 # This module is part of Video::DVDRip, which is free software; you can
 # redistribute it and/or modify it under the same terms as Perl itself.
@@ -35,9 +35,6 @@ sub set_selected_title		{ shift->{selected_title}	= $_[1] }
 
 sub gtk_title_labels		{ shift->{gtk_title_labels}		}	# lref
 sub set_gtk_title_labels	{ shift->{gtk_title_labels}	= $_[1] }
-
-sub logger			{ shift->{logger}			}
-sub set_logger			{ shift->{logger}		= $_[1] }
 
 sub closed			{ shift->{closed}			}
 sub set_closed			{ shift->{closed}		= $_[1] }
@@ -113,6 +110,7 @@ sub fill_with_values {
 
 	$self->init_title_labels;
 	$self->init_audio_popup;
+	$self->init_chapter_list;
 	$self->init_adjust_values;
 	$self->init_transcode_values;
 
@@ -126,12 +124,6 @@ sub close {
 	$self->log ("Project closed.");
 	$self->set_closed(1);
 	
-	1;
-}
-
-sub log {
-	my $self = shift;
-	$self->logger->log (@_);
 	1;
 }
 

@@ -1,7 +1,7 @@
-# $Id: StorageTab.pm,v 1.6 2001/12/15 14:37:12 joern Exp $
+# $Id: StorageTab.pm,v 1.8 2002/01/03 17:40:01 joern Exp $
 
 #-----------------------------------------------------------------------
-# Copyright (C) 2001 Jörn Reder <joern@zyn.de> All Rights Reserved
+# Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
 # 
 # This module is part of Video::DVDRip, which is free software; you can
 # redistribute it and/or modify it under the same terms as Perl itself.
@@ -39,21 +39,36 @@ sub create_storage_tab {
 		  value => $self->project->vob_dir,
 		  type  => 'text',
 		  onchange => sub {
-		  	$self->project->set_vob_dir (shift->get_text)
+		  	my $text = $_[0]->get_text;
+			if ( not $text =~ m!^/! ) {
+				$text = "/$text";
+				$_[0]->set_text($text);
+			}
+		  	$self->project->set_vob_dir ($text)
 		  },
 		},
 		{ label => "AVI Directory",
 		  value => $self->project->avi_dir,
 		  type  => 'text',
 		  onchange => sub {
-		  	$self->project->set_avi_dir (shift->get_text)
+		  	my $text = $_[0]->get_text;
+			if ( not $text =~ m!^/! ) {
+				$text = "/$text";
+				$_[0]->set_text($text);
+			}
+		  	$self->project->set_avi_dir ($text)
 		  },
 		},
 		{ label => "Temp Directory",
 		  value => $self->project->snap_dir,
 		  type  => 'text',
 		  onchange => sub {
-		  	$self->project->set_snap_dir (shift->get_text)
+		  	my $text = $_[0]->get_text;
+			if ( not $text =~ m!^/! ) {
+				$text = "/$text";
+				$_[0]->set_text($text);
+			}
+		  	$self->project->set_snap_dir ($text)
 		  },
 		},
 	);

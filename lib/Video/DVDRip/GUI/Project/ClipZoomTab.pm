@@ -1,7 +1,7 @@
-# $Id: ClipZoomTab.pm,v 1.12 2001/12/18 22:44:51 joern Exp $
+# $Id: ClipZoomTab.pm,v 1.15 2002/01/03 17:40:01 joern Exp $
 
 #-----------------------------------------------------------------------
-# Copyright (C) 2001 Jörn Reder <joern@zyn.de> All Rights Reserved
+# Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
 # 
 # This module is part of Video::DVDRip, which is free software; you can
 # redistribute it and/or modify it under the same terms as Perl itself.
@@ -658,50 +658,65 @@ sub grab_preview_frame {
 		return 1;
 	}
 
-	my $fh = $title->take_snapshot_async_start (
-		frame    => $frame_nr,
-		filename => $filename,
+	my $open_callback = sub {
+		return $title->take_snapshot_async_start (
+			frame    => $frame_nr,
+			filename => $filename,
+		);
+	};
+
+	my $progress_callback = sub {
+		my %par = @_;
+		my ($buffer) = @par{'buffer'};
+		$buffer =~ /\[0+-(\d+)\].*?$/;
+		return $1;
+	};
+
+	my $close_callback = sub {
+		my %par = @_;
+		my ($progress) = @par{'progress'};
+
+		$progress->set_label ("Convert PPM to JPEG");
+
+		$self->log ("Convert PPM to JPEG");
+		$self->log (
+			"Command:".
+			$title->get_convert_snapshot_command (
+				filename => $title->snapshot_filename
+			)
+		);
+
+		$title->take_snapshot_async_stop ( fh => $progress->fh );
+
+		$self->make_previews;
+		$self->show_preview_images;
+
+		$self->log ("Preview grabbing finished.");
+
+		return 'finished';
+	};
+
+	my $cancel_callback = sub {
+		my %par = @_;
+		my ($progress) = @par{'progress'};
+		close ($progress->fh);
+		return 1;
+	};
+
+	$self->comp('progress')->open (
+		label             => "Grab frame $frame_nr of title #".
+				     $title->nr,
+		need_output       => 0,
+		show_percent      => 1,
+		show_fps          => 0,
+		show_eta          => 1,
+		max_value         => $frame_nr,
+		open_callback     => $open_callback,
+		progress_callback => $progress_callback,
+		cancel_callback   => $cancel_callback,
+		close_callback    => $close_callback,
 	);
 
-	$self->log (
-		"Start grabbing preview frame $frame_nr of title ".
-		$title->nr
-	);
-	$self->log (
-		"Command: ".
-		$title->get_take_snapshot_command (frame => $frame_nr)
-	);
-
-	$self->comp('progress')->open_continious_progress (
-		max_value => $frame_nr,
-		label     => "Grabbing Preview Image",
-		fh        => $fh,
-		get_progress_callback => sub {
-			my %par = @_;
-			my ($buffer) = @par{'buffer'};
-			$buffer =~ /\[0+-(\d+)\].*?$/;
-			return $1;
-		},
-		finished_callback => sub {
-			$self->log ("Convert PPM to JPEG");
-			$self->log (
-				"Command:".
-				$title->get_convert_snapshot_command (
-					filename => $title->snapshot_filename
-				)
-			);
-			$title->take_snapshot_async_stop ( fh => $fh );
-			$self->make_previews;
-			$self->show_preview_images;
-			$self->log ("Preview grabbing finished.");
-			return;
-		},
-		cancel_callback => sub {
-			close $fh;
-			$self->log ("User cancelled preview grabbing.");
-		},
-	);
-	
 	1;
 }
 

@@ -1,7 +1,7 @@
-# $Id: Scan.pm,v 1.5 2001/11/23 20:21:51 joern Exp $
+# $Id: Scan.pm,v 1.6 2002/01/03 17:40:00 joern Exp $
 
 #-----------------------------------------------------------------------
-# Copyright (C) 2001 Jörn Reder <joern@zyn.de> All Rights Reserved
+# Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
 # 
 # This module is part of Video::DVDRip, which is free software; you can
 # redistribute it and/or modify it under the same terms as Perl itself.

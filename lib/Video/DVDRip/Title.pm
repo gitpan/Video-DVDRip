@@ -1,7 +1,7 @@
-# $Id: Title.pm,v 1.35 2001/12/15 20:11:16 joern Exp $
+# $Id: Title.pm,v 1.41 2002/01/04 12:20:26 joern Exp $
 
 #-----------------------------------------------------------------------
-# Copyright (C) 2001 Jörn Reder <joern@zyn.de> All Rights Reserved
+# Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
 # 
 # This module is part of Video::DVDRip, which is free software; you can
 # redistribute it and/or modify it under the same terms as Perl itself.
@@ -36,6 +36,8 @@ sub frame_rate			{ shift->probe_result->frame_rate	}
 sub audio_size			{ shift->probe_result->audio_size	}
 sub bitrates			{ shift->probe_result->bitrates		}
 sub audio_tracks		{ shift->probe_result->audio_tracks	}
+sub chapters			{ shift->probe_result->chapters		}
+sub viewing_angles		{ shift->probe_result->viewing_angles	}
 
 sub volume_rescale		{ shift->scan_result->volume_rescale	}
 
@@ -44,23 +46,19 @@ sub size			{ shift->{size}				}
 sub audio_channel		{ shift->{audio_channel}		}
 sub scan_result			{ shift->{scan_result}			}
 sub probe_result		{ shift->{probe_result}			}
-sub rip_time			{ shift->{rip_time}			}
-sub scan_time			{ shift->{scan_time}			}
-sub probe_time			{ shift->{probe_time}			}
 sub preset			{ shift->{preset}			}
 sub preview_frame_nr		{ shift->{preview_frame_nr}		}
 sub files			{ shift->{files}			}
+sub actual_chapter		{ shift->{actual_chapter}		}
 
 sub set_nr			{ shift->{nr}			= $_[1] }
 sub set_size			{ shift->{size}			= $_[1] }
 sub set_audio_channel		{ shift->{audio_channel}	= $_[1] }
 sub set_scan_result		{ shift->{scan_result}		= $_[1] }
 sub set_probe_result		{ shift->{probe_result}		= $_[1] }
-sub set_rip_time		{ shift->{rip_time}		= $_[1] }
-sub set_scan_time		{ shift->{scan_time}		= $_[1] }
-sub set_probe_time		{ shift->{probe_time}		= $_[1] }
 sub set_preset			{ shift->{preset}		= $_[1] }
 sub set_preview_frame_nr	{ shift->{preview_frame_nr}	= $_[1] }
+sub set_actual_chapter		{ shift->{actual_chapter}	= $_[1] }
 
 #------------------------------------------------------------------------
 # These attributes must be specified by the user and are
@@ -96,7 +94,8 @@ sub tc_end_frame	    	{ shift->{tc_end_frame}			}
 sub tc_fast_resize	    	{ shift->{tc_fast_resize}		}
 sub tc_multipass	    	{ shift->{tc_multipass}			}
 sub tc_title_nr	    		{ $_[0]->{tc_title_nr} || $_[0]->{nr}	}
-sub tc_use_chapter_mode    	{ shift->{tc_use_chapter_mode}	}
+sub tc_use_chapter_mode    	{ shift->{tc_use_chapter_mode}		}
+sub tc_selected_chapters	{ shift->{tc_selected_chapters}		}
 
 sub set_project			{ shift->{project}		= $_[1] }
 sub set_tc_viewing_angle	{ shift->{tc_viewing_angle}	= $_[1]	}
@@ -128,20 +127,39 @@ sub set_tc_fast_resize		{ shift->{tc_fast_resize}    	= $_[1]	}
 sub set_tc_multipass		{ shift->{tc_multipass}    	= $_[1]	}
 sub set_tc_title_nr	    	{ shift->{tc_title_nr}    	= $_[1]	}
 sub set_tc_use_chapter_mode 	{ shift->{tc_use_chapter_mode}	= $_[1]	}
+sub set_tc_selected_chapters	{ shift->{tc_selected_chapters}	= $_[1] }
 
 sub vob_dir {
 	my $self = shift; $self->trace_in;
 	
-	return 	$self->project->vob_dir."/".
-		$self->nr;
+	my $vob_dir;
+
+	if ( $self->tc_use_chapter_mode ) {
+		$vob_dir = $self->project->vob_dir."/".
+		       $self->nr."-C".
+		       ($self->actual_chapter ||
+		        $self->get_first_chapter || 1);
+
+	} else {
+		$vob_dir = $self->project->vob_dir."/".$self->nr;
+	}
+	
+	return $vob_dir;
 }
 
 sub avi_file {
 	my $self = shift; $self->trace_in;
-	
-	return 	$self->project->avi_dir."/".
-		$self->project->name."-".
-		$self->nr.".avi";
+
+	if ( $self->tc_use_chapter_mode ) {
+		return 	$self->project->avi_dir."/".
+			$self->project->name."-".
+			$self->nr."-C".
+			$self->actual_chapter.".avi";
+	} else {
+		return 	$self->project->avi_dir."/".
+			$self->project->name."-".
+			$self->nr.".avi";
+	}
 }
 
 sub preview_filename {
@@ -160,24 +178,22 @@ sub new {
 	my ($nr, $project) = @par{'nr','project'};
 
 	my $self = {
-		project	        => $project,
-		nr              => $nr,
-		size            => 0,
-		files           => [],
-		audio_channel   => 0,
-		scan_result     => undef,
-		probe_result    => undef,
-		rip_time        => undef,
-		scan_time       => undef,
-		probe_time      => undef,
-		tc_clip1_top	=> 0,
-		tc_clip1_bottom	=> 0,
-		tc_clip1_left	=> 0,
-		tc_clip1_right	=> 0,
-		tc_clip2_top	=> 0,
-		tc_clip2_bottom	=> 0,
-		tc_clip2_left	=> 0,
-		tc_clip2_right	=> 0,
+		project	             => $project,
+		nr                   => $nr,
+		size                 => 0,
+		files                => [],
+		audio_channel        => 0,
+		scan_result          => undef,
+		probe_result         => undef,
+		tc_clip1_top	     => 0,
+		tc_clip1_bottom	     => 0,
+		tc_clip1_left	     => 0,
+		tc_clip1_right	     => 0,
+		tc_clip2_top	     => 0,
+		tc_clip2_bottom	     => 0,
+		tc_clip2_left	     => 0,
+		tc_clip2_right	     => 0,
+		tc_selected_chapters => [],
 	};
 	
 	return bless $self, $class;
@@ -209,6 +225,33 @@ sub apply_preset {
 	1;
 }
 
+sub get_first_chapter {
+	my $self = shift;
+	
+	my $chapter_mode = $self->tc_use_chapter_mode;
+	return if not $chapter_mode;
+	
+	if ( $chapter_mode eq 'select' ) {
+		my $chapters = $self->get_chapters;
+		return $chapters->[0];
+	} else {
+		return 1;
+	}
+}
+
+sub get_chapters {
+	my $self = shift;
+
+	my @chapters;
+	if ( $self->tc_use_chapter_mode eq 'select' ) {
+		@chapters = sort { $a <=> $b } @{$self->tc_selected_chapters || []};
+	} else {
+		@chapters = (1 .. $self->chapters);
+	}
+
+	return \@chapters;
+}
+
 #---------------------------------------------------------------------
 # Methods for Ripping
 #---------------------------------------------------------------------
@@ -216,10 +259,24 @@ sub apply_preset {
 sub is_ripped {
 	my $self = shift;
 	
-	my $vob_dir    = $self->vob_dir;
-	my $name       = $self->project->name;
+	my $name = $self->project->name;
+
+	if ( not $self->tc_use_chapter_mode ) {
+		my $vob_dir = $self->vob_dir;
+		return -f "$vob_dir/$name-001.vob";
+	}
 	
-	return -f "$vob_dir/$name-001.vob";
+	my $chapters = $self->get_chapters;
+	
+	my $vob_dir;
+	foreach my $chapter ( @{$chapters} ) {
+		$self->set_actual_chapter($chapter);
+		$vob_dir = $self->vob_dir;
+		$self->set_actual_chapter(undef);
+		return if not -f "$vob_dir/$name-001.vob";
+	}
+	
+	return 1;
 }
 
 sub get_rip_command {
@@ -237,8 +294,13 @@ sub get_rip_command {
 			or croak "Can't mkpath directory '$vob_dir'";
 	}
 
+	my $chapter =
+		$self->tc_use_chapter_mode ? $self->actual_chapter : -1;
+
+	my $angle = $self->tc_viewing_angle || 1;
+
 	my $command = "rm -f $vob_dir/$name-???.vob;\n".
-	           "tccat -t dvd -T $nr,-1 -i $dvd_device ".
+	           "tccat -t dvd -T $nr,$chapter,$angle -i $dvd_device ".
 	           "| splitpipe 1024 $vob_dir/$name vob >/dev/null";
 
 	return $command;
@@ -251,8 +313,6 @@ sub rip {
 		command => $self->get_rip_command,
 	);
 	
-	$self->set_rip_time (time);
-
 	1;
 }
 
@@ -266,8 +326,6 @@ sub rip_with_callback {
 		callback => $callback,
 	);
 	
-	$self->set_rip_time (time);
-
 	1;
 }
 
@@ -290,11 +348,9 @@ sub rip_async_stop {
 			$self->get_rip_command.
 			$output;
 
-	close $fh;
+	my $rc = close $fh;
 	croak ($message) if $?;
 
-	$self->set_rip_time (time);
-	
 	1;
 }
 
@@ -323,8 +379,6 @@ sub scan {
 		command => $self->get_scan_command,
 	);
 	
-	$self->set_scan_time (time);
-
 	$self->analyze_scan_output (
 		output => $output
 	);
@@ -343,8 +397,6 @@ sub scan_with_callback {
 		catch_output => 1,
 	);
 	
-	$self->set_scan_time (time);
-
 	$self->analyze_scan_output (
 		output => $output
 	);
@@ -374,8 +426,6 @@ sub scan_async_stop {
 	close $fh;
 	croak ($message) if $?;
 
-	$self->set_scan_time (time);
-
 	$self->analyze_scan_output (
 		output => $output
 	);
@@ -397,7 +447,11 @@ sub analyze_scan_output {
 
 	);
 
-	$self->set_tc_volume_rescale ( $self->volume_rescale );
+	if ( $self->tc_use_chapter_mode ) {
+		$self->set_tc_volume_rescale ( undef );
+	} else {
+		$self->set_tc_volume_rescale ( $self->volume_rescale );
+	}
 
 	1;
 }
@@ -422,9 +476,14 @@ sub get_rip_and_scan_command {
 			or croak "Can't mkpath directory '$vob_dir'";
 	}
 
+	my $chapter =
+		$self->tc_use_chapter_mode ? $self->actual_chapter : -1;
+
+	my $angle = $self->tc_viewing_angle || 1;
+
 	my $command =
 	       "rm -f $vob_dir/$name-???.vob;\n".
-	       "tccat -t dvd -T $nr,-1 -i $dvd_device ".
+	       "tccat -t dvd -T $nr,$chapter,$angle -i $dvd_device ".
 	       "| splitpipe 1024 $vob_dir/$name vob ".
 	       "| tcextract -a $audio_channel -x ac3 -t vob ".
 	       "| tcdecode -x ac3 ".
@@ -440,9 +499,6 @@ sub rip_and_scan {
 		command => $self->get_rip_and_scan_command,
 	);
 
-	$self->set_rip_time (time);
-	$self->set_scan_time (time);
-	
 	$self->analyze_scan_output (
 		output => $output
 	);
@@ -456,13 +512,10 @@ sub rip_and_scan_with_callback {
 	my ($callback) = @par{'callback'};
 	
 	my $output = $self->popen (
-		command => $self->get_rip_and_scan_command,
-		callback => $callback,
+		command      => $self->get_rip_and_scan_command,
+		callback     => $callback,
 		catch_output => 1,
 	);
-
-	$self->set_rip_time (time);
-	$self->set_scan_time (time);
 
 	$self->analyze_scan_output (
 		output => $output
@@ -493,9 +546,6 @@ sub rip_and_scan_async_stop {
 	close $fh;
 	croak ($message) if $?;
 
-	$self->set_rip_time (time);
-	$self->set_scan_time (time);
-	
 	$self->analyze_scan_output (
 		output => $output
 	);
@@ -527,8 +577,6 @@ sub probe {
 		command => $self->get_probe_command
 	);
 	
-	$self->set_probe_time(time);
-
 	$self->analyze_probe_output (
 		output => $output
 	);
@@ -547,8 +595,6 @@ sub probe_with_callback {
 		catch_output => 1,
 	);
 	
-	$self->set_probe_time (time);
-
 	$self->analyze_probe_output (
 		output => $output
 	);
@@ -578,8 +624,6 @@ sub probe_async_stop {
 	close $fh;
 	croak ($message) if $?;
 	
-	$self->set_probe_time (time);
-
 	$self->analyze_probe_output (
 		output => $output
 	);
@@ -625,33 +669,6 @@ sub suggest_transcode_options {
 
 	$self->suggest_video_bitrate;
 
-	return 1;
-	
-	# this works bad... :(
-
-	if ( $self->aspect_ratio eq '16:9' and not $self->letterboxed ) {
-		# anamorph encoded
-		$self->print_debug ("anamorph 16:9 encoding detected...");
-		$self->set_tc_zoom_width (768);
-		$self->set_tc_zoom_height(432);
-
-	} elsif ( $self->aspect_ratio eq '16:9' ) {
-		# aspect ratio is Ok, we cut off the black bars
-		# (this should probably be adjusted later)
-		$self->print_debug ("letterboxed 16:9 encoding detected...");
-		$self->set_tc_clip1_top (80);
-		$self->set_tc_clip1_bottom (80);
-		$self->set_tc_clip1_left (16);
-		$self->set_tc_clip1_right (16);
-
-	} elsif ( $self->aspect_ratio eq '4:3' ) {
-		# nothing special here, we'll do a 1:1 transcoding
-		$self->print_debug ("4:3 encoding detected...");
-
-	} else {
-		# Can't suggest parameters for this DVD
-	}
-	
 	1;
 }
 
@@ -664,6 +681,7 @@ sub suggest_video_bitrate {
 
 	my $frames        = $self->frames;
 	my $fps           = $self->frame_rate;
+
 	my $audio_bitrate = $self->tc_audio_bitrate;
 
 	my $runtime = $frames/$fps;
@@ -690,17 +708,16 @@ sub get_transcode_command {
 
 	my $command =
 		"transcode".
-		" -i ".$self->project->vob_dir."/$nr".
+		" -i ".$self->vob_dir.
 		" -x vob".
 		" -a ".$self->audio_channel.
 		" -w ".int($self->tc_video_bitrate).",250,100";
 
 	if ( $self->tc_use_chapter_mode ) {
-		$avi_file =~ s/\.avi$//;
-		$command .= qq{ -U $avi_file -J skip="0-2" };
-	} else {
-		$command .= " -o $avi_file";
+		$command .= qq{ -J skip="0-2" };
 	}
+	
+	$command .= " -o $avi_file";
 	
 	if ( $self->tc_start_frame ne '' and
 	     $self->tc_end_frame ne '' ) {
@@ -800,9 +817,11 @@ sub get_fast_resize_options {
 
 	my ($err_div32, $err_shrink_expand);
 
-	if ( ($width_n != 0 and $zoom_width % 32 != 0 and $width % 32 != 0) or
-	     ($height_n != 0 and $zoom_height % 32 != 0 and $height % 32 != 0) 
-	     or () ) {
+	$self->print_debug("width_n=$width_n width=$width width \% 32 = ", $width % 32);
+	$self->print_debug("height_n=$height_n height=$height height \% 32 = ", $height % 32);
+
+	if ( ($width_n != 0 and ( $zoom_width % 32 != 0 or $width % 32 != 0) ) or
+	     ($height_n != 0 and ( $zoom_height % 32 != 0 or $height % 32 != 0 ) ) ) {
 		$err_div32 = 1;
 	}
 
@@ -871,18 +890,13 @@ sub transcode_async_stop {
 
 sub get_split_command {
 	my $self = shift; $self->trace_in;
-	
+
 	$self->project->check_installation;
 
 	my $avi_file = $self->avi_file;
 	my $size     = $self->tc_disc_size;
 
 	croak "No AVI file found: '$avi_file'" if not -f $avi_file;
-
-#	if ( -s $avi_file < $size*1024*1024 ) {
-#		warn "$avi_file is smaller than $size MB, no need to split.";
-#		return;
-#	}
 
 	my $command = "avisplit -s $size -i $avi_file";
 	
@@ -982,13 +996,13 @@ sub get_take_snapshot_command {
 	$self->project->check_installation;
 
 	my $nr      = $self->nr;
-	my $tmp_dir = "/tmp/lightrip$$.ppm";
+	my $tmp_dir = "/tmp/dvdrip$$.ppm";
 	
 	my $command =
 	       "mkdir $tmp_dir; ".
 	       "cd $tmp_dir; ".
 	       "transcode".
-	       " -z -k -i ".$self->project->vob_dir."/$nr".
+	       " -z -k -i ".$self->vob_dir.
 	       " -o snapshot".
 	       " -x vob -y ppm -c $frame-".($frame+1);
 
@@ -1018,7 +1032,7 @@ sub get_convert_snapshot_command {
 	my %par = @_;
 	my ($filename) = @par{'filename'};
 
-	my $tmp_dir = "/tmp/lightrip$$.ppm";
+	my $tmp_dir = "/tmp/dvdrip$$.ppm";
 
 	my $dirname = dirname ($filename);
 
@@ -1208,8 +1222,6 @@ sub remove_vob_files {
 	my $vob_dir = $self->vob_dir;
 	
 	unlink (<$vob_dir/*>);
-	
-	$self->set_rip_time(undef);
 	
 	1;
 }

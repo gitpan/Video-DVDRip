@@ -1,48 +1,28 @@
-$Id: TODO,v 1.15 2001/12/18 22:44:51 joern Exp $
-
-KNOWN BUGS:
-- The bug described below should be fixed by a new transcode patch for
-  0.5.2 and 0.6.0pre1. Please download and install this patch from
-  the transcode homepage.
-
-  Some DVDs can confuse the TOC reading algorithm of dvd::rip. First
-  the titles are determined simply by reading the directory listing
-  of the mounted DVD. Then tcprobe is called on each title number
-  to gather detailed information of the corresponding video and audio
-  streams. But tcprobe (probably due to a bug in the underlying
-  libdvdread) sometimes permutes the title information, so a 5000 MB
-  title appears with 500 frames and vice versa.
-  
-  To workaround this, there is a text entry on the "RIP Title" tab.
-  Select the track with the correct size and enter the title number
-  with the correct tcprobe information.
-  
-  I think this is not really a dvd::rip bug, because tcprobe (or libdvdread)
-  should report proper title information. But I noted this in my bug list,
-  because it can be very confusing, and you should know about it ;)
-  
-  BTW: xine plays such DVDs without problems and displays the correct
-       title number. This helps determining the correct title number.
+$Id: TODO,v 1.20 2002/01/04 16:05:55 joern Exp $
 
 TODO
-- enable debugging mode by menu
+- don't rip chapters already ripped in chapter selection mode
+- provide avimerge option in chapter mode
+- check space on filesystem before ripping and transcoding
+- rip without audio scanning
+- changing sample rate, suggested by Certron DiSoni <certron_80 AT yahoo.com>
+- selection box for supported video codecs, suggested by Certron DiSoni
+- these two tasks should be combined
+  - batch mode for transcoding a bunch of projects, suggested by
+    Ralf Furhmann <rfuhrmann AT ht-troplast.com>
+  - cluster transcoding (delegate chapters or smaller parts to nodes),
+    suggested by Allen Day <allenday AT 1-up.net> and myself ;)
+- avisplit in chapter mode
 - generic transcode option text entry (with override of parameters
   already added by dvd::rip)
-- chapter mode ripping, requested by Norbert Preining
-- rip without audio scanning
 - extensive checking of user input. most input is currently
   passed through without examination
+- enable debugging mode by menu
 - calculate and show real aspect ratio of all processing steps,
   particularly needed for the fast resize option
 - on the fly ripping & transcoding, requested by many users ;)
-- bypass tcprobe mode, if tcprobe is unable to analyze the DVD correctly,
-  requested by XI <xizard AT enib.fr>. Probably obsolete due to bugfix
-  in tcprobe.
 - exact letterbox autodetection
 - create personal clip&zoom preferences
 - mplayer support
 - VCD and SVCD support (transcode 0.6.x), requested by
   George Farris <george AT gmsys.com>
-
-
-

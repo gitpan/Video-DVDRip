@@ -1,9 +1,9 @@
 #!/usr/local/bin/perl
 
-# $Id: dvdrip,v 1.7 2001/11/26 22:34:31 joern Exp $
+# $Id: dvdrip,v 1.8 2002/01/03 17:39:59 joern Exp $
 
 #-----------------------------------------------------------------------
-# Copyright (C) 2001 Jörn Reder <joern@zyn.de> All Rights Reserved
+# Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
 # 
 # This program is part of Video::DVDRip, which is free software; you can
 # redistribute it and/or modify it under the same terms as Perl itself.

@@ -1,7 +1,7 @@
-# $Id: Main.pm,v 1.19 2001/12/18 22:44:51 joern Exp $
+# $Id: Main.pm,v 1.21 2002/01/03 17:40:01 joern Exp $
 
 #-----------------------------------------------------------------------
-# Copyright (C) 2001 Jörn Reder <joern@zyn.de> All Rights Reserved
+# Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
 # 
 # This module is part of Video::DVDRip, which is free software; you can
 # redistribute it and/or modify it under the same terms as Perl itself.
@@ -109,7 +109,7 @@ dvd::rip - A full featured DVD Ripper GUI for Linux
 
 Version $Video::DVDRip::VERSION
 
-Copyright (c) 2001 Joern Reder, All Rights Reserved
+Copyright (c) 2001-2002 Joern Reder, All Rights Reserved
 
 http://www.netcologne.de/~nc-joernre/
 
@@ -459,9 +459,13 @@ sub show_transcode_commands {
 
 	$commands .= "\n\n";
 
+	my $rip_method = $title->tc_use_chapter_mode ?
+		"get_rip_command" :
+		"get_rip_and_scan_command";
+
 	$commands .= "Rip Command:\n".
 		    "============\n".
-		    $title->get_rip_and_scan_command()."\n";
+		    $title->$rip_method()."\n";
 
 	$commands .= "\n\n";
 	

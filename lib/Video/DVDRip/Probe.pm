@@ -1,7 +1,7 @@
-# $Id: Probe.pm,v 1.7 2001/11/23 20:21:51 joern Exp $
+# $Id: Probe.pm,v 1.10 2002/01/03 17:40:00 joern Exp $
 
 #-----------------------------------------------------------------------
-# Copyright (C) 2001 Jörn Reder <joern@zyn.de> All Rights Reserved
+# Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
 # 
 # This module is part of Video::DVDRip, which is free software; you can
 # redistribute it and/or modify it under the same terms as Perl itself.
@@ -26,6 +26,8 @@ sub audio_size		{ shift->{audio_size}		}
 sub bitrates		{ shift->{bitrates}		}	# href
 sub audio_tracks	{ shift->{audio_tracks}		}	# lref
 sub probe_output	{ shift->{probe_output}	    	}
+sub chapters		{ shift->{chapters}	    	}
+sub viewing_angles	{ shift->{viewing_angles}	}
 
 sub set_width		{ shift->{width}	= $_[1]	}
 sub set_height		{ shift->{height}	= $_[1]	}
@@ -39,6 +41,8 @@ sub set_audio_size	{ shift->{audio_size}	= $_[1] }
 sub set_bitrates	{ shift->{bitrates}	= $_[1] }
 sub set_audio_tracks	{ shift->{audio_tracks}	= $_[1] }
 sub set_probe_output	{ shift->{probe_output}	= $_[1]	}
+sub set_chapters	{ shift->{chapters}	= $_[1]	}
+sub set_viewing_angles	{ shift->{viewing_angles}=$_[1]	}
 
 sub analyze {
 	my $class = shift;
@@ -46,7 +50,7 @@ sub analyze {
 	my  ($probe_output) = @par{'probe_output'};
 
 	my ($width, $height, $aspect_ratio, $video_mode, $letterboxed);
-	my ($frames, $runtime, $frame_rate, $audio_size);
+	my ($frames, $runtime, $frame_rate, $audio_size, $chapters, $angles);
 
 	($width)	= $probe_output =~ /frame\s+size:\s*-g\s+(\d+)/;
 	($height)	= $probe_output =~ /frame\s+size:\s*-g\s+\d+x(\d+)/;
@@ -54,12 +58,17 @@ sub analyze {
 	($video_mode)	= $probe_output =~ /dvd_reader.*?(pal|ntsc)/i;
 	($letterboxed)	= $probe_output =~ /dvd_reader.*?(letterboxed)/;
 	($frames)       = $probe_output =~ /V:\s*(\d+)\s*frames/;
-	($runtime)      = $probe_output =~ /frames,\s*(\d+)\s*sec/;
+	($runtime)      = $probe_output =~ /playback time:.*?(\d+)\s*sec/;
 	($frame_rate)   = $probe_output =~ /frame\s+rate:\s+-f\s+([\d.]+)/;
 	($audio_size)   = $probe_output =~ /A:\s*([\d.]+)/;
+	($chapters)     = $probe_output =~ /(\d+)\s+chapter/;
+	($angles)       = $probe_output =~ /(\d+)\s+angle/;
 
 	$letterboxed = $letterboxed ? 1 : 0;
 	$video_mode  = lc ($video_mode);
+
+	# transcode 0.5.3 workaround
+	$frames ||= $runtime * $frame_rate;
 
 	my ($size, %bitrates, $bitrate);
 	while ( $probe_output =~ /CD:\s*(\d+)/g ) {
@@ -95,9 +104,11 @@ sub analyze {
 		frames		=> $frames,
 		runtime		=> $runtime,
 		frame_rate	=> $frame_rate,
+		chapters	=> $chapters,
 		audio_size      => $audio_size,
 		bitrates	=> \%bitrates,
 		audio_tracks    => \@audio_tracks,
+		viewing_angles  => $angles,
 	};
 	
 	return bless $self, $class;

@@ -1,8 +1,8 @@
-# $Id: DVDRip.pm,v 1.18 2001/12/18 23:02:33 joern Exp $
+# $Id: DVDRip.pm,v 1.24 2002/01/04 15:50:27 joern Exp $
 
 package Video::DVDRip;
 
-$VERSION = "0.27";
+$VERSION = "0.28";
 
 __END__
 
@@ -160,9 +160,12 @@ You can contact me by email. Please place the word "dvd::rip"
 everywhere in the subject, in addition to your real topic, because
 this helps me classifying your email correctly. Thanks.
 
+I'm native german speaker, so you can send your mails in german,
+if you want. The others have to accept my rough english ;)
+
 =head1 COPYRIGHT
 
-Copyright (C) 2001 by Joern Reder, All Rights Reserved.
+Copyright (C) 2001-2002 by Joern Reder, All Rights Reserved.
 
 This library is free software; you can redistribute it
 and/or modify it under the same terms as Perl itself.
