@@ -1,4 +1,4 @@
-# $Id: InfoFile.pm,v 1.4 2002/11/13 22:41:25 joern Exp $
+# $Id: InfoFile.pm,v 1.4.2.1 2002/12/04 22:49:35 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -14,6 +14,8 @@ use base Video::DVDRip::Base;
 use Carp;
 use strict;
 use FileHandle;
+use File::Basename;
+use File::Path;
 
 sub title			{ shift->{title}			}
 sub filename			{ shift->{filename}			}
@@ -254,6 +256,8 @@ sub write_fields {
 	my $self = shift;
 
 	my $filename = $self->filename;
+	my $dir = dirname($filename);
+	mkpath ([$dir],0,0755) if not -d $dir;
 
 	my $fh = FileHandle->new;
 	open ($fh, "> $filename") or die "can't write $filename";

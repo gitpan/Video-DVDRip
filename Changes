@@ -1,6 +1,14 @@
-$Id: Changes,v 1.122.2.4 2002/12/03 20:24:31 joern Exp $
+$Id: Changes,v 1.122.2.5 2002/12/04 22:50:00 joern Exp $
 
 Revision history and release notes for dvd::rip.
+
+0.48.4 Wed 4 Dec 2002, joern
+	Bugfix:
+	- Fixed a dumb bug, where dvd::rip complained about a missing
+	  avi directory when transcoding a title the first time.
+	  Thanks for the report to Florin Andrei (I'm wondering why
+	  nobody found this bug earlier - it should exist since version
+	  0.47.5 - anyway, now it's fixed ;)
 
 0.48.3 Tue 3 Dec 2002, joern
 	Features:
@@ -144,7 +152,7 @@ Revision history and release notes for dvd::rip.
 	- Fractional volume rescale values were rejected. Thanks for
 	  the report to Laurent Grawet.
 
-0.47.09 Fri 01 Nov 2002, joern
+0.47.9 Fri 01 Nov 2002, joern
 	Bugfixes:
 	- Spaces in the frame range entries produced illegal transcode
 	  options. Reported by Andrea Carpani <ancarpan AT tiscalinet.it>.
@@ -167,13 +175,13 @@ Revision history and release notes for dvd::rip.
 	- Ripping didn't work, when the DVD wasn't mounted by the user
 	  before.
 
-0.47.08 Wed 30 Oct 2002, joern
+0.47.8 Wed 30 Oct 2002, joern
 	Bugfixes:
 	- Fixed a typo which breaks subtitle transcoding. Thanks to
 	  Paul Gohn <pgohn AT nexgo.de> for the report and
 	  William Hawkins <whawkins AT vt.edu> for the fix.
 
-0.47.07 Tue 29 Oct 2002, joern
+0.47.7 Tue 29 Oct 2002, joern
 	Features:
 	- Added another RPM spec file RedHat-Rawhide-Video-DVDRip.spec.
 	  Sorry for my ignorance, but I don't understand anything of
@@ -192,7 +200,7 @@ Revision history and release notes for dvd::rip.
 	  (considering automounters, which were problematic). Thanks
 	  to Davide Ferrari for the bug report.
 
-0.47.06 Mon 28 Oct 2002, joern
+0.47.6 Mon 28 Oct 2002, joern
 	Notes:
 	- From now on dvd::rip needs to know the mount point of your
 	  DVD device. So open the preferences dialog and enter your
@@ -255,7 +263,7 @@ Revision history and release notes for dvd::rip.
 	- dvd::rip crashed on first startup, when no ~/.dvdriprc file
 	  was present. Thanks to Davide Ferarri for the detailed report.
 
-0.47.05 Wed 16 Oct 2002, joern
+0.47.5 Wed 16 Oct 2002, joern
 	Features:
 	- Extensive support for rendering subtitles on the movie
 	  (creating vobsub files is prepared, not yet implemented
@@ -346,14 +354,14 @@ Revision history and release notes for dvd::rip.
 	  dvd::rip prevents adding such a title to a cluster. Reported
 	  by Rainer Lay.
 
-0.47.04 Sun 6 Oct 2002, joern
+0.47.4 Sun 6 Oct 2002, joern
 	Bugfixes:
 	- On the fly CD burning didn't work (fortunately without
 	  destroying the CD...).
 	- Updated RPM spec file which now considers pstree for
 	  standard mode.
 	
-0.47.03 Sun 6 Oct 2002, joern
+0.47.3 Sun 6 Oct 2002, joern
 	Notes:
 	- dvd::rip now generally depends on 'pstree' not only in
 	  cluster mode
@@ -406,7 +414,7 @@ Revision history and release notes for dvd::rip.
 	- Window title was not cleared, if a project was closed,
  	  reported by Fabio Russo
 
-0.47.02 Mon 30 Sep 2002, joern
+0.47.2 Mon 30 Sep 2002, joern
 	Note:
 	- File format changed slightly, but is backward compatible.
 	  dvd::rip prints a short message when converting an older
@@ -453,7 +461,7 @@ Revision history and release notes for dvd::rip.
 	  is still not supported with cluster mode, but really no
 	  need for dvdrip-master to crash here... ;)
 
-0.47.01 Sun 29 Sep 2002, joern
+0.47.1 Sun 29 Sep 2002, joern
 	Bugfixes:
 	- Progress information was messed up when transcoding
 	  chapters from a DVD image or when doing direct DVD

@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# $Id: dvdrip,v 1.15.2.1 2002/12/02 18:20:55 joern Exp $
+# $Id: dvdrip,v 1.15.2.2 2002/12/03 20:26:52 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -32,7 +32,7 @@ BEGIN {
 		print STDERR "dvd::rip doesn't work with them if PERLIO isn't set.\n\n";
 		print STDERR "I will set PERLIO=stdio for you and restart dvd::rip...\n\n";
 		print STDERR "You can get rid of this messages, by setting PERLIO=stdio\n";
-		print STDERR "in your ~/.profile.\n\n";
+		print STDERR "in your ~/.profile, or whatever your shell uses.\n\n";
 		exec $Config::Config{perlpath}, $0, @ARGV;
 	}
 
