@@ -1,4 +1,4 @@
-# $Id: TranscodeTab.pm,v 1.61 2002/11/12 22:07:20 joern Exp $
+# $Id: TranscodeTab.pm,v 1.61.2.1 2002/11/23 13:44:42 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -122,6 +122,13 @@ sub create_transcode_tab {
 					$self->burn_widgets
 					     ->{burn_cd_type_iso}->set_active(1);
 				}
+				if ( $widget->get_text eq 'ffmpeg' ) {
+					$widgets->{tc_video_af6_codec}->set_text ("mpeg4");
+					$title->set_tc_video_af6_codec("mpeg4");
+				} elsif ( $widget->get_text ne 'af6' ) {
+					$widgets->{tc_video_af6_codec}->set_text ("");
+					$title->set_tc_video_af6_codec("");
+				}
 				$self->selected_title->calc_video_bitrate;
 				$self->init_transcode_values;
 			}
@@ -211,7 +218,7 @@ sub create_video_options {
 
 	$entry = Gtk::Combo->new;
 	$entry->show;
-	$entry->set_popdown_strings ("SVCD","VCD","divx4","divx5","xvid","xvidcvs","ffmpeg4","fame","af6");
+	$entry->set_popdown_strings ("SVCD","VCD","divx4","divx5","xvid","xvidcvs","ffmpeg","fame","af6");
 	$entry->set_usize(80,undef);
 	$hbox->pack_start($entry, 0, 1, 0);
 
@@ -223,7 +230,7 @@ sub create_video_options {
 	++$row;
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new ("af6 video codec");
+	$label = Gtk::Label->new ("af6/ffmpeg codec");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 	$table->attach ($hbox, 0, 1, $row, $row+1, 'fill','expand',0,0);

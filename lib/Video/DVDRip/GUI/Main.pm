@@ -1,4 +1,4 @@
-# $Id: Main.pm,v 1.54 2002/11/12 22:05:21 joern Exp $
+# $Id: Main.pm,v 1.54.2.1 2002/11/23 13:40:48 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -67,6 +67,9 @@ sub start {
 
 	$self->log (
 		"Detected transcode version: $TC::ORIG_VERSION (=> $TC::VERSION)"
+	);
+	$self->log (
+		"Detected subtitleripper version: $STR::VERSION"
 	);
 
 	$self->check_annoying_red_hat_8_0_perl_BUG;

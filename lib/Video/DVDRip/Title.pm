@@ -1,4 +1,4 @@
-# $Id: Title.pm,v 1.108 2002/11/17 17:17:19 joern Exp $
+# $Id: Title.pm,v 1.108.2.1 2002/11/23 13:45:45 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -2639,7 +2639,7 @@ sub get_create_image_command {
 	} else {
 		$command = $self->config('burn_vcdimager_cmd').
 			($cd_type eq 'svcd' ? ' --type=svcd' : ' --type=vcd2').
-			" -l '".uc($self->burn_label)."'".
+			" --iso-volume-label '".uc($self->burn_label)."'".
 			" --info-album-id='".uc($self->burn_abstract." ".$self->burn_number)."'".
 			" --cue-file=$image_file.cue".
 			" --bin-file=$image_file".

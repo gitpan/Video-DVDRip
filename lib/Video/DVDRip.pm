@@ -1,8 +1,8 @@
-# $Id: DVDRip.pm,v 1.96 2002/11/17 17:18:07 joern Exp $
+# $Id: DVDRip.pm,v 1.96.2.1 2002/11/23 13:46:00 joern Exp $
 
 package Video::DVDRip;
 
-$VERSION = "0.48.0";
+$VERSION = "0.48.1";
 
 use Carp;
 use FileHandle;
@@ -100,6 +100,15 @@ init: {
 		      "Please upgrade transcode.\n";
 		exit 1;
 	}
+	
+	# subtitleripper version check
+	$ver = qx[ subtitle2pgm -h 2>&1 ];
+	
+	$ver =~ /version\s+([\d\.]+)/i;
+	
+	$STR::VERSION = $1;
+
+	1;
 }
 
 1;

@@ -1,7 +1,35 @@
-$Id: Changes,v 1.122 2002/11/17 17:35:16 joern Exp $
+$Id: Changes,v 1.122.2.1 2002/11/23 13:46:00 joern Exp $
 
-Revision history for dvd::rip 0.47.1 and newer. See Changes.0.46
+Revision history for dvd::rip 0.47 and newer. See Changes.0.46
 for older releases.
+
+0.48.1 Sat 23 Nov 2002, joern
+	Note:
+	- transcode 0.6.2 was released on 22. November. dvd::rip
+	  works with all 0.6 releases, but 0.6.2 is recommended.
+	  dvd::rip disables some features for smaller versions.
+	
+	Features:
+	- Added 64 kbit/s audio bitrate preset entry. Suggested by
+	  Miguel J. Jimenez <cactus_espinado AT yahoo.es>
+	- ffmpeg video codec setting adjusted to the new ffmpeg
+	  interface of transcode 0.6.2. Thanks for the hint to
+	  Stefano <stefano AT symbola.it>
+	- subtitleripper version is now checked, a correspondent
+	  note is printed, if a version smaller than 0.3 is detected.
+	  Arne Driescher build a transcode independent tarball
+	  of this release, which you can get from Sourceforge:
+	  http://sourceforge.net/projects/subtitleripper
+
+	Bugfixes:
+	- Burning tab: label information followed file selection only
+	  on the GUI, but old values were used internally.
+	- IFO file copying didn't work for DVD image projects. Thanks
+	  for the report to Arne Driescher.
+	- thranduil <thranduil AT free.fr> reported that dvd::rip's
+	  vcdimager command works only with long options. I can't
+	  reproduce this, but I switched over to the long options,
+	  just to be sure.
 
 0.48.0 Sun 17 Nov 2002, joern
 	Notes:

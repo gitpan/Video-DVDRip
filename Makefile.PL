@@ -1,4 +1,4 @@
-# $Id: Makefile.PL,v 1.17 2002/10/15 21:19:23 joern Exp $
+# $Id: Makefile.PL,v 1.17.2.1 2002/11/23 13:38:53 joern Exp $
 
 use strict;
 
@@ -13,12 +13,13 @@ WriteMakefile(
     'EXE_FILES' => [ 'dvdrip', 'dvdrip-master',
     		     'dr_splitpipe', 'dr_progress' ],
     'PREREQ_PM' => { 'Gtk' => 0.7008, 'Gtk::Gdk::Pixbuf' => 0 },
-    'clean' => { FILES => 'dr_splitpipe src/dr_splitpipe  dr_progress src/dr_progress' },
+    'clean' => { FILES => 'dr_splitpipe src/dr_splitpipe dr_progress src/dr_progress' },
     'dist' => {
          COMPRESS => "gzip",
          SUFFIX   => "gz",
-	 PREOP    => 'tools/genreadme > README; '.
-	 	     'cp Changes htdocs/; '.
+	 PREOP    => 'tools/add_changes;'.
+	 	     'tools/genreadme > README; '.
+	 	     'cp Changes ../dvdrip-web/; '.
 		     'tools/gensplash; '.
 		     'tools/genrpmspec; ',
 	 POSTOP   => 'tools/movedist *.tar.gz',

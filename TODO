@@ -1,4 +1,4 @@
-$Id: TODO,v 1.97 2002/11/17 17:26:41 joern Exp $
+$Id: TODO,v 1.98.2.1 2002/11/23 13:46:00 joern Exp $
 
 KNOWN BUGS:
 ===========
@@ -26,6 +26,8 @@ TODO:
 - mplayer aid parameter must be codec specific. Thanks for
   the report to Fabio Russo.
 - support multiple subtitles in the same vobsub file
+- delete a file selection on the rip tab, requested by Tony Clark
+  <tclark AT bredband.net>
 - pcm passthrough
   -y (video codec),raw -N 0x1 (remove -b), requested by
   Jamie Manley <jamie AT homebrewcomputing.com> and

@@ -1,4 +1,4 @@
-# $Id: SubtitleTab.pm,v 1.8 2002/11/17 17:16:51 joern Exp $
+# $Id: SubtitleTab.pm,v 1.8.2.1 2002/11/23 13:44:19 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -136,9 +136,13 @@ sub create_subtitle_select {
 	my $selected = $TC::VERSION >= 601.2002101 ?
 		"Activated:" : "You need transcode v0.6.2.20021010 or better.";
 
-	if ( $TC::VERSION < 601.2002101 ) {
+	if ( $selected eq 'Activated:' ) {
+		$selected = "You need subtitleripper 0.3 or better"
+			if $STR::VERSION < 0.3;
+	}
+
+	if ( $selected ne 'Activated:' ) {
 		$widgets->{selection_popup}->hide;
-		
 	}
 
 	$label = Gtk::Label->new ("$selected");
@@ -843,7 +847,8 @@ sub set_subtitle_sensitive {
 
 	my $sensitive = 1;
 	$sensitive = 0 if not $title->is_ripped or 
-			  not $subtitles or keys %{$subtitles} == 0;
+			  not $subtitles or keys %{$subtitles} == 0 or
+			  $STR::VERSION < 0.3;
 
 	foreach my $type ( "select", "preview", "vobsub", "render" ) {
 		$widgets->{$type}->{frame}->set_sensitive($sensitive);

@@ -85,8 +85,6 @@ lib/Video/DVDRip/Subtitle.pm
 src/dr_splitpipe.c
 src/dr_progress.c
 src/Makefile
-contrib/fast_resize.gnumeric
-contrib/fast_resize.ksp
 rpmspecs/RedHat-8.0-perl-Video-DVDRip.spec
 rpmspecs/SuSE-8.0-Video-DVDRip.spec
 rpmspecs/RedHat-Rawhide-Video-DVDRip.spec

@@ -1,4 +1,4 @@
-# $Id: TranscodeTabAudio.pm,v 1.5 2002/11/12 22:07:57 joern Exp $
+# $Id: TranscodeTabAudio.pm,v 1.5.2.1 2002/11/23 13:45:00 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -453,7 +453,7 @@ sub create_audio_bitrate {
 		is_min		=> 1,
 	);
 	$entry->show;
-	$entry->set_popdown_strings (96, 128, 160, 192, 256, 320, 384);
+	$entry->set_popdown_strings (64, 96, 128, 160, 192, 256, 320, 384);
 	$entry->set_usize(80,undef);
 	$hbox->pack_start($entry, 0, 1, 0);
 

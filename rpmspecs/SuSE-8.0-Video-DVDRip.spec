@@ -1,18 +1,5 @@
-##############################################################
-# define here the version - prerelease stuff
-%define prerelease %nil
-%define version 0.48.0
-# myrelease >=1 !
-%define myrelease 1
-##############################################################
-
-%if "%{prerelease}" == ""
-	%define release %{myrelease}
-%else
-	%define release 0.pre%{prerelease}_%{myrelease}
-%endif
-
-%define source_version %{version}%{prerelease}
+%define version 0.48.1
+%define release 0
 
 Summary: Video-DVDRip module for perl 
 Name:		perl-Video-DVDRip
@@ -20,11 +7,7 @@ Version:	%version
 Release:	%release
 Copyright:	distributable
 Group:		Applications/CPAN
-%if "%{prerelease}" == ""
-Source:		http://www.exit1.org/dvdrip/dist/Video-DVDRip-%{source_version}.tar.gz
-%else
-Source:		http://www.exit1.org/dvdrip/dist/pre/Video-DVDRip-%{source_version}.tar.gz
-%endif
+Source:		http://www.exit1.org/dvdrip/dist/Video-DVDRip-%{version}.tar.gz
 Url:		http://www.exit1.org/dvdrip/
 BuildRoot:	%{_tmppath}/buildroot-%{name}
 Requires:	transcode >= 0.6.2
@@ -33,9 +16,11 @@ Requires:       perl-Gtk-Perl
 Requires:       ps
 
 %description
-dvd::rip is a Perl Gtk+ based DVD copy program build on top of a low level DVD Ripping API, 
-which uses the Linux Video Stream Processing Tool transcode, written by Thomas Östreich.
-    
+dvd::rip is a full featured DVD copy program written in Perl.
+It provides an easy to use but feature-rich Gtk+ GUI to control
+almost all aspects of the ripping and transcoding process.
+It uses the widely known video processing swissknife transcode
+and many other Open Source tools.
 
 %package cluster    
 Summary:        Cluster support for Video-DVDRip
@@ -45,15 +30,15 @@ Requires:       fping
 Requires:       ps
 
 %description cluster    
-The cluster package for Videos-DVDRip should ensure, that the installtion is OK for
-the cluster mode.
+The cluster package for Videos-DVDRip should ensure, that the
+installation is OK for the cluster mode.
   
 # Provide perl-specific find-{provides,requires}.
 %define __find_provides /usr/lib/rpm/find-provides.perl
 %define __find_requires /usr/lib/rpm/find-requires.perl
 
 %prep
-%setup -q -n Video-DVDRip-%{source_version}
+%setup -q -n Video-DVDRip-%{version}
 
 %build
 CFLAGS="$RPM_OPT_FLAGS" perl Makefile.PL
@@ -86,6 +71,26 @@ test `/bin/ls -la /usr/sbin/fping | cut -c4-4` != s
 [ $? = 0 ] && echo "/usr/sbin/fping should be suid root! You can do this with 'chmod +s /usr/sbin/fping'"
 [ $? = 1 ] && /bin/true
 
+%post
+# Kde3
+if test -d /opt/kde3/share/applnk/Multimedia; then
+    echo -e "[Desktop Entry]\12Encoding=UTF-8\12Name=Video-DVDRip\12Exec=dvdrip\12Icon=package_multimedia\12Type=Application\12GenericName=dvd::rip\12Terminal=0" > /opt/kde3/share/applnk/Multimedia/Video-DVDRip.desktop
+    chmod 755 /opt/kde3/share/applnk/Multimedia/Video-DVDRip.desktop
+fi
+# End Kde3
+# Kde2
+if test -d /opt/kde2/share/applnk/Multimedia; then
+    echo -e "[Desktop Entry]\12Encoding=UTF-8\12Name=Video-DVDRip\12Exec=dvdrip\12Icon=package_multimedia\12Type=Application\12GenericName=dvd::rip\12Terminal=0" > /opt/kde2/share/applnk/Multimedia/Video-DVDRip.desktop
+    chmod 755 /opt/kde2/share/applnk/Multimedia/Video-DVDRip.desktop
+fi
+# End Kde2
+
+%preun
+  # KDE 2 Desktopeintrag entfernen
+  rm -f /opt/kde2/share/applnk/Multimedia/Video-DVDRip.desktop
+  # KDE 3 Desktopeintrag entfernen
+  rm -f /opt/kde3/share/applnk/Multimedia/Video-DVDRip.desktop
+
 %files -f Video-DVDRip-%{version}-filelist
 %defattr(-,root,root)
 
@@ -93,6 +98,9 @@ test `/bin/ls -la /usr/sbin/fping | cut -c4-4` != s
 %defattr(-,root,root)
 
 %changelog
+* Thu Nov 21 2002 Rainer Lay <rainer.lay@cs.fau.de> 0.48.0-1
+- adepted to new naming scheme
+
 * Sun Oct  6 2002  <rainer.lay@cs.fau.de> 0.47
 - added ps for std package
 

@@ -1,4 +1,4 @@
-# $Id: BurnTab.pm,v 1.5 2002/11/01 16:11:34 joern Exp $
+# $Id: BurnTab.pm,v 1.5.2.1 2002/11/23 13:41:34 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -381,21 +381,21 @@ sub create_burn_label {
 
 	$widgets->{cd_number} = $entry;
 
-	$widgets->{cd_label}->signal_connect ("focus-out-event", sub {
+	$widgets->{cd_label}->signal_connect ("changed", sub {
 		return if $self->in_transcode_init;
 		my $title = $self->selected_title;
 		return 1 if not $title;
 		$title->set_burn_label ($_[0]->get_text);
 		1;
 	});
-	$widgets->{cd_abstract}->signal_connect ("focus-out-event", sub {
+	$widgets->{cd_abstract}->signal_connect ("changed", sub {
 		return if $self->in_transcode_init;
 		my $title = $self->selected_title;
 		return 1 if not $title;
 		$title->set_burn_abstract ($_[0]->get_text);
 		1;
 	});
-	$widgets->{cd_number}->signal_connect ("focus-out-event", sub {
+	$widgets->{cd_number}->signal_connect ("changed", sub {
 		return if $self->in_transcode_init;
 		my $title = $self->selected_title;
 		return 1 if not $title;
