@@ -1,6 +1,12 @@
-$Id: Changes,v 1.122.2.5 2002/12/04 22:50:00 joern Exp $
+$Id: Changes,v 1.122.2.6 2002/12/07 08:43:10 joern Exp $
 
 Revision history and release notes for dvd::rip.
+
+0.48.5 Fri 7 Dec 2002, joern
+	Bugfix:
+	- 0.48.3 introduced a bug which prevents multiple audio
+	  tracks with OGG/Vorbis. Thanks to Lethal Weapon for
+	  the report.
 
 0.48.4 Wed 4 Dec 2002, joern
 	Bugfix:

@@ -1,4 +1,4 @@
-# $Id: Title.pm,v 1.108.2.2 2002/12/02 18:22:00 joern Exp $
+# $Id: Title.pm,v 1.108.2.3 2002/12/07 08:43:11 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -1864,16 +1864,16 @@ sub get_transcode_audio_command {
 		" -a $vob_nr".
 		" -y raw";
 
-	my ($k,$v);
-	while ( ($k, $v) = each %{$source_options} ) {
-		$command .= " -$k $v";
-	}	
-
 	if ( $tc_audio_info->tc_audio_codec eq 'ogg' ) {
 		$command .= ",ogg -m $audio_file";
 	} else {
 		$command .= " -o ".$audio_file;
 	}
+
+	my ($k,$v);
+	while ( ($k, $v) = each %{$source_options} ) {
+		$command .= " -$k $v";
+	}	
 
 	if ( $self->tc_video_framerate ) {
 		my $fr = $self->tc_video_framerate;
