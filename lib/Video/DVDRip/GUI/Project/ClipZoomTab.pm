@@ -1,4 +1,4 @@
-# $Id: ClipZoomTab.pm,v 1.16 2002/01/12 11:03:24 joern Exp $
+# $Id: ClipZoomTab.pm,v 1.17 2002/03/13 18:10:10 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -14,6 +14,9 @@ use strict;
 
 sub adjust_widgets		{ shift->{adjust_widgets}		}	# href
 sub set_adjust_widgets		{ shift->{adjust_widgets}	= $_[1] }
+
+sub in_adjust_init		{ shift->{in_adjust_init}		}	# href
+sub set_in_adjust_init		{ shift->{in_adjust_init}	= $_[1] }
 
 #------------------------------------------------------------------------
 # Build Adjustments Tab
@@ -219,6 +222,7 @@ sub create_adjust_tab {
 			my ($widget, $name) = @_;
 			my $title = $self->selected_title;
 			return 1 if not $title;
+			return 1 if $self->in_adjust_init;
 			$title->set_preset ($name);
 		}, $preset->name);
 		$popup_menu->append($item);
@@ -463,6 +467,8 @@ sub create_adjust_tab {
        			       tc_clip2_top  tc_clip2_bottom
 			       tc_clip2_left tc_clip2_right )) {
 		$widgets->{$attr}->signal_connect ("changed", sub {
+			return 1 if not $self->selected_title;
+			return 1 if $self->in_adjust_init;
 			my ($widget, $method) = @_;
 			$self->selected_title->$method ( $widget->get_text );
 			$self->update_fast_resize_info;
@@ -472,6 +478,7 @@ sub create_adjust_tab {
 	$self->adjust_widgets->{tc_fast_resize_yes}->signal_connect (
 		"clicked", sub {
 			return 1 if not $self->selected_title;
+			return 1 if $self->in_adjust_init;
 			$self->selected_title->set_tc_fast_resize(1);
 			$self->update_fast_resize_info;
 		}
@@ -479,6 +486,7 @@ sub create_adjust_tab {
 	$self->adjust_widgets->{tc_fast_resize_no}->signal_connect (
 		"clicked", sub {
 			return 1 if not $self->selected_title;
+			return 1 if $self->in_adjust_init;
 			$self->selected_title->set_tc_fast_resize(0);
 			$self->update_fast_resize_info;
 		}
@@ -493,6 +501,8 @@ sub init_adjust_values {
 	my $title = $self->selected_title;
 	return 1 if not $title;
 	return 1 if not $self->adjust_widgets->{preview_frame_nr};
+
+	$self->set_in_adjust_init(1);
 
 	$self->show_preview_images;
 
@@ -521,6 +531,8 @@ sub init_adjust_values {
 	$widgets->{tc_fast_resize_no}->set_active(!$fast_resize);
 
 	$self->update_fast_resize_info;
+
+	$self->set_in_adjust_init(0);
 
 	1;
 }

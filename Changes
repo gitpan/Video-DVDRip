@@ -1,61 +1,95 @@
-$Id: Changes,v 1.57 2002/03/03 21:30:08 joern Exp $
+$Id: Changes,v 1.59 2002/03/13 18:16:09 joern Exp $
 
 Revision history for Perl extension Video::DVDRip
 
+0.35 Wed Mar 13 2002, joern
+	Features:
+	- Cluster mode:
+	  - added test procedure which checks if a node is
+	    configured correctly: ssh connection, r/w NFS access
+	    and transcode version match are checked. Currently
+	    this works by comparing the output of a test script
+	    executed on the node and the machine where the dvd::rip
+	    GUI runs on. You can execute the test procedure
+	    from the "Edit Node" window.
+	  - the "audio processing" job is now splitted into two
+	    jobs: audio transcoding and a/v multiplexing. This
+	    enables running the audio transcoding in parallel with
+	    other jobs, e.g. video transcoding. Finally the audio
+	    and video chunks have to be multiplexed, what is
+	    single threaded again, but much faster than the old
+	    audio processing job, which blocks the project nearly
+	    at the end for a longer time, what was really
+	    frustrating ;). Thanks to Rainer Lay for his idea.
+	  - minimum chunk count is now (online nodes + 1) instead
+	    of 2.
+	  - you can start dvdrip with option -c to open the
+	    cluster control window without opening a main window
+
+	Bugfixes:
+	- audio bitrate was always set to AC3 passthrough bitrate
+	  when a project was opened from file
+	- Cluster mode:
+	  - in rare cases and when there was heavy traffic on the
+	    network, the Cluster Control Daemon erroneously
+	    determined that a node is offline and aborted the
+	    current job. Now the offline state is checked twice,
+	    so this shouldn't happen anymore.
+
 0.34 Sun Mar 03 2002, joern
-    Note:
-    - Cluster mode: you need the pstree command on the cluster
-      control computer from now
+	Note:
+	- Cluster mode: you need the pstree command on the cluster
+	  control computer from now
 
-    Features:
-    - Cluster mode:
-      - now you can reset a single job, if something went wrong
-	with it, so you don't have to start the whole project
-	again. All dependent jobs are reset automatically.
-	Thanks to Sloan Poe for his suggestion.
-      - cluster mode scheduler optimization regarding the
-	delegation of IO intensive jobs preferably to nodes
-	with local resp. fast file system access. In earlier
-	versions a local node could be blocked too early by
-	a non-local job, so local jobs later had to be
-	delegated to non-local nodes. The scheduler now
-	tries delegating local jobs to local nodes first,
-	and then normal jobs to idle nodes, if there are any.
-      - you can optionally let dvd::rip delete the VOBs
-	after finishing, making bigger project queues possible,
-	even with little harddisk space (but is risky, if
-	something goes wrong).
-    - AC3 audio passthrough support. If you're upgrading and
-      you have an existent project, you need to rip the title
-      again, because the necessary probing is done directly
-      after ripping. There is no restriction for new projects.
-    - Currently it's not possible to use AC3 passthrough in
-      cluster mode, because I hadn't the time to test it.
-    - the layout of the Transcode Tab changed slightly, to get
-      space for the AC3 radio buttons.
-    - all directories are now created with mode 0775, to
-      prevent file access problems in cluster mode, if
-      the user ids of all nodes doesn't match. Suggested
-      by Sloan Poe.
-    - range transcoding: default for the start value is 0.
-      default for end value is number of frames. Until now
-      you had to fill both values to get a range transcoding.
-      Suggested by Douglas Bollinger <dcb AT 321.net>.
+	Features:
+	- Cluster mode:
+	  - now you can reset a single job, if something went wrong
+	    with it, so you don't have to start the whole project
+	    again. All dependent jobs are reset automatically.
+	    Thanks to Sloan Poe for his suggestion.
+	  - cluster mode scheduler optimization regarding the
+	    delegation of IO intensive jobs preferably to nodes
+	    with local resp. fast file system access. In earlier
+	    versions a local node could be blocked too early by
+	    a non-local job, so local jobs later had to be
+	    delegated to non-local nodes. The scheduler now
+	    tries delegating local jobs to local nodes first,
+	    and then normal jobs to idle nodes, if there are any.
+	  - you can optionally let dvd::rip delete the VOBs
+	    after finishing, making bigger project queues possible,
+	    even with little harddisk space (but is risky, if
+	    something goes wrong).
+	- AC3 audio passthrough support. If you're upgrading and
+	  you have an existent project, you need to rip the title
+	  again, because the necessary probing is done directly
+	  after ripping. There is no restriction for new projects.
+	- Currently it's not possible to use AC3 passthrough in
+	  cluster mode, because I hadn't the time to test it.
+	- the layout of the Transcode Tab changed slightly, to get
+	  space for the AC3 radio buttons.
+	- all directories are now created with mode 0775, to
+	  prevent file access problems in cluster mode, if
+	  the user ids of all nodes doesn't match. Suggested
+	  by Sloan Poe.
+	- range transcoding: default for the start value is 0.
+	  default for end value is number of frames. Until now
+	  you had to fill both values to get a range transcoding.
+	  Suggested by Douglas Bollinger <dcb AT 321.net>.
 
-    Bugfixes:
-    - Cluster mode:
-      - on some systems stopping a node didn't work (dvd::rip
-	hung). Now the child process is killed explicitely and
-	this should work on any system. You need 'pstree' on
-	the cluster control computer from now. Thanks to
-	Sloan Poe, who helped me debugging this problem.
-      - in multipass mode dvd::rip tried moving the AVI file
-	to its final destination after the first pass. This
-	threw an error message, but had no other effect.
-	Anyway it was useless and confusing.
-      - switching off avisplit of a just added project didn't work
-    - removed DVD mount point from preferences, because this
-      isn't needed anymore
+	Bugfixes:
+	- Cluster mode:
+	  - on some systems stopping a node didn't work (dvd::rip
+	    hung). Now the child process is killed explicitely and
+	    this should work on any system. You need 'pstree' on
+	    the cluster control computer from now. Thanks to
+	    Sloan Poe, who helped me debugging this problem.
+	  - in multipass mode dvd::rip tried moving the AVI file
+	    to its final destination after the first pass. This
+	    threw an error message, but had no other effect.
+	    Anyway it was useless and confusing.
+	  - switching off avisplit of a just added project didn't work
+	- removed DVD mount point from preferences, because this
+	  isn't needed anymore
 
 0.33 Tue Feb 19 2002, joern
 	Bugfixes:

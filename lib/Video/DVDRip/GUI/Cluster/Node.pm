@@ -1,4 +1,4 @@
-# $Id: Node.pm,v 1.6 2002/02/17 14:21:54 joern Exp $
+# $Id: Node.pm,v 1.7 2002/03/12 13:56:55 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -13,6 +13,8 @@ use base Video::DVDRip::GUI::Window;
 
 use strict;
 use Carp;
+
+use FileHandle;
 
 sub multi_instance_window { 1 }
 
@@ -167,7 +169,11 @@ sub build {
 	$button = Gtk::Button->new_with_label ("      Ok      ");
 	$button->show;
 	$button->signal_connect ( "clicked", sub { $self->dialog_ok } );
+	$hbox->pack_start ($button, 0, 1, 0);
 
+	$button = Gtk::Button->new_with_label ("     Test     ");
+	$button->show;
+	$button->signal_connect ( "clicked", sub { $self->test_node } );
 	$hbox->pack_start ($button, 0, 1, 0);
 
 	$button = Gtk::Button->new_with_label ("    Cancel    ");
@@ -189,14 +195,9 @@ sub dialog_ok {
 
 	my $node = $self->node;
 
-	# copy data into node object
-	my ($k, $v);
-	my $set_method;
-
-	while ( ($k, $v) = each %{$self->node_data} ) {
-		$set_method = "set_".$k;
-		$node->$set_method ($v);
-	}
+	$self->copy_dialog_to_node (
+		node => $node
+	);
 
 	if ( $self->just_added ) {
 		# we have to add this new node to the Master Daemon
@@ -214,11 +215,154 @@ sub dialog_ok {
 	1;
 }
 
+sub copy_dialog_to_node {
+	my $self = shift;
+	my %par = @_;
+	my ($node) = @par{'node'};
+	
+	# copy data into node object
+	my ($k, $v);
+	my $set_method;
+
+	while ( ($k, $v) = each %{$self->node_data} ) {
+		$set_method = "set_".$k;
+		$node->$set_method ($v);
+	}
+	
+	1;
+}
+
 sub dialog_cancel {
 	my $self = shift;
 	
 	$self->gtk_window_widget->destroy;
 	
+	1;
+}
+
+sub test_node {
+	my $self = shift;
+	
+	# touch a test file in the base project dir
+	# (we'll later check if this file appears also
+	#  on the node)
+	my $base_project_dir = $self->config('base_project_dir');
+	my $test_file = "$base_project_dir/dvdrip-test-$$-".time;
+	my $fh = FileHandle->new;
+	open ($fh, ">$test_file") or croak "can't write $test_file";
+	close $fh;
+
+	# run tests on the node, making a copy, set the data
+	# from the dialog and work on this copy
+	my $node = $self->node->clone;
+	$self->copy_dialog_to_node ( node => $node );
+	
+	# trigger test start
+	$node->run_tests;
+
+	# open a window and add a timeout for
+	# polling the result
+	my $text_widget = $self->long_message_window (
+		message => "Waiting on the test result...\n\n"
+	);
+
+	Gtk->timeout_add ( 200, sub {
+		return 1 if not $node->test_finished;
+		$self->test_node_show_result (
+			test_file   => $test_file,
+			node        => $node,
+			text_widget => $text_widget,
+		);
+		return 0;
+	});
+
+	1;
+}
+
+sub test_node_show_result {
+	my $self = shift;
+	my %par = @_;
+	my  ($node, $test_file, $text_widget) =
+	@par{'node','test_file','text_widget'};
+
+	my $result = $node->test_result;
+
+	#---------------------------------------------------------------
+	# $result is a scalar containing a fatal error message, or
+	# a hash reference with the following keys:
+	#
+	#   data_base_dir_content   sorted content of the data_base_dir,
+	#			    or error message
+	#   write_test		    SUCCESS if write was succesfull,
+	#			    or error message otherwise
+	#   transcode_version       full output of transcode -h
+	#---------------------------------------------------------------
+	
+	if ( not ref $result ) {
+		$text_widget->insert (
+			undef, undef, undef, "Can't execute tests:\n\n$result"
+		);
+		unlink $test_file;
+		return 1;
+	}
+	
+	# now execute the test command on this machine
+	my $base_project_dir = $self->config('base_project_dir');
+	my $local_command = $node->get_test_command (
+		data_base_dir => $base_project_dir
+	);
+
+	my $local_output = qx[ ($local_command) 2>&1 ];
+
+	my $local_result = $node->parse_test_output (
+		output => $local_output
+	);
+
+	# remove test file
+	unlink $test_file;
+
+	# check if results are equal
+	my $report;
+	my $details;
+
+	my %desc = (
+		ssh_connect		=> "ssh connect",
+		data_base_dir_content 	=> "Content of project base directory",
+		write_test		=> "Project base directory writable",
+		transcode_version	=> "transcode version match",
+	);
+	
+	foreach my $case ( qw ( ssh_connect data_base_dir_content write_test transcode_version ) ) {
+		$report .= "Test case : $desc{$case}\n";
+		$report .= "Result    : ";
+
+		if ( $result->{$case} eq $local_result->{$case} ) {
+			$report  .= "Ok\n\n";
+		} else {
+			$report  .= "Not Ok!\n\n";
+			$details .= "Test case    : $desc{$case}\n";
+			if ( $case eq 'ssh_connect' ) {
+				$details .= "Node output  :\n$result->{output}\n\n";
+				last;
+			} else {
+				$details .= "Node output  :\n$result->{$case}\n\n";
+			}
+			$details .= "Local output :\n$local_result->{$case}\n\n";
+		}
+	}
+	
+	$text_widget->insert (undef, undef, undef, "All tests successful!\n\n")
+		if not $details;
+
+	$text_widget->insert (undef, undef, undef, "Brief report:\n\n".$report);
+
+	if ( $details ) {
+		$text_widget->insert (
+			undef, undef, undef,
+			"\nDetailed report:\n\n".$details
+		);
+	}
+
 	1;
 }
 

@@ -1,4 +1,4 @@
-# $Id: Main.pm,v 1.32 2002/03/02 16:21:27 joern Exp $
+# $Id: Main.pm,v 1.33 2002/03/13 18:09:42 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -44,7 +44,7 @@ sub start {
 	Gtk::Widget->set_default_colormap(Gtk::Gdk::Rgb->get_cmap());
 	Gtk::Widget->set_default_visual(Gtk::Gdk::Rgb->get_visual());
 
-	$self->build;
+	$self->build if not $open_cluster_control;
 
 	eval {
 		Video::DVDRip->init;
@@ -60,7 +60,8 @@ sub start {
 		);
 	}
 
-	$self->cluster_control if $open_cluster_control;
+	$self->cluster_control ( exit_on_close => 1 )
+		if $open_cluster_control;
 
 	$self->log ("Detected transcode version: ".$TC::VERSION);
 
@@ -459,6 +460,8 @@ sub edit_preferences {
 
 sub cluster_control {
 	my $self = shift;
+	my %par = @_;
+	my ($exit_on_close) = @par{'exit_on_close'};
 
 	require Video::DVDRip::GUI::Cluster::Control;
 
@@ -467,7 +470,9 @@ sub cluster_control {
 	      $self->config('cluster_master_port') ) {
 
 		my $cluster = Video::DVDRip::GUI::Cluster::Control->new;
+		$cluster->set_exit_on_close ($exit_on_close);
 		$cluster->open_window;
+
 	} else {
 		$self->message_window (
 			message => "You must first configure a cluster control daemon\n".

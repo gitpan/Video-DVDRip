@@ -1,4 +1,4 @@
-# $Id: Server.pm,v 1.10 2002/02/17 09:34:42 joern Exp $
+# $Id: Server.pm,v 1.11 2002/03/12 14:02:17 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -75,7 +75,7 @@ sub new {
 	return $self;
 }
 
-sub start_server {
+sub start {
 	my $self = shift;
 
 	$self->log ($self->name." started");
@@ -199,7 +199,7 @@ sub load_class {
 	
 	$client->load_class ( class => $class );
 	
-	1;
+	$class;
 }
 
 sub log {

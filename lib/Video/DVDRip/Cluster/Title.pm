@@ -1,4 +1,4 @@
-# $Id: Title.pm,v 1.18 2002/03/02 16:19:46 joern Exp $
+# $Id: Title.pm,v 1.19 2002/03/12 14:00:55 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -102,6 +102,32 @@ sub final_avi_file {
 		$self->project->name,
 		$self->nr,
 		$job->chunk
+	);
+}
+
+sub audio_avi_dir {
+	my $self = shift;
+
+	my $job = $self->project->assigned_job or croak "No job assigned";
+	
+	return sprintf (
+		"%s/%03d/psu-%02d-audio",
+		$self->project->final_avi_dir,
+		$self->nr,
+		$job->psu
+	);
+}
+
+sub audio_avi_file {
+	my $self = shift;
+
+	my $job = $self->project->assigned_job or croak "No job assigned";
+	
+	return sprintf (
+		"%s/%s-%03d-audio.avi",
+		$self->audio_avi_dir,
+		$self->project->name,
+		$self->nr
 	);
 }
 
@@ -258,8 +284,8 @@ sub get_process_audio_command {
 	my $avi_dir           = dirname $merged_avi_file;
 	my $volume_rescale    = $self->tc_volume_rescale;
 
-	my $psu       = $self->project->assigned_job->psu;
-	my $chunk_cnt = $self->project->assigned_job->chunk_cnt;
+	my $psu       = $job->psu;
+	my $chunk_cnt = $job->chunk_cnt;
 
 	$target_avi_file = $self->target_avi_file if $job->move_final;
 
@@ -320,6 +346,52 @@ sub get_split_command {
 	
 	$command .= " && rm '$target_avi_file'" if $self->with_cleanup;
 	
+	return $command;
+}
+
+sub get_transcode_audio_command {
+	my $self = shift;
+	
+	my $job = $self->project->assigned_job or croak "No job assigned";
+	my $audio_avi_dir = $self->audio_avi_dir;
+
+	my $nice;
+	$nice = "/usr/bin/nice -n ".$self->tc_nice." "
+		if $self->tc_nice =~ /\S/;
+
+	my $command =
+		"mkdir -m 0775 -p '$audio_avi_dir' && ".
+		$nice.
+		"transcode -i ".$self->vob_dir.
+		" -x null,vob -g 0x0 -y raw -u 50".
+		" -S ".$job->psu.
+		" -a ".$self->audio_channel.
+		" -o ".$self->audio_avi_file.
+		" && echo DVDRIP_SUCCESS";
+
+	return $command;
+}
+
+sub get_merge_audio_command {
+	my $self = shift;
+	
+	my $job = $self->project->assigned_job or croak "No job assigned";
+
+	my $merged_avi_file = $self->merged_chunks_avi_file;
+	my $audio_avi_file  = $self->audio_avi_file;
+	my $target_avi_file = $self->merged_chunks_with_audio_avi_file;
+
+	$target_avi_file = $self->target_avi_file if $job->move_final;
+
+	my $command =
+		"avimerge -i $merged_avi_file".
+		" -o $target_avi_file ".
+		" -p $audio_avi_file ".
+		" && echo DVDRIP_SUCCESS";
+
+	$command .= " && rm '$merged_avi_file' '$audio_avi_file'"
+		if $self->with_cleanup;
+
 	return $command;
 }
 

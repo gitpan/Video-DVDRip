@@ -1,6 +1,7 @@
-$Id: TODO,v 1.50 2002/03/03 21:30:09 joern Exp $
+$Id: TODO,v 1.52 2002/03/13 18:16:09 joern Exp $
 
 KNOWN BUGS
+- audio bitrate setting is not saved to project file?
 - cluster mode
   - cluster control daemon leaks memory
   - still avimerge progress problems. GUI freezes sometimes
@@ -8,22 +9,27 @@ KNOWN BUGS
   - problems with avimerge and very small chunks? (not verified yet)
 - transcode didn't accept YUV mode with odd frame sizes, so
   dvd::rip shouldn't either
-- Gtk assertion when closing a project
 
 TODO
+- dvdrip -c
 - cluster mode:
   - schedule start/end time of a node, suggested by Rainer Lay
   - stop node after current job, suggested by Rainer Lay
   - enhance chunk calculation (e.g. min: number of idle nodes)
-  - test mode, which checks if a node is configured correctly:
-    - does file system access work
-    - does the transcode version match
+  - checkbox for reducing the bitrate about a few precent to
+    prevent a slightly bigger result, which can happen because
+    the bitrate estimation tends to bigger files on small chunks.
+- documentation
+  - cluster mode ssh issues, inspired by a report from
+    Douglas Bollinger
 - support DVDs with pcm encoded audio
 - check out if pgmfindclip is useful for dvd::rip
 - display a status of the selected title
   - ripped
   - preview grabbed
   - transcoded
+- textfield for arbitrary command execution after transcoding,
+  e.g. for system shutdown. Suggested by simbolo <simbolo225@yahoo.com>
 - enable dvd::rip to work on already existent VOB copies
   in filesystem, suggested by flier <flier AT scrollz.com>
 - enable pausing after 1st pass of a two-pass divx4 encoding,

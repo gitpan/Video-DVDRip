@@ -1,4 +1,4 @@
-# $Id: Control.pm,v 1.17 2002/02/23 17:32:02 joern Exp $
+# $Id: Control.pm,v 1.18 2002/03/13 18:09:18 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -50,6 +50,8 @@ sub set_selected_node		{ shift->{selected_node}	= $_[1] }
 sub selected_node_row		{ shift->{selected_node_row}		}
 sub set_selected_node_row	{ shift->{selected_node_row}	= $_[1] }
 
+sub exit_on_close		{ shift->{exit_on_close}		}
+sub set_exit_on_close		{ shift->{exit_on_close}	= $_[1] }
 
 # GUI Stuff ----------------------------------------------------------
 
@@ -72,6 +74,9 @@ sub build {
 		Gtk::Gdk->input_remove ($self->gtk_widgets->{log_input})
 			if $self->gtk_widgets->{log_input};
 		close $self->log_socket if $self->log_socket;
+		if ( $self->exit_on_close ) {
+			Gtk->exit ( 0 );
+		}
 	});
 	$win->border_width(0);
 	$win->set_uposition (10,10);

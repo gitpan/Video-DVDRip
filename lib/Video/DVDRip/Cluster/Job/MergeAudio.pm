@@ -1,4 +1,4 @@
-# $Id: MergePSUs.pm,v 1.4 2002/03/12 13:55:46 joern Exp $
+# $Id: MergeAudio.pm,v 1.1 2002/03/12 14:03:42 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -7,27 +7,27 @@
 # redistribute it and/or modify it under the same terms as Perl itself.
 #-----------------------------------------------------------------------
 
-package Video::DVDRip::Cluster::Job::MergePSUs;
+package Video::DVDRip::Cluster::Job::MergeAudio;
 
 use base Video::DVDRip::Cluster::Job;
 
 use Carp;
 use strict;
 
-sub chunk_cnt			{ shift->{chunk_cnt}			}
-sub set_chunk_cnt		{ shift->{chunk_cnt}		= $_[1]	}
+sub psu				{ shift->{psu}				}
+sub move_final			{ shift->{move_final}			}
 
-sub progress_chunks		{ shift->{progress_chunks}		}
-sub set_progress_chunks		{ shift->{progress_chunks}	= $_[1]	}
+sub set_psu			{ shift->{psu}			= $_[1]	}
+sub set_move_final		{ shift->{move_final}		= $_[1]	}
 
 sub type {
-	return "psu merge";
+	return "audio merge";
 }
 
 sub info {
 	my $self = shift;
 
-	return "merge program stream units";
+	return "merge audio of psu ".$self->psu;
 }
 
 sub start {
@@ -38,10 +38,8 @@ sub start {
 
 	# get merge command
 	$project->set_assigned_job ( $self );
-	my $command = $title->get_merge_psu_command;
+	my $command = $title->get_merge_audio_command;
 	$project->set_assigned_job ( undef );
-
-	$self->set_progress_chunks(1);
 
 	my $successful_finished = 0;
 	$self->popen (
@@ -50,9 +48,6 @@ sub start {
 			my ($line) = @_;
 			if ( $line =~ /DVDRIP_SUCCESS/ ) {
 				$successful_finished = 1;
-
-			} elsif ( $line =~ /file\s+(\d+)\s+/ ) {
-				$self->set_progress_chunks($1);
 			}
 		},
 		cb_finished  => sub {
@@ -66,12 +61,12 @@ sub start {
 
 	1;
 }
-     
+
 sub calc_progress {
 	my $self = shift;
 
-	return 	"Chunk ".($self->progress_chunks||1)."/".$self->chunk_cnt.
-		", ".$self->progress_runtime;
+       return "Merging audio of PSU ".$self->psu.", ".
+	      $self->progress_runtime;
 }
  
 1;

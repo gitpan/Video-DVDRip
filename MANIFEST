@@ -19,8 +19,10 @@ lib/Video/DVDRip/GUI/Cluster/Control.pm
 lib/Video/DVDRip/GUI/Cluster/Node.pm
 lib/Video/DVDRip/GUI/Cluster/Title.pm
 lib/Video/DVDRip/Cluster/Job/Audio.pm
+lib/Video/DVDRip/Cluster/Job/TranscodeAudio.pm
 lib/Video/DVDRip/Cluster/Job/MergeChunks.pm
 lib/Video/DVDRip/Cluster/Job/MergePSUs.pm
+lib/Video/DVDRip/Cluster/Job/MergeAudio.pm
 lib/Video/DVDRip/Cluster/Job/Split.pm
 lib/Video/DVDRip/Cluster/Job/Transcode.pm
 lib/Video/DVDRip/Cluster/Job/RemoveVOBs.pm

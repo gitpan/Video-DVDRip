@@ -1,8 +1,8 @@
-# $Id: DVDRip.pm,v 1.43 2002/03/03 15:08:20 joern Exp $
+# $Id: DVDRip.pm,v 1.45 2002/03/13 18:16:10 joern Exp $
 
 package Video::DVDRip;
 
-$VERSION = "0.34";
+$VERSION = "0.35";
 
 use Carp;
 use FileHandle;

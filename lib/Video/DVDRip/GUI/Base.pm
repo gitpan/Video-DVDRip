@@ -1,4 +1,4 @@
-# $Id: Base.pm,v 1.13 2002/02/08 13:00:23 joern Exp $
+# $Id: Base.pm,v 1.14 2002/03/12 14:01:50 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -342,8 +342,7 @@ sub long_message_window {
 
 	$win->show;
 
-	1;	
-	
+	return $text;
 }
 
 1;

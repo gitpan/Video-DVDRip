@@ -1,4 +1,4 @@
-# $Id: Pipe.pm,v 1.5 2002/02/24 16:57:58 joern Exp $
+# $Id: Pipe.pm,v 1.6 2002/03/12 13:59:44 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -33,9 +33,6 @@ sub command			{ shift->{command}			}
 sub line_buffer			{ shift->{line_buffer}			}
 sub set_line_buffer		{ shift->{line_buffer}		= $_[1]	}
 
-sub timeout_disabled		{ shift->{timeout}			}
-sub set_timeout_disabled	{ shift->{timeout_disabled}	= $_[1]	}
-
 sub event_waiter		{ shift->{event_waiter}			}
 sub set_event_waiter		{ shift->{event_waiter}	= $_[1]		}
 
@@ -44,8 +41,6 @@ sub new {
 	my %par = @_;
 	my  ($command, $cb_line_read, $cb_finished, $timeout) =
 	@par{'command','cb_line_read','cb_finished','timeout'};
-
-	$timeout ||= 10;
 
 	my $fh  = FileHandle->new;
 	my $pid;
@@ -82,23 +77,19 @@ sub new {
 		lifo_idx	=> -1,
 	}, $class;
 
-	my %timeout_options = (
+	my %timeout_options;
+	%timeout_options = (
 		timeout 	=> $timeout,
-		timeout_cb	=> sub { $self->timeout		},
-	);
-
-	# Timeout currently disabled completely due to strange
-	# problems with avimerge output...
-	%timeout_options = ();
-	# %timeout_options = () if $timeout == -1;
+		timeout_cb	=> sub { $self->timeout },
+	) if $timeout;
 
 	$self->{event_waiter} = Event->io (
 		fd      	=> $fh,
 		poll    	=> 'r',
 		desc 		=> "command execution",
 		nice    	=> NICE,
-		%timeout_options,
 		cb   		=> sub { $self->input ( $_[1] ) },
+		%timeout_options,
 	);
 
 	$self->log (3, "execute command: $command");
@@ -160,8 +151,8 @@ sub timeout {
 
 	$self->log ("Command cancelled due to timeout");
 
-	kill 9, $self->pid;
-	$self->abort;
+	kill 15, $self->pid;
+#	$self->abort;
 
 	1;
 }
@@ -184,38 +175,30 @@ sub input {
 	}
 
 	# read next line
-	my ($rc, $last_was_eol);
+	my ($rc, $last_was_eol, $got_empty_line);
 	my $line_buffer = $self->line_buffer;
-	my $timeout_disabled = $self->timeout_disabled;
 
 	while ( not eof($fh) and defined ($rc = getc($fh)) ) {
 		last if $last_was_eol and $rc ne "\n" and $rc ne "\r";
 		if ( $rc ne "\n" and $rc ne "\r" ) {
 			$line_buffer .= $rc;
+		} elsif ( $last_was_eol ) {
+			$got_empty_line = 1;
+			$rc = '';
+			last;
 		} else {
 			$last_was_eol = 1;
 		}
-		last if not $timeout_disabled and $line_buffer =~ /password: $/;
+		last if $line_buffer =~ /password: $/;
 	}
 
 	# append line to lifo
 	$self->add_lifo_line ( $line_buffer."\n" );
 
-	# disable timeout, because we got some data
-	if ( not $timeout_disabled and $self->lifo_idx > 0 ) {
-		$self->event_waiter->stop;
-		$self->event_waiter->timeout(600);
-		$self->event_waiter->start;
-		$self->set_timeout_disabled (1);
-	}
-
-	# !!! STRANGE BUG WORKAROUND !!!
-	# otherwise $event appears at $_[0] in
-	# (some, not all) called closures !!?!
-	$_[0] = $line_buffer;
-	
+	# call the line_read callback, if we have one
 	my $cb_line_read = $self->cb_line_read;
-	&$cb_line_read($line_buffer) if &$cb_line_read;
+	&$cb_line_read($line_buffer) if $cb_line_read;
+	&$cb_line_read('')           if $got_empty_line and $cb_line_read;
 
 	$self->set_line_buffer ($rc);
 

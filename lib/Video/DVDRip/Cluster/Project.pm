@@ -1,4 +1,4 @@
-# $Id: Project.pm,v 1.18 2002/03/02 16:19:13 joern Exp $
+# $Id: Project.pm,v 1.20 2002/03/13 18:08:55 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -20,6 +20,8 @@ use Video::DVDRip::Cluster::Job::Audio;
 use Video::DVDRip::Cluster::Job::MergePSUs;
 use Video::DVDRip::Cluster::Job::Split;
 use Video::DVDRip::Cluster::Job::RemoveVOBs;
+use Video::DVDRip::Cluster::Job::TranscodeAudio;
+use Video::DVDRip::Cluster::Job::MergeAudio;
 
 use Carp;
 use strict;
@@ -142,6 +144,139 @@ sub create_job_plan {
 
 	$self->log ("Creating job plan");
 
+	my $title     = $self->title;
+	my $multipass = $title->tc_multipass;
+
+	my @pass = ( 1 );
+	push @pass, 2 if $multipass;
+
+	my (@jobs, $job, $last_job);
+	my @depend_merge_psu;
+
+	my $nr = 1;
+
+	# first we have to do some work per psu
+	foreach my $psu ( @{$title->program_stream_units} ) {
+		next if not $psu->selected;
+
+		my @depend_merge_video;
+		my @depend_merge_audio;
+
+		# audio processing job
+		$job = Video::DVDRip::Cluster::Job::TranscodeAudio->new ( nr => $nr++ );
+		push @jobs, $job;
+		$job->set_project ($self);
+		$job->set_psu ( $psu->nr );
+		$job->set_prefer_local_access (1);
+		$last_job = $job;
+		push @depend_merge_audio, $job;
+
+		# calculate chunk cnt of this psu
+		my $chunk_cnt = int($psu->frames / 10000);
+		my $nodes_cnt =
+			Video::DVDRip::Cluster::Master->get_master
+						      ->get_online_nodes_cnt + 1;
+
+		$chunk_cnt = $nodes_cnt if $chunk_cnt < $nodes_cnt;
+		$chunk_cnt = 2          if $chunk_cnt < 2;
+
+		$psu->set_chunk_cnt ($chunk_cnt);
+
+		# add transcode jobs for each chunk
+		for (my $i=0; $i < $chunk_cnt; ++$i ) {
+			# one job for each pass
+			foreach my $pass ( @pass ) {
+				$job = Video::DVDRip::Cluster::Job::Transcode->new ( nr => $nr++ );
+				push @jobs, $job;
+				$job->set_project ($self);
+				$job->set_pass ($pass);
+				$job->set_chunk ($i);
+				$job->set_chunk_cnt ($chunk_cnt);
+				$job->set_psu ($psu->nr);
+
+				push @depend_merge_video, $job
+					if not $multipass or $pass == 2;
+
+				$job->set_depends_on_jobs ( [ $last_job ] )
+					if $pass == 2;
+
+				$last_job = $job;
+			}
+		}
+		
+		# add a video merge job for this psu
+		$job = Video::DVDRip::Cluster::Job::MergeChunks->new ( nr => $nr++ );
+		push @jobs, $job;
+		$job->set_project ($self);
+		$job->set_chunk_cnt ( $chunk_cnt );
+		$job->set_psu ( $psu->nr );
+		$job->set_prefer_local_access (1);
+		$job->set_depends_on_jobs ( \@depend_merge_video );
+		$last_job = $job;
+		push @depend_merge_audio, $job;
+
+		# finaly audio and video has to be merged
+		$job = Video::DVDRip::Cluster::Job::MergeAudio->new ( nr => $nr++ );
+		push @jobs, $job;
+		$job->set_project ($self);
+		$job->set_psu ( $psu->nr );
+		$job->set_prefer_local_access (1);
+		$job->set_depends_on_jobs ( \@depend_merge_audio );
+		$last_job = $job;
+		push @depend_merge_psu, $job;
+	}
+	
+	# do we need merging of psu AVIs?
+	if ( @depend_merge_psu > 1 ) {
+		$job = Video::DVDRip::Cluster::Job::MergePSUs->new ( nr => $nr++ );
+		push @jobs, $job;
+		$job->set_project ($self);
+		$job->set_chunk_cnt ( scalar(@depend_merge_psu) );
+		$job->set_depends_on_jobs ( \@depend_merge_psu );
+		$job->set_prefer_local_access (1);
+		$last_job = $job;
+	} else {
+		$last_job->set_move_final(1) if $last_job;
+	}
+	
+	# finally split the AVI if requested
+	if ( $title->with_avisplit ) {
+		$job = Video::DVDRip::Cluster::Job::Split->new ( nr => $nr++ );
+		push @jobs, $job;
+		$job->set_project ($self);
+		$job->set_prefer_local_access (1);
+		if ( @depend_merge_psu > 1 ) {
+			$job->set_depends_on_jobs ( [ $last_job ] );
+		} else {
+			$job->set_depends_on_jobs ( \@depend_merge_psu );
+		}
+		$last_job = $job;
+	}
+	
+	# remove VOB files afterwards?
+	if ( $title->with_vob_remove ) {
+		$job = Video::DVDRip::Cluster::Job::RemoveVOBs->new ( nr => $nr++ );
+		push @jobs, $job;
+		$job->set_project ($self);
+		$job->set_depends_on_jobs ( [ $last_job ] );
+		$last_job = $job;
+	}
+	
+	# calc dep strings
+	$_->calc_dep_string foreach @jobs;
+
+	# store job plan
+	$self->set_jobs ( \@jobs );
+
+	1;
+}
+
+
+sub create_job_plan_old {
+	my $self = shift;
+
+	$self->log ("Creating job plan");
+
 	my $title = $self->title;
 	my $multipass = $title->tc_multipass;
 
@@ -156,6 +291,7 @@ sub create_job_plan {
 	# first we have to do some work per psu
 	foreach my $psu ( @{$title->program_stream_units} ) {
 		next if not $psu->selected;
+
 		my @depend_merge_chunk;
 
 		# calculate chunk cnt of this psu

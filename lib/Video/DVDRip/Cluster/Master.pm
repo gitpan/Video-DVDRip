@@ -1,4 +1,4 @@
-# $Id: Master.pm,v 1.18 2002/02/24 16:56:39 joern Exp $
+# $Id: Master.pm,v 1.20 2002/03/13 18:08:29 joern Exp $
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
 # 
@@ -51,11 +51,12 @@ sub set_node_check_watcher	{ shift->{node_check_watcher}	= $_[1] }
 	
 	sub get_master {
 		my $class = shift;
-		my %par = @_;
-
 		# only one master object per process, so return the object
 		# directly if already created.
 		return $MASTER_OBJECT if $MASTER_OBJECT;
+
+		my %par = @_;
+		my ($logger) = @par{'logger'};
 
 		my $self = {
 			data_dir	  => $ENV{HOME}."/.dvdrip-master",
@@ -65,6 +66,7 @@ sub set_node_check_watcher	{ shift->{node_check_watcher}	= $_[1] }
 			nodes		  => [],
 			projects          => [],
 			job_id		  => 0,
+			logger		  => $logger,
 		};
 
 		bless $self, $class;
@@ -86,8 +88,6 @@ sub set_node_check_watcher	{ shift->{node_check_watcher}	= $_[1] }
 				croak "can't create directory '".$self->project_dir."'";
 
 		}
-
-		$self->set_logger ( $Video::DVDRip::Cluster::logger );
 
 		$self->log ("Master daemon activated");
 
@@ -179,11 +179,20 @@ sub node_check {
 				if ( $buffer =~ /^$node_name\s+is\s+alive/m ) {
 					$self->log ("Node '$node_name' is now online")
 						if not $node->alive;
+					$self->log ("Node '$node_name' is Ok again")
+						if $node->alive == 0.5;
 					$node->set_alive(1);
 				} else {
-					$self->log ("Warning: Node '$node_name' is unreachable")
-						if $node->alive or $node->state eq 'unknown';
-					$node->set_alive(0);
+					if ( $node->alive == 0.5 ) {
+						$self->log ("Warning: Node '$node_name' is unreachable")
+							if $node->alive or $node->state eq 'unknown';
+						$node->set_alive(0);
+					} elsif ( $node->alive ) {
+						$self->log ("Warning: Node '$node_name' possibly offline");
+						$node->set_alive(0.5);
+					} else {
+						$node->set_alive(0);
+					}
 				}
 				++$idle_nodes if $node->state eq 'idle';
 			}
@@ -722,5 +731,19 @@ sub get_next_job_id {
 	
 	return $job_id;
 }
+
+sub get_online_nodes_cnt {
+	my $self = shift;
+
+	my $cnt = 0;	
+	foreach my $node ( @{$self->nodes} ) {
+		++$cnt if $node->state ne 'unknown' and
+			  $node->state ne 'offline';
+	}
+	
+	return $cnt;
+}
+
+
 
 1;

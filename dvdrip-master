@@ -1,6 +1,6 @@
 #!/usr/local/bin/perl
 
-# $Id: dvdrip-master,v 1.15 2002/03/02 16:25:30 joern Exp $
+# $Id: dvdrip-master,v 1.16 2002/03/12 14:02:52 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -20,7 +20,7 @@ main: {
 	my $log_level = shift @ARGV || 0;
 
 	# setup master RPC Server with class interface declaration
-	my $master = Video::DVDRip::RPC::Server->new (
+	my $server = Video::DVDRip::RPC::Server->new (
 		name    => "dvd::rip cluster control daemon",
 		port    => 28646,
 		classes => {
@@ -80,6 +80,12 @@ main: {
 				set_tc_options		=> 1,
 				stop			=> 1,
 				start			=> 1,
+				run_tests		=> 1,
+				get_test_command	=> 1,
+				parse_test_output	=> 1,
+				test_finished		=> 1,
+				test_result		=> 1,
+				clone			=> 'Video::DVDRip::Cluster::Node',
 			},
 			'Video::DVDRip::Cluster::Title' => {
 				project			=> 'Video::DVDRip::Cluster::Project',
@@ -104,23 +110,13 @@ main: {
 	);
 
 	# set log level
-	$master->set_log_level ( $log_level );
+	$server->set_log_level ( $log_level );
 
-	# The Video::DVDRip::Cluster::Master class picks
-	# up its logger object from here.
-	$Video::DVDRip::Cluster::logger = $master;
-	
 	# start master thread
-	$master->load_class (
-		class => 'Video::DVDRip::Cluster::Master',
-	);
-	Video::DVDRip::Cluster::Master->get_master;
-
-#	use NetServer::Portal;
-#	use NetServer::Portal::Top;
-#	NetServer::Portal->start( NetServer::Portal->new_socket ( 28647 ) );
+	$server->load_class ( class => 'Video::DVDRip::Cluster::Master' )
+	       ->get_master ( logger => $server );
 
 	# start the object RPC server
-	$master->start_server;
+	$server->start;
 }
 

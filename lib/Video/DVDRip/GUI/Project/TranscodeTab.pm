@@ -1,4 +1,4 @@
-# $Id: TranscodeTab.pm,v 1.34 2002/03/03 21:26:47 joern Exp $
+# $Id: TranscodeTab.pm,v 1.35 2002/03/13 18:10:43 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -14,6 +14,9 @@ use strict;
 
 sub transcode_widgets		{ shift->{transcode_widgets}		}	# href
 sub set_transcode_widgets	{ shift->{transcode_widgets}	= $_[1] }
+
+sub in_transcode_init		{ shift->{in_transcode_init}		}	# href
+sub set_in_transcode_init	{ shift->{in_transcode_init}	= $_[1] }
 
 #---------------------------------------------------------------------
 # Build Transcode Tab
@@ -235,6 +238,7 @@ sub create_transcode_tab {
 		$item->signal_connect (
 			"select", sub {
 				return 1 if not $self->selected_title;
+				return 1 if $self->in_transcode_init;
 				$self->selected_title
 				     ->set_tc_deinterlace($key)
 			}, $key
@@ -273,6 +277,7 @@ sub create_transcode_tab {
 		$item->signal_connect (
 			"select", sub {
 				return 1 if not $self->selected_title;
+				return 1 if $self->in_transcode_init;
 				$self->selected_title
 				     ->set_tc_anti_alias($key)
 			}, $key
@@ -423,6 +428,7 @@ sub create_transcode_tab {
 			"select", sub {
 				my $title =$self->selected_title;
 				return 1 if not $title;
+				return 1 if $self->in_transcode_init;
 				$title->set_tc_disc_cnt($key);
 				$title->set_tc_target_size(
 					$key * $title->tc_disc_size,
@@ -456,6 +462,7 @@ sub create_transcode_tab {
 			"select", sub {
 				my $title =$self->selected_title;
 				return 1 if not $title;
+				return 1 if $self->in_transcode_init;
 				$title->set_tc_disc_size($key);
 				$title->set_tc_target_size(
 					$key * $title->tc_disc_cnt,
@@ -671,6 +678,7 @@ sub create_transcode_tab {
 		$widgets->{$attr}->signal_connect ("changed", sub {
 			my ($widget, $method) = @_;
 			return 1 if not $self->selected_title;
+			return 1 if $self->in_transcode_init;
 			$self->selected_title->$method ( $widget->get_text );
 			$self->update_storage_labels if $method =~ /bitrate/;
 		}, "set_$attr");
@@ -678,24 +686,28 @@ sub create_transcode_tab {
 	$self->transcode_widgets->{tc_use_yuv_internal_yes}->signal_connect (
 		"clicked", sub {
 			return 1 if not $self->selected_title;
+			return 1 if $self->in_transcode_init;
 			$self->selected_title->set_tc_use_yuv_internal(1);
 		}
 	);
 	$self->transcode_widgets->{tc_use_yuv_internal_no}->signal_connect (
 		"clicked", sub {
 			return 1 if not $self->selected_title;
+			return 1 if $self->in_transcode_init;
 			$self->selected_title->set_tc_use_yuv_internal(0);
 		}
 	);
 	$self->transcode_widgets->{tc_multipass_yes}->signal_connect (
 		"clicked", sub {
 			return 1 if not $self->selected_title;
+			return 1 if $self->in_transcode_init;
 			$self->selected_title->set_tc_multipass(1);
 		}
 	);
 	$self->transcode_widgets->{tc_multipass_no}->signal_connect (
 		"clicked", sub {
 			return 1 if not $self->selected_title;
+			return 1 if $self->in_transcode_init;
 			$self->selected_title->set_tc_multipass(0);
 		}
 	);
@@ -703,6 +715,7 @@ sub create_transcode_tab {
 		"clicked", sub {
 			my $title = $self->selected_title;
 			return 1 if not $title;
+			return 1 if $self->in_transcode_init;
 			$title->set_tc_ac3_passthrough(1);
 			$title->set_tc_audio_bitrate(
 				$title->audio_tracks
@@ -723,6 +736,7 @@ sub create_transcode_tab {
 	$self->transcode_widgets->{tc_ac3_passthrough_no}->signal_connect (
 		"clicked", sub {
 			return 1 if not $self->selected_title;
+			return 1 if $self->in_transcode_init;
 			$self->selected_title->set_tc_ac3_passthrough(0);
 			$self->transcode_widgets
 			     ->{tc_audio_bitrate}
@@ -735,6 +749,7 @@ sub create_transcode_tab {
 	$self->transcode_widgets->{tc_preview_checkbox}->signal_connect (
 		"clicked", sub {
 			return 1 if not $self->selected_title;
+			return 1 if $self->in_transcode_init;
 			$self->selected_title->set_tc_preview($_[0]->active);
 		}
 	);
@@ -750,6 +765,8 @@ sub init_transcode_values {
 
 	my $widgets = $self->transcode_widgets;
 	return 1 if not defined $widgets->{tc_video_codec};
+
+	$self->set_in_transcode_init(1);
 
 	foreach my $attr (qw ( tc_video_codec tc_options tc_nice
 			       tc_video_af6_codec tc_video_bitrate
@@ -788,8 +805,9 @@ sub init_transcode_values {
 
 	$widgets->{tc_preview_checkbox}->set_active ( $preview );
 
-
 	$self->update_storage_labels;
+
+	$self->set_in_transcode_init(0);
 
 	1;
 }

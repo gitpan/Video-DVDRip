@@ -1,4 +1,4 @@
-# $Id: Node.pm,v 1.13 2002/02/19 22:42:25 joern Exp $
+# $Id: Node.pm,v 1.14 2002/03/12 13:56:55 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -54,6 +54,12 @@ sub set_progress_merge		{ shift->{progress_merge}	= $_[1] }
 sub set_progress_start_time	{ shift->{progress_start_time}	= $_[1] }
 sub set_assigned_job		{ shift->{assigned_job} 	= $_[1] }
 sub set_assigned_chunk		{ shift->{assigned_chunk}	= $_[1] }
+
+sub test_finished		{ shift->{test_finished}		}
+sub test_result			{ shift->{test_result}			}
+
+sub set_test_finished		{ shift->{test_finished}	= $_[1] }
+sub set_test_result		{ shift->{test_result}		= $_[1] }
 
 sub alive			{ shift->{alive}			}
 
@@ -252,6 +258,98 @@ sub job_info {
 	}
 
 	return $info;
+}
+
+sub run_tests {
+	my $self = shift;
+	
+	# First reset the finished flag
+	$self->set_test_finished(0);
+
+	if ( $self->state eq 'offline' ) {
+		$self->set_test_finished(1);
+		$self->set_test_result (
+			"Node is offline. Can't test its configuration."
+		);
+		return;
+	}
+
+	# get test command for this node
+	my $command = $self->get_test_command;
+
+	my $popen_command = $self->get_popen_code ( command => $command );
+
+	my $output = "";
+	Video::DVDRip::Cluster::Pipe->new (
+		command      => $popen_command,
+		timeout	     => 5,
+		cb_line_read => sub {
+			$output .= $_[0]."\n";
+		},
+		cb_finished => sub {
+			$self->parse_test_output;
+			$self->set_test_result (
+				$self->parse_test_output (
+					output => $output
+				)
+			);
+			$self->set_test_finished (1);
+		}
+	);
+
+	1;
+}
+
+sub get_test_command {
+	my $self = shift;
+	my %par = @_;
+	my ($data_base_dir) = @par{'data_base_dir'};
+	
+	my $command = "sh -c '";
+	
+	# 1. confirm ssh connection
+	$command .= "echo --ssh_connect--; ".
+		    "echo Ok; ".
+		    "echo --ssh_connect--";
+	
+	# 2. get content of data_base_dir
+	$data_base_dir ||= $self->data_base_dir;
+	$command .= "echo --data_base_dir_content--; ".
+		    "ls $data_base_dir 2>&1|sort; ".
+		    "echo --data_base_dir_content--; ";
+	
+	# 3. try writing in the data_base_dir
+	my $test_file = "$data_base_dir/".$self->name."-file-write-test";
+	$command .= "echo --write_test--; ".
+		    "echo node write test > $test_file 2>&1 && echo SUCCESS; ".
+		    "rm -f $test_file; ".
+		    "echo --write_test--; ";
+
+	# 4. get transcode version
+	$command .= "echo --transcode_version--; ".
+		    "transcode -h 2>&1; ".
+		    "echo --transcode_version--; ";
+
+	$command .= "'";
+
+	return $command;
+}
+
+sub parse_test_output {
+	my $self = shift;
+	my %par = @_;
+	my ($output) = @par{'output'};
+
+	# parse output
+	my %result;
+	foreach my $case ( qw ( ssh_connect data_base_dir_content
+				write_test transcode_version ) ) {
+		($result{$case}) = $output =~ m/--$case--\n(.*?)--$case--/s;
+	}
+
+	$result{output} = $output;
+
+	return \%result;
 }
 
 1;
