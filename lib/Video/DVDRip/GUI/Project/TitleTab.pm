@@ -1,4 +1,4 @@
-# $Id: TitleTab.pm,v 1.56.2.1 2003/03/28 20:37:04 joern Exp $
+# $Id: TitleTab.pm,v 1.56.2.2 2003/03/31 12:59:26 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -50,7 +50,7 @@ sub create_title_tab {
 
 	my $button = Gtk::Button->new_with_label (" Read DVD table of contents ");
 	$button->show;
-	$button->signal_connect ("clicked", sub { $self->read_dvd_toc } );
+	$button->signal_connect ("clicked", sub { $self->ask_read_dvd_toc } );
 
 	$self->rip_title_widgets->{read_dvd_toc_button} = $button;
 
@@ -651,6 +651,26 @@ sub init_title_labels {
 	1;
 }
 
+sub ask_read_dvd_toc {
+	my $self = shift; $self->trace_in;
+
+	if ( $self->project->content->titles ) {
+		$self->confirm_window (
+			message =>
+				"If you re-read the TOC, all settings in\n".
+				"this project get lost. Probably you want\n".
+				"to save the project to another file before\n".
+				"you proceeed.\n\n".
+				"Do you want to re-read the TOC now?",
+			yes_callback => sub { $self->read_dvd_toc },
+			yes_label => "Yes",
+			
+		);
+	} else {
+		return $self->read_dvd_toc;
+	}
+}
+
 sub read_dvd_toc {
 	my $self = shift; $self->trace_in;
 
@@ -664,45 +684,34 @@ sub read_dvd_toc {
 
 	$self->clear_content_list;
 
-	# read TOC
-	eval {
-		$project->check_dvd_in_drive;
-		$content->read_title_listing;
-	};
-
-	if ( $@ ) {
-		$self->message_window (
-			message => "Can't read DVD TOC. Please put ".
-				   "a disc into your drive.\n\n".
-				   "Internal message was:\n".
-				   $self->stripped_exception
-		);
-		return;
-	}
-	
-	my $titles = $content->get_titles_by_nr;
-
 	my $nr;
 	my $job;
-	my $last_job;
 	my $exec = Video::DVDRip::GUI::ExecuteJobs->new (
 		reuse_progress => 1
 	);
-	
-	foreach my $title ( @{$titles} ) {
-		$job  = Video::DVDRip::Job::Probe->new (
-			nr    => ++$nr,
-			title => $title,
-		);
 
-		$job->set_progress_max(scalar(@{$titles})+0.001);
+	$job  = Video::DVDRip::Job::ProbeTitleCount->new (
+		nr    => ++$nr,
+	);
+	$job->set_content ($content);
 
-		$job->set_cb_finished (sub {
-			$self->append_content_list ( title => $title );
-		});
+	$job->set_cb_finished ( sub {
+		my $titles = $content->get_titles_by_nr;
+		foreach my $title ( @{$titles} ) {
+			$job  = Video::DVDRip::Job::Probe->new (
+				nr    => ++$nr,
+				title => $title,
+			);
 
-		$last_job = $exec->add_job ( job => $job );
-	}
+			$job->set_progress_max(scalar(@{$titles})+0.001);
+
+			$job->set_cb_finished (sub {
+				$self->append_content_list ( title => $title );
+			});
+
+			$exec->add_job ( job => $job );
+		}
+	});
 	
 	$exec->set_cb_finished (sub{
 		return if $exec->cancelled;
@@ -730,6 +739,8 @@ sub read_dvd_toc {
 		1;
 	});
 
+	
+	$exec->add_job ( job => $job );
 	$exec->execute_jobs;
 
 	1;
@@ -871,15 +882,6 @@ sub rip_title {
 	$self->rip_title_selection_sensitive(0);
 
 	my $project = $self->comp('project')->project;
-
-	eval { $self->project->check_dvd_in_drive };
-	if ( $@ ) {
-		$self->rip_title_selection_sensitive(1);
-		$self->message_window (
-			message => "Please put a disc into your drive. ($@)"
-		);
-		return;
-	}
 
 	my @sel = $self->rip_title_widgets->{content_clist}->selection;
 	

@@ -1,4 +1,4 @@
-# $Id: Title.pm,v 1.137.2.9 2003/03/28 21:24:39 joern Exp $
+# $Id: Title.pm,v 1.137.2.11 2003/04/01 19:58:59 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -77,7 +77,11 @@ sub preset			{ shift->{preset}			}
 sub last_applied_preset		{ shift->{last_applied_preset}		}
 sub preview_frame_nr		{ shift->{preview_frame_nr}		}
 sub files			{ shift->{files}			}
-sub actual_chapter		{ shift->{actual_chapter}		}
+sub actual_chapter		{
+	my $self = shift;
+	$self->{actual_chapter} ||
+	$self->get_first_chapter;
+}
 sub program_stream_units	{ shift->{program_stream_units}		}
 sub bbox_min_x			{ shift->{bbox_min_x}			}
 sub bbox_min_y			{ shift->{bbox_min_y}			}
@@ -1556,19 +1560,21 @@ sub get_transcode_frame_cnt {
 	my %par = @_;
 	my ($chapter) = @par{'chapter'};
 
-	my $frames;
+	my $frames_cnt;
 	if ( not $chapter ) {
-		if ( $self->tc_start_frame ne '' or
-		     $self->tc_end_frame ne '' ) {
-		     	$frames = $self->tc_end_frame || $self->frames;
-			$frames = $frames - $self->tc_start_frame
-				     	if $self->has_vob_nav_file;
-			$frames ||= $self->frames;
-		} else {
-			$frames = $self->frames;
-		}
+		$frames_cnt = $self->frames;
 	} else {
-		$frames = $self->chapter_frames->{$chapter};
+		$frames_cnt = $self->chapter_frames->{$chapter};
+	}
+
+	my $frames = $frames_cnt;
+
+	if ( $self->tc_start_frame ne '' or
+	     $self->tc_end_frame ne '' ) {
+	     	$frames = $self->tc_end_frame || $frames_cnt;
+		$frames = $frames - $self->tc_start_frame
+			     	if $self->has_vob_nav_file;
+		$frames ||= $frames_cnt;
 	}
 
 	return $frames;
@@ -1820,13 +1826,14 @@ sub get_transcode_command {
 		$command = "mkdir -m 0775 -p '$dir' && cd $dir && $command";
 		$command .= " -R $pass";
 
+		$avi_file = "/dev/null" if $pass == 1;
+
 		if ( $pass == 1 and not $self->has_vbr_audio or
 		     $pass == 2 and     $self->has_vbr_audio ) {
 			$command =~ s/(-x\s+[^\s]+)/$1,null/;
 			$command =~ s/-x\s+([^,]+),null,null/-x $1,null/;
 			$command .= " -y ".$self->tc_video_codec;
 			$command .= ",null" if not $self->has_vbr_audio or $pass == 2;
-			$avi_file = "/dev/null" if not $self->has_vbr_audio;
 		}
 	}
 	

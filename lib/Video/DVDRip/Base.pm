@@ -1,4 +1,4 @@
-# $Id: Base.pm,v 1.31.2.5 2003/03/28 20:35:56 joern Exp $
+# $Id: Base.pm,v 1.31.2.6 2003/03/31 08:45:13 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -173,7 +173,7 @@ sub system {
 
 	$self->print_debug ("got: rc=$rc catch=$catch");
 
-	croak "Error executing command >$command< : $catch" if $rc;
+	croak "Error executing command $command:\n$catch" if $rc;
 
 	return $return_rc ? $? : $catch;
 }

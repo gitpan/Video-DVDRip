@@ -82,6 +82,7 @@ lib/Video/DVDRip/Job/ScanVolume.pm
 lib/Video/DVDRip/Job/Split.pm
 lib/Video/DVDRip/Job/TranscodeAudio.pm
 lib/Video/DVDRip/Job/TranscodeVideo.pm
+lib/Video/DVDRip/Job/ProbeTitleCount.pm
 lib/Video/DVDRip.pm
 lib/Video/DVDRip/Preset.pm
 lib/Video/DVDRip/Probe.pm

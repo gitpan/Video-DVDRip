@@ -1,6 +1,31 @@
-$Id: Changes,v 1.131.2.21 2003/03/28 21:41:59 joern Exp $
+$Id: Changes,v 1.131.2.24 2003/04/01 20:14:56 joern Exp $
 
 Revision history and release notes for dvd::rip.
+
+0.50.10 [stable branch] Tue 1 Apr 2003, joern
+	Features:
+	- If you re-read the TOC you get a warning, that this will
+	  override all settings of the current project.
+	- A warning message appears, if you add a project with frame
+	  range setting to the cluster, because always the full movie
+	  is transcoded in cluster mode.
+	
+	Bugfixes:
+	- GUI doesn't block anymore on first DVD access when reading
+	  TOC. Also the complete tcprobe output is printed, if
+	  something went wrong, which helps solving transcode related
+	  problems.
+	- Extended preferences check of the cdrecord device, which
+	  also may be a device file on Linux 2.5 systems, since
+	  IDE burning support is native here. Thanks for the hint
+	  to Moritz Muehlenhoff <jmm AT informatik.uni-bremen.de>.
+	- Transcoding a frame range in chapter mode didn't
+	  show correct progress information. Reported by Ole Tange.
+	- Viewing a subtitle test transcode movie in chapter
+	  mode didn't work.
+	- A video avi file was generated during the first pass with
+	  ogg quality proccessing. Thanks for the report to Jonathan
+	  Rogers.
 
 0.50.9 [stable branch] Fri 28 Mar 2003, joern
 	Features:

@@ -1,4 +1,4 @@
-# $Id: ExecuteJobs.pm,v 1.13.2.1 2003/03/03 11:37:57 joern Exp $
+# $Id: ExecuteJobs.pm,v 1.13.2.2 2003/03/31 12:59:05 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -14,6 +14,7 @@ use base Video::DVDRip::GUI::Base;
 
 use Video::DVDRip::GUI::Pipe;
 
+use Video::DVDRip::Job::ProbeTitleCount;
 use Video::DVDRip::Job::Probe;
 use Video::DVDRip::Job::Rip;
 use Video::DVDRip::Job::GrabPreviewFrame;

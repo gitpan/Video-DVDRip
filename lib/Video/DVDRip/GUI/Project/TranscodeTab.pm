@@ -1,4 +1,4 @@
-# $Id: TranscodeTab.pm,v 1.83.2.5 2003/03/28 21:24:39 joern Exp $
+# $Id: TranscodeTab.pm,v 1.83.2.6 2003/03/31 08:54:10 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -1806,6 +1806,15 @@ sub add_to_cluster {
 			message => "(S)VCD is not supported for cluster mode."
 		);
 		return 1;
+	}
+
+	if ( $title->tc_start_frame ne '' or
+	     $title->tc_end_frame ne '' ) {
+		$self->message_window (
+			message =>
+				"WARNING: your frame range setting\n".
+				"is ignored in cluster mode"
+		);
 	}
 
 	# calculate program stream units, if not already done

@@ -1,4 +1,4 @@
-# $Id: Content.pm,v 1.16 2003/01/28 20:19:57 joern Exp $
+# $Id: Content.pm,v 1.16.2.1 2003/03/31 12:57:00 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -55,40 +55,12 @@ sub new {
 	return bless $self, $class;
 }
 
-sub read_title_listing {
+sub get_probe_title_cnt_command {
 	my $self = shift;
 	
-	my $rip_mode    = $self->project->rip_mode;
 	my $data_source = $self->project->rip_data_source;
 
-	my $title_cnt;
-
-	# execute tcprobe to get the number of titles
-	my $output = $self->system (
-		command => "tcprobe -i $data_source"
-	);
-	
-	($title_cnt) = $output =~ m!DVD\s+title\s+\d+/(\d+)!;
-
-	# Fatal error if we can't determine the title cnt
-	if ( not $title_cnt ) {
-		croak "Can't determine number of titles.\n".
-		      "Please put the DVD in your drive.\n".
-		      "tcprobe output was:\n$output";
-	}
-	
-	my ($nr, %titles);
-	foreach my $nr ( 1..$title_cnt ) {
-		$titles{$nr} = Video::DVDRip::Title->new (
-			nr      => $nr,
-			project => $self->project
-		);
-	}
-
-	# store Title objects
-	$self->set_titles (\%titles);
-	
-	1;
+	return "dr_exec tcprobe -i $data_source && DVDRIP_SUCCESS";
 }
 
 sub get_titles_by_nr {

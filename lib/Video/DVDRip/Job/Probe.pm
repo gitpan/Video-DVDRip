@@ -1,4 +1,4 @@
-# $Id: Probe.pm,v 1.3 2003/01/28 20:19:57 joern Exp $
+# $Id: Probe.pm,v 1.3.2.1 2003/03/31 12:59:52 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -34,6 +34,7 @@ sub init {
 	$self->set_progress_cnt($self->title->nr);
 	$self->set_progress_show_fps(0);
 	$self->set_progress_show_elapsed(0);
+	$self->set_progress_show_percent(1);
 
 	1;
 }

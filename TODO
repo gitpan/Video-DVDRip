@@ -1,17 +1,10 @@
-$Id: TODO,v 1.117.2.5 2003/03/28 20:37:53 joern Exp $
+$Id: TODO,v 1.117.2.6 2003/04/01 20:00:31 joern Exp $
 
 KNOWN BUGS:
 ===========
 - selecting (S)VCD container type, triggers SVCD video
   codec, but doesn't set the SVCD type on the burning page.
   Reported by mark <Xebeque AT gmx.de>
-- when doing multiple cds, multiple audio tracks, and mutiple vobsubs:
-  i've had to down the twice 703MB proposed to 683, else the files and
-  add-ons were too big to be contained on the two cds; but i still have to
-  put a slight lower target size, if not, i have 2 cds and ~15MB for a
-  third one (at the second test, i had 1,5MB left for a third cd :(  ),
-  this is an annoying test because it takes lots of time to proceed :)
-- vobsub subtitling seems to be (partly) broken for chapter mode.
 - Ripping and snapshot grabbing fails if the title has no
   audio at all. Reported by Sean Dwyer <ewe2 AT can.org.au>.
 - negative cropping isn't visualized in the preview image
@@ -27,8 +20,6 @@ may be implemented soon, some eventually never... ;)
 
 TODO:
 =====
-- warn, if a project with a selected frame range is put
-  on a cluster.
 - check chapter mode && diskspace calculations
 - add an "uninstall HOWTO" to the FAQ
 - global nice preference, which apply to all started processes.
