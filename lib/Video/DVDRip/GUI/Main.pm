@@ -1,0 +1,422 @@
+# $Id: Main.pm,v 1.13 2001/11/29 20:10:08 joern Exp $
+
+#-----------------------------------------------------------------------
+# Copyright (C) 2001 Jörn Reder <joern@zyn.de> All Rights Reserved
+# 
+# This module is part of Video::DVDRip, which is free software; you can
+# redistribute it and/or modify it under the same terms as Perl itself.
+#-----------------------------------------------------------------------
+
+package Video::DVDRip::GUI::Main;
+
+use base Video::DVDRip::GUI::Component;
+
+use Video::DVDRip;
+use Video::DVDRip::Project;
+use Video::DVDRip::GUI::Project;
+use Video::DVDRip::GUI::Config;
+
+use strict;
+use Data::Dumper;
+
+use Gtk;
+use Gtk::Keysyms;
+
+use File::Basename;
+
+sub gtk_box			{ shift->{gtk_box}			}
+sub gtk_menubar			{ shift->{gtk_menubar}			}
+sub gtk_greetings		{ shift->{gtk_greetings}		}
+sub project_opened		{ shift->{project_opened}		}
+
+sub set_gtk_box			{ shift->{gtk_box}		= $_[1] }
+sub set_gtk_menubar		{ shift->{gtk_menubar}		= $_[1] }
+sub set_gtk_greetings		{ shift->{gtk_greetings}	= $_[1] }
+sub set_project_opened		{ shift->{project_opened}	= $_[1] }
+
+sub start {
+	my $self = shift; $self->trace_in;
+	my %par = @_;
+	my ($filename) = @par{'filename'};
+
+	Gtk->init;
+	Gtk::Widget->set_default_colormap(Gtk::Gdk::Rgb->get_cmap());
+	Gtk::Widget->set_default_visual(Gtk::Gdk::Rgb->get_visual());
+
+	$self->build;
+
+	if ( $filename ) {
+		$self->open_project_file (
+			filename => $filename
+		);
+	}
+
+	while ( 1 ) {
+		eval { Gtk->main };
+		if ( $@ ) {
+			my $error =
+				"An internal exception was thrown!\n".
+				"The error message was:\n\n$@";
+
+			$self->message_window (
+				message => $error
+			);
+			next;
+		} else {
+			last;
+		}
+	}
+}
+
+sub build {
+	my $self = shift; $self->trace_in;
+
+	# create GTK widgets for main application window
+	my $win       = $self->create_window;
+	my $box       = $self->create_window_box;
+	my $menubar   = $self->create_menubar;
+	my $greetings = $self->create_greetings;
+
+	$win->add ($box);
+	$box->pack_start ($menubar, 0, 1, 0);
+	$box->pack_start ($greetings, 1, 1, 0);
+
+	$self->set_gtk_greetings ($greetings);
+
+	# store component
+	$self->set_comp ( main => $self );
+
+	$self->set_widget($win);
+
+	$win->show;
+
+	return 1;
+}
+
+sub create_greetings {
+	my $self = shift;
+	
+	my $text = <<__EOT;
+dvd::rip - A full featured DVD Ripper GUI for Linux
+
+Version $Video::DVDRip::VERSION
+
+Copyright (c) 2001 Joern Reder, All Rights Reserved
+
+http://www.netcologne.de/~nc-joernre/
+
+dvd::rip is free software; you can redistribute it
+and/or modify it under the same terms as Perl itself.
+
+__EOT
+	my $label = Gtk::Label->new ($text);
+	$label->show;
+
+	return $label;
+}
+
+sub create_window {
+	my $self = shift; $self->trace_in;
+	
+	my $win = new Gtk::Window -toplevel;
+	$win->set_title($self->config('program_name'));
+	$win->signal_connect("destroy" => \&Gtk::main_quit);
+	$win->border_width(0);
+	$win->set_uposition (10,10);
+	$win->set_default_size (
+		$self->config('main_window_width'),
+		$self->config('main_window_height'),
+	);
+	$win->realize;
+
+	$win->signal_connect("size-allocate",
+		sub {
+			$self->set_config('main_window_width', $_[1]->[2]);
+			$self->set_config('main_window_height', $_[1]->[3]);
+		}
+	);
+
+	$self->set_gtk_win ($win);
+	
+	return $win;
+}	
+
+sub create_window_box {
+	my $self = shift; $self->trace_in;
+	
+	my $box = new Gtk::VBox (0, 2);
+	$box->show;
+	
+	$self->set_gtk_box ($box);
+	
+	return $box;
+}
+
+sub create_menubar {
+	my $self = shift; $self->trace_in;
+	
+	my $win = $self->gtk_win;
+	
+	my @menu_items = (
+		{ path        => '/_File',
+                  type        => '<Branch>' },
+
+                { path        => '/File/_New Project',
+		  accelerator => '<control>n',
+                  callback    => sub { $self->new_project } },
+                { path        => '/File/_Open Project...',
+		  accelerator => '<control>o',
+                  callback    => sub { $self->open_project } },
+                { path        => '/File/_Save Project',
+		  accelerator => '<control>s',
+                  callback    => sub { $self->save_project } },
+                { path        => '/File/Save Project As...',
+                  callback    => sub { $self->save_project_as } },
+                { path        => '/File/_Close Project',
+		  accelerator => '<control>w',
+                  callback    => sub { $self->close_project } },
+
+		{ path	      => '/File/sep_quit',
+		  type	      => '<Separator>' },
+                { path        => '/File/_Exit',
+		  accelerator => '<control>Q',
+                  callback    => sub { $self->exit_program } },
+
+                { path        => '/_Edit/Edit _Preferences...',
+		  accelerator => '<control>p',
+                  callback    => sub { $self->edit_preferences } },
+	);
+
+	my $accel_group = Gtk::AccelGroup->new;
+	my $item_factory = Gtk::ItemFactory->new (
+		'Gtk::MenuBar',
+		'<main>',
+		$accel_group
+	);
+	$item_factory->create_items ( @menu_items );
+	$win->add_accel_group ( $accel_group );
+	my $menubar = $self->set_gtk_menubar ( $item_factory->get_widget( '<main>' ) );
+	$menubar->show;
+
+	return $menubar;
+}
+
+sub new_project {
+	my $self = shift;
+	
+	return if $self->unsaved_project_open (
+		wants => "new_project"
+	);
+	
+	$self->close_project;
+
+	my $project = Video::DVDRip::Project->new (
+		name => 'unnamed',
+	);
+
+	$project->set_vob_dir (
+		$self->config('base_project_dir')."/unnamed/vob",
+	);
+	$project->set_avi_dir (
+		$self->config('base_project_dir')."/unnamed/avi",
+	);
+	$project->set_snap_dir (
+		$self->config('base_project_dir')."/unnamed/snap",
+	);
+	$project->set_mount_point (
+		$self->config('dvd_mount_point'),
+	);
+	$project->set_dvd_device (
+		$self->config('dvd_device'),
+	);
+	
+	my $project_gui = Video::DVDRip::GUI::Project->new;
+	$project_gui->set_project ( $project );
+
+	$self->gtk_greetings->hide;
+	$self->gtk_box->pack_start ($project_gui->build, 1, 1, 1);
+	
+	$self->set_project_opened(1);
+	
+	$self->set_window_title;
+
+	1;
+}
+
+sub set_window_title {
+	my $self = shift;
+
+	my $filename = basename($self->comp('project')->project->filename) ||
+		       "<unnamed project>";
+
+	$self->widget->set_title (
+		$self->config('program_name')." - ".$filename
+	);
+	
+	1;
+}
+
+
+sub open_project {
+	my $self = shift;
+
+	return if $self->unsaved_project_open (
+		wants => "open_project"
+	);
+	
+	$self->show_file_dialog (
+		dir      => ".",
+		filename => "",
+		cb       => sub {
+			$self->open_project_file ( filename => $_[0] );
+		},
+	);
+}
+
+sub open_project_file {
+	my $self = shift;
+	my %par = @_;
+	my ($filename) = @par{'filename'};
+	
+	if ( not -r $filename ) {
+		$self->message_window (
+			message => "File '$filename' not found or not readable."
+		);
+		return 1;
+	}
+
+	my $project = Video::DVDRip::Project->new_from_file (
+		filename => $filename
+	);
+
+	my $project_gui = Video::DVDRip::GUI::Project->new;
+	$project_gui->set_project ( $project );
+
+	$self->gtk_greetings->hide;
+	$self->gtk_box->pack_start ($project_gui->build, 1, 1, 1);
+	$project_gui->fill_with_values;
+
+	$self->set_project_opened(1);
+
+	$project_gui->show_preview_images;
+
+	$self->set_window_title;
+
+	$project->set_dvd_device (
+		$self->config('dvd_device')
+	);
+	$project->set_mount_point (
+		$self->config('dvd_mount_point')
+	);
+
+	
+	1;
+}
+
+sub save_project {
+	my $self = shift;
+	
+	return if not $self->project_opened;
+
+	if ( $self->comp('project')->project->filename ) {
+		$self->comp('project')->project->save;
+		$self->set_window_title;
+		return 1;
+
+	} else {
+		$self->show_file_dialog (
+			dir      => ".",
+			filename => $self->comp('project')->project->name.".rip",
+			confirm  => 1,
+			cb       => sub {
+				$self->comp('project')->project->set_filename($_[0]);
+				$self->comp('project')->project->save;
+				$self->set_window_title;
+			},
+		);
+		return 1;
+	}
+}
+
+sub save_project_as {
+	my $self = shift;
+	
+	return if not $self->project_opened;
+
+	$self->show_file_dialog (
+		dir      => ".",
+		filename => $self->comp('project')->project->name.".rip",
+		confirm  => 1,
+		cb       => sub {
+			$self->comp('project')->project->set_filename($_[0]);
+			$self->comp('project')->project->save;
+			$self->set_window_title;
+		},
+	);
+
+	return 1;
+}
+
+sub close_project {
+	my $self = shift;
+	my %par = @_;
+	my ($dont_ask) = @par{'dont_ask'};
+	
+	return if not $self->project_opened;
+	return if not $dont_ask and $self->unsaved_project_open;
+	
+	$self->gtk_box->remove ($self->comp('project')->widget);
+	$self->comp( project => undef );
+	$self->set_project_opened (0);
+	$self->gtk_greetings->show;
+
+	1;
+}
+
+sub unsaved_project_open {
+	my $self = shift;
+	my %par = @_;
+	my ($wants) = @par{'wants'};
+	
+	return if not $self->project_opened;
+	return if not $self->comp('project')->project->changed;
+
+	$self->confirm_window (
+		message => "Do you want to save this project first?",
+		yes_label => "Yes",
+		no_label => "No",
+		yes_callback => sub {
+			if ( $self->save_project ) {
+				$self->close_project ( dont_ask => 1 );
+				$self->$wants if $wants
+			}
+		},
+		no_callback => sub {
+			$self->close_project ( dont_ask => 1 );
+			$self->$wants if $wants;
+		},
+	);
+	
+	1;
+}
+
+sub exit_program {
+	my $self = shift;
+
+	return if $self->unsaved_project_open (
+		wants => "exit_program"
+	);
+	
+	Gtk->exit( 0 ); 
+}
+
+sub edit_preferences {
+	my $self = shift;
+	
+	my $pref = Video::DVDRip::GUI::Config->new;
+	$pref->open_window;
+	
+	1;
+}
+
+1;

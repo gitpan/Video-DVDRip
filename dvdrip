@@ -1,0 +1,35 @@
+#!/usr/local/bin/perl
+
+# $Id: dvdrip,v 1.7 2001/11/26 22:34:31 joern Exp $
+
+#-----------------------------------------------------------------------
+# Copyright (C) 2001 Jörn Reder <joern@zyn.de> All Rights Reserved
+# 
+# This program is part of Video::DVDRip, which is free software; you can
+# redistribute it and/or modify it under the same terms as Perl itself.
+#-----------------------------------------------------------------------
+
+package Video::DVDRip;
+
+use strict;
+use lib 'lib';
+
+use Video::DVDRip::GUI::Main;
+
+main: {
+	Video::DVDRip::GUI::Main->set_debug_level(0);
+
+	# fetch filename paramter
+	my $filename = shift @ARGV;
+
+	# create GUI object
+	my $gui = Video::DVDRip::GUI::Main->new;
+
+	# start GUI
+	$gui->start (
+		filename => $filename
+	);
+
+	END { Gtk->exit(0) }
+}
+

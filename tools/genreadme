@@ -1,0 +1,18 @@
+use strict;
+
+open (POD, "pod2text lib/Video/DVDRip.pm |") or die "can't fork";
+
+while (<POD>) {
+	print;
+}
+
+close POD or die "can't run pod2text";
+
+print "CHANGES\n";
+
+open (CHANGES, "Changes") or die "can't read Changes";
+while (<CHANGES>) {
+	print "    " if ! m/^\s/;
+	print;
+}
+close CHANGES;

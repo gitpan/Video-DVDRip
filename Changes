@@ -1,0 +1,8 @@
+$Id: Changes,v 1.1 2001/11/26 22:34:30 joern Exp $
+
+Revision history for Perl extension Video::DVDRip
+
+0.20  Tue Nov 27 2001, joern
+	- First public release. Should be usable but is not tested
+	  with thousands of DVDs.
+

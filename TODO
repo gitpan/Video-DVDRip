@@ -1,0 +1,10 @@
+$Id: TODO,v 1.5 2001/11/26 21:17:08 joern Exp $
+
+KNOWN BUGS:
+- none
+
+TODO
+- installation procedure
+- check MANIFEST
+- remove debugging output
+- create new clip&zoom preference
