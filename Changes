@@ -1,6 +1,13 @@
-$Id: Changes,v 1.6 2001/12/09 12:12:07 joern Exp $
+$Id: Changes,v 1.8 2001/12/09 12:50:21 joern Exp $
 
 Revision history for Perl extension Video::DVDRip
+
+0.23  Sun Dec 09 2001, joern
+	Bugfixes:
+	- fast resizing: 32 pixel boundary check ommited checking the
+	  clip1 size
+	- transcode progress label did always show the "split afterwards"
+	  message, even if started without splitting.
 
 0.22  Sun Dec 09 2001, joern
 	Bugfixes:

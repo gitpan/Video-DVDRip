@@ -1,4 +1,4 @@
-# $Id: Title.pm,v 1.29 2001/12/09 12:00:51 joern Exp $
+# $Id: Title.pm,v 1.30 2001/12/09 12:49:22 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -725,7 +725,7 @@ sub get_transcode_command {
 			$self->get_fast_resize_options;
 
 		if ( $err_div32 ) {
-			croak "When using fast resize: Zoom size must be divsible by 32";
+			croak "When using fast resize: Clip1 and Zoom size must be divsible by 32";
 		}
 
 		if ( $err_shrink_expand ) {
@@ -778,7 +778,8 @@ sub get_fast_resize_options {
 	my ($err_div32, $err_shrink_expand);
 
 	if ( ($width_n != 0 and $zoom_width % 32 != 0) or
-	     ($height_n != 0 and $zoom_height % 32 != 0) ) {
+	     ($height_n != 0 and $zoom_height % 32 != 0) or
+	     ($width % 32 != 0 or $height % 32 != 0) or () ) {
 		$err_div32 = 1;
 	}
 

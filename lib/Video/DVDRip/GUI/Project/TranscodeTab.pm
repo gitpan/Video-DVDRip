@@ -1,4 +1,4 @@
-# $Id: TranscodeTab.pm,v 1.13 2001/12/09 12:00:01 joern Exp $
+# $Id: TranscodeTab.pm,v 1.14 2001/12/09 12:48:51 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -744,7 +744,7 @@ sub transcode {
 		$label_prefix = "Transcoding Video:";
 	}
 
-	$label_prefix =~ s/:$/ (split afterwards):/;
+	$label_prefix =~ s/:$/ (split afterwards):/ if $split;
 
 	$self->comp('progress')->open_continious_progress (
 		max_value => $max_value,
