@@ -1,4 +1,4 @@
-# $Id: Title.pm,v 1.26 2001/12/01 15:36:31 joern Exp $
+# $Id: Title.pm,v 1.29 2001/12/09 12:00:51 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -93,6 +93,8 @@ sub tc_disc_cnt 	    	{ shift->{tc_disc_cnt}			}
 sub tc_disc_size	    	{ shift->{tc_disc_size}			}
 sub tc_start_frame	    	{ shift->{tc_start_frame}		}
 sub tc_end_frame	    	{ shift->{tc_end_frame}			}
+sub tc_fast_resize	    	{ shift->{tc_fast_resize}		}
+sub tc_multipass	    	{ shift->{tc_multipass}			}
 
 sub set_project			{ shift->{project}		= $_[1] }
 sub set_tc_viewing_angle	{ shift->{tc_viewing_angle}	= $_[1]	}
@@ -120,6 +122,8 @@ sub set_tc_disc_cnt		{ shift->{tc_disc_cnt}    	= $_[1]	}
 sub set_tc_disc_size		{ shift->{tc_disc_size}    	= $_[1]	}
 sub set_tc_start_frame		{ shift->{tc_start_frame}    	= $_[1]	}
 sub set_tc_end_frame		{ shift->{tc_end_frame}    	= $_[1]	}
+sub set_tc_fast_resize		{ shift->{tc_fast_resize}    	= $_[1]	}
+sub set_tc_multipass		{ shift->{tc_multipass}    	= $_[1]	}
 
 sub vob_dir {
 	my $self = shift; $self->trace_in;
@@ -195,7 +199,7 @@ sub apply_preset {
 	my $set_method;
 	foreach my $attr ( @{$attributes} ) {
 		$set_method = "set_$attr";
-		$self->$set_method($preset->$attr);
+		$self->$set_method($preset->$attr());
 	}
 	
 	1;
@@ -271,7 +275,8 @@ sub rip_async_stop {
 			$self->get_rip_command.
 			$output;
 
-	close $fh or croak ($message);
+	close $fh;
+	croak ($message) if $?;
 
 	$self->set_rip_time (time);
 	
@@ -350,7 +355,8 @@ sub scan_async_stop {
 			$self->get_scan_command.
 			$output;
 
-	close $fh or croak ($message);
+	close $fh;
+	croak ($message) if $?;
 
 	$self->set_scan_time (time);
 
@@ -468,7 +474,8 @@ sub rip_and_scan_async_stop {
 			$self->get_rip_and_scan_command.
 			$output;
 
-	close $fh or croak ($message);
+	close $fh;
+	croak ($message) if $?;
 
 	$self->set_rip_time (time);
 	$self->set_scan_time (time);
@@ -551,7 +558,8 @@ sub probe_async_stop {
 			$self->get_probe_command.
 			$output;
 
-	close $fh or croak ($message);
+	close $fh;
+	croak ($message) if $?;
 	
 	$self->set_probe_time (time);
 
@@ -655,6 +663,8 @@ sub suggest_video_bitrate {
 
 sub get_transcode_command {
 	my $self = shift; $self->trace_in;
+	my %par = @_;
+	my ($pass) = @par{'pass'};
 
 	my $nr       = $self->nr;
 	my $avi_file = $self->avi_file;
@@ -706,10 +716,38 @@ sub get_transcode_command {
 	$command .= " -Y $clip2"
 		if $clip2 =~ /^\d+,\d+,\d+,\d+$/ and $clip2 ne '0,0,0,0';
 
-	my $zoom = $self->tc_zoom_width."x".$self->tc_zoom_height;
+	if ( not $self->tc_fast_resize ) {
+		my $zoom = $self->tc_zoom_width."x".$self->tc_zoom_height;
+		$command .= " -Z $zoom"
+			if $zoom =~ /^\d+x\d+$/;
+	} else {
+		my ($width_n, $height_n, $err_div32, $err_shrink_expand) =
+			$self->get_fast_resize_options;
 
-	$command .= " -Z $zoom"
-		if $zoom =~ /^\d+x\d+$/;
+		if ( $err_div32 ) {
+			croak "When using fast resize: Zoom size must be divsible by 32";
+		}
+
+		if ( $err_shrink_expand ) {
+			croak "When using fast resize: Width and height must both shrink or expand";
+		}
+
+		if ( $width_n * $height_n >= 0 ) {
+			if ( $width_n > 0 or $height_n > 0 ) {
+				$command .= " -X $height_n,$width_n";
+			} else {
+				$width_n  = abs($width_n);
+				$height_n = abs($height_n);
+				$command .= " -B $height_n,$width_n";
+			}
+		}
+	}
+
+	if ( $self->tc_multipass ) {
+		my $dir = dirname($self->preview_filename);
+		$command = "cd $dir; $command";
+		$command .= " -R $pass";
+	}
 
 	my $avi_dir = dirname $avi_file;
 
@@ -718,16 +756,46 @@ sub get_transcode_command {
 			or croak "Can't mkpath directory '$avi_dir'";
 	}
 	
-	print "$command\n";
+print "$command\n";
 
 	return $command;
 }
 
+sub get_fast_resize_options {
+	my $self = shift;
+
+	my $width = $self->width - $self->tc_clip1_left
+				 - $self->tc_clip1_right;
+	my $height = $self->height - $self->tc_clip1_top
+				   - $self->tc_clip1_bottom;
+
+	my $zoom_width  = $self->tc_zoom_width;
+	my $zoom_height = $self->tc_zoom_height;
+
+	my $width_n  = ($zoom_width  - $width)  / 32;
+	my $height_n = ($zoom_height - $height) / 32;
+
+	my ($err_div32, $err_shrink_expand);
+
+	if ( ($width_n != 0 and $zoom_width % 32 != 0) or
+	     ($height_n != 0 and $zoom_height % 32 != 0) ) {
+		$err_div32 = 1;
+	}
+
+	if ( $width_n * $height_n < 0 ) {
+		$err_shrink_expand = 1;
+	}
+
+	return ($width_n, $height_n, $err_div32, $err_shrink_expand);
+}
+
 sub transcode {
 	my $self = shift; $self->trace_in;
+	my %par = @_;
+	my ($pass) = @par{'pass'};
 
 	$self->system (
-		command => $self->get_transcode_command,
+		command => $self->get_transcode_command ( pass => $pass ),
 	);
 	
 	1;
@@ -736,10 +804,10 @@ sub transcode {
 sub transcode_with_callback {
 	my $self = shift; $self->trace_in;
 	my %par = @_;
-	my  ($callback) = @par{'callback'};
+	my  ($callback, $pass) = @par{'callback','pass'};
 
 	$self->popen (
-		command  => $self->get_transcode_command,
+		command  => $self->get_transcode_command ( pass => $pass ),
 		callback => $callback,
 	);
 	
@@ -748,9 +816,11 @@ sub transcode_with_callback {
 
 sub transcode_async_start {
 	my $self = shift; $self->trace_in;
-	
+	my %par = @_;
+	my ($pass) = @par{'pass'};
+
 	return $self->popen (
-		command => $self->get_transcode_command,
+		command => $self->get_transcode_command ( pass => $pass ),
 	);
 }
 
@@ -765,7 +835,8 @@ sub transcode_async_stop {
 			$self->get_transcode_command.
 			$output;
 
-	close $fh or croak ($message);
+	close $fh;
+	croak ($message) if $?;
 
 	1;
 }
@@ -864,7 +935,8 @@ sub split_async_stop {
 			$self->get_split_command.
 			$output;
 
-	close $fh or croak ($message);
+	close $fh;
+	croak ($message) if $?;
 
 	$self->rename_avi_files;
 
@@ -894,7 +966,7 @@ sub get_take_snapshot_command {
 	       " -o snapshot".
 	       " -x vob -y ppm -c $frame-".($frame+1);
 
-	print $command,"\n";
+print $command,"\n";
 
 	return $command;
 }
@@ -988,7 +1060,8 @@ sub take_snapshot_async_stop {
 			).
 			$output;
 
-	close $fh or croak ($message);
+	close $fh;
+	croak ($message) if $?;
 
 	$self->convert_snapshot (
 		filename => $self->snapshot_filename,

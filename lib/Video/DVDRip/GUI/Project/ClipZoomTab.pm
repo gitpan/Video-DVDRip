@@ -1,4 +1,4 @@
-# $Id: ClipZoomTab.pm,v 1.6 2001/11/25 12:26:40 joern Exp $
+# $Id: ClipZoomTab.pm,v 1.9 2001/12/09 11:58:25 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -192,7 +192,7 @@ sub create_adjust_tab {
 
 	$frame->add ($hbox);
 
-	my $table = Gtk::Table->new ( 4, 3, 0 );
+	my $table = Gtk::Table->new ( 5, 3, 0 );
 	$table->show;
 	$table->set_row_spacings ( 10 );
 	$table->set_col_spacings ( 10 );
@@ -330,7 +330,7 @@ sub create_adjust_tab {
 
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$table->attach_defaults ($hbox, 1, 2, $row, $row+1);
+	$table->attach_defaults ($hbox, 1, 3, $row, $row+1);
 
 	$label = Gtk::Label->new("Width");
 	$label->show;
@@ -355,6 +355,34 @@ sub create_adjust_tab {
 	$hbox->pack_start($entry, 0, 1, 0);
 
 	$self->adjust_widgets->{tc_zoom_height}      = $entry;
+
+	$label = Gtk::Label->new ("");
+	$label->show;
+	$hbox->pack_start($label, 0, 1, 0);
+
+	$self->adjust_widgets->{tc_zoom_info}        = $label;
+
+	# fast resizing
+	++$row;
+	$hbox = Gtk::HBox->new;
+	$hbox->show;
+	$label = Gtk::Label->new ("Use Fast Resizing");
+	$label->show;
+	$hbox->pack_start($label, 0, 1, 0);
+	$table->attach_defaults ($hbox, 0, 1, $row, $row+1);
+	
+	$hbox = Gtk::HBox->new;
+	$hbox->show;
+	my $radio_yes = Gtk::RadioButton->new ("Yes");
+	$radio_yes->show;
+	$hbox->pack_start($radio_yes, 0, 1, 0);
+	my $radio_no = Gtk::RadioButton->new ("No", $radio_yes);
+	$radio_no->show;
+	$hbox->pack_start($radio_no, 0, 1, 0);
+	$table->attach_defaults ($hbox, 1, 2, $row, $row+1);
+
+	$self->adjust_widgets->{tc_fast_resize_yes} = $radio_yes;
+	$self->adjust_widgets->{tc_fast_resize_no}  = $radio_no;
 
 	# Clipping #2
 	++$row;
@@ -436,8 +464,24 @@ sub create_adjust_tab {
 		$widgets->{$attr}->signal_connect ("changed", sub {
 			my ($widget, $method) = @_;
 			$self->selected_title->$method ( $widget->get_text );
+			$self->update_fast_resize_info;
 		}, "set_$attr");
 	}
+
+	$self->adjust_widgets->{tc_fast_resize_yes}->signal_connect (
+		"clicked", sub {
+			return 1 if not $self->selected_title;
+			$self->selected_title->set_tc_fast_resize(1);
+			$self->update_fast_resize_info;
+		}
+	);
+	$self->adjust_widgets->{tc_fast_resize_no}->signal_connect (
+		"clicked", sub {
+			return 1 if not $self->selected_title;
+			$self->selected_title->set_tc_fast_resize(0);
+			$self->update_fast_resize_info;
+		}
+	);
 
 	return $vbox;
 }
@@ -458,7 +502,7 @@ sub init_adjust_values {
 			       tc_clip1_left tc_clip1_right
        			       tc_clip2_top  tc_clip2_bottom
 			       tc_clip2_left tc_clip2_right )) {
-		$widgets->{$attr}->set_text ($self->selected_title->$attr);
+		$widgets->{$attr}->set_text ($self->selected_title->$attr());
 	}
 
 	my $preset_name = $title->preset;
@@ -469,6 +513,41 @@ sub init_adjust_values {
 	}
 	$i = 0 if $i >= @{$self->config_object->presets};
 	$widgets->{preset_popup}->set_history ($i);
+
+	my $fast_resize = $title->tc_fast_resize;
+
+	$widgets->{tc_fast_resize_yes}->set_active($fast_resize);
+	$widgets->{tc_fast_resize_no}->set_active(!$fast_resize);
+
+	$self->update_fast_resize_info;
+
+	1;
+}
+
+sub update_fast_resize_info {
+	my $self = shift; $self->trace_in;
+
+	my $title = $self->selected_title;
+	return 1 if not $title;
+	return 1 if not $self->adjust_widgets->{preview_frame_nr};
+
+	my $info = "";
+	if ( $title->tc_fast_resize ) {
+		my ($width_n, $height_n, $err_div32, $err_shrink_expand) =
+			$title->get_fast_resize_options;
+
+		if ( $err_div32 or $err_shrink_expand ) {
+			$info .= "32 boundary! " if $err_div32;
+			$info .= "shrink-expand!" if $err_shrink_expand;
+			$info =~ s! $!!;
+			$info =~ s! s! / s!;
+			$info = "Err: $info";
+		} else {
+			$info = "Fast Resize: Ok";
+		}
+	}
+
+	$self->adjust_widgets->{tc_zoom_info}->set_text ($info);
 
 	1;
 }
@@ -545,6 +624,8 @@ sub show_preview_labels {
 		
 		$self->adjust_widgets->{$type."_info_label"}->set_text($text);
 	}
+
+	$self->update_fast_resize_info;
 	
 	1;
 }
@@ -595,6 +676,7 @@ sub grab_preview_frame {
 			$title->take_snapshot_async_stop ( fh => $fh );
 			$self->make_previews;
 			$self->show_preview_images;
+			return;
 		},
 		cancel_callback => sub {
 			close $fh;
@@ -706,6 +788,8 @@ sub move_clip2_to_clip1 {
 
 	my $title = $self->selected_title;
 	return 1 if not $title;
+
+	return 1 if $title->tc_fast_resize;
 
 	my $clip1_top    = $title->tc_clip1_top;
 	my $clip1_bottom = $title->tc_clip1_bottom;

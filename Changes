@@ -1,9 +1,38 @@
-$Id: Changes,v 1.3 2001/12/01 15:40:30 joern Exp $
+$Id: Changes,v 1.6 2001/12/09 12:12:07 joern Exp $
 
 Revision history for Perl extension Video::DVDRip
 
+0.22  Sun Dec 09 2001, joern
+	Bugfixes:
+	- applied Perl 5.005 patch supplied by Norbert
+	  Preining <preining AT logic.at>. Thanks.
+	- DVD read-toc code always tried a mount, even if the
+	  DVD was already mounted. This could confuse systems
+	  using automounter.
+
+	New Features:
+	- Support of the fast resizing algorithm of transcode
+	  (transcode-0.5.2-20011206 is recommended because of
+	  a bug in the horizontal fast resize code in earlier
+	  versions). Fast resizing presumes 32 pixel boundaries.
+	  If you break with this rule, you'll get an error window
+	  on transcoding. I'm planning a wizard which helps
+	  calculating the correct values, because this can be a
+	  brain squeezing task ;)
+	- Added two new Presets for anamorph transcoding using the
+	  fast resizing algorithm. They should bypass the time,
+	  until the fast resizing wizard is finished.
+	- Support of multipass DivX encoding.
+	- Added a button to the Transcode tab for viewing the
+	  transcoded non-splitted AVI file.
+	- transcode progress label shows, whether started with or
+	  without splitting
+
 0.21  Sat Dec 01 2001, joern
+	Bugfixes:
 	- fixed color problem with snapshot images
+	
+	New Features:
 	- transcode 0.5.1 supports 4GB AVI files, so max.
 	  filesize for the bitrate suggestion is now 4000 MB
 	  (was 2000 MB with transcode 0.5.0)

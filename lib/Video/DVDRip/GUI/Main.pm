@@ -1,4 +1,4 @@
-# $Id: Main.pm,v 1.13 2001/11/29 20:10:08 joern Exp $
+# $Id: Main.pm,v 1.14 2001/12/07 20:17:59 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -388,12 +388,12 @@ sub unsaved_project_open {
 		yes_callback => sub {
 			if ( $self->save_project ) {
 				$self->close_project ( dont_ask => 1 );
-				$self->$wants if $wants
+				$self->$wants() if $wants;
 			}
 		},
 		no_callback => sub {
 			$self->close_project ( dont_ask => 1 );
-			$self->$wants if $wants;
+			$self->$wants() if $wants;
 		},
 	);
 	

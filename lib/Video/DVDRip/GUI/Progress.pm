@@ -1,4 +1,4 @@
-# $Id: Progress.pm,v 1.6 2001/11/24 12:10:06 joern Exp $
+# $Id: Progress.pm,v 1.8 2001/12/09 11:57:54 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -289,11 +289,17 @@ sub execute_finished_callback {
 	my $self = shift;
 	
 	my $finished_callback = $self->finished_callback;
-	$self->close_progress;
 	
-	eval {
+	my $rc = eval {
 		&$finished_callback( output => $self->output );
 	};
+
+	if ( not $rc or $@ ) {
+		$self->close_progress;
+	} elsif ( $rc ) {
+		$self->set_finished(0);
+	}
+
 	if ( $@ )  {
 		$self->long_message_window (
 			message => $self->stripped_exception,

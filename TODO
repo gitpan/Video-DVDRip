@@ -1,10 +1,41 @@
-$Id: TODO,v 1.5 2001/11/26 21:17:08 joern Exp $
+$Id: TODO,v 1.8 2001/12/09 12:00:51 joern Exp $
 
 KNOWN BUGS:
-- none
+- Some DVDs can confuse the TOC reading algorithm of dvd::rip. First
+  the titles are determined simply by reading the directory listing
+  of the mounted DVD. Then tcprobe is called on each title number
+  to gather detailed information of the corresponding video and audio
+  streams. But tcprobe (probably due to a bug in the underlying
+  libdvdread) sometimes permutes the title information, so a 5000 MB
+  title appears with 500 frames and vice versa.
+  
+  This is no problem, if the swapped tracks have similar audio channels
+  so you can choose the correct audio channel number in the apperently wrong
+  title. When you rip such a track, the progress bar does not work correctly,
+  because it relies on the scanned title size. But the ripping itself
+  and the following transcode process are successful.
+  
+  If this does not work for you, you can edit the saved dvd::rip project
+  file and correct the entries by hand. This is currently undocumented, but
+  the project file is somewhat human readable, so give it a try.
+  
+  I think this is not really a dvd::rip bug, because tcprobe (or libdvdread)
+  should report proper title information. But I noted this in my bug list,
+  because it can be very confusing, and you should know about it ;)
+  
+  BTW: xine plays such DVDs without problems and displays the correct
+       title number. This helps determining the correct title number.
 
 TODO
-- installation procedure
-- check MANIFEST
-- remove debugging output
-- create new clip&zoom preference
+- extensive checking of user input. most input is currently
+  passed through without examination.
+- exact letterbox autodetection
+- button for vieweing the generated transcode command
+- create personal clip&zoom preferences
+
+DONE
+- works not with Perl 5.005, but it should (fixed in 0.22)
+- problems with automounter. check if the dvd is already mounted
+  should fix the problem (fixed in 0.22)
+- use fast resizing, when transcode hsize bug is fixed (done in 0.22)
+- support multipass DivX encoding (done in 0.22)

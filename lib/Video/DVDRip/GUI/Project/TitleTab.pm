@@ -1,4 +1,4 @@
-# $Id: TitleTab.pm,v 1.7 2001/11/25 10:46:39 joern Exp $
+# $Id: TitleTab.pm,v 1.9 2001/12/09 00:19:24 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -303,6 +303,7 @@ sub read_dvd_toc {
 			$self->set_selected_title( $title );
 			$title->suggest_transcode_options;
 			$self->fill_with_values;
+			return;
 		}
 	);
 
@@ -419,7 +420,7 @@ sub rip_title {
 	my $window_title = $with_scanning ? "Rip and Scan DVD Title" :
 					    "Rip DVD Title";
 
-	my $fh = $title->$start_method;
+	my $fh = $title->$start_method();
 	my $max_value = int ($title->size / 1024);
 
 	$self->comp('progress')->open_continious_progress (
@@ -445,6 +446,7 @@ sub rip_title {
 			);
 			$title->suggest_transcode_options;
 			$self->fill_with_values;
+			return;
 		},
 		cancel_callback => sub {
 			close $fh;

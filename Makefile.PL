@@ -1,4 +1,4 @@
-# $Id: Makefile.PL,v 1.7 2001/12/01 15:32:06 joern Exp $
+# $Id: Makefile.PL,v 1.8 2001/12/09 12:24:23 joern Exp $
 
 use strict;
 
@@ -17,7 +17,7 @@ WriteMakefile(
          COMPRESS => "gzip",
          SUFFIX   => "gz",
 	 PREOP    => 'perl tools/genreadme > README; perl tools/add_changes',
-	 POSTOP   => "cp *.tar.gz htdocs/dist/dvdrip.tar.gz; test -d dist || mkdir dist; mv *.tar.gz dist",
+	 POSTOP   => "cp *.tar.gz htdocs/dist/; test -d dist || mkdir dist; mv *.tar.gz dist",
     },
 );
 

@@ -1,4 +1,4 @@
-# $Id: TranscodeTab.pm,v 1.10 2001/11/29 20:38:40 joern Exp $
+# $Id: TranscodeTab.pm,v 1.13 2001/12/09 12:00:01 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -108,6 +108,29 @@ sub create_transcode_tab {
 
 	$self->transcode_widgets->{tc_video_af6_codec} = $entry;
 
+	# Enable DivX Multipass Encoding
+	++$row;
+	$hbox = Gtk::HBox->new;
+	$hbox->show;
+	$label = Gtk::Label->new ("DivX Multipass");
+	$label->show;
+	$hbox->pack_start($label, 0, 1, 0);
+	$table->attach_defaults ($hbox, 0, 1, $row, $row+1);
+
+	$hbox = Gtk::HBox->new;
+	$hbox->show;
+	my $radio_yes = Gtk::RadioButton->new ("Yes");
+	$radio_yes->show;
+	$hbox->pack_start($radio_yes, 0, 1, 0);
+	my $radio_no = Gtk::RadioButton->new ("No", $radio_yes);
+	$radio_no->show;
+	$hbox->pack_start($radio_no, 0, 1, 0);
+	
+	$table->attach_defaults ($hbox, 1, 2, $row, $row+1);
+
+	$self->transcode_widgets->{tc_multipass_yes} = $radio_yes;
+	$self->transcode_widgets->{tc_multipass_no}  = $radio_no;
+	
 	# Video Bitrate
 	++$row;
 	$hbox = Gtk::HBox->new;
@@ -456,8 +479,43 @@ sub create_transcode_tab {
 	$table->set_col_spacings ( 10 );
 	$frame_hbox->pack_start ($table, 0, 1, 0);
 
+	$row = -1;
+
+	# frame range
+	++$row;
+	$hbox = Gtk::HBox->new;
+	$hbox->show;
+	$table->attach_defaults ($hbox, 0, 1, $row, $row+1);
+
+	$entry = Gtk::Entry->new;
+	$entry->show;
+	$entry->set_usize (50,undef);
+	$hbox->pack_start ($entry, 0, 1, 0);
+
+	$self->transcode_widgets->{tc_start_frame} = $entry;
+
+	$label = Gtk::Label->new(" - ");
+	$label->show;
+	$hbox->pack_start ($label, 0, 1, 0);
+
+	$entry = Gtk::Entry->new;
+	$entry->show;
+	$entry->set_usize (50,undef);
+	$hbox->pack_start ($entry, 0, 1, 0);
+
+	$self->transcode_widgets->{tc_end_frame} = $entry;
+
+	$hbox = Gtk::HBox->new;
+	$hbox->show;
+	$label = Gtk::Label->new ("Specify frame range for test transcoding. Leave ".
+				  "both fields empty for full processing.");
+	$label->set_line_wrap(1);
+	$label->show;
+	$hbox->pack_start($label, 0, 1, 0);
+	$table->attach_defaults ($hbox, 1, 2, $row, $row+1);
+
 	# Transcode and split Button
-	$row = 0;
+	++$row;
 	$button = Gtk::Button->new_with_label (" Transcode And Split ");
 	$button->show;
 	$button->signal_connect ("clicked", sub { $self->transcode ( split => 1 ) } );
@@ -504,34 +562,17 @@ sub create_transcode_tab {
 	$hbox->pack_start($label, 0, 1, 0);
 	$table->attach_defaults ($hbox, 1, 2, $row, $row+1);
 
-	# frame range
+	# View AVI Button
 	++$row;
-	$hbox = Gtk::HBox->new;
-	$hbox->show;
-	$table->attach_defaults ($hbox, 0, 1, $row, $row+1);
-
-	$entry = Gtk::Entry->new;
-	$entry->show;
-	$entry->set_usize (50,undef);
-	$hbox->pack_start ($entry, 0, 1, 0);
-
-	$self->transcode_widgets->{tc_start_frame} = $entry;
-
-	$label = Gtk::Label->new(" - ");
-	$label->show;
-	$hbox->pack_start ($label, 0, 1, 0);
-
-	$entry = Gtk::Entry->new;
-	$entry->show;
-	$entry->set_usize (50,undef);
-	$hbox->pack_start ($entry, 0, 1, 0);
-
-	$self->transcode_widgets->{tc_end_frame} = $entry;
+	$button = Gtk::Button->new_with_label (" View AVI ");
+	$button->show;
+	$button->signal_connect ("clicked", sub { $self->view_avi } );
+	$table->attach_defaults ($button, 0, 1, $row, $row+1);
 
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new ("Specify frame range for test transcoding. Leave ".
-				  "both fields empty for full processing.");
+	$label = Gtk::Label->new ("View transcoded AVI file of this title.".
+				  "                               ");
 	$label->set_line_wrap(1);
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
@@ -562,6 +603,18 @@ sub create_transcode_tab {
 			$self->selected_title->set_tc_use_yuv_internal(0);
 		}
 	);
+	$self->transcode_widgets->{tc_multipass_yes}->signal_connect (
+		"clicked", sub {
+			return 1 if not $self->selected_title;
+			$self->selected_title->set_tc_multipass(1);
+		}
+	);
+	$self->transcode_widgets->{tc_multipass_no}->signal_connect (
+		"clicked", sub {
+			return 1 if not $self->selected_title;
+			$self->selected_title->set_tc_multipass(0);
+		}
+	);
 	
 	return $vbox;
 }
@@ -579,10 +632,11 @@ sub init_transcode_values {
 			       tc_video_af6_codec tc_video_bitrate
 			       tc_audio_bitrate tc_volume_rescale
 			       tc_start_frame tc_end_frame )) {
-		$widgets->{$attr}->set_text ($self->selected_title->$attr);
+		$widgets->{$attr}->set_text ($self->selected_title->$attr());
 	}
 
 	my $yuv         = $title->tc_use_yuv_internal;
+	my $multipass   = $title->tc_multipass;
 	my $deinterlace = $title->tc_deinterlace;
 	my $anti_alias  = $title->tc_anti_alias;
 
@@ -591,6 +645,9 @@ sub init_transcode_values {
 
 	$widgets->{tc_use_yuv_internal_yes}->set_active($yuv);
 	$widgets->{tc_use_yuv_internal_no}->set_active(!$yuv);
+
+	$widgets->{tc_multipass_yes}->set_active($multipass);
+	$widgets->{tc_multipass_no}->set_active(!$multipass);
 
 	$widgets->{tc_deinterlace_popup}->set_history ($deinterlace);
 	$widgets->{tc_anti_alias_popup}->set_history ($anti_alias);
@@ -670,11 +727,24 @@ sub transcode {
 		$max_value = $title->frames;
 	}
 
-	my $fh = $title->transcode_async_start;
+	my $fh = $title->transcode_async_start ( pass => 1 );
 
 	use FileHandle;
 	my $DEBUG = FileHandle->new;
 	open ($DEBUG, "> transcode.".$title->project->name.".".$title->nr.".log");
+
+	my $multipass = $title->tc_multipass;
+	my $pass = 1;
+
+	my $label_prefix;
+	if ( $multipass ) {
+		$label_prefix = "Analyzing Video (Pass 1/2):";
+
+	} else {
+		$label_prefix = "Transcoding Video:";
+	}
+
+	$label_prefix =~ s/:$/ (split afterwards):/;
 
 	$self->comp('progress')->open_continious_progress (
 		max_value => $max_value,
@@ -686,7 +756,7 @@ sub transcode {
 			print $DEBUG $buffer;
 			$buffer =~ /\[\d{6}-(\d+)\],\s+(.*?)\[.*?$/;
 			my $value = $1;
-			my $label = "Transcoding Video: $2";
+			my $label = "$label_prefix $2";
 			$label =~ s/ +/ /g;
 			$label =~ s/,\s*$//;
 			$label =~ s/\%/%%/g;
@@ -695,12 +765,24 @@ sub transcode {
 		finished_callback => sub {
 			my %par = @_;
 			my ($output) = @par{'output'};
+			
 			$title->transcode_async_stop (
 				fh     => $fh,
 				output => $output,
 			);
-			$self->avisplit ( title => $title ) if $split;
-			close $DEBUG;
+			
+			if ( $multipass and $pass == 1 ) {
+				++$pass;
+				$fh = $title->transcode_async_start ( pass => 2 );
+				$self->comp('progress')->set_fh ($fh);
+				$label_prefix = "Transcoding Video (Pass 2/2):";
+				return 1;
+
+			} else {
+				$self->avisplit ( title => $title ) if $split;
+				close $DEBUG;
+				return;
+			}
 		},
 		cancel_callback => sub {
 			system ("killall -2 transcode");
@@ -735,7 +817,7 @@ sub avisplit {
 
 	$self->comp('progress')->open_continious_progress (
 		max_value => $title->frames,
-		label     => "Splitting Video",
+		label     => "Splitting AVI",
 		fh        => $fh,
 		get_progress_callback => sub {
 			my %par = @_;
@@ -745,12 +827,36 @@ sub avisplit {
 		},
 		finished_callback => sub {
 			$title->split_async_stop ( fh => $fh );
+			return;
 		},
 		cancel_callback => sub {
 			close $fh;
 		},
 	);
 
+	1;
+}
+
+sub view_avi {
+	my $self = shift;
+	my %par = @_;
+	my ($title) = @par{'title'};
+
+	$title ||= $self->selected_title;
+	return 1 if not $title;
+	return 1 if $self->comp('progress')->is_active;
+	
+	my $filename = $title->avi_file;
+
+	if ( not -f $filename ) {
+		$self->message_window (
+			message => "You first have to transcode this title."
+		);
+		return 1;
+	}
+
+	system ("xine $filename -p &");
+	
 	1;
 }
 

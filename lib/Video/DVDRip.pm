@@ -1,8 +1,8 @@
-# $Id: DVDRip.pm,v 1.8 2001/12/01 15:40:16 joern Exp $
+# $Id: DVDRip.pm,v 1.10 2001/12/08 14:31:20 joern Exp $
 
 package Video::DVDRip;
 
-$VERSION = "0.21";
+$VERSION = "0.22";
 
 __END__
 
@@ -37,9 +37,8 @@ which can be obtained here:
 
   http://www.theorie.physik.uni-goettingen.de/~ostreich/transcode/
 
-As of this writing, transcode 0.5.1 is the stable release
-dvd::rip is tested with. dvd::rip expects all transcode binaries
-to be found in the standard search PATH.
+dvd::rip expects all transcode binaries to be found in the
+standard search PATH.
 
 B<Image Magick>
 
@@ -125,13 +124,41 @@ Create a new project by choosing the appropriate entry of the main
 menu. The GUI should be more or less self-explanatory. Please check
 my homepage for more details on using dvd::rip.
 
+=head1 BUG REPORTS / CONTRIBUTING
+
+If you find bugs or have suggestions which make dvd::rip a better tool:
+don't hesitate to send me emails (see AUTHOR section below).
+	
+If you find a bug which crashes dvd::rip, please add the following
+information to your report:
+	
+  1. information about your Linux installation, which may be interesting
+     (Kernel version, Distro version, X11 Version)
+
+  2. information about your Perl installation. Simply send me
+     the output of the "perl -V" command.
+
+  3. if possible a description how the bug can be reproduced.
+
+Patches are welcome. I prefer unified context diffs created this way:
+
+  diff -urN Video-DVDRip-0.21 Video-DVDRip-0.21.patched
+
+where Video-DVDRip-0.21 is the root directory of the original
+distribution and Video-DVDRip-0.21.patched your modified version.
+
+If you encounter problems ripping specific DVDs, this is probably
+a transcode problem. Maybe you want to report this directly to Thomas
+Östreich. If you're not sure about this, report the problem to me
+and I'll see what I can do for you.
+
 =head1 AUTHOR
 
 Joern Reder <joern@zyn.de>
 
 You can contact me by email. Please place the word "dvd::rip"
-in the subject, because this helps me classifying your email
-correctly. Thanks.
+everywhere in the subject, in addition to your real topic, because
+this helps me classifying your email correctly. Thanks.
 
 =head1 COPYRIGHT
 

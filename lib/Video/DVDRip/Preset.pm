@@ -1,4 +1,4 @@
-# $Id: Preset.pm,v 1.1 2001/11/25 12:27:22 joern Exp $
+# $Id: Preset.pm,v 1.2 2001/12/09 00:21:52 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -26,6 +26,7 @@ sub tc_clip2_top		{ shift->{tc_clip2_top}			}
 sub tc_clip2_bottom		{ shift->{tc_clip2_bottom}		}
 sub tc_clip2_left		{ shift->{tc_clip2_left}		}
 sub tc_clip2_right		{ shift->{tc_clip2_right}		}
+sub tc_fast_resize		{ shift->{tc_fast_resize}		}
 
 sub set_name			{ shift->{name}			= $_[1]	}
 sub set_title			{ shift->{title}		= $_[1]	}
@@ -39,12 +40,13 @@ sub set_tc_clip2_top		{ shift->{tc_clip2_top}		= $_[1]	}
 sub set_tc_clip2_bottom		{ shift->{tc_clip2_bottom}	= $_[1]	}
 sub set_tc_clip2_left		{ shift->{tc_clip2_left}	= $_[1]	}
 sub set_tc_clip2_right		{ shift->{tc_clip2_right}	= $_[1]	}
+sub set_tc_fast_resize		{ shift->{tc_fast_resize}    	= $_[1]	}
 
 sub new {
 	my $type = shift;
 	my %par = @_;
-	my  ($name, $title, $tc_zoom_width, $tc_zoom_height) =
-	@par{'name','title','tc_zoom_width','tc_zoom_height'};
+	my  ($name, $title, $tc_zoom_width, $tc_zoom_height, $tc_fast_resize) =
+	@par{'name','title','tc_zoom_width','tc_zoom_height','tc_fast_resize'};
 	my  ($tc_clip1_top, $tc_clip1_bottom, $tc_clip1_left, $tc_clip1_right) =
 	@par{'tc_clip1_top','tc_clip1_bottom','tc_clip1_left','tc_clip1_right'};
 	my  ($tc_clip2_top, $tc_clip2_bottom, $tc_clip2_left, $tc_clip2_right) =
@@ -63,6 +65,7 @@ sub new {
 		tc_clip2_bottom	=> $tc_clip2_bottom,
 		tc_clip2_left	=> $tc_clip2_left,
 		tc_clip2_right	=> $tc_clip2_right,
+		tc_fast_resize	=> $tc_fast_resize,
 	};
 	
 	return bless $self, $type;

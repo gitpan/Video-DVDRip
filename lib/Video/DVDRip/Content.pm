@@ -1,4 +1,4 @@
-# $Id: Content.pm,v 1.8 2001/11/24 21:46:30 joern Exp $
+# $Id: Content.pm,v 1.9 2001/12/08 14:30:31 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -55,18 +55,27 @@ sub read_title_listing {
 	
 	my $mount_point = $self->project->mount_point;
 
-	# try mounting the DVD
-	my $rc = eval {
+	my $video_ts;
+	my $dvd_mounted = 0;
+
+	# try to find VIDEO_TS folder
+	$video_ts = -d "$mount_point/VIDEO_TS" ?
+		"$mount_point/VIDEO_TS" :
+		"$mount_point/video_ts";
+
+	# Mount DVD if we do not find the video_ts folder.
+	if ( not -d $video_ts ) {
 		$self->system (
 			command   => "mount $mount_point",
-			return_rc => 1,
 		);
-	};
-	
-	# try to find VIDEO_TS folder
-	my $video_ts = -d "$mount_point/VIDEO_TS" ?
-			"$mount_point/VIDEO_TS" : "$mount_point/video_ts";
+		$dvd_mounted = 1;
 
+		$video_ts = -d "$mount_point/VIDEO_TS" ?
+			"$mount_point/VIDEO_TS" :
+			"$mount_point/video_ts";
+	}
+
+	# Fatal error if we still can't find the video_ts folder
 	if ( not -d $video_ts ) {
 		croak 	"can't find VIDEO_TS/video_ts folder in ".
 			"directory '$mount_point'";
@@ -94,9 +103,9 @@ sub read_title_listing {
 	# story Title objects
 	$self->set_titles (\%titles);
 	
-	# if we mounted the DVD successfully, we umount it here
+	# if we mounted the DVD, we umount it here
 	# (as it was before)
-	if ( $rc == 0 ) {
+	if ( $dvd_mounted ) {
 		$self->system (
 			command => "umount $mount_point",
 		);
