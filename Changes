@@ -1,6 +1,41 @@
-$Id: Changes,v 1.131.2.31 2003/05/23 20:22:40 joern Exp $
+$Id: Changes,v 1.131.2.34 2003/06/29 09:17:16 joern Exp $
 
 Revision history and release notes for dvd::rip.
+
+0.50.14 [stable branch] Sun 29 Jun 2003, joern
+	Bugfixes:
+	- NTSC A/V sync enhancement: dvd::rip's -x vob,null transcode
+	  option in the 1st pass of a multipass transcoding was 
+	  good for performance, but could be bad for A/V sync with
+	  some NTSC material, because the audio information is always
+	  needed for proper synchronisation. Thanks to Florin and
+	  Tilmann for figuring this out.
+	- NTSC: -M2 isn't set anymore by dvd::rip, because transcode
+	  does autodetect this. Thanks to Tilmann for the hint.
+	- Fixed a small mismatch (about 1%) in the audio size
+	  calculation, which affected video bitrate calculation.
+	  Thanks for the report to Charles François Rey
+	  <charlesfr.rey AT epfl.ch>.
+	- Automatic setting of PERLIO=stdio failed, if PERLIO
+	  was already set to some value. Thanks for the report to
+	  Richard Kilgore <rkilgore AT hotpop.com>.
+	- Progress bar was messed up with PSU core. Thanks for the
+	  report to Tyler <dvdrip AT unixgod.net> and Florin.
+	- NTSC: resolution was set to 720x480, even if the movie
+	  had 704x480. dvd::rip now sets no resolution at all, because
+	  transcode autodectes the resolution. Thanks for the report to
+	  Francisco J. León <fleona AT cantv.net>.
+
+	Features:
+	- transcoce >= 0.6.6 sets mpeg2enc -I 0 by default, but
+	  older versions doesn't. This speeds up things signifcantly,
+	  because now mpeg2enc skips deinterlace processing (it was
+	  done even for non-interlaced material and wasted time).
+	  dvd::rip now sets -I0, too. Thanks for the hint to
+	  Simone Lehmann
+	- Warn about AVI files >2GB and set transcode option
+	  --avi_limit 9999, otherwise transcode splits automatically
+	  at 2GB.
 
 0.50.13 [stable branch] Thu 23 May 2003, joern
 	Features:

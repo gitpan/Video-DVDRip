@@ -1,4 +1,4 @@
-# $Id: TranscodeVideo.pm,v 1.10.2.1 2003/04/26 15:45:20 joern Exp $
+# $Id: TranscodeVideo.pm,v 1.10.2.2 2003/06/25 20:48:15 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -29,6 +29,7 @@ sub single_pass			{ shift->{single_pass}			}
 sub split			{ shift->{split}			}
 sub subtitle_test		{ shift->{subtitle_test}		}
 sub bc				{ shift->{bc}				}
+sub psu_frames			{ shift->{psu_frames}			}
 
 sub set_chapter			{ shift->{chapter}		= $_[1]	}
 sub set_pass			{ shift->{pass}			= $_[1]	}
@@ -36,6 +37,7 @@ sub set_single_pass		{ shift->{single_pass}		= $_[1]	}
 sub set_split			{ shift->{split}		= $_[1]	}
 sub set_subtitle_test		{ shift->{subtitle_test}	= $_[1]	}
 sub set_bc			{ shift->{bc}			= $_[1]	}
+sub set_psu_frames		{ shift->{psu_frames}		= $_[1]	}
 
 sub type {
 	return "transcode";
@@ -67,6 +69,7 @@ sub init {
 	my $chapter = $self->chapter;
 
 	$self->set_progress_show_fps ( 1 );
+	$self->set_psu_frames ( 0 );
 
 	my $max_value;
 	
@@ -132,10 +135,19 @@ sub parse_output {
 		$self->set_progress_start_time(time);
 	}
 
+	#-- new PSU: store actual frame count, because
+	#-- frame numbers start at 0 for each PSU
+	if ( $self->title->tc_psu_core and
+	     $line =~ /reading\s+auto-split/ ) {
+		$self->set_psu_frames($self->progress_cnt);
+	}
+
 	if ( $line =~ /\[(\d{6}-)?(\d+)\]/ ) {
 		$self->set_progress_start_time(time)
 			if not $self->progress_start_time;
-		$self->set_progress_cnt($2);
+		$self->set_progress_cnt(
+			$self->psu_frames + $2
+		);
 	}
 
 	$self->set_operation_successful ( 1 )

@@ -1,4 +1,4 @@
-$Id: TODO,v 1.117.2.9 2003/05/23 20:09:01 joern Exp $
+$Id: TODO,v 1.117.2.11 2003/06/29 09:17:16 joern Exp $
 
 KNOWN BUGS:
 ===========
@@ -28,6 +28,11 @@ may be implemented soon, some eventually never... ;)
 
 TODO:
 =====
+- support multiple subtitles in the same vobsub file
+- add a preference option whether dvd::rip project data files
+  should be saved in the project directory by default,
+  suggested by Davide Ferrari
+- add a include dir for burning, suggested by Florin Andrei
 - Make creating vcd11 images possible (e.g. by not overiding a
   --type=vcd11 setting in the preferences). Suggested by
   "Eric Fether" <efether AT rwconsulting.com>
@@ -70,7 +75,6 @@ TODO:
 - add a DVD profile, Suggested by Felix Maibaum <f.maibaum AT tu-bs.de>
 - mplayer aid parameter must be codec specific. Thanks for
   the report to Fabio Russo.
-- support multiple subtitles in the same vobsub file
 - support vobsub generation with cluster mode
 - delete a file selection on the burn tab, requested by Tony Clark
   <tclark AT bredband.net>
@@ -138,9 +142,6 @@ TODO:
   in a specific logfile (suggested by Florin Andrei)
 - log some statistics after transcoding (e.g. avi size, actual bitrate,
   total time, total CPU time, sysload...), suggested by Florin Andrei
-- add a preference option whether dvd::rip project data files
-  should be saved in the project directory by default,
-  suggested by Davide Ferrari
 - support for transcode's -r option for fast frame bisection
   (and very fast deinterlacing)
 - check for negative nice value if not run as root

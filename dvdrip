@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# $Id: dvdrip,v 1.16.2.7 2003/05/01 11:35:18 joern Exp $
+# $Id: dvdrip,v 1.16.2.8 2003/06/25 20:47:33 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -26,7 +26,7 @@ my $has_dvdrip_rc;
 BEGIN {
 	# check for Perl 5.8.0 and no PERLIO set.
 	# set it and re-exec the program.
-	if ( $] >= 5.008 and not defined $ENV{PERLIO} ) {
+	if ( $] >= 5.008 and $ENV{PERLIO} ne 'stdio' ) {
 		$ENV{PERLIO} = "stdio";
 		require Config;
 		exec $Config::Config{perlpath}, $0, @ARGV;

@@ -1,4 +1,4 @@
-# $Id: TranscodeTab.pm,v 1.83.2.7 2003/04/26 15:44:09 joern Exp $
+# $Id: TranscodeTab.pm,v 1.83.2.8 2003/06/29 09:16:42 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -28,6 +28,8 @@ sub set_in_transcode_init	{ shift->{in_transcode_init}	= $_[1] }
 #---------------------------------------------------------------------
 # Build Transcode Tab
 #---------------------------------------------------------------------
+
+my $big_target_size_warned_today;
 
 sub create_transcode_tab {
 	my $self = shift; $self->trace_in;
@@ -108,17 +110,19 @@ sub create_transcode_tab {
 			return 1 if $self->in_transcode_init;
 			my $title = $self->selected_title;
 
-			$title->$method ( $widget->get_text );
+			my $value = $widget->get_text;
+
+			$title->$method ( $value );
 			if ( $method eq "set_tc_target_size" ) {
 				$self->calc_video_bitrate;
 			}
 			$self->update_storage_labels
 				if $method eq 'set_tc_video_bitrate';
 			if ( $attr eq 'tc_video_codec' ) {
-				if ( $widget->get_text eq 'VCD' ) {
+				if ( $value eq 'VCD' ) {
 					$self->burn_widgets
 					     ->{burn_cd_type_vcd}->set_active(1);
-				} elsif ( $widget->get_text eq 'SVCD' ) {
+				} elsif ( $value eq 'SVCD' ) {
 					$self->burn_widgets
 					     ->{burn_cd_type_svcd}->set_active(1);
 				} else {
@@ -138,7 +142,18 @@ sub create_transcode_tab {
 				$self->calc_video_bitrate;
 				$self->init_transcode_values;
 			}
-
+			if ( $attr eq 'tc_target_size' ) {
+				if ( $self->selected_title->tc_container eq 'avi' and
+				     $value > 2048 and not $big_target_size_warned_today ) {
+					$self->message_window (
+						message =>
+							"Warning: AVI files shouldn't get bigger than 2 GB.\n".
+							"Some players can't play them and you can't seek\n".
+							"within the files. Better use OGG for such big files."
+					);
+					$big_target_size_warned_today = 1;
+				}
+			}
 			1;
 		}, "set_$attr");
 	}

@@ -1,4 +1,4 @@
-# $Id: BitrateCalc.pm,v 1.10.2.1 2003/04/26 15:42:21 joern Exp $
+# $Id: BitrateCalc.pm,v 1.10.2.2 2003/06/25 20:47:51 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -276,7 +276,7 @@ sub calculate_video_bitrate {
 			     	$bitrate = $VORBIS_NOMINAL_BITRATES{int($audio->tc_vorbis_quality+0.5)};
 			}
 
-			my $track_size = $runtime * $bitrate / 1000 / 8;
+			my $track_size = $runtime * $bitrate * 1000 / 8 / 1024 / 1024;
 			my $audio_overhead;
 			$audio_overhead = $AVI_AUDIO_OVERHEAD * $frames / 1024 / 1024
 				if $container eq 'avi';

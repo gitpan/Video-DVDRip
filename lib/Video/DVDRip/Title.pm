@@ -1,4 +1,4 @@
-# $Id: Title.pm,v 1.137.2.13 2003/05/23 19:53:02 joern Exp $
+# $Id: Title.pm,v 1.137.2.18 2003/06/29 09:17:02 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -1655,7 +1655,7 @@ sub get_transcode_command {
 	if ( $mpeg ) {
 		my $size = $bc->disc_size;
 		my $reserve_bitrate = $bc->vcd_reserve_bitrate;
-		my $mpeg2enc_opts = "-B $reserve_bitrate ";
+		my $mpeg2enc_opts = "-B $reserve_bitrate -I 0 ";
 		if ( $split ) {
 			$mpeg2enc_opts   .= "-S $size ";
 		} else {
@@ -1668,7 +1668,7 @@ sub get_transcode_command {
 			} else {
 				$mpeg2enc_opts .= " -g 9 -G 18";
 				if ( $self->frame_rate == 23.976 ) {
-					$mpeg2enc_opts .= " -I 0 -p";
+					$mpeg2enc_opts .= " -p";
 				}
 			}
 
@@ -1770,8 +1770,7 @@ sub get_transcode_command {
 	}
 
 	if ( $self->video_mode eq 'ntsc' ) {
-		$command .= " -g 720x480";
-		$command .= " -M ".($self->tc_deinterlace ne 'ivtc' ? 2 : 0);
+		$command .= " -M 0" if $self->tc_deinterlace eq 'ivtc';
 	}
 
 	$command .= " -J preview=xv" if $self->tc_preview;
@@ -1841,8 +1840,14 @@ sub get_transcode_command {
 			$command .= " -y ".$self->tc_video_codec;
 			$command .= ",null" if not $self->has_vbr_audio or $pass == 2;
 		}
+
+		if ( $pass == 1 and $self->video_mode eq 'ntsc' ) {
+			# Don't use -x vob,null with NTSC, because this may
+			# cause out-of-sync audio.
+			$command =~ s/(-x\s+[^,]+),null/$1/;
+		}
 	}
-	
+
 	if ( not $self->tc_multipass or ( $pass == 2 xor $self->has_vbr_audio ) ) {
 		if ( $mpeg ) {
 			$command .= " -y mpeg2enc,mp2enc -E 44100";
@@ -1882,6 +1887,10 @@ sub get_transcode_command {
 	$command .= " -o $avi_file";
 
 	$command .= " --print_status 20";
+
+	if ( $self->tc_container eq 'avi' and $self->tc_target_size > 2048 ) {
+		$command .= "--avi_limit 9999";
+	}
 
 	# Filters
 	my $config_strings =

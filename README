@@ -32,6 +32,7 @@ III. DOCUMENTATION
      * 1.1.3 Mandrake packages
      * 1.1.4 RedHat packages
      * 1.1.5 gentoo packages
+     * 1.1.6 FreeBSD port
 
      1.2 Source download
      * 1.2.1 dvd::rip tarball download
@@ -121,6 +122,18 @@ deb http://marillat.free.fr/ unstable main
 
      http://www.gentoo.org/packages/media-video/dvdrip.html
 
+1.1.6 FreeBSD port
+
+   dvd::rip is available in the FreeBSD ports collection. To install from
+   source, cd to ${PORTSDIR}/multimedia/dvdrip and type 'make install
+   clean'. To install a binary package of the port, type 'pkg_add -r
+   dvdrip'. Note however that the default installation of the transcode
+   port which dvd::rip depends on is very minimalistic, it is recommended
+   to look at the Makefile of the transcode port, enable all the options
+   you need for dvd::rip and install the transcode port from source.
+
+   (Thanks to Michael Nottebrock, who maintains the FreeBSD port)
+
 1.2 Source download
 
 1.2.1 dvd::rip tarball download
@@ -131,7 +144,7 @@ deb http://marillat.free.fr/ unstable main
    Local download of the latest stable release: (currently no unstable
    release available)
 
-     Video-DVDRip-0.50.13.tar.gz
+     Video-DVDRip-0.50.14.tar.gz
 
    CPAN download directory: (list of mirrors)
 
@@ -149,28 +162,40 @@ deb http://marillat.free.fr/ unstable main
 
 1.2.2 CVS access
 
-   This is mainly intended for developers. This CVS repository is only a
-   read only mirror of my main repository. It's updated manually when I
-   publish releases or pre-releases, so there is no advantage for normal
-   users compared to downloading the tar balls (besides making it easier
-   using "cvs update" ;)
+   This is mainly intended for developers and CVS experienced users. This
+   CVS repository is only a read only mirror of my main repository. It's
+   updated manually when I publish releases or pre-releases, so there is
+   no advantage for normal users compared to downloading the tar balls
+   (besides making it easier using "cvs update" ;)
 
    Since development of dvd::rip is divided into two branches, you get
    the current (unstable) version, if you don't specifiy a release tag.
    If you want to access a stable version, add -r rel-MAJOR-MINOR-PATCH
    to your cvs checkout command (example: for 0.48.5 this is -r
-   rel-0-48-5). All subsequent updates will stay on this branch (here:
-   0.48). The easiest way of switching to another branch, is creating a
-   new checkout using the corresponding release tag.
+   rel-0-48-5). If you always want to have the latest stable patch
+   release, use -r rel-MAJOR-MINOR-patches (e.g. -r rel-0-50-patches).
+   All subsequent updates will stay on this branch (here: 0.50). The
+   easiest way of switching to another branch is creating a new checkout
+   using the corresponding release tag.
 
    Root                            Module Unstable tag Stable tag
    :pserver:cvs@cvs.exit1.org:/cvs dvdrip none         rel-MAJOR-MINOR-PATCH
 
 1.2.2.1 CVS examples
 
-   Checkout a stable/bugfix version (here 0.48.5) with:
+   Log into CVS server with:
 
-cvs -z3 -d :pserver:cvs@cvs.exit1.org:/cvs checkout -r rel-0-48-5 dvdrip
+cvs -z3 -d :pserver:cvs@cvs.exit1.org:/cvs login
+
+          (Press ENTER for password)
+
+   Checkout latest version of the actual stable branch (here 0.50.x):
+
+cvs -z3 -d :pserver:cvs@cvs.exit1.org:/cvs checkout -r rel-0-50-patches dvdrip
+
+   Checkout a specific stable/bugfix version (here 0.50.13) with:
+
+cvs -z3 -d :pserver:cvs@cvs.exit1.org:/cvs checkout -r rel-0-50-13 dvdrip
 
    Checkout the current development version with:
 
@@ -380,7 +405,7 @@ chmod u+s /usr/sbin/fping
    generate the Makefile and execute make:
 
 # as a normal user
-tar xfz Video-DVDRip-0.50.13.tar.gz
+tar xfz Video-DVDRip-0.50.14.tar.gz
 cd Video-DVDRip-x.xx
 perl Makefile.PL
 make
@@ -434,7 +459,7 @@ make install
    otherwise some dvd::rip helper binaries may be taken from another
    place.
 
-tar xvfz Video-DVDRip-0.50.13.tar.gz
+tar xvfz Video-DVDRip-0.50.14.tar.gz
 cd Video-DVDRip-x.xx
 perl Makefile.PL && make
 export PATH=.:$PATH
@@ -632,31 +657,42 @@ URL References
   13. mailto:?subject=dvd::rip
 
 VI. CHANGES
-   $Id: Changes,v 1.131.2.31 2003/05/23 20:22:40 joern Exp $
+   $Id: Changes,v 1.131.2.34 2003/06/29 09:17:16 joern Exp $
 
    Revision history and release notes for dvd::rip.
 
-   0.50.13 [stable branch] Thu 23 May 2003, joern
-	Features:
-	- New deinterlace preset: inverse telecine (for NTSC).
-	  Suggested by Andrew Ukrainec <ukrainec AT sympatico.ca>
-	  and Thanasis Tsiodras <ttsiod AT softlab.ece.ntua.gr>.
-	- Added dvdxchap dependency (which is part of ogmtools),
-	  because you get proper chapter progress bars only
-	  if dvdxchap is installed.
-
+   0.50.14 [stable branch] Sun 29 Jun 2003, joern
 	Bugfixes:
-	- Removed a small copy protection related function. You
-	  can read details about why this happened on
-	  http://www.exit1.org/dvdrip/ news entry 2003/05/23.
-	- Default disc size for a new project was still 703 MB
-	  (instead of 700). Also the Zoom Calculator showed
-	  703 MB in the disc size popup. Thanks for the report
-	  to Fridtjof Busse.
-	- Audio bitrate combo box popdown button was sensitive
-	  for VCD, although VCD has a fixed rate of 224. Reported
-	  by Andreas Volz <andreas AT brachttal.net>.
-	- Sometimes the chapter progress bar was messed up, if no
-	  dvdxchap is installed on the system (which is part of
-	  ogmtools).
+	- NTSC A/V sync enhancement: dvd::rip's -x vob,null transcode
+	  option in the 1st pass of a multipass transcoding was 
+	  good for performance, but could be bad for A/V sync with
+	  some NTSC material, because the audio information is always
+	  needed for proper synchronisation. Thanks to Florin and
+	  Tilmann for figuring this out.
+	- NTSC: -M2 isn't set anymore by dvd::rip, because transcode
+	  does autodetect this. Thanks to Tilmann for the hint.
+	- Fixed a small mismatch (about 1%) in the audio size
+	  calculation, which affected video bitrate calculation.
+	  Thanks for the report to Charles François Rey
+	  <charlesfr.rey AT epfl.ch>.
+	- Automatic setting of PERLIO=stdio failed, if PERLIO
+	  was already set to some value. Thanks for the report to
+	  Richard Kilgore <rkilgore AT hotpop.com>.
+	- Progress bar was messed up with PSU core. Thanks for the
+	  report to Tyler <dvdrip AT unixgod.net> and Florin.
+	- NTSC: resolution was set to 720x480, even if the movie
+	  had 704x480. dvd::rip now sets no resolution at all, because
+	  transcode autodectes the resolution. Thanks for the report to
+	  Francisco J. León <fleona AT cantv.net>.
+
+	Features:
+	- transcoce >= 0.6.6 sets mpeg2enc -I 0 by default, but
+	  older versions doesn't. This speeds up things signifcantly,
+	  because now mpeg2enc skips deinterlace processing (it was
+	  done even for non-interlaced material and wasted time).
+	  dvd::rip now sets -I0, too. Thanks for the hint to
+	  Simone Lehmann
+	- Warn about AVI files >2GB and set transcode option
+	  --avi_limit 9999, otherwise transcode splits automatically
+	  at 2GB.
 
