@@ -1,7 +1,8 @@
-# $Id: Server.pm,v 1.11 2002/03/12 14:02:17 joern Exp $
+# $Id: Server.pm,v 1.13 2003/01/28 20:19:57 joern Exp $
 
 #-----------------------------------------------------------------------
-# Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
+# Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
+# All Rights Reserved. See file COPYRIGHT for details.
 # 
 # This module is part of Video::DVDRip, which is free software; you can
 # redistribute it and/or modify it under the same terms as Perl itself.

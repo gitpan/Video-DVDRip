@@ -1,7 +1,8 @@
-# $Id: TranscodeAudio.pm,v 1.5 2002/09/30 21:05:58 joern Exp $
+# $Id: TranscodeAudio.pm,v 1.8 2003/01/28 20:19:57 joern Exp $
 
 #-----------------------------------------------------------------------
-# Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
+# Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
+# All Rights Reserved. See file COPYRIGHT for details.
 # 
 # This program is part of Video::DVDRip, which is free software; you can
 # redistribute it and/or modify it under the same terms as Perl itself.
@@ -59,6 +60,25 @@ sub command {
 	$project->set_assigned_job ( undef );
 
 	return $command;
+}
+
+sub commit {
+	my $self = shift;
+
+	$self->project->set_assigned_job ( $self );
+
+	if ( $self->bc ) {
+		$self->bc->add_audio_size (
+			bytes => -s $self->project->title->target_avi_audio_file (
+				vob_nr => $self->vob_nr,
+				avi_nr => $self->avi_nr,
+			)
+		);
+	}
+
+	$self->project->set_assigned_job ( undef );
+	
+	1;
 }
 
 1;

@@ -1,7 +1,8 @@
-# $Id: Node.pm,v 1.21 2002/11/12 22:04:40 joern Exp $
+# $Id: Node.pm,v 1.25 2003/01/28 20:19:57 joern Exp $
 
 #-----------------------------------------------------------------------
-# Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
+# Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
+# All Rights Reserved. See file COPYRIGHT for details.
 # 
 # This program is part of Video::DVDRip, which is free software; you can
 # redistribute it and/or modify it under the same terms as Perl itself.
@@ -110,12 +111,16 @@ sub new {
 		is_master 	=> $is_master,
 		username	=> $username,
 		tc_options	=> $tc_options,
-		alive           => 0,
+		alive           => $is_master,
 	};
 	
 	bless $self, $class;
 	
-	$self->set_state ( "unknown" );
+	if ( $is_master ) {
+		$self->set_state ("idle");
+	} else {
+		$self->set_state ( "unknown" );
+	}
 	
 	return $self;
 }
@@ -208,10 +213,9 @@ sub reset {
 	$self->set_alive(0);
 	$self->set_state ($startup_state);
 	$self->set_answered_last_ping(0);
-	$self->set_state ('unknown')
+	$self->set_state ( $self->is_master ? 'idle' : 'unknown')
 		if $startup_state ne 'stopped' and
 		   $startup_state ne 'aborted';
-
 	$self->save;
 
 	1;
@@ -247,7 +251,7 @@ sub start {
 	$self->log ("Node '".$self->name."' started");
 
 	$self->set_alive ( 0 );
-	$self->set_state ('unknown');
+	$self->set_state ( $self->is_master ? 'idle' : 'unknown');
 	$self->set_answered_last_ping ( 1 );
 	$self->save;
 

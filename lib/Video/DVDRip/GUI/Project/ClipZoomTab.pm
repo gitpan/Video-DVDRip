@@ -1,7 +1,8 @@
-# $Id: ClipZoomTab.pm,v 1.36 2002/11/01 16:11:34 joern Exp $
+# $Id: ClipZoomTab.pm,v 1.38 2003/01/28 20:19:57 joern Exp $
 
 #-----------------------------------------------------------------------
-# Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
+# Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
+# All Rights Reserved. See file COPYRIGHT for details.
 # 
 # This module is part of Video::DVDRip, which is free software; you can
 # redistribute it and/or modify it under the same terms as Perl itself.

@@ -1,7 +1,8 @@
-# $Id: PSU.pm,v 1.1 2002/02/11 17:10:31 joern Exp $
+# $Id: PSU.pm,v 1.3 2003/01/28 20:19:57 joern Exp $
 
 #-----------------------------------------------------------------------
-# Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
+# Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
+# All Rights Reserved. See file COPYRIGHT for details.
 # 
 # This program is part of Video::DVDRip, which is free software; you can
 # redistribute it and/or modify it under the same terms as Perl itself.

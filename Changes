@@ -1,8 +1,500 @@
-$Id: Changes,v 1.122.2.7 2002/12/13 22:38:31 joern Exp $
+$Id: Changes,v 1.131 2003/02/10 13:10:33 joern Exp $
 
 Revision history and release notes for dvd::rip.
 
-0.48.6 Fri 13 Dec 2002, joern
+0.50.0 [stable branch] Mon 10 Feb 2003, joern
+	Notes:
+	- This is a new stable release, closing the 0.49.x unstable
+	  branch.
+	- Project file format changed since 0.48.x. Older files are
+	  converted automatically, but you can't use files saved with
+	  this release with older dvd::rip versions.
+	- You should use at least transcode 0.6.3 to get all new features,
+	  but transcode 0.6.2 is still supported.
+	- To get full and bugfree support for the new Filter & Preview
+	  feature, read the entry of 0.49.11 and apply the patch mentioned
+	  there, unless you have transcode > 0.6.3 (which doesn't exist
+	  as of this writing).
+	- From now on dvd::rip insists on Perl >= 5.6.0.
+	- For a full list of changes and bugfixes, refer to the 0.49.x
+	  change log entries below. Features and bugfixes listed next
+	  are changes to 0.49.13.
+
+	Features:
+	- New button "Check all settings" in Preference dialog.
+	  Suggested by Ole Tange.
+
+	Bugfixes:
+	- Dependencies listed ogmtools with minimum 0.954, but correct
+	  is 0.960 (mp3/ac3 only works since this version).
+	- Dependency check didn't consider maximum rar version (must be
+	  a 2.x version, no 3.x).
+	- Filter removal didn't affect an opened preview window.
+	- Negative values in the cropping entries were rejected. Thanks
+	  for the report to Mauro Spluga <ferluga AT inwind.it>
+
+0.49.13 [unstable branch] Sat 08 Feb 2003, joern
+	Features:
+	- A more sophisticated dependency check. A new window (menu item
+	  "Debug/Check dependencies") lists all needed tools with
+	  minimum, suggested and installed version numbers. On startup
+	  dvd::rip opens this window with a corresponding error message,
+	  if a mandatory tool is missing. Optional modules are disabled,
+	  if the correspondent tool isn't installed (affects subtitles,
+	  (S)VCD, OGG/Vorbis and CD burning).
+	- Filter & preview: an activated subtitle rendering (from the
+	  Subtitle page) is passed through, so this is a better option to
+	  test your subtitle settings - compared to the slow test
+	  transcoding facility on the Subtitle page.
+	- PSU core is enabled by default only for NTSC movies which
+	  have more than one PSU. Thanks for this suggestion to Florin.
+	- Full volume scanning support in chapter mode. A patch from
+	  Kianusch Sayah Karadji.
+
+	Bugfixes:
+	- Filter preview: transcode has to be started with -u 1,
+	  otherwise pause/undo jumps between different frames. Thanks
+	  to Tilmann for the hint.
+	- Enabled nice for all cluster jobs (was enabled only for video
+	  transcoding). Reported by Michael Dratz <midra AT web.de>.
+	- A uncaught exception was thrown, if dvd::rip couldn't connect
+	  to a remote cluster master daemon. Reported by Fabio Russo.
+
+0.49.12 [unstable branch] Thu 06 Feb 2003, joern
+	Bugfixes:
+	- Reading TOC threw an exception, reported by Tilmann.
+	- Opening a filter preview frame with a freshly ripped
+	  title segfaulted transcode, because the preview buffer
+	  size was empty. Now it's 20 by default.
+	- Stopping a paused preview window didn't close the window.
+	
+0.49.11 [unstable branch] Thu 06 Feb 2003, joern
+	Note:
+	- Filter & Preview enabled only for transcode >= 0.6.3 stable.
+
+	Features:
+	- Added a warning message about non-standard (S)VCD frame sizes.
+	- SVCD video framerate is now limited to a maximum of 2600
+	  (overall bitrate as supplied before is limited to 2748).
+	- Added Open/Close DVD/Burner tray buttons on Title and Burn pages.
+	  Based on a patch from Kianusch Sayah Karadji <kianusch AT
+	  sk-tech.net>. You need to configure your "burner device" in the
+	  Preferences and must have the 'eject' command installed on your
+	  system.
+	- Special support for logo, logoaway and mask filters: you
+	  can select a rectangular area on the preview window and
+	  the corresponding position / size values are automatically
+	  filled into the entries on the GUI. For PRE filters (currently
+	  mask only), the coordinates are transformed correctly - needed
+	  because the preview window shows the POST result, while the
+	  filter expects PRE coordinates (prior clipping and resizing).
+	  Also in YUV mode dvd::rip takes care, that the values are even.
+	- File selection dialog for filename filter options.
+	- YUV is automatically disabled, if you have a filter which
+	  supports RGB only (indeed, currently all transcode filters
+	  support YUV) or if you crop or resize with odd values.
+	  So now there is no need for the "YUV internal" checkbox to
+	  come back.
+	- Filter preview loops, if end of the movie or frame range
+	  is reached.
+	- Applying filters in pause mode enabled again - also the "Undo"
+	  button is back. You need transcode 0.6.3 with this patch
+	  from Tilmann: (to be applied on vanilla 0.6.3)
+          http://www.exit1.org/dvdrip/dist/patches/tc-0.6.3-preview-pause.patch
+		% cd transcode-0.6.3
+		% patch -p1 < tc-0.6.3-preview-pause.patch
+	- Multiple instances of the same filter are now fully supported.
+
+	Bugfixes:
+	- VCD Clip&Zoom presets didn't produce correct aspect ratio.
+	  Thanks for the hint to Simone Lehmann <simone AT lisanet.de>.
+	- Quotes in the project name resp. project paths confuse
+	  dvd::rip. The path fields on the storage page now reject
+	  a bunch of special characters, as a first bugfix. Thanks for
+	  the report to Spencer Ogden <spencero AT mail.utexas.edu>.
+	- Added mpeg2enc options "-I 0 -p" for NTSC 23.976 fps movies,
+	  because otherwise A/V sync is messy. Thanks for the hint
+	  to Andrew Ukrainec <ukrainec AT sympatico.ca>.
+	- Closing the "Configure filter" window when a preview
+	  window was playing, didn't close the preview window
+	  also.
+	- PSU core disabled for filter preview, because the generated
+	  transcode command doesn't work with it. Thanks for the
+	  report to Douglas Bollinger.
+	- GUI for filters with no options (e.g. dilyuvmmx) was messed up.
+	- Changing some filter frame range options didn't work.
+	- Some legal fractional values were rejected by dvd::rip's
+	  value check module.
+	- Fixed a typo on the burning page. Thanks to Yves Duret
+	  <yves AT zarb.org>.
+
+0.49.10 [unstable branch] Tue 28 Jan 2003, joern
+	Features:
+	- transcode filter description cache is automatically
+	  refreshed not only when transcode was updated, but
+	  also when the corresponding dvd::rip module changed.
+
+	Bugfixes:
+	- A broken .dvdriprc file could crash dvd::rip with a
+	  confusing error message. Now a better error message
+	  is printed, which suggests to remove the broken file.
+	- Filter & Preview:
+	  - Options of 'logo' filter were not recognized correctly.
+	    Reported by Tilmann.
+	  - Adding 'logoaway' filter threw an exception. In general
+	    some filters with checkbox options didn't work correctly.
+	    Also reported by Tilmann.
+	  - Parameter passing for filter options with multiple values
+	    didn't work.
+	  - Broken filter default setting parser removed. Now
+	    String::Scanf is used, which is copied into dvd::rip's
+	    library tree, to keep the dependencies low.
+	  - transcode currently doesn't support reliably to apply filter
+	    changes in paused mode, so this isn't possible on the GUI
+	    anymore. The "Undo" button became useless due to that, so it
+	    was also removed. Now everything that's possible, should
+	    work as expected ;)
+	  - Closing the preview window now works and stops the
+	    corresponding transcode process cleanly.
+	    Note: you need to patch your transcode for that. Download
+            http://www.exit1.org/dvdrip/dist/patches/tc-20030123-preview-close.patch
+	    (from Tilmann) and and apply it with
+		% cd transcode-0.6.3-20030123
+		% patch -p1 < tc-20030123-preview-close.patch
+	    Any newer snapshot as 0.6.3-20030123 should have that
+	    patch included, soon. Older unpatched versions show the
+	    same erroneous behaviour - so don't close the preview
+	    window with them and use the 'O' button instead.
+
+0.49.9 [unstable branch] Mon 27 Jan 2003, joern
+	Features:
+	- A new experimental dialog "Configure filters". All filters
+	  supported by transcode's new socket interface are available
+	  here for configuration. You need at least transcode 0.6.3.20030123
+	  for it. But it's not only a comprehensive configuration
+	  dialog - you have a live preview window and can check your
+	  changes in realtime WYSIWYG - it's really cool, guys. Thanks
+	  to Tilmann, who implemented the transcode part and send me
+	  patches immediately after my bug reports ;) Currently there
+	  is no documentation, hopefully the GUI is somewhat self-
+	  explanatory. Nevertheless: a short quick start guide:
+	  - click "Configure filters & preview" on the transcode page
+	  - double click on the "invert" filter in the left filter list
+	  - click on the ">" (Play) Button
+	  - a preview window opens, showing the movie inverted
+	  - disable the "Enable filter" checkbox
+	  - click on "A" (Apply) - the movie immediately gets
+	    normal again
+	  - any filter setting changes can be applied in realtime
+	    by clicking on the "A" button at any time.
+	  - click on the "||" (Pause) button
+	  - now you can navigate through transcode's internal preview
+	    buffer (you can modify the size of this buffer with the
+	    first entry in the "Preview settings" frame). "<<" and ">>"
+	    navigate by frame, "<<<" and ">>>" usually by 5 frames
+	    (resp. higher values for higher buffer sizes). You get green
+	    frames, if you access parts of the buffer, which aren't
+	    filled yet.
+	  - in pause mode:
+	    - change a filter setting
+	    - click on "A" (Apply)
+	    - the current picture is rendered with the new setting
+	    - now click on "U" (Undo)
+	    - the picture before you applied the last time is restored.
+	      This way you easily can compare two filter settings.
+	    - (see note about this in the "Known bugs" section beyond).
+	  - the preview window runs with maximum speed. You can slow
+	    done resp. speed up again using the "-" and "+" buttons.
+	  - click on "O" (Stop) to close the preview window
+	- Dropped "Antialias" setting on transcode page. It's seldom
+	  used and you still can enable it using the new filters
+	  dialog (videocore filter, -C option).
+	- Progress information for chapter ripping. dvd::rip uses
+	  dvdxchap, which is part of ogmtools, to get the chapter
+	  lengths. If you don't have ogmtools installed, dvd::rip
+	  falls back to the old bevhaviour showing no ripping progress
+	  for chapters.
+
+	Known bugs:
+	- For some reasons the pp filter doesn't work with the
+	  filter configuration dialog. Have to debug this.
+	- Just closing the preview window doesn't really stop the
+	  process, you anyway must hit the stop button. Sometimes
+	  you even must kill transcode processes by hand, if you
+	  closed the preview window. Have to discuss this with Tilmann.
+	- Multiple applying and undoing settings on a paused frame is
+	  cumulative. Also a subject of discussion with Tilmann ;)
+	- transcode supports adding some filters multiple times. Due
+	  to a bug in transcode (or in dvd::rip - not figured out finally)
+	  this doesn't work with transcode 0.6.3.20030123, so it's
+	  disabled on dvd::rip's GUI until it works.
+	
+	Bugfixes:
+	- Reduce disc size passed to avisplit/ogmsplit to decrease
+	  the risk of a oversized file. Thanks to Felix Knecht
+	  <felixknecht AT web.de> and Julio Sánchez for report and
+	  discussion.
+	- Adding (S)VCD projects to cluster using the menu entry
+	  isn't possible anymore - (S)VCD is not supported by 
+	  cluster mode. The corresponding button was disabled, but
+	  the menu entry not.
+	- Remove trailing whitespace from path's on the storage page.
+	  This makes pasting from an xterm easier, if the buffer
+	  contains a trailing newline. Requested by Tilmann Bitterberg.
+	- Subtitle preview grabbing threw an exception.
+
+0.49.8 [unstable branch] Mon 13 Jan 2003, joern
+	Bugfixes:
+	- Frame range "end" entry didn't work anymore. Christoph's
+	  frame range patch of 0.49.7 was correct, but I applied an
+	  erroneous "optimization" ;)
+	- Fixed a typo: preset "SVCD 16:9 anamorph, PAL" actually is
+	  "SVCD anamorph, PAL".
+
+0.49.7 [unstable branch] Mon 13 Jan 2003, joern
+	Notes:
+	- From now on dvd::rip insists on Perl >= 5.6.0. Older
+	  versions don't provide the syntactic sugar I like.
+	- Added a COPYRIGHT file, with references to all developers
+	  who contributed patches and share the copyright.
+
+	Features:
+	- Multiple audio track support for SVCD (you get a warning
+	  if you select more than two tracks, because this isn't
+	  standard conform).
+	- A new checkbox "Use range" on the Transcode page enables
+	  considerung a given frame range for video bitrate
+	  calculation. This was implemented by Christoph Bartoschek
+	  <bartoschek AT gmx.de>.
+	- Single instance windows now pop up into foreground if
+	  opened again. A patch from Matthias Riese.
+	- DVD TOC occupies now all space available. Again a patch
+	  from Matthias Riese.
+	- Burn page filename list occupies now all space available.
+	  Yet another a patch from Matthias Riese ;)
+
+	Bugfixes:
+	- Removed any conditional code for transcode versions < 0.6.2.
+	  This fixed also a missing "--print_status 20" transcode
+	  parameter, which increased video transcoding load
+	  unnecessarily. Thanks for the report to Vlad Spichek
+	  <spy AT mbox.ath.cx>.
+	- According to a hint from Julio Sánchez mpeg2enc's -S
+	  parameter is set to 10000 for non-splitting operation,
+	  because mpeg2enc splits by default at 700 MB.
+	- smartdeinter setting wasn't restored after opening a
+	  project file. Reported by Christian Lambert.
+	- Adjusted smartdeinter settings according to a suggestion
+	  of Christian Lambert:
+	  -J smartdeinter=threshold=10:Blend=1:diffmode=2:highq=1
+	- Frame range: entering illegal ranges (start > end) is
+	  prevented now. Thanks for the report to Christoph Bartoschek.
+	- Most 'focus-out' handlers are 'changed' handlers again.
+	  Transfering changes to the internal object data structure on
+	  focus-out is confusing resp. sometimes user has to click
+	  somewhere to trigger it explicitly. Reported by Florin Andrei.
+	- Burning tab: some unusal named (S)VCD image files weren't
+	  recognized correctly.
+	- Preferences: ffmpeg4 preset became ffmpeg. Setting 'ffmpeg'
+	  from preferences didn't set af6/ffmpeg codec to 'mpeg4'
+	  automatically. Reported by Christian Lambert.
+	- Added fail safe code for a possible "illegal by division by
+	  zero" condition in bitrate calculator. Reported by Christoph
+	  Bartoschek.
+	- "View AVI" was too fuzzy regarding filename globbing (.mpg
+	  files were included). Reported by Markus Dewerny.
+
+0.49.6 [unstable branch] Tue 7 Jan 2003, joern
+	Features:
+	- New preference for DVDCSS_METHOD environment variable
+	  (in the misc section) which may help solving libdvdcss
+	  related problems.
+	  Refer to http://www.videolan.org/libdvdcss/doc/ for
+	  details about the possible values and their meanings.
+	  Default value is 'title', which works well for me.
+	  Thanks to Dan <ayahuasca AT internode.on.net> for this
+	  suggestion.
+	- WAV creation command now printed in the debugging window.
+
+	Bugfixes:
+	- WAV creation resulted in white noise for lpcm tracks.
+	  Thanks for the report to Damien Covey <djcovey AT
+	  softhome.net>.
+	- WAV creation didn't worked for Chapter mode. Also reported
+	  by Damien Covey.
+
+0.49.5 [unstable branch] Mon 6 Jan 2003, joern
+	Features:
+	- rar command (for vobsub compression) is now configurable.
+	  Suggested by Mikkel Mondrup Kristensen <mikkel AT tdx.dk>.
+
+	Bugfixes:
+	- CD size wasn't set in (S)VCD transcode command. Reported
+	  by Markus Dewerny <dewerny AT web.de> and Dirk Aust
+	  <dirk_aust AT gmx.de>.
+	- Clip & Zoom: width and height of zoom/clip2 stages didn't
+	  update correctly if no zoom was set. Thanks for the report
+	  to Joakim Verona <joakim AT verona.se>.
+
+0.49.4 [unstable branch] Wed 1 Jan 2003, joern
+	Features:
+	- WAV generation of the selected audio track. You find a
+	  correspondent entry in the "Operate" menu. The file is
+	  created in the project's avi/ directory. Requested by
+	  Thibaut Cousin <cousin AT in2p3.fr> and Marc Dirix
+	  <dirixmjm AT home.nl>. Thanks to Tillmann Bitterberg
+	  <transcode AT tibit.org>, who posted the shortest transcode
+	  command for this ;)
+	- Percentage log messages of previous dvd::rip versions are
+	  back again (disappeared accidentally some versions ago).
+	  Requested by Fred Beondo <bl8206 AT mindspring.com>.
+
+	Bugfixes:
+	- Fixed a typo on the transcode tab. Thanks to Jochen Puchalla
+	  <mail AT puchalla-online.de>.
+	- Spaces in directories / filenames (project base directory,
+	  vob/avi/tmp etc.) are not allowed, because they make problems
+	  with transcode and other tools. Thanks to David Legg
+	  <david_legg AT tiscali.co.uk>.
+	- Changing the project name resp. project path after reading TOC
+	  isn't possible anymore, because this confuses dvd::rp, which
+	  can't find the files anymore. Thanks to Fabio Russo.
+	- Closing a new project after reading TOC didn't open a save
+	  file dialog (because after TOC reading the project is saved
+	  to tmp/backup.rip already).
+	- Cluster mode: dvdrip-master ignored configured nodes as long
+	  as no project ever was added to the cluster. Thanks for some
+	  hard investigation work to Wolfgang Schricker <wols AT wols.org>.
+	- Added a fail safe check in file conversion.
+	
+0.49.3 [unstable branch] Sun 29 Dec 2002, joern
+	Bugfixes:
+	- File conversion didn't work for all older files, due to a bug
+	  in the version comparison routine.
+
+0.49.2 [unstable branch] Sun 29 Dec 2002, joern
+	Notes:
+	- File format changed and isn't backward compatible. Old project
+	  files are autoconverted, but older dvd::rip versions can't open
+	  files saved with this version.
+	- dvd::rip insists on transcode 0.6.2 from now on.
+
+	Features:
+	- Major internal code cleanup, hopefully without introducing too
+	  many bugs.
+	- Added OGG/Vorbis video bitrate optimization. First all audio
+	  tracks are transcoded, after that the real audio size is known
+	  so the video bitrate can be adjusted accordingly. Correspondent
+	  messages appear in the log. This works in standard and cluster
+	  mode. Thanks to Moritz Bunkus, Markus Liebl and xercist for
+	  suggestions and discussion.
+	- PCM passthrough (for AVI only). Requested long time ago by
+	  Jamie Manley <jamie AT homebrewcomputing.com> and xercist.
+	- Support for transcode's smartdeinter deinterlacing filter. This
+	  switches off YUV mode, because this filter supports only RGB
+	  (it's rather slow but has good quality). Requested by Christian
+	  Lambert, Florin Andrei and others.
+	- Slightly cluster mode optimization: master node's state is never
+	  'offline' or 'unknown', and the node isn't fping'ed anymore.
+
+	Bugfixes:
+	- Adjusted (S)VCD bitrate overhead calculation (mpeg2enc's -B
+	  parameter) to audio + 2% of overall stream (was 1%), because
+	  1% seems to be underestimated in general.
+	- (S)VCD disc size calculation didn't consider the per disc
+	  overhead of 600 sectors. Again thanks to Julio Sánchez.
+	- Vorbis sample rate conversion didn't work.
+	- transcoding to OGG without audio didn't work. Thanks for the
+	  report to Clint Silvester <clint AT focuscompanies.com>
+	- Volume scanning of PCM audio tracks didn't work.
+	- Cluster mode: additional audio tracks with OGG didn't work.
+
+0.49.1 [unstable branch] Fri 27 Dec 2002, joern
+	Notes:
+	- File format changed and isn't backward compatible. Old project
+	  files are autoconverted, but older dvd::rip versions can't open
+	  files saved with this version.
+
+	Bugfixes:
+	- All changes from 0.48.0 - 0.48.6 are included in this release
+	  (refer to the corresponding Changes entries for details)
+	- Cluster mode: fixed missing progress information for merge
+	  jobs. Thanks for the fix to Fabio Russo.
+
+	Features:
+	- Applied a patch from Stefan Gmeiner <riddlebox AT freesurf.ch>,
+	  which adds the ability of estimating the image size before
+	  burning on the fly, which is needed for some drives (e.g.
+	  TEAC).
+	- Partially applied a patch from Petros Stavrakakis
+	  <petros AT stavrakakis.de> which brings more detailed options
+	  for cdrdao, in particular you can select the cdrdao-driver
+	  and buffersize.
+	- On the transcode tab a new setting "Container format" was added,
+	  currently with three options: AVI, OGG, (S)VCD. This way you
+	  explicitely decide a container format first, the GUI follows
+	  this decision and enables/disables all other options accordingly.
+	  If actual settings can't be done with a selected container
+	  these will be set to reasonably defaults, with correspondent
+	  messages in the log.
+	- mp3/ac3 audio codecs now supported also for OGG container. You
+	  need at least ogmtools v0.960 (I tested with v0.970).
+	- Preliminary support for vorbis quality based encoding. Future
+	  versions will determine real audio size after encoding the
+	  1st pass (when using 2pass transcoding) and will adjust
+	  video bitrate accordingly for the 2nd pass.
+	- Option to change the audio samplerate (be careful with odd
+	  values here, transcode resp. lame bails out for ununsal
+	  samplerates - 48000, 44100 and 24000 always worked for me).
+	  Requested long time ago by Certron DiSoni.
+	- A new window "Bitrate calculation details" shows all steps of
+	  the video bitrate calculation, so you can see exactly what
+	  happens here. The window can stay open all the time. Its
+	  calculation sheet follows your settings immediately.
+	- Bitrate calculation now considers selected chapters correctly.
+	- A new checkbox "manual video bitrate" let you decide explicetly,
+	  if you want dvd::rip to calculate the video bitrate for you,
+	  or not. By default, it's disabled and the video bitrate entry
+	  not sensible. If you enable the "manual" checkbox, dvd::rip
+	  doesn't touch your setting, even if you change the target size,
+	  disc count popup etc.
+	- Adjusted CD size presets to standard values: 650,703,800,870
+	  (which are 74, 80, 90, 99 minute CD-R with 2048 bytes sector
+	  size. 2324 byte sector size for VCD is now considered, see
+	  below). Thanks to Julio Sánchez <j.sanchezf AT terra.es>.
+	- (S)VCD sector sizes are considered for SVCD video bitrate
+	  calculation, so you can select a CD size from the popup and
+	  need not to fiddle with SVCD space on your own. This maybe
+	  somewhat confusing on the one hand (because the resulting size is
+	  magically bigger than your setting), but on the other hand
+	  the CD-ROM disc sizes are well-known. And you still can enter
+	  arbitrary MB values by hand, so I decided to leave the MB based
+	  size definition (beside a CD-R duration / minute based one).
+	  Thanks to Julio Sánchez who enlighted several details of the
+	  (S)VCD specification, which were new to me.
+	- Some further SVCD improvements, e.g. min-gop-size and max-gop-size
+	  values depending on PAL/NTSC are set. Thanks a lot for the
+	  (S)VCD help to Tom Vijlbrief <tom.vijlbrief AT ision.nl>
+	- AVI/OGG/MPEG container overhead is now considered for video
+	  bitrate calculation. Thanks to Markus Liebl for some tests
+	  and hints regarding measuring the overhead values, and Moritz
+	  Bunkus for information about OGG overhead.
+	- Dropped the "YUV internally" setting from the GUI, it's always
+	  enabled.
+
+0.48.8 [stable branch] Mon 06 Jan 2003, joern
+	Bugfixes:
+	- Clip & Zoom: width and height of zoom/clip2 stages didn't
+	  update correctly if no zoom was set. Thanks for the report
+	  to Joakim Verona <joakim AT verona.se>.
+
+0.48.7 [stable branch] Mon 06 Jan 2003, joern
+	Bugfixes:
+	- CD size wasn't set in (S)VCD transcode command. Reported
+	  by Markus Dewerny <dewerny AT web.de> and Dirk Aust
+	  <dirk_aust AT gmx.de>.
+
+0.48.6 [stable branch] Fri 13 Dec 2002, joern
 	Bugfixes:
 	- Fixed a typo in the vcdimager command (which didn't affect
 	  proper operation on my system, but it was anyway a typo ;)
@@ -11,13 +503,13 @@ Revision history and release notes for dvd::rip.
 	- Using "Create vobsub now" threw an exception due to a missing
 	  avi directory. Thanks to Eckehardt Luhm <bselu AT web.de>.
 
-0.48.5 Sat 7 Dec 2002, joern
+0.48.5 [stable branch] Sat 7 Dec 2002, joern
 	Bugfix:
 	- 0.48.3 introduced a bug which prevents multiple audio
 	  tracks with OGG/Vorbis. Thanks to Lethal Weapon for
 	  the report.
 
-0.48.4 Wed 4 Dec 2002, joern
+0.48.4 [stable branch] Wed 4 Dec 2002, joern
 	Bugfix:
 	- Fixed a dumb bug, where dvd::rip complained about a missing
 	  avi directory when transcoding a title the first time.
@@ -25,7 +517,7 @@ Revision history and release notes for dvd::rip.
 	  nobody found this bug earlier - it should exist since version
 	  0.47.5 - anyway, now it's fixed ;)
 
-0.48.3 Tue 3 Dec 2002, joern
+0.48.3 [stable branch] Tue 3 Dec 2002, joern
 	Features:
 	- dvd::rip now checks on startup if you're using Perl 5.8
 	  without having PERLIO=stdio set. If yes, dvd::rip sets
@@ -46,13 +538,13 @@ Revision history and release notes for dvd::rip.
 	  conversion, which is most likely a consequence of an
 	  failed ac3 detection.
 
-0.48.2 Sun 24 Nov 2002, joern
+0.48.2 [stable branch] Sun 24 Nov 2002, joern
 	Bugfix:
 	- transcode 0.6.2 changed its progress output for transcoding
 	  frames ranges. dvd::rip didn't show a valid progress bar
 	  due to that. Thanks for the report to Florin Andrei.
 
-0.48.1 Sat 23 Nov 2002, joern
+0.48.1 [stable branch] Sat 23 Nov 2002, joern
 	Note:
 	- transcode 0.6.2 was released on 22. November. dvd::rip
 	  works with all 0.6 releases, but 0.6.2 is recommended.
@@ -80,7 +572,7 @@ Revision history and release notes for dvd::rip.
 	  reproduce this, but I switched over to the long options,
 	  just to be sure.
 
-0.48.0 Sun 17 Nov 2002, joern
+0.48.0 [stable branch] Sun 17 Nov 2002, joern
 	Notes:
 	- transcode 0.6.2.20021114 is the recommended version for
 	  this release. 0.6.0 and 0.6.1 still work, but dvd::rip

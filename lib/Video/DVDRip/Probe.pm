@@ -1,7 +1,8 @@
-# $Id: Probe.pm,v 1.15.2.1 2002/12/03 20:19:02 joern Exp $
+# $Id: Probe.pm,v 1.21 2003/02/08 11:29:21 joern Exp $
 
 #-----------------------------------------------------------------------
-# Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
+# Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
+# All Rights Reserved. See file COPYRIGHT for details.
 # 
 # This module is part of Video::DVDRip, which is free software; you can
 # redistribute it and/or modify it under the same terms as Perl itself.
@@ -10,8 +11,6 @@
 package Video::DVDRip::Probe;
 
 use base Video::DVDRip::Base;
-
-use Video::DVDRip::ProbeAudio;
 
 use Carp;
 use strict;
@@ -24,7 +23,6 @@ sub letterboxed			{ shift->{letterboxed}	    		}
 sub frames			{ shift->{frames}			}
 sub runtime			{ shift->{runtime}			}
 sub frame_rate			{ shift->{frame_rate}			}
-sub audio_size			{ shift->{audio_size}			}
 sub bitrates			{ shift->{bitrates}			}	# href
 sub audio_tracks		{ shift->{audio_tracks}			}	# lref
 sub probe_output		{ shift->{probe_output}	    		}
@@ -40,7 +38,6 @@ sub set_letterboxed		{ shift->{letterboxed}		= $_[1]	}
 sub set_frames			{ shift->{frames}		= $_[1] }
 sub set_runtime			{ shift->{runtime}		= $_[1] }
 sub set_frame_rate		{ shift->{frame_rate}		= $_[1] }
-sub set_audio_size		{ shift->{audio_size}		= $_[1] }
 sub set_bitrates		{ shift->{bitrates}		= $_[1] }
 sub set_audio_tracks		{ shift->{audio_tracks}		= $_[1] }
 sub set_probe_output		{ shift->{probe_output}		= $_[1]	}
@@ -54,7 +51,7 @@ sub analyze {
 	my ($probe_output, $title) = @par{'probe_output','title'};
 
 	my ($width, $height, $aspect_ratio, $video_mode, $letterboxed);
-	my ($frames, $runtime, $frame_rate, $audio_size, $chapters, $angles);
+	my ($frames, $runtime, $frame_rate, $chapters, $angles);
 
 	($width)	= $probe_output =~ /frame\s+size:\s*-g\s+(\d+)/;
 	($height)	= $probe_output =~ /frame\s+size:\s*-g\s+\d+x(\d+)/;
@@ -64,15 +61,11 @@ sub analyze {
 	($frames)       = $probe_output =~ /V:\s*(\d+)\s*frames/;
 	($runtime)      = $probe_output =~ /playback time:.*?(\d+)\s*sec/;
 	($frame_rate)   = $probe_output =~ /frame\s+rate:\s+-f\s+([\d.]+)/;
-	($audio_size)   = $probe_output =~ /A:\s*([\d.]+)/;
 	($chapters)     = $probe_output =~ /(\d+)\s+chapter/;
 	($angles)       = $probe_output =~ /(\d+)\s+angle/;
 
 	$letterboxed = $letterboxed ? 1 : 0;
 	$video_mode  = lc ($video_mode);
-
-	# transcode 0.5.3 workaround
-	$frames ||= $runtime * $frame_rate;
 
 	my ($size, %bitrates, $bitrate);
 	while ( $probe_output =~ /CD:\s*(\d+)/g ) {
@@ -103,29 +96,30 @@ sub analyze {
 		++$i;
 	}
 
+	# Audio
+
 	my @audio_track_objects;
-	my @tc_audio_track_objects;
+
 	$i = 0;
 	foreach my $audio ( @audio_tracks ) {
-		push @audio_track_objects, Video::DVDRip::ProbeAudio->new (
+		push @audio_track_objects, Video::DVDRip::Audio->new (
 			type		=> $audio->{type},
 			lang		=> $audio->{lang},
 			channels	=> $audio->{channels},
 			sample_rate	=> $audio->{sample_rate},
-		);
-		push @tc_audio_track_objects, Video::DVDRip::Audio->new (
 			tc_nr 		=> $i,
 			tc_target_track	=> ($i==0 ? 0 : -1),
 			tc_audio_codec	=> "mp3",
 			tc_bitrate	=> 128,
 			tc_mp3_quality	=> 0,
+			tc_samplerate   => $audio->{sample_rate},
 		);
 		++$i;
 	}
 
-	$title->set_tc_audio_tracks ( \@tc_audio_track_objects );
-
 	$title->set_audio_channel(@audio_tracks? 0 : -1);
+
+	# Subtitles
 
 	my %subtitles;
 	my $sid;
@@ -147,24 +141,35 @@ sub analyze {
 		$title->set_selected_subtitle_id (-1);
 	}
 
-	my $self = {
-		probe_output 	=> $probe_output,
-		width	   	=> $width,
-		height     	=> $height,
-		aspect_ratio 	=> $aspect_ratio,
-		video_mode  	=> $video_mode,
-		letterboxed  	=> $letterboxed,
-		frames		=> $frames,
-		runtime		=> $runtime,
-		frame_rate	=> $frame_rate,
-		chapters	=> $chapters,
-		audio_size      => $audio_size,
-		bitrates	=> \%bitrates,
-		audio_tracks    => \@audio_track_objects,
-		viewing_angles  => $angles,
-	};
-	
-	return bless $self, $class;
+	# Chapter frame counter
+	my ($timecode, $last_timecode);
+	for ( my $i=2; $i <= $chapters; ++$i ) {
+		($timecode) = ( $probe_output =~ /CHAPTER0?$i=([\d:.]+)/ );
+		next if $timecode eq '';
+		$timecode =~ /(\d+):(\d+):(\d+)\.(\d+)/;
+		$timecode = $1 * 3600 + $2 * 60 + $3 + $4/1000;
+		$timecode = int($timecode * $frame_rate);
+		$title->chapter_frames->{$i-1} = $timecode - $last_timecode;
+		$last_timecode = $timecode;
+	}
+
+	$title->chapter_frames->{$chapters} = $frames - $timecode;
+
+	$title->set_width		( $width		);	   
+	$title->set_height   		( $height		);  
+	$title->set_aspect_ratio 	( $aspect_ratio		);
+	$title->set_video_mode  	( $video_mode		);
+	$title->set_letterboxed 	( $letterboxed		); 
+	$title->set_frames		( $frames		);	
+	$title->set_runtime		( $runtime		);	
+	$title->set_frame_rate		( $frame_rate		);
+	$title->set_bitrates		( \%bitrates		);
+	$title->set_audio_tracks  	( \@audio_track_objects	);
+	$title->set_chapters		( $chapters		);
+	$title->set_viewing_angles	( $angles		);	
+	$title->set_dvd_probe_output	( $probe_output		);
+
+	1;
 }
 
 sub analyze_audio {
@@ -173,23 +178,42 @@ sub analyze_audio {
 	my  ($probe_output, $title) =
 	@par{'probe_output','title'};
 	
-	$self->set_audio_probe_output ( $probe_output );
+	$title->set_vob_probe_output ( $probe_output );
 	
 	my @lines = split (/\n/, $probe_output);
 	my $nr;
 	for ( my $i=0; $i < @lines; ++$i ) {
 		if ( $lines[$i] =~ /audio\s+track:\s+-a\s+(\d+).*?-n\s+([x0-9]+)/ ) {
 			$nr = $1;
-			next if not defined $self->audio_tracks->[$nr];
-			$title->tc_audio_tracks->[$nr]->set_tc_option_n ($2);
+			next if not defined $title->audio_tracks->[$nr];
+			$title->audio_tracks->[$nr]->set_tc_option_n ($2);
 			++$i;
 			$lines[$i] =~ /bitrate\s*=(\d+)/;
-			$self->audio_tracks->[$nr]->set_bitrate($1);
+			$title->audio_tracks->[$nr]->set_bitrate($1);
 		}
 	}
 	
 	1;
 }
 
+sub analyze_scan {
+	my $class = shift;
+	my %par = @_;
+	my  ($scan_output, $audio, $count) =
+	@par{'scan_output','audio','count'};
+
+	my ($volume_rescale);
+
+	($volume_rescale) = $scan_output =~ /rescale=([\d.]+)/;
+
+	if ( $audio->volume_rescale > $volume_rescale or $count == 0 ) {
+		$audio->set_scan_output       ( $scan_output    );
+		$audio->set_volume_rescale    ( $volume_rescale );
+		$audio->set_tc_volume_rescale ( $volume_rescale );
+	}
+
+	1;
+}
 
 1;
+

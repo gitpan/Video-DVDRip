@@ -1,11 +1,26 @@
-# $Id: DVDRip.pm,v 1.96.2.6 2002/12/13 22:39:06 joern Exp $
+#-----------------------------------------------------------------------
+# Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
+# All Rights Reserved. See file COPYRIGHT for details.
+# 
+# This program is part of Video::DVDRip, which is free software; you can
+# redistribute it and/or modify it under the same terms as Perl itself.
+#-----------------------------------------------------------------------
 
 package Video::DVDRip;
 
-$VERSION = "0.48.6";
+$VERSION = "0.50.0";
+
+use base Video::DVDRip::Base;
 
 use Carp;
 use FileHandle;
+require 5.006;
+
+%Video::DVDRip::container_formats = (
+	'avi'       => "AVI",
+	'ogg'       => "OGG",
+	'vcd'       => "(S)VCD",
+);
 
 %Video::DVDRip::deinterlace_filters = (
 	0          => "No deinterlacing",
@@ -13,6 +28,7 @@ use FileHandle;
 	2          => "Handled by encoder (may segfault)",
 	3          => "Zoom to full frame (slow)",
 	'32detect' => "Automatic deinterlacing of single frames",
+	'smart'    => "Smart deinterlacing",
 );
 
 %Video::DVDRip::antialias_filters = (
@@ -27,89 +43,9 @@ use FileHandle;
 	'a52drc'    => "Range compression (liba52 filter)",
 	'normalize' => "Normalizing (mplayer filter)",
 );
-	
 
-init: {
-	# Skip transcode check during "make test". This makes
-	# automatic CPAN testing fail erroneously and makes
-	# problems during first dvd::rip install, when the
-	# use has no "." in PATH, because then dr_splitpipe isn't
-	# found.
-	last if $ENV{PERL_DL_NONLAZY} == 1;
-
-	my @path = split(":", $ENV{PATH});
-
-	my @programs = qw (
-		rm convert identify pstree
-		transcode tcscan tccat
-		tcextract tcdecode
-		dr_splitpipe dr_progress
-	);
-	
-	my $missing = "";
-	PROGRAM: foreach my $program ( @programs ) {
-		PATH: foreach my $path ( @path ) {
-			next PROGRAM if -x "$path/$program";
-		}
-		$missing .= "$program, ";
-	}
-	
-	$missing =~ s/, $//;
-	
-	if ( $missing ) {
-		croak 	"Missing the following programs.\n".
-			"Please install them and configure your PATH:\n\n".
-			"$missing\n";
-	}
-
-	my $fh = FileHandle->new;
-	open ($fh, "transcode -h 2>&1 |") or croak "can't fork transcode -h";
-	my $ver = <$fh>;
-	close $fh;
-
-	$ver =~ m/v(\d+)\.(\d+)\.(\d+)(.\d+)?/;
-	
-	# ------------------------------
-	# transcode version numbers:
-	# ------------------------------
-	# 0.5.3    => 503
-	# 0.6.0    => 600
-	# 1.2.7    => 100207
-	# 99.99.99 => 999999
-	#
-	# 0.6.2.20021011 => 601.20021011
-	# ------------------------------
-
-	$TC::ORIG_VERSION = "$1.$2.$3$4";
-
-	$TC::VERSION = $1*10000+$2*100+$3;
-	$TC::VERSION ||= 0;
-
-	if ( $4 ) {
-		# If we have a snapshot release, reduce the
-		# version number by 1 and add the snapshot
-		# date as decimals. This way version
-		# 6.0.2.20021011 is newer than 0.6.1 but
-		# older than 0.6.2 (final).
-
-		$TC::VERSION = $TC::VERSION - 1 + $4;
-	}
-
-	if ( $TC::VERSION < 600 ) {
-		print "Sorry, transcode versions prior 0.6.0 are no longer supported.\n".
-		      "Please upgrade transcode.\n";
-		exit 1;
-	}
-	
-	# subtitleripper version check
-	$ver = qx[ subtitle2pgm -h 2>&1 ];
-	
-	$ver =~ /version\s+([\d\.]+)/i;
-	
-	$STR::VERSION = $1;
-
-	1;
-}
+$Video::DVDRIP::scratch_width   = 1024;
+$Video::DVDRIP::scratch_height  = 768;
 
 1;
 

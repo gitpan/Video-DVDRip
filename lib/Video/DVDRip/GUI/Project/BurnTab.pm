@@ -1,7 +1,8 @@
-# $Id: BurnTab.pm,v 1.5.2.2 2002/12/02 18:21:59 joern Exp $
+# $Id: BurnTab.pm,v 1.13 2003/02/08 10:40:29 joern Exp $
 
 #-----------------------------------------------------------------------
-# Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
+# Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
+# All Rights Reserved. See file COPYRIGHT for details.
 # 
 # This module is part of Video::DVDRip, which is free software; you can
 # redistribute it and/or modify it under the same terms as Perl itself.
@@ -71,13 +72,19 @@ sub create_burn_tab {
 	$table->show;
 	$table->set_row_spacings ( $TABLE_SPACING );
 	$table->set_col_spacings ( $TABLE_SPACING );
-	$vbox->pack_start ($table, 0, 1, 0);
+	$vbox->pack_start ($table, 1, 1, 0);
 
-	$table->attach_defaults ($cd_type, 	0, 1, 0, 1);
+	$table->attach ($cd_type, 	0, 1, 0, 1, ['fill','expand'], [], 0, 0);
 	$table->attach_defaults ($files, 	0, 1, 1, 2);
-	$table->attach_defaults ($label, 	0, 1, 2, 3);
-	$table->attach_defaults ($options, 	0, 1, 3, 4);
-	$table->attach_defaults ($operate, 	0, 1, 4, 5);
+	$table->attach ($label, 	0, 1, 2, 3, ['fill','expand'], [], 0, 0);
+	$table->attach ($options, 	0, 1, 3, 4, ['fill','expand'], [], 0, 0);
+	$table->attach ($operate, 	0, 1, 4, 5, ['fill','expand'], [], 0, 0);
+
+	$table->set_sensitive(0) if not $self->has ("mkisofs") or
+				    not $self->has ("cdrecord") or
+				    not $self->has ("vcdimager") or
+				    not $self->has ("cdrdao");
+
 
 	return $vbox;
 }
@@ -117,19 +124,25 @@ sub create_burn_cd_type {
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 	$table->attach ($hbox, 0, 1, $row, $row+1, 'fill','expand',0,0);
-	$hsize_group->add ($hbox);
+	# $hsize_group->add ($hbox);
 
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
 	my $ogg = $self->config('ogg_file_ext');
 	my $radio_iso = Gtk::RadioButton->new ("ISO 9660 (.avi and .$ogg files)   ");
 	$radio_iso->show;
+	$radio_iso->set_sensitive(0) if not $self->has ("mkisofs") or
+					not $self->has ("cdrecord");
 	$hbox->pack_start($radio_iso, 0, 1, 0);
 	my $radio_svcd = Gtk::RadioButton->new ("SVCD (.mpg files)   ", $radio_iso);
 	$radio_svcd->show;
+	$radio_svcd->set_sensitive(0) if not $self->has ("vcdimager") or
+					 not $self->has ("cdrdao");
 	$hbox->pack_start($radio_svcd, 0, 1, 0);
 	my $radio_vcd = Gtk::RadioButton->new ("VCD (.mpg files)   ", $radio_iso);
 	$radio_vcd->show;
+	$radio_vcd->set_sensitive(0) if not $self->has ("vcdimager") or
+					not $self->has ("cdrdao");
 	$hbox->pack_start($radio_vcd, 0, 1, 0);
 	
 	$table->attach_defaults ($hbox, 1, 2, $row, $row+1);
@@ -170,28 +183,18 @@ sub create_burn_files {
 
 	my $widgets = $self->burn_widgets;
 
-	my ($frame, $frame_hbox, $table, $row, $hbox, $label, $entry);
+	my ($frame, $frame_vbox, $table, $row, $hbox, $label, $entry);
 	my ($popup_menu, $popup, $item, %popup_entries, $button);
 
 	# Frame
 	$frame = Gtk::Frame->new ("File selection");
 	$frame->show;
 
-	# Frame HBox
-	$frame_hbox = Gtk::VBox->new;
-	$frame_hbox->set_border_width(5);
-	$frame_hbox->show;
-	$frame->add ($frame_hbox);
-
-	# Table
-	$table = Gtk::Table->new ( 1, 1, 0 );
-	$table->show;
-	$table->set_row_spacings ( $TABLE_SPACING );
-	$table->set_col_spacings ( $TABLE_SPACING );
-	$frame_hbox->pack_start ($table, 1, 1, 0);
-
-	# File selection list
-	$row = 0;
+	# Frame VBox
+	$frame_vbox = Gtk::VBox->new;
+	$frame_vbox->set_border_width(5);
+	$frame_vbox->show;
+	$frame->add ($frame_vbox);
 
 	my $sw = new Gtk::ScrolledWindow( undef, undef );
 	$sw->show;
@@ -201,9 +204,10 @@ sub create_burn_files {
 		"Filename", "Size (MB)"
 	);
 	$clist->show,
-	$clist->set_usize (undef, 150);
+#	$clist->set_usize (undef, 150);
 	$clist->set_column_width( 0, 500 );
  	$clist->set_selection_mode( 'extended' ); 
+ 	$clist->column_titles_passive;
 	$clist->signal_connect ("select_row",   sub {
 		$self->cb_select_burn_title (@_);
 	} );
@@ -213,7 +217,7 @@ sub create_burn_files {
 
 	$sw->add( $clist );
 
-	$table->attach_defaults ($sw, 0, 1, $row, $row+1);
+	$frame_vbox->pack_start ($sw, 1, 1, 0);
 
 	$widgets->{file_content_clist} = $clist;
 
@@ -222,24 +226,24 @@ sub create_burn_files {
 	$table->show;
 	$table->set_row_spacings ( $TABLE_SPACING );
 	$table->set_col_spacings ( $TABLE_SPACING );
-	$frame_hbox->pack_start ($table, 1, 1, 0);
+	$frame_vbox->pack_start ($table, 0, 0, 0);
 
 	# Megabytes selected
-	++$row;
+	$row = 1;
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
 	$label = Gtk::Label->new ("MB selected");
 	$label->show;
-	$hbox->pack_start($label, 0, 1, 0);
-	$table->attach ($hbox, 0, 1, $row, $row+1, 'fill','expand',0,0);
-	$hsize_group->add ($hbox);
+	$hbox->pack_start($label, 0, 0, 0);
+	$table->attach ($hbox, 0, 1, $row, $row+1, 'fill',[],0,0);
+	# $hsize_group->add ($hbox);
 
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
 	$label = Gtk::Label->new ('0 MB');
 	$label->show;
-	$hbox->pack_start($label, 0, 1, 0);
-	$table->attach ($hbox, 1, 2, $row, $row+1, 'fill','expand',0,0);
+	$hbox->pack_start($label, 0, 0, 0);
+	$table->attach ($hbox, 1, 2, $row, $row+1, 'fill',[],0,0);
 
 	$widgets->{mb_selected_label} = $label;
 
@@ -247,16 +251,16 @@ sub create_burn_files {
 	$hbox->show;
 	$label = Gtk::Label->new ("     Free diskspace");
 	$label->show;
-	$hbox->pack_start($label, 0, 1, 0);
-	$table->attach ($hbox, 2, 3, $row, $row+1, 'fill','expand',0,0);
-	$hsize_group->add ($hbox);
+	$hbox->pack_start($label, 0, 0, 0);
+	$table->attach ($hbox, 2, 3, $row, $row+1, 'fill',[],0,0);
+	# $hsize_group->add ($hbox);
 
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
 	$label = Gtk::Label->new ('0 MB');
 	$label->show;
-	$hbox->pack_start($label, 0, 1, 0);
-	$table->attach ($hbox, 3, 4, $row, $row+1, 'fill','expand',0,0);
+	$hbox->pack_start($label, 0, 0, 0);
+	$table->attach ($hbox, 3, 4, $row, $row+1, 'fill',[],0,0);
 
 	$widgets->{free_diskspace_mb} = $label;
 
@@ -266,13 +270,14 @@ sub create_burn_files {
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
 	$align->add ($hbox);
-	$table->attach_defaults ($align, 4, 5, $row, $row+1);
+	$table->attach ($align, 4, 5, $row, $row+1, ['expand','fill'], [], 0, 0);
+#	$table->attach_defaults ($align, 4, 5, $row, $row+1);
 
 	# Delete Button
 	$button = Gtk::Button->new (" Delete selected file ");
 	$button->show;
 	$button->set_sensitive(0);
-	$hbox->pack_start ($button, 0, 1, 0);
+	$hbox->pack_start ($button, 0, 0, 0);
 
 	$widgets->{delete_file_button} = $button;
 	$button->signal_connect ("clicked", sub { $self->ask_delete_selected_burn_file } );
@@ -281,7 +286,7 @@ sub create_burn_files {
 	$button = Gtk::Button->new (" View selected file ");
 	$button->show;
 	$button->set_sensitive(0);
-	$hbox->pack_start ($button, 0, 1, 0);
+	$hbox->pack_start ($button, 0, 0, 0);
 
 	$widgets->{view_file_button} = $button;
 	$button->signal_connect ("clicked", sub { $self->view_selected_burn_file } );
@@ -324,7 +329,7 @@ sub create_burn_label {
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 	$table->attach ($hbox, 0, 1, $row, $row+1, 'fill','expand',0,0);
-	$hsize_group->add ($hbox);
+	# $hsize_group->add ($hbox);
 
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
@@ -344,7 +349,7 @@ sub create_burn_label {
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 	$table->attach ($hbox, 0, 1, $row, $row+1, 'fill','expand',0,0);
-	$hsize_group->add ($hbox);
+	# $hsize_group->add ($hbox);
 
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
@@ -441,7 +446,7 @@ sub create_burn_options {
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 	$table->attach ($hbox, 0, 1, $row, $row+1, 'fill','expand',0,0);
-	$hsize_group->add ($hbox);
+	# $hsize_group->add ($hbox);
 
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
@@ -468,7 +473,7 @@ sub create_burn_options {
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 	$table->attach ($hbox, 0, 1, $row, $row+1, 'fill','expand',0,0);
-	$hsize_group->add ($hbox);
+	# $hsize_group->add ($hbox);
 
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
@@ -486,7 +491,7 @@ sub create_burn_options {
 
 	$widgets->{writing_speed} = $entry;
 
-	$entry->entry->signal_connect ("focus-out-event", sub {
+	$entry->entry->signal_connect ("changed", sub {
 		return 1 if $self->in_transcode_init;
 		$self->config_object->set_value (
 			burn_writing_speed => $_[0]->get_text
@@ -519,16 +524,15 @@ sub create_burn_operate {
 	$frame->add ($frame_hbox);
 
 	# ButtonBox
-	$button_box = new Gtk::HButtonBox();
+	$button_box = Gtk::HBox->new;
 	$button_box->show;
-	$button_box->set_spacing_default(2);
 	$frame_hbox->pack_start ($button_box, 0, 1, 0);
 
 	# Burn Button
 	$button = Gtk::Button->new_with_label ("  Burn selected file(s)  ");
 	$button->show;
 	$button->signal_connect ("clicked", sub { $self->burn_cd } );
-	$button_box->add ($button);
+	$button_box->pack_start ($button, 0, 1, 0);
 
 	$widgets->{burn_button} = $button;
 
@@ -536,9 +540,21 @@ sub create_burn_operate {
 	$button = Gtk::Button->new_with_label ("  Create CD image from selected file(s) ");
 	$button->show;
 	$button->signal_connect ("clicked", sub { $self->create_cd_image } );
-	$button_box->add ($button);
+	$button_box->pack_start ($button, 0, 1, 0);
 
 	$widgets->{image_button} = $button;
+
+	# Eject Button
+	$button = Gtk::Button->new_with_label (" Open burner tray ");
+	$button->show;
+	$button->signal_connect ("clicked", sub { $self->eject_media } );
+	$button_box->pack_start ($button, 0, 1, 0);
+
+	# Insert Button
+	$button = Gtk::Button->new_with_label (" Close burner tray ");
+	$button->show;
+	$button->signal_connect ("clicked", sub { $self->insert_media } );
+	$button_box->pack_start ($button, 0, 1, 0);
 
 	return $frame;
 }
@@ -803,5 +819,26 @@ sub burn_cd {
 
 	1;
 }
+
+sub eject_media {
+        my $self = shift;
+
+        my $command = $self->config('eject_command') . " " . $self->config('writer_device');
+
+        system ("$command &");
+
+        1;
+}
+
+sub insert_media {
+        my $self = shift;
+
+        my $command = $self->config('eject_command') . " -t " . $self->config('writer_device');
+
+        system ("$command &");
+
+        1;
+}
+
 
 1;

@@ -1,7 +1,8 @@
-# $Id: Project.pm,v 1.26 2002/09/30 21:07:00 joern Exp $
+# $Id: Project.pm,v 1.30 2003/01/28 20:19:57 joern Exp $
 
 #-----------------------------------------------------------------------
-# Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
+# Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
+# All Rights Reserved. See file COPYRIGHT for details.
 # 
 # This program is part of Video::DVDRip, which is free software; you can
 # redistribute it and/or modify it under the same terms as Perl itself.
@@ -21,6 +22,7 @@ use Video::DVDRip::Cluster::Job::AddAudioMerge;
 use Video::DVDRip::Cluster::Job::MergePSUs;
 use Video::DVDRip::Cluster::Job::Split;
 use Video::DVDRip::Cluster::Job::RemoveVOBs;
+use Video::DVDRip::Cluster::Job::BitrateCalc;
 
 use Carp;
 use strict;
@@ -175,7 +177,7 @@ sub create_job_plan {
 
 	$self->log ("Creating job plan");
 
-	my $title = $self->title;
+	my $title     = $self->title;
 	my $multipass = $title->tc_multipass;
 
 	my @pass = ( 1 );
@@ -186,6 +188,26 @@ sub create_job_plan {
 
 	my $nr = 1;
 	my $frames_per_chunk = $title->frames_per_chunk || 10000;
+
+	# This array takes all video transcode jobs: 2nd pass or single pass.
+	# In case of vbr audio these jobs depend on all audio jobs, because
+	# bitrate calculation is done afterwards.
+	my @tc_video_jobs;
+	
+	# The bitrate calculation job depends on all audio jobs.
+	my @tc_audio_jobs;
+
+	my ($bc, $bc_job);
+
+	if ( $title->has_vbr_audio ) {
+		$bc = Video::DVDRip::BitrateCalc->new;
+		$job = Video::DVDRip::Cluster::Job::BitrateCalc->new ( nr => $nr++ );
+		push @jobs, $job;
+		$job->set_project ($self);
+		$job->set_bc ($bc);
+		$job->set_depends_on_jobs ( \@tc_audio_jobs );
+		$bc_job = $job;
+	}
 
 	# first we have to do some work per psu
 	foreach my $psu ( @{$title->program_stream_units} ) {
@@ -205,7 +227,7 @@ sub create_job_plan {
 
 		# first an audio processing job
 		my $vob_nr = $title->get_first_audio_track || 0;
-		my $avi_nr = $title->tc_audio_tracks->[$vob_nr]->tc_target_track;
+		my $avi_nr = $title->audio_tracks->[$vob_nr]->tc_target_track;
 		
 		$job = Video::DVDRip::Cluster::Job::TranscodeAudio->new ( nr => $nr++ );
 		push @jobs, $job;
@@ -215,7 +237,9 @@ sub create_job_plan {
 		$job->set_prefer_local_access (1);
 		$job->set_vob_nr ($vob_nr);
 		$job->set_avi_nr ($avi_nr);
+		$job->set_bc ($bc);
 		push @depend_merge_chunk, $job;
+		push @tc_audio_jobs, $job;
 
 		# add transcode jobs for each chunk
 		for (my $i=0; $i < $chunk_cnt; ++$i ) {
@@ -229,11 +253,22 @@ sub create_job_plan {
 				$job->set_chunk_cnt ($chunk_cnt);
 				$job->set_psu ($psu->nr);
 
-				push @depend_merge_chunk, $job
-					if not $multipass or $pass == 2;
+				if ( not $multipass or $pass == 2 ) {
+					push @tc_video_jobs, $job;
+					push @depend_merge_chunk, $job;
+				}
 
-				$job->set_depends_on_jobs ( [ $last_job ] )
-					if $pass == 2;
+				if ( $pass == 2 ) {
+					if ( $bc_job ) {
+						$job->set_depends_on_jobs ( [ $bc_job, $last_job ] );
+					} else {
+						$job->set_depends_on_jobs ( [ $last_job ] );
+					}
+				} else {
+					if ( $bc_job ) {
+						$job->set_depends_on_jobs ( [ $bc_job ] );
+					}
+				}
 
 				$last_job = $job;
 			}
@@ -250,11 +285,12 @@ sub create_job_plan {
 		
 		my $merge_video_audio_job = $job;
 
+		# ogg audio merging isn't done with the video/audio merge job above
 		if ( $title->is_ogg ) {
 			$job = Video::DVDRip::Cluster::Job::AddAudioMerge->new ( nr => $nr++ );
 			push @jobs, $job;
 			my $vob_nr = $title->get_first_audio_track;
-			$job->set_avi_nr ( $title->tc_audio_tracks->[$vob_nr]->tc_target_track );
+			$job->set_avi_nr ( $title->audio_tracks->[$vob_nr]->tc_target_track );
 			$job->set_vob_nr ( $vob_nr );
 			$job->set_project ($self);
 			$job->set_psu ( $psu->nr );
@@ -272,12 +308,14 @@ sub create_job_plan {
 
 				$job = Video::DVDRip::Cluster::Job::TranscodeAudio->new ( nr => $nr++ );
 				push @jobs, $job;
+				push @tc_audio_jobs, $job;
 				$job->set_project ($self);
 				$job->set_psu ( $psu->nr );
 				$job->set_chunk_cnt ($chunk_cnt);
 				$job->set_prefer_local_access (1);
 				$job->set_vob_nr ($vob_nr);
 				$job->set_avi_nr ($avi_nr);
+				$job->set_bc ($bc);
 				$job->set_depends_on_jobs ( [] );
 				$last_job = $job;
 

@@ -1,7 +1,8 @@
-# $Id: InfoFile.pm,v 1.4.2.1 2002/12/04 22:49:35 joern Exp $
+# $Id: InfoFile.pm,v 1.8 2003/01/28 20:19:57 joern Exp $
 
 #-----------------------------------------------------------------------
-# Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
+# Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
+# All Rights Reserved. See file COPYRIGHT for details.
 # 
 # This module is part of Video::DVDRip, which is free software; you can
 # redistribute it and/or modify it under the same terms as Perl itself.
@@ -156,7 +157,7 @@ sub write {
 	# Audio ------------------------------------------------------
 
 	foreach my $audio ( sort { $a->tc_target_track <=> $b->tc_target_track }
-			    @{$title->tc_audio_tracks} ) {
+			    @{$title->audio_tracks} ) {
 		next if $audio->tc_target_track < 0;
 		$self->add_head ( name => "Audio ".($audio->tc_target_track+1) );
 
@@ -173,7 +174,7 @@ sub write {
 		);
 		$self->add_field (
 			name  => "Audio codec",
-			value => $codec eq 'ogg' ? 'vorbis' : $codec,
+			value => $codec,
 		);
 		$self->add_field (
 			name  => "MP3 quality",

@@ -1,7 +1,8 @@
-# $Id: Progress.pm,v 1.23.2.1 2002/12/02 18:21:59 joern Exp $
+# $Id: Progress.pm,v 1.27 2003/01/28 20:19:57 joern Exp $
 
 #-----------------------------------------------------------------------
-# Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
+# Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
+# All Rights Reserved. See file COPYRIGHT for details.
 # 
 # This module is part of Video::DVDRip, which is free software; you can
 # redistribute it and/or modify it under the same terms as Perl itself.
@@ -134,7 +135,9 @@ sub set_idle_label {
 	}
 
 	$self->gtk_progress->set_format_string ($label);
-	
+
+	$project_comp->init_storage_values if $project_comp;
+
 	1;
 }
 

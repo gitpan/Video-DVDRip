@@ -1,7 +1,8 @@
-# $Id: Config.pm,v 1.16 2002/10/06 11:44:58 joern Exp $
+# $Id: Config.pm,v 1.20 2003/02/10 11:57:54 joern Exp $
 
 #-----------------------------------------------------------------------
-# Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
+# Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
+# All Rights Reserved. See file COPYRIGHT for details.
 # 
 # This module is part of Video::DVDRip, which is free software; you can
 # redistribute it and/or modify it under the same terms as Perl itself.
@@ -83,9 +84,11 @@ sub build {
 		foreach my $field ( @{$order} ) {
 			push @{$page2params{$page_no}}, $field;
 			my %field = %{$config_object->config->{$field}};
+			my $onload = $field{onload};
 			if ( $field{type} eq 'switch' ) {
 				$field{onchange} = sub {
 					$config_object->set_value ($field, $_[0]);
+					&$onload() if $onload;
 				};
 			} else {
 				$field{onchange} = sub {
@@ -99,6 +102,7 @@ sub build {
 					$config_object->set_value (
 						$field, $value
 					);
+					&$onload($value) if $onload;
 				};
 			}
 			push @fields, \%field;
@@ -122,10 +126,19 @@ sub build {
 	$align->add ($hbox);
 	$frame_vbox->pack_start ($align, 0, 1, 0);
 
-	my $button = Gtk::Button->new_with_label (" Check settings ");
+	my $button = Gtk::Button->new_with_label (" Check all settings ");
+	$button->show;
+	$button->signal_connect ( "clicked", sub { $self->check_params ( all_pages => 1 ) } );
+	$hbox->pack_start ($button, 0, 1, 0);
+
+	# Check current settings button
+
+	$button = Gtk::Button->new_with_label (" Check settings on this page ");
 	$button->show;
 	$button->signal_connect ( "clicked", sub { $self->check_params } );
 	$hbox->pack_start ($button, 0, 1, 0);
+
+	# Ok Button
 
 	$button = Gtk::Button->new_with_label ("          Ok          ");
 	$button->show;
@@ -194,12 +207,18 @@ sub build {
 sub check_params {
 	my $self = shift;
 	my %par = @_;
-	my ($page) = @par{'page'};
+	my ($page, $all_pages) = @par{'page','all_pages'};
 
-	$page = $self->gtk_notebook->get_current_page if not defined $page;
+	my @pages;
+	if ( not $all_pages ) {
+		$page = $self->gtk_notebook->get_current_page
+			if not defined $page;
+		push @pages, $page;
+	} else {
+		@pages = sort { $a <=> $b } keys %{$self->page2params};
+	}
 
 	my $text          = $self->gtk_result_text;
-	my $options       = $self->page2params->{$page};
 	my $config_object = $self->config_object;
 	
 	$text->freeze;
@@ -216,20 +235,24 @@ sub check_params {
 	$green->{green} = 80*256;
 	$green->{blue}  = 30*256;
 
-	my $method;
-	foreach my $option ( @{$options} ) {
-		$text->insert (
-			undef, undef, undef,
-			$config_object->config->{$option}->{label}.": "
-		);
-		my $result;
-		$method = "test_$option";
-		if ( $config_object->can ($method) ) {
-			$result = $config_object->$method($option);
-		} else {
-			$result = "not tested : Ok";
+	my ($options, $method);
+	foreach $page ( @pages ) {
+		$options = $self->page2params->{$page};
+		foreach my $option ( @{$options} ) {
+			$text->insert (
+				undef, undef, undef,
+				$config_object->config->{$option}->{label}.": "
+			);
+			my $result;
+			$method = "test_$option";
+			if ( $config_object->can ($method) ) {
+				$result = $config_object->$method($option);
+			} else {
+				$result = "not tested : Ok";
+			}
+			$text->insert ( undef, ($result =~ /NOT/ ? $red : $green), undef, $result."\n" );
 		}
-		$text->insert ( undef, ($result =~ /NOT/ ? $red : $green), undef, $result."\n" );
+		$text->insert ( undef, undef, undef, "\n" );
 	}
 	
 	$text->thaw;

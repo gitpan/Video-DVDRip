@@ -1,7 +1,8 @@
-# $Id: TranscodeAudio.pm,v 1.3 2002/10/15 21:15:53 joern Exp $
+# $Id: TranscodeAudio.pm,v 1.7 2003/01/28 20:19:57 joern Exp $
 
 #-----------------------------------------------------------------------
-# Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
+# Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
+# All Rights Reserved. See file COPYRIGHT for details.
 # 
 # This program is part of Video::DVDRip, which is free software; you can
 # redistribute it and/or modify it under the same terms as Perl itself.
@@ -15,9 +16,9 @@ use Carp;
 use strict;
 
 sub vob_nr			{ shift->{vob_nr}			}
-sub set_vob_nr			{ shift->{vob_nr}		= $_[1]	}
-
 sub avi_nr			{ shift->{avi_nr}			}
+
+sub set_vob_nr			{ shift->{vob_nr}		= $_[1]	}
 sub set_avi_nr			{ shift->{avi_nr}		= $_[1]	}
 
 sub type {
@@ -40,7 +41,7 @@ sub info {
 sub get_diskspace_needed {
 	my $self = shift; $self->trace_in;
 
-	my $bitrate = $self->title->tc_audio_tracks
+	my $bitrate = $self->title->audio_tracks
 				  ->[$self->vob_nr]
 				  ->tc_bitrate;
 
@@ -68,6 +69,21 @@ sub command {
 	$title->set_actual_chapter (undef);
 
 	return $command;
+}
+
+sub commit {
+	my $self = shift;
+
+	if ( $self->bc ) {
+		$self->bc->add_audio_size (
+			bytes => -s $self->bc->title->target_avi_audio_file (
+				vob_nr => $self->vob_nr,
+				avi_nr => $self->avi_nr,
+			)
+		);
+	}
+	
+	1;
 }
 
 1;

@@ -1,7 +1,8 @@
-# $Id: Base.pm,v 1.18 2002/11/01 13:29:19 joern Exp $
+# $Id: Base.pm,v 1.22 2003/02/08 10:38:29 joern Exp $
 
 #-----------------------------------------------------------------------
-# Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
+# Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
+# All Rights Reserved. See file COPYRIGHT for details.
 # 
 # This module is part of Video::DVDRip, which is free software; you can
 # redistribute it and/or modify it under the same terms as Perl itself.
@@ -143,11 +144,15 @@ sub message_window {
 	my $dialog = Gtk::Dialog->new;
 
 	my $label = Gtk::Label->new ("\n".$message."\n");
-	$dialog->vbox->pack_start ($label, 1, 1, 0);
+	$label->set_justify("left");
+	$label->show;
+	my $hbox = Gtk::HBox->new;
+	$hbox->show;
+	$hbox->pack_start ($label, 0, 1, 0);
+	$dialog->vbox->pack_start ($hbox, 1, 1, 0);
 	$dialog->border_width(10);
 	$dialog->set_title ("Video::DVDRip Message");
 	$dialog->set_default_size (250, 150);
-	$label->show;
 
 	my $ok = Gtk::Button->new ("Ok");
 	$dialog->action_area->pack_start ( $ok, 1, 1, 0 );
@@ -203,6 +208,22 @@ sub create_text_entry {
 	return $hbox;
 }
 
+sub create_tooltip {
+	my $self = shift;
+	my %par = @_;
+	my  ($text, $widget) =
+	@par{'text','widget'};
+
+	return if not $text;
+
+	my $tooltip = Gtk::Tooltips->new;
+	$tooltip->set_tip ($widget, $text, "");
+	$tooltip->enable;
+	$tooltip->set_delay(0);
+	
+	1;
+}
+
 sub create_dialog {
 	my $self = shift;
 	my @fields = @_;
@@ -250,12 +271,15 @@ sub create_dialog {
 					"clicked", sub { &$cb(0) }
 				);
 			}
-			
+
 			if ( $field->{value} ) {
 				$radio_yes->set_active(1);
 			} else {
 				$radio_no->set_active(1);
 			}
+
+			$self->create_tooltip( text => $field->{tooltip}, widget => $radio_no);
+			$self->create_tooltip( text => $field->{tooltip}, widget => $radio_yes);
 			
 		} elsif ( $field->{type} eq 'string' and $field->{presets} ) {
 			my $entry = Gtk::Combo->new;
@@ -271,6 +295,8 @@ sub create_dialog {
 			push @widgets, $entry;
 			$table->attach_defaults ($entry, 1, 2, $i, $i+1);
 
+			$self->create_tooltip( text => $field->{tooltip}, widget => $entry );
+
 		} else {
 			my $entry;
 			$entry = Gtk::Entry->new;
@@ -285,7 +311,10 @@ sub create_dialog {
 			}
 			push @widgets, $entry;
 			$table->attach_defaults ($entry, 1, 2, $i, $i+1);
+
+			$self->create_tooltip( text => $field->{tooltip}, widget => $entry );
 		}
+			
 		++$i;
 	}
 

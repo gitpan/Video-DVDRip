@@ -1,7 +1,8 @@
-# $Id: TitleTab.pm,v 1.48 2002/11/03 11:35:16 joern Exp $
+# $Id: TitleTab.pm,v 1.56 2003/02/05 22:50:25 joern Exp $
 
 #-----------------------------------------------------------------------
-# Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
+# Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
+# All Rights Reserved. See file COPYRIGHT for details.
 # 
 # This module is part of Video::DVDRip, which is free software; you can
 # redistribute it and/or modify it under the same terms as Perl itself.
@@ -32,6 +33,7 @@ sub create_title_tab {
 
 	$self->set_rip_title_widgets({});
 
+	my $label;
 	my $hsep;
 
 	my $vbox = Gtk::VBox->new;
@@ -46,17 +48,41 @@ sub create_title_tab {
 	$hbox->set_border_width(5);
 	$hbox->show;
 
-	my $button = Gtk::Button->new_with_label ("Read DVD table of contents");
+	my $button = Gtk::Button->new_with_label (" Read DVD table of contents ");
 	$button->show;
 	$button->signal_connect ("clicked", sub { $self->read_dvd_toc } );
 
 	$self->rip_title_widgets->{read_dvd_toc_button} = $button;
 
-	my $label = Gtk::Label->new ("Press button, if list is empty or disc has changed.");
-	$label->show;
+#	my $label = Gtk::Label->new ("Press button, if list is empty or disc has changed.");
+#	$label->show;
 
 	$hbox->pack_start ( $button, 0, 1, 0);
-	$hbox->pack_start ( $label, 0, 1, 0);
+#	$hbox->pack_start ( $label, 0, 1, 0);
+
+        # Eject Button
+        $button = Gtk::Button->new_with_label (
+                " Open DVD tray"
+        );
+        $button->show;
+        $button->signal_connect ("clicked",
+                sub { $self->eject_dvd }
+        );
+        $hbox->pack_start ($button, 0, 1, 0);
+
+        $self->rip_title_widgets->{eject_dvd_button} = $button;
+
+        # Insert Button
+        $button = Gtk::Button->new_with_label (
+                " Close DVD tray "
+        );
+        $button->show;
+        $button->signal_connect ("clicked",
+                sub { $self->insert_dvd }
+        );
+        $hbox->pack_start ($button, 0, 1, 0);
+
+        $self->rip_title_widgets->{insert_dvd_button} = $button;
 
 	$frame->add ($hbox);
 	$vbox->pack_start ( $frame, 0, 1, 0);
@@ -64,7 +90,7 @@ sub create_title_tab {
 	# 2. TOC List / Frame
 	$frame = Gtk::Frame->new ("DVD table of contents");
 	$frame->show;
-	$vbox->pack_start ( $frame, 0, 1, 0);
+	$vbox->pack_start ( $frame, 1, 1, 0);
 
 	$hbox = Gtk::HBox->new;
 	$hbox->set_border_width(5);
@@ -73,7 +99,7 @@ sub create_title_tab {
 
 	my $list_vbox = Gtk::VBox->new;
 	$list_vbox->show;
-	$hbox->pack_start ( $list_vbox, 0, 1, 0);
+	$hbox->pack_start ( $list_vbox, 1, 1, 0);
 
 	my $sw = new Gtk::ScrolledWindow( undef, undef );
 	$sw->show;
@@ -83,7 +109,8 @@ sub create_title_tab {
 		"Title", "Technical information"
 	);
 	$clist->show,
-	$clist->set_usize (450, 372);
+#	$clist->set_usize (450, 372);
+ 	$clist->column_titles_passive;
 	$clist->set_selection_mode( 'extended' ); 
 	$clist->signal_connect ("select_row",   sub {
 		return 1 if $self->in_title_init;
@@ -98,7 +125,7 @@ sub create_title_tab {
 
 	$self->rip_title_widgets->{content_clist} = $clist;
 
-	$list_vbox->pack_start ( $sw, 0, 1, 0);
+	$list_vbox->pack_start ( $sw, 1, 1, 0);
 
 	# 3. Audio Selection Popup
 	my $audio_vbox = Gtk::VBox->new;
@@ -206,13 +233,12 @@ sub create_title_tab {
 	$self->rip_title_widgets->{chapter_select_window} = $sw;
 	$self->rip_title_widgets->{chapter_select_clist}  = $chapter_clist;
 
-	# 5. Show and RIP  Buttons
-	$hbox = Gtk::HBox->new (1);
+	# 5. Insert, Show, RIP and Eject  Buttons
+	$hbox = Gtk::HBox->new;# (1);
 	$hbox->set_border_width(5);
 	$hbox->show;
-	$list_vbox->pack_start($hbox, 1, 1, 0);
+	$list_vbox->pack_start($hbox, 0, 0, 0);
 
-	my $button;
 	$button = Gtk::Button->new_with_label ("View\nselected title/chapter(s)");
 	$button->show;
 	$hbox->pack_start ($button, 1, 1, 0);
@@ -381,7 +407,7 @@ sub fill_audio_popup {
 	$audio_popup->remove_menu;
 	$audio_popup->set_menu($audio_popup_menu);
 
-	my $tc_audio_tracks = $title->tc_audio_tracks;
+	my $audio_tracks = $title->audio_tracks;
 
 	my $item;
 	my $i = 0;
@@ -392,8 +418,8 @@ sub fill_audio_popup {
 		$sample_rate = "41.1kHz" if $sample_rate == 44100;
 
 		my $target_track = "";
-		if ( $tc_audio_tracks->[$i]->tc_target_track != -1 ) {
-			$target_track = " => ".$tc_audio_tracks->[$i]->tc_target_track;
+		if ( $audio_tracks->[$i]->tc_target_track != -1 ) {
+			$target_track = " => ".$audio_tracks->[$i]->tc_target_track;
 		} else {
 			$target_track = " => skip";
 		}
@@ -466,7 +492,7 @@ sub configure_target_audio_popup {
 	my $items = $self->rip_title_widgets->{target_popup_items};
 	
 	my %track_is_assigned;
-	foreach my $audio ( @{$title->tc_audio_tracks} ) {
+	foreach my $audio ( @{$title->audio_tracks} ) {
 		$track_is_assigned{$audio->tc_target_track} = 1
 			if $audio->tc_target_track != -1;
 	}
@@ -475,7 +501,7 @@ sub configure_target_audio_popup {
 	foreach my $it ( @{$items} ) {
 		$it->set_sensitive(
 			!($track_is_assigned{$j} and 
-			  $title->tc_target_track != $j)
+			  $title->audio_track->tc_target_track != $j)
 		);
 		++$j;
 	}
@@ -495,7 +521,7 @@ sub fill_target_audio_popup {
 	$audio_popup->set_menu($audio_popup_menu);
 
 	my %track_is_assigned;
-	foreach my $audio ( @{$title->tc_audio_tracks} ) {
+	foreach my $audio ( @{$title->audio_tracks} ) {
 		$track_is_assigned{$audio->tc_target_track} = 1
 			if $audio->tc_target_track != -1;
 	}
@@ -506,17 +532,17 @@ sub fill_target_audio_popup {
 	my %history;
 	my $history = 0;
 	for (my $i=-1; $i < @{$title->audio_tracks}; ++$i ) {
-		$text = $i == -1 ? "Skip / Decativate this track" : "Track #$i";
+		$text = $i == -1 ? "Skip / Deactivate this track" : "Track #$i";
 		$history{$i} = $history;
 		$item = Gtk::MenuItem->new ($text);
 		push @items, $item;
 		$item->show;
 		$item->set_sensitive(0) if $track_is_assigned{$i} and
-			$title->tc_target_track != $i;
+			$title->audio_track->tc_target_track != $i;
 		$item->signal_connect (
 			"select", sub {
 				return if $self->in_transcode_init;
-				$title->set_tc_target_track ($_[1]);
+				$title->audio_track->set_tc_target_track ($_[1]);
 				$title->calc_video_bitrate;
 				$self->init_audio_values (
 					dont_set_target_popup => 1
@@ -541,7 +567,9 @@ sub fill_target_audio_popup {
 		++$history;
 	}
 
-	$audio_popup->set_history ($history{$title->tc_target_track});
+	$audio_popup->set_history (
+		$history{$title->audio_track->tc_target_track}
+	);
 	$self->rip_title_widgets->{target_popup_items} = \@items;
 
 	1;
@@ -599,9 +627,8 @@ sub init_title_labels {
 	my $audio_label;
 	my $audio_channel = $title->audio_channel;
 	if ( $audio_channel >= 0 ) {
-		my $audio = $title->probe_result
-			       ->audio_tracks
-			       ->[$audio_channel];
+		my $audio = $title->audio_tracks
+			          ->[$audio_channel];
 		$audio_label =
 			"Viewing angle #".$title->tc_viewing_angle.", ".
 			"Audio track: #$audio_channel - ".
@@ -691,8 +718,9 @@ sub read_dvd_toc {
 		if ( $@ ) {
 			$self->long_message_window (
 				message =>
-					"Failed to copy the IFO files. vobsub creation ".
-					"won't work properly.\nThe error message is:\n".
+					"Failed to copy the IFO files. vobsub creation won't work properly.\n".
+					"(Did you specify the mount point of your DVD drive in the Preferences?)\n".
+					"The error message is:\n".
 					$self->stripped_exception
 					
 			);
@@ -729,7 +757,6 @@ sub fill_content_list {
 	my $selected_title_nr = $self->project->selected_title_nr;
 
 	foreach my $title ( @{$titles} ) {
-		next if not defined $title->probe_result;
 		$self->append_content_list ( title => $title );
 		$select_row = $row if $selected_title_nr == $title->nr;
 		++$row;
@@ -935,5 +962,26 @@ sub view_title {
 	
 	1;
 }
+
+sub eject_dvd {
+        my $self = shift;
+
+        my $command = $self->config('eject_command') . " " . $self->config('dvd_device');
+
+        system ("$command &");
+        
+        1;
+}
+
+sub insert_dvd {
+        my $self = shift;
+
+        my $command = $self->config('eject_command') . " -t " . $self->config('dvd_device');
+
+         system ("$command &");
+        
+        1;
+}
+
 
 1;

@@ -1,7 +1,8 @@
-# $Id: ZoomCalculator.pm,v 1.8 2002/11/01 16:12:20 joern Exp $
+# $Id: ZoomCalculator.pm,v 1.13 2003/01/28 20:19:57 joern Exp $
 
 #-----------------------------------------------------------------------
-# Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
+# Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
+# All Rights Reserved. See file COPYRIGHT for details.
 # 
 # This module is part of Video::DVDRip, which is free software; you can
 # redistribute it and/or modify it under the same terms as Perl itself.
@@ -37,15 +38,8 @@ sub set_achieve_result_align	{ shift->{achieve_result_align}	= $_[1]	}
 sub result_frame_align		{ shift->{result_frame_align}		}
 sub set_result_frame_align	{ shift->{result_frame_align}	= $_[1]	}
 
-sub target_size			{ shift->{target_size}			}
-sub disc_size			{ shift->{disc_size}			}
-sub disc_cnt			{ shift->{disc_cnt}			}
-sub video_bitrate		{ shift->{video_bitrate}		}
-
-sub set_target_size		{ shift->{target_size}		= $_[1]	}
-sub set_disc_size		{ shift->{disc_size}		= $_[1]	}
-sub set_disc_cnt		{ shift->{disc_cnt}		= $_[1]	}
-sub set_video_bitrate		{ shift->{video_bitrate}	= $_[1]	}
+sub title			{ shift->{title}			}
+sub set_title			{ shift->{title}		= $_[1]	}
 
 # GUI Stuff ----------------------------------------------------------
 
@@ -55,15 +49,14 @@ sub build {
 	$self->set_gtk_widgets ({});
 
 	my $title = $self->comp('project')->selected_title;
+	my %title = %{$title};
+	$title = bless \%title, ref($title);
 
+	$self->set_title ($title);
 	$self->set_fast_resize_align(8);
 	$self->set_auto_clip('clip2');
 	$self->set_result_frame_align(16);
 	$self->set_achieve_result_align('clip2');
-	$self->set_disc_cnt ($title->tc_disc_cnt);
-	$self->set_disc_size ($title->tc_disc_size);
-	$self->set_target_size ($title->tc_target_size);
-	$self->set_video_bitrate ($title->tc_video_bitrate);
 
 	# build window -----------------------------------------------
 	my $win = Gtk::Window->new ( -toplevel );
@@ -333,7 +326,7 @@ sub create_video_bitrate_calc {
 	my ($frame, $frame_hbox, $table, $row, $hbox, $label, $entry);
 	my ($popup_menu, $popup, $item, %popup_entries, $i);
 
-	my $title = $self->comp('project')->selected_title;
+	my $title = $self->title;
 
 	# Frame
 	$frame = Gtk::Frame->new ("Video bitrate calculation");
@@ -346,7 +339,7 @@ sub create_video_bitrate_calc {
 	$frame->add ($frame_hbox);
 
 	# Table
-	$table = Gtk::Table->new ( 3, 2, 0 );
+	$table = Gtk::Table->new ( 3, 3, 0 );
 	$table->show;
 	$table->set_row_spacings ( 7 );
 	$table->set_col_spacings ( 7 );
@@ -384,24 +377,18 @@ sub create_video_bitrate_calc {
 		$popup_menu->append($item);
 		$item->signal_connect (
 			"select", sub {
-				$self->set_disc_cnt($key);
-				$self->set_target_size(
-					$key * $self->disc_size,
+				$title->set_tc_disc_cnt($key);
+				$title->set_tc_target_size(
+					$key * $title->tc_disc_size,
 				);
 				$self->gtk_widgets
 				     ->{target_size}
-				     ->set_text ($self->target_size);
-				my $bitrate = $title->get_optimal_video_bitrate (
-					target_size => $self->target_size
-				);
-				$self->gtk_widgets
-				     ->{video_bitrate}
-				     ->set_text ($bitrate);
-				$self->set_video_bitrate($bitrate);
+				     ->set_text ($title->tc_target_size);
+				$self->calc_video_bitrate;
 				1;
 			}, $key
 		);
-		$popup->set_history($i) if $key == $self->disc_cnt;
+		$popup->set_history($i) if $key == $title->tc_disc_cnt;
 		++$i;
 	}
 	$hbox->pack_start($popup, 1, 1, 0);
@@ -418,26 +405,20 @@ sub create_video_bitrate_calc {
 		may_empty      => 0,
 	);
 	$entry->show;
-	$entry->set_popdown_strings (650, 700, 760);
+	$entry->set_popdown_strings (650, 703, 800, 870);
 	$entry->set_usize(60,undef);
 	$hbox->pack_start($entry, 0, 1, 0);
 
 	$entry->entry->signal_connect ("changed", sub {
-		$self->set_disc_size ($_[0]->get_text);
-		$self->set_target_size(
-			$self->disc_cnt * $self->disc_size,
+		$title->set_tc_disc_size ($_[0]->get_text);
+		$title->set_tc_target_size(
+			$title->tc_disc_cnt * $title->tc_disc_size,
 		);
 		return 1 if not $self->gtk_widgets->{target_size};
 		$self->gtk_widgets
 		     ->{target_size}
-		     ->set_text ($self->target_size);
-		my $bitrate = $title->get_optimal_video_bitrate (
-			target_size => $self->target_size
-		);
-		$self->gtk_widgets
-		     ->{video_bitrate}
-		     ->set_text ($bitrate);
-		$self->set_video_bitrate($bitrate);
+		     ->set_text ($title->tc_target_size);
+		$self->calc_video_bitrate;
 		1;
 	});
 
@@ -449,7 +430,7 @@ sub create_video_bitrate_calc {
 	$label->show;
 	$hbox->pack_start ($label, 0, 1, 0);
 
-	$table->attach ($hbox, 1, 2, $row, $row+1, 'fill','expand',0,0);
+	$table->attach ($hbox, 1, 3, $row, $row+1, 'fill','expand',0,0);
 
 	# Target Size
 	++$row;
@@ -479,8 +460,31 @@ sub create_video_bitrate_calc {
 
 	$self->gtk_widgets->{target_size} = $entry;
 
-	$entry->set_text($self->target_size);
+	$entry->set_text($title->tc_target_size);
 
+	$entry->signal_connect ("changed", sub {
+		$title->set_tc_target_size( $_[0]->get_text );
+		$self->calc_video_bitrate;
+		1;
+	});
+
+	$hbox = Gtk::HBox->new;
+	$hbox->show;
+	my $checkbox = Gtk::CheckButton->new ("Use range");
+	$checkbox->set_active($title->tc_video_bitrate_range);
+	$checkbox->show;	
+	$hbox->pack_start ($checkbox, 0, 1, 0);
+	$checkbox->signal_connect (
+		"clicked", sub {
+			$title->set_tc_video_bitrate_range($_[0]->active);
+			$self->calc_video_bitrate;
+			1;
+		}
+	);
+	
+	$self->gtk_widgets->{video_bitrate_range} = $checkbox;
+	$table->attach_defaults ($hbox, 2, 3, $row, $row+1);
+	
 	# Video Bitrate
 	++$row;
 	$hbox = Gtk::HBox->new;
@@ -505,18 +509,55 @@ sub create_video_bitrate_calc {
 	$label->show;
 	$hbox->pack_start ($label, 0, 1, 0);
 	
+	$entry->set_text($title->tc_video_bitrate);
+	
+	$entry->signal_connect ("changed", sub {
+		$title->set_tc_video_bitrate($_[0]->get_text);
+		1;
+	});
+
+	if ( not $title->tc_video_bitrate_manual ) {
+		$entry->set_sensitive(0);
+	} else {
+		$entry->set_sensitive(1);
+	}
+
 	$table->attach_defaults ($hbox, 1, 2, $row, $row+1);
 
 	$self->gtk_widgets->{video_bitrate} = $entry;
 
-	$entry->set_text($self->video_bitrate);
 	
-	$entry->signal_connect ("changed", sub {
-		$self->set_video_bitrate($_[0]->get_text);
+	$hbox = Gtk::HBox->new;
+	$hbox->show;	
+	my $checkbox = Gtk::CheckButton->new ("Manual");
+	$checkbox->set_active($title->tc_video_bitrate_manual);
+	$checkbox->show;
+	$hbox->pack_start ($checkbox, 0, 1, 0);
+	$checkbox->signal_connect ( "clicked", sub {
+		$title->set_tc_video_bitrate_manual($_[0]->active);
+		if ( not $title->tc_video_bitrate_manual ) {
+			$self->calc_video_bitrate;
+			$entry->set_sensitive(0);
+		} else {
+			$entry->set_sensitive(1);
+		}
 		1;
-	});
+	});	
+	
+	$table->attach_defaults($hbox, 2, 3, $row, $row+1);
+	$self->gtk_widgets->{video_bitrate_manual} = $checkbox;
 
 	return $frame;
+}
+
+sub calc_video_bitrate {
+	my $self = shift;
+
+	$self->gtk_widgets->{video_bitrate}->set_text (
+		$self->title->calc_video_bitrate
+	);
+	
+	1;
 }
 
 sub init_calc_list {
@@ -526,7 +567,7 @@ sub init_calc_list {
 
 	$clist = $self->gtk_widgets->{calc_clist};
 
-	$clist->thaw;
+	$clist->freeze;
 	$clist->clear;
 
 	my $font = Gtk::Gdk::Font->load (
@@ -551,7 +592,7 @@ sub init_calc_list {
 	my $result_align_clip2 = ($self->achieve_result_align eq 'clip2');
 	my $auto_clip          = ($self->auto_clip ne 'no');
 	my $use_clip1	       = ($self->auto_clip eq 'clip1');
-	my $video_bitrate      = $self->video_bitrate;
+	my $video_bitrate      = $self->title->tc_video_bitrate;
 
 	$self->print_debug("
 		fast_resize_align  => $fast_resize_align,
@@ -599,6 +640,8 @@ sub init_calc_list {
 
 	$self->set_calc_results ($calc_lref);
 
+	$clist->thaw;
+
 	1;
 }
 
@@ -607,9 +650,10 @@ sub apply_values {
 
 	my ($row) = $self->gtk_widgets->{calc_clist}->selection;
 
-	my $result  = $self->calc_results->[$row];
-	my $project = $self->comp('project');
-	my $title   = $project->selected_title;
+	my $result   = $self->calc_results->[$row];
+	my $project  = $self->comp('project');
+	my $title    = $project->selected_title;
+	my $zc_title = $self->title;
 
 	$title->set_tc_zoom_width    ( $result->{zoom_width}   );
 	$title->set_tc_zoom_height   ( $result->{zoom_height}  );
@@ -623,11 +667,15 @@ sub apply_values {
 	$title->set_tc_clip2_bottom  ( $result->{clip2_bottom} );
 
 	$title->set_tc_fast_resize   ( $self->fast_resize_align != 0 );
-	$title->set_tc_disc_cnt      ( $self->disc_cnt );
-	$title->set_tc_disc_size     ( $self->disc_size );
-	$title->set_tc_target_size   ( $self->target_size );
-	$title->set_tc_video_bitrate ( $self->video_bitrate );
 
+	$title->set_tc_disc_cnt      ( $zc_title->tc_disc_cnt );
+	$title->set_tc_disc_size     ( $zc_title->tc_disc_size );
+	$title->set_tc_target_size   ( $zc_title->tc_target_size );
+	$title->set_tc_video_bitrate ( $zc_title->tc_video_bitrate );
+
+	$title->set_tc_video_bitrate_manual ( $zc_title->tc_video_bitrate_manual );
+	$title->set_tc_video_bitrate_range ( $zc_title->tc_video_bitrate_range );
+	
 	$project->make_previews;
 	$project->init_adjust_values;
 	$project->init_transcode_values;

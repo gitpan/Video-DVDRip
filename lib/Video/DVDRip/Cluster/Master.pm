@@ -1,6 +1,7 @@
-# $Id: Master.pm,v 1.26 2002/11/12 22:04:10 joern Exp $
+# $Id: Master.pm,v 1.30 2003/01/28 20:19:57 joern Exp $
 #-----------------------------------------------------------------------
-# Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
+# Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
+# All Rights Reserved. See file COPYRIGHT for details.
 # 
 # This program is part of Video::DVDRip, which is free software; you can
 # redistribute it and/or modify it under the same terms as Perl itself.
@@ -177,7 +178,8 @@ sub node_check {
 	my $nodes_list;
 	foreach my $node ( @{$self->nodes} ) {
 		$nodes_list .= $node->hostname." "
-			if $node->state ne 'stopped';
+			if $node->state ne 'stopped' and
+			   not $node->is_master;
 	}
 	
 	return 1 if not $nodes_list;
@@ -202,6 +204,11 @@ sub node_check {
 			my $idle_nodes;
 			foreach my $node ( @{$self->nodes} ) {
 				next if $node->state eq 'stopped';
+				if ( $node->is_master ) {
+					++$idle_nodes if $node->state eq 'idle';
+					next;
+				}
+
 				$node_name = $node->hostname;
 				if ( $buffer =~ /^$node_name\s+is\s+alive/m ) {
 					if ( not $node->alive and $node->answered_last_ping == 2 ) {
@@ -259,7 +266,9 @@ sub load {
 	my $self = shift; $self->trace_in;
 	
 	my $filename = $self->config_filename;
-	return if not -f $filename;
+	if( not -f $filename ) {
+		$self->save;
+	}
 	
 	my $fh = FileHandle->new;
 	open ($fh, $filename)
@@ -359,6 +368,8 @@ sub add_node {
 
 	croak "msg: Node must have a name" if $node->name eq '';
 	croak "msg: Node with this name already exists" if -f $filename;
+	
+	$node->set_state ("idle") if $node->is_master;
 	
 	push @{$self->nodes}, $node;
 	$node->set_filename ($filename);
@@ -630,7 +641,7 @@ sub job_delegate_pending_jobs {
 	
 	# get idle nodes
 	my $nodes = $self->job_get_idle_nodes;
-	
+
 	# nothing to do if no node is idle
 	return 1 if not @{$nodes};	
 

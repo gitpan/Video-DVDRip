@@ -1,7 +1,8 @@
-# $Id: ScanVolume.pm,v 1.1 2002/09/01 13:57:52 joern Exp $
+# $Id: ScanVolume.pm,v 1.4 2003/02/08 11:29:21 joern Exp $
 
 #-----------------------------------------------------------------------
-# Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
+# Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
+# All Rights Reserved. See file COPYRIGHT for details.
 # 
 # This program is part of Video::DVDRip, which is free software; you can
 # redistribute it and/or modify it under the same terms as Perl itself.
@@ -14,6 +15,11 @@ use base Video::DVDRip::Job;
 use Carp;
 use strict;
 
+sub count                       { shift->{count}                        }
+sub set_count                   { shift->{count}                = $_[1] }
+sub chapter                     { shift->{chapter}                      }
+sub set_chapter                 { shift->{chapter}              = $_[1] }
+
 sub type {
 	return "scan";
 }
@@ -21,7 +27,12 @@ sub type {
 sub info {
 	my $self = shift;
 
+        my $chapter = $self->chapter;
+
 	my $info = "Volume scanning - title #".$self->title->nr;
+        if ( $chapter ) {
+                $info .= ", chapter #$chapter";
+        }
 	$info .= ", audio track #".$self->title->audio_channel;
 
 	return $info;
@@ -30,15 +41,30 @@ sub info {
 sub init {
 	my $self = shift;
 	
-	my $title    = $self->title;
+	my $title = $self->title;
 	
+	$title->set_actual_chapter ($self->chapter);
+
 	if ( $title->project->rip_mode eq 'rip' ) {
 		$self->set_progress_show_fps ( 0 );
 		$self->set_progress_max ( $title->get_vob_size );
-	} else {
+
+	} elsif ( not $self->chapter ) {
 		$self->set_progress_show_fps ( 1 );
 		$self->set_progress_max ( $title->frames );
+
+	} else {
+		if ( defined $self->chapter_frames->{$self->chapter} ) {
+			$self->set_progress_show_fps ( 1 );
+			$self->set_progress_max ( 
+				$self->chapter_frames->{$self->chapter}
+			);
+		} else {
+			$self->set_progress_show_fps ( 0 );
+		}
 	}
+
+        $title->set_actual_chapter (undef);
 	
 	1;
 }
@@ -46,7 +72,15 @@ sub init {
 sub command {
 	my $self = shift;
 
-	return $self->title->get_scan_command;
+	my $title = $self->title;
+
+	$title->set_actual_chapter ($self->chapter);
+
+        my $command = $title->get_scan_command;
+
+        $title->set_actual_chapter (undef);
+
+	return $command;
 }
 
 sub parse_output {
@@ -70,9 +104,12 @@ sub parse_output {
 
 sub commit {
 	my $self = shift;
-	
+
+	my $count = $self->count;
+
 	$self->title->analyze_scan_output (
-		output => $self->pipe->output
+		output => $self->pipe->output,
+		count  => $count,
 	);
 	
 	1;

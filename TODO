@@ -1,18 +1,20 @@
-$Id: TODO,v 1.98.2.1 2002/11/23 13:46:00 joern Exp $
+$Id: TODO,v 1.117 2003/02/08 12:37:41 joern Exp $
 
 KNOWN BUGS:
 ===========
 - cluster mode
   - cluster control daemon leaks memory
-- negative cropping isn't visualized in the preview image
-  (all calculations and the transcoding itself work, so
-   it's not that big problem ;)
 - cluster mode: on FreeBSD pstree's output looks different,
   so stopping jobs doesn't work on FreeBSD. Should use some
   Perl modules instead. Reported by Lukas Ertl <l.ertl AT
   univie.ac.at>
-- cluster mode: merging PSU / splitting prints "Initializing" and
-  "Finished", no progress. Reported by Fabio Russo
+
+- Ripping and snapshot grabbing fails if the title has no
+  audio at all. Reported by Sean Dwyer <ewe2 AT can.org.au>.
+- negative cropping isn't visualized in the preview image
+  (all calculations and the transcoding itself work, so
+   it's not that big problem ;)
+- check chapter mode && diskspace calculations
 
 NOTE:
 =====
@@ -23,62 +25,46 @@ may be implemented soon, some eventually never... ;)
 
 TODO:
 =====
+- write error messages of executed tools in dvd::rip's log.
+  Suggested by Felix Enning <felix AT hfsclub.de>.
+- global nice preference, which apply to all started processes.
+  It's not necessary to adjust this per project. Suggested by
+  Spencer Ogden.
+- transcode all selected titles on the rip tab in a row,
+  suggested by James Dowlearn <alwjdd AT utdallas.edu>
+- on-the-fly/dvd-image mode: rip a small ammount to harddisk, to get ac3
+  probing and passthrough working.
+- link ETA compution of a 2-pass transcode together, requested by Ole Tange.
+- add a DVD profile, Suggested by Felix Maibaum <f.maibaum AT tu-bs.de>
 - mplayer aid parameter must be codec specific. Thanks for
   the report to Fabio Russo.
 - support multiple subtitles in the same vobsub file
-- delete a file selection on the rip tab, requested by Tony Clark
+- support vobsub generation with cluster mode
+- delete a file selection on the burn tab, requested by Tony Clark
   <tclark AT bredband.net>
-- pcm passthrough
-  -y (video codec),raw -N 0x1 (remove -b), requested by
-  Jamie Manley <jamie AT homebrewcomputing.com> and
-  <xercist AT xernet.lammah.com>
+- rename files on burn tab. Suggested by Christoph Bartoschek.
+- entry for filename addition, to distinguish rips of the same title,
+  with different settings. Suggested by Christoph Bartoschek.
+- check and print diskspace for VOB/AVI directories separately.
+  Suggested by Bodo Bauer <bb AT bb-zone.com>
 - consider avi/ogg containter overhead when calculating the
   video bitrate, suggested by Markus Liebl
-- audio only encoding, suggested by Thibaut Cousin <cousin AT
-  in2p3.fr>
-- add support for inverse telecine filter:
-  -f 23.976024 -M 0 -J ivtc,32detect=force_mode=3,decimate
-  Suggested by xercist AT xernet.lammah.com
 - overall video bitrate calculation for a collection of
   selected titles. Requested by Felix Knecht <felixknecht AT web.de>
-- add mplayer's deinterlace filter (-J ppcvs=lb), suggested
-  by <xercist AT xernet.lammah.com>
 - print actual bits/pixel somewhere on the clip&zoom tab,
   suggested by Florin Andrei
-- add bbmpeg support (and DVD compliant presets)
-- use dvdxchap to scan chapter lengths before ripping
-  to show chapter mode ripping/transcoding progress.
-- option for forking the transcode process into the background,
-  suggested by Akos Maroy <darkeye AT tyrell.hu>
 - probe audio on the ripped VOB data. Some DVD's report wrong
   information when probed from the DVD.
 - xvid properties window as a frontend for the xvid.cfg file,
   suggested by Edouard Gomez <ed.gomez AT wanadoo.fr>
-- enable pausing after 1st pass of a two-pass divx4 encoding,
-  suggested by Chris <chris AT axique.de> and Douglas Bollinger.
-- speed up 2pass transcoding with hq resizing by using fast
-  resizing in the 1st pass. Suggested by Magnus Sandin <magnus AT sandin.cx>
 - add (S)VCD support to cluster mode
-- add multi audio support to (S)VCD mode
-- add additionals VCD presets, which doesn't clip the width,
-  requested by Dave Van Dijck <dvandijck AT connect.be>
-- warn (S)VCD rip's with illegal frame sizes, suggested by Rainer Lay
 - pre-define user defaults for all clip & zoom and transcode parameters
   in a special project .rip file located in the user's home directory.
   The file can be loaded, all parameters changed, and saved. Future
   projects will take their default parameters from this file.
-- add proper disc size presets for (S)VCD
-- splitting: not at 700 MB boundaries, but evenly distributed on
-  the number of discs, if the user wants it. Suggested by
-  Rainer Hantsch <rainer AT hantsch.co.at>
-- preset a reasonably default value for the project data directory
-  on first startup, suggested by Ole Tange <tange AT tange.dk>
-- add some explantation to all those codecs to the docs
-  (divx4/divx5/xvid/xvidcvs etc.)
 - button for deletion of VOB's and temp files,
   suggested by Robert Nemkin <buci AT buci.hu>
 - add preference "default clip&zoom preset"
-- copy IFO files to HD, suggested by Magnus Sandin <magnus AT sandin.cx>
 - preference for standard additional transcode options,
   suggested by Uwe Ade <uwe.ade AT gmx.de>
 - lock project file to prevent multiple instances of the
@@ -111,14 +97,10 @@ TODO:
   - schedule start/end time of a node, suggested by Rainer Lay
   - stop node after current job, suggested by Rainer Lay
 - check file access rights before operation (ripping, transcoding etc.)
-- print "ETA: not computable" for chapter ripping instead of
-  a 100% progress bar, suggested by Ole Tange <tange AT tange.dk>
 - chapter mode: check if preview frame # is available in 1st
   chapter and print better error message, suggested by
   Ole Tange <tange AT tange.dk>
-- add rewind (1/10/60 seconds) buttons to preview frame # entry,
-  suggested by Ole Tange <tange AT tange.dk>
-- add a 'about' window with all important information, inclduing
+- add a 'about' window with all important information, including
   on how to send bug reports, suggested by Ole Tange <tange AT tange.dk>
 - enable transcode's debugging mode (-q 2) and collect messages
   in a specific logfile (suggested by Florin Andrei)
@@ -127,16 +109,7 @@ TODO:
 - add a preference option whether dvd::rip project data files
   should be saved in the project directory by default,
   suggested by Davide Ferrari
-- option for disabling audio processing completely, suggested by
-  <xercist AT xernet.lammah.com>
-- support smartdeinter filter, suggested by Christian Lambert
 - support for transcode's -r option for fast frame bisection
   (and very fast deinterlacing)
 - check for negative nice value if not run as root
-- merge chapter avi's in two modes: all into one file,
-  or adjacent chapters in separate files. Suggested by
-  Certron DiSoni <certron_80 AT yahoo.com>
-- enable video bitrate calculation for chapter mode
 - don't rip chapters already ripped in chapter selection mode
-- audio resampling, suggested by Certron DiSoni <certron_80 AT yahoo.com>
-- create personal clip&zoom preferences

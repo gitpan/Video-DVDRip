@@ -1,7 +1,8 @@
-# $Id: Pipe.pm,v 1.5 2002/10/06 11:46:40 joern Exp $
+# $Id: Pipe.pm,v 1.8 2003/02/06 15:00:33 joern Exp $
 
 #-----------------------------------------------------------------------
-# Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
+# Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
+# All Rights Reserved. See file COPYRIGHT for details.
 # 
 # This module is part of Video::DVDRip, which is free software; you can
 # redistribute it and/or modify it under the same terms as Perl itself.
@@ -121,7 +122,7 @@ sub progress {
 	my $cb_line_read = $self->cb_line_read;
 
 	# call callback if we got something
-	&$cb_line_read ( $buffer ) if $buffer;
+	&$cb_line_read ( $buffer ) if $cb_line_read and $buffer;
 
 	# are we finished?
 	if ( $finished ) {
@@ -150,37 +151,14 @@ sub close {
 sub cancel {
 	my $self = shift;
 
-	# this pid belong to the sh we started with exec
 	my $pid = $self->pid;
-	
-	# but we want to have its child. We use pstree for that.
-	my $pstree = qx[pstree -p $pid];
-	$pstree =~ /\($pid\).*?\((\d+)/;
-	my $child_pid = $1;
 
-	# if there was no sh with a further child, we have to kill
-	# our child process directly
-	$child_pid ||= $pid;
+	$self->log ("Aborting command. Sending signal 1 to PID $pid...");
 
-	# kill the child
-	$self->log ("Aborting command. Sending signal 2 to PID $child_pid...");
-	kill 2, $child_pid;
-
-	# close this pipe
-	$self->close;
-
-	1;
-}
-
-sub OLD_cancel {
-	my $self = shift; $self->trace_in;
-
-	kill 2, $self->pid;
-	sleep 1;
-	kill 9, $self->pid;
+	kill 1, $pid;
 
 	$self->close;
-	
+
 	1;
 }
 

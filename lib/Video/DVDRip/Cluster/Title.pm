@@ -1,7 +1,8 @@
-# $Id: Title.pm,v 1.33 2002/10/06 11:43:28 joern Exp $
+# $Id: Title.pm,v 1.38 2003/02/08 10:37:49 joern Exp $
 
 #-----------------------------------------------------------------------
-# Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
+# Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
+# All Rights Reserved. See file COPYRIGHT for details.
 # 
 # This program is part of Video::DVDRip, which is free software; you can
 # redistribute it and/or modify it under the same terms as Perl itself.
@@ -127,17 +128,20 @@ sub audio_video_psu_dir {
 }
 
 
-sub audio_video_psu_file {				# audio only file
+sub audio_video_psu_file {
 	my $self = shift; $self->trace_in;
 
 	my $job = $self->project->assigned_job or croak "No job assigned";
 	
+	my $ext = $self->is_ogg ? $self->config('ogg_file_ext') : 'avi';
+
 	return sprintf (
-		"%s/%s-%03d-av-psu-%02d.avi",
+		"%s/%s-%03d-av-psu-%02d.$ext",
 		$self->audio_video_psu_dir,
 		$self->project->name,
 		$self->nr,
 		$job->psu,
+		
 	);
 }
 
@@ -246,15 +250,22 @@ sub get_merge_audio_command {
 
 	my $command;
 
+	my $nice;
+	$nice = "`which nice` -n ".$self->tc_nice." "
+		if $self->tc_nice =~ /\S/;
+
+	$command = $nice;
+
 	if ( $self->is_ogg ) {
 		my $audio_video_psu_file;
 		# remove audio_video_psu file here, because
 		# this isn't done in get_merge_video_audio_command,
 		# because audio merging is done here with ogg.
 		$audio_video_psu_file = $self->audio_video_psu_file
-			if $self->with_cleanup;
+			if $self->with_cleanup and
+			   $self->audio_video_psu_file ne $target_file;
 
-		$command =
+		$command .=
 			"ogmmerge -o $avi_file.merged ".
 			" $avi_file".
 			" $audio_file &&".
@@ -263,7 +274,7 @@ sub get_merge_audio_command {
 			" echo DVDRIP_SUCCESS";
 		
 	} else {
-		$command =
+		$command .=
 			"avimerge".
 			" -i $avi_file".
 			" -p $audio_file".
@@ -295,9 +306,13 @@ sub get_merge_video_audio_command {
 		$self->nr
 	);
 
+	my $nice;
+	$nice = "`which nice` -n ".$self->tc_nice." "
+		if $self->tc_nice =~ /\S/;
+
 	my $command =
 		"mkdir -m 0775 -p '$audio_video_psu_dir' && ".
-		"avimerge -i $avi_chunks_dir/*".
+		"${nice}avimerge -i $avi_chunks_dir/*".
 		" -o $audio_video_psu_file ";
 	
 	$command .= " -p $audio_psu_file " if not $self->is_ogg;
@@ -322,10 +337,14 @@ sub get_merge_psu_command {
 	my $target_avi_dir       = dirname($target_avi_file);
 	my $audio_video_psu_dir  = $self->audio_video_psu_dir;
 
+	my $nice;
+	$nice = "`which nice` -n ".$self->tc_nice." "
+		if $self->tc_nice =~ /\S/;
+
 	my $command =
 		"mkdir -m 0775 -p '$target_avi_dir' && ".
-		"avimerge -o '$target_avi_file' ".
-		" -i $audio_video_psu_dir/*.avi 2>/dev/null";
+		"${nice} avimerge -o '$target_avi_file' ".
+		" -i $audio_video_psu_dir/*.avi";
 
 	$command .= " && echo DVDRIP_SUCCESS";
 	$command .= " && rm $audio_video_psu_dir/*.avi"

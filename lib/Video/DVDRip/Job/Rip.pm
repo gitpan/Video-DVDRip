@@ -1,7 +1,8 @@
-# $Id: Rip.pm,v 1.4 2002/11/01 13:32:30 joern Exp $
+# $Id: Rip.pm,v 1.9 2003/02/08 11:29:21 joern Exp $
 
 #-----------------------------------------------------------------------
-# Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
+# Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
+# All Rights Reserved. See file COPYRIGHT for details.
 # 
 # This program is part of Video::DVDRip, which is free software; you can
 # redistribute it and/or modify it under the same terms as Perl itself.
@@ -34,12 +35,19 @@ sub info {
 sub init {
 	my $self = shift;
 	
-	my $title = $self->title;
+	my $title   = $self->title;
+	my $chapter = $self->chapter;
 	
 	$self->set_progress_show_fps ( 1 );
 	
-	if ( not $self->chapter or $self->title->tc_use_chapter_mode eq 'all' ) {
+	if ( not $chapter or $self->title->tc_use_chapter_mode eq 'all' ) {
 		$self->set_progress_max ( $title->frames );
+
+	} elsif ( $chapter and $self->title->chapter_frames->{$chapter} ) {
+		$self->set_progress_max (
+			$self->title->chapter_frames->{$chapter}
+		);
+
 	} else {
 		$self->set_progress_show_percent( 0 );
 		$self->set_progress_max ( 0 );
@@ -91,15 +99,20 @@ sub commit {
 	
 	my $title = $self->title;
 	
+	my $count = 0;
+
+	$count = 1 if $self->chapter and
+		      $self->chapter != $title->get_first_chapter;
+
 	$title->analyze_scan_output (
-		output => $self->pipe->output
+		output => $self->pipe->output,
+		count  => $count,
 	);
 	
-	my $tc_audio_tracks = $title->tc_audio_tracks;
-	my $audio_channel   = $title->audio_channel;
+	my $audio_tracks  = $title->audio_tracks;
 	
-	$_->set_tc_target_track(-1) for @{$tc_audio_tracks};
-	$tc_audio_tracks->[$audio_channel]->set_tc_target_track(0);
+	$_->set_tc_target_track(-1) for @{$audio_tracks};
+	$title->audio_track->set_tc_target_track(0);
 
 	$title->set_actual_chapter($self->chapter);
 

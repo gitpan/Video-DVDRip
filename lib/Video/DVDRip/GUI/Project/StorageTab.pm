@@ -1,7 +1,8 @@
-# $Id: StorageTab.pm,v 1.14 2002/11/03 11:36:59 joern Exp $
+# $Id: StorageTab.pm,v 1.21 2003/02/05 22:16:19 joern Exp $
 
 #-----------------------------------------------------------------------
-# Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
+# Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
+# All Rights Reserved. See file COPYRIGHT for details.
 # 
 # This module is part of Video::DVDRip, which is free software; you can
 # redistribute it and/or modify it under the same terms as Perl itself.
@@ -64,6 +65,14 @@ sub create_storage_frame {
 				$text = "/$text";
 				$_[0]->set_text($text);
 			}
+			if ( $text =~ /[\s'"#~*?`{}&!\$]/ ) {
+				$text = $self->project->vob_dir;
+				$_[0]->set_text($text);
+			}
+			if ( $text =~ /\s+$/ ) {
+				$text =~ s/\s+$//;
+				$_[0]->set_text($text);
+			}
 		  	$self->project->set_vob_dir ($text)
 		  },
 		},
@@ -74,6 +83,14 @@ sub create_storage_frame {
 		  	my $text = $_[0]->get_text;
 			if ( not $text =~ m!^/! ) {
 				$text = "/$text";
+				$_[0]->set_text($text);
+			}
+			if ( $text =~ /[\s'"#~*?`{}&!\$]/ ) {
+				$text = $self->project->avi_dir;
+				$_[0]->set_text($text);
+			}
+			if ( $text =~ /\s+$/ ) {
+				$text =~ s/\s+$//;
 				$_[0]->set_text($text);
 			}
 		  	$self->project->set_avi_dir ($text)
@@ -88,6 +105,14 @@ sub create_storage_frame {
 				$text = "/$text";
 				$_[0]->set_text($text);
 			}
+			if ( $text =~ /[\s'"#~*?`{}&!\$]/ ) {
+				$text = $self->project->snap_dir;
+				$_[0]->set_text($text);
+			}
+			if ( $text =~ /\s+$/ ) {
+				$text =~ s/\s+$//;
+				$_[0]->set_text($text);
+			}
 		  	$self->project->set_snap_dir ($text)
 		  },
 		},
@@ -96,7 +121,7 @@ sub create_storage_frame {
 	# changes of project name should also change
 	# vob- and avi-dir, if they are not touched yet
 	$widgets->[0]->signal_connect ("changed", sub {
-		if ( $widgets->[0]->get_text =~ /\s/ ) {
+		if ( $widgets->[0]->get_text =~ /[\s'"#~*?`{}&!\$\/]/ ) {
 			# spaces in project name not allowed
 			$widgets->[0]->set_text ( $self->project->name );
 			return 1;
@@ -133,6 +158,11 @@ sub create_storage_frame {
 			$self->config('program_name')." - ".$self->project->name
 		);
 	});
+
+	$self->storage_widgets->{project_name} = $widgets->[0];
+	$self->storage_widgets->{vob_dir}      = $widgets->[1];
+	$self->storage_widgets->{avi_dir}      = $widgets->[2];
+	$self->storage_widgets->{tmp_dir}      = $widgets->[3];
 
 	$hbox->pack_start ( $dialog, 0, 1, 0);
 	$frame->add ($hbox);
@@ -184,9 +214,12 @@ sub create_source_frame {
 	$hbox->show;
 	$label = Gtk::Label->new (
 		"\n".
-		"Use the following modes only, if ripping is no option for you.\n".
-		"Many interesting features are disabled for them."
+		"Use one of the following modes only, if ripping is no option for you.\n".
+		"Many interesting features are disabled for them:\n".
+		"No AC3, no subtitles, no PSU core for NTSC A/V sync optimization and\n".
+		"also preview grabbing and frame range transcoding is rather slow."
 	);
+
 	$label->set_justify('left');
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
@@ -245,11 +278,15 @@ sub create_source_frame {
 		} );
 	}
 	
-	$widgets->{rip_mode_dvd_image_dir}->signal_connect ("focus-out-event", sub {
+	$widgets->{rip_mode_dvd_image_dir}->signal_connect ("changed", sub {
 		return 1 if $self->in_storage_init;
 	  	my $text = $_[0]->get_text;
 		if ( not $text =~ m!^/! ) {
 			$text = "/$text";
+			$_[0]->set_text($text);
+		}
+		if ( $text =~ /\s+$/ ) {
+			$text =~ s/\s+$//;
 			$_[0]->set_text($text);
 		}
 		$self->project->set_dvd_image_dir ( $text );
@@ -270,6 +307,13 @@ sub init_storage_values {
 	$widgets->{rip_mode_dvd_image_dir}->set_text ($project->dvd_image_dir);
 
 	my $mode = $project->rip_mode || "rip";
+	
+	my $sensitive = not -d $project->snap_dir;
+	
+	$widgets->{project_name}->set_sensitive($sensitive);
+	$widgets->{vob_dir}->set_sensitive($sensitive);
+	$widgets->{avi_dir}->set_sensitive($sensitive);
+	$widgets->{tmp_dir}->set_sensitive($sensitive);
 
 	$self->set_in_storage_init(0);
 

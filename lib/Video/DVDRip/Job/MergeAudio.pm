@@ -1,7 +1,8 @@
-# $Id: MergeAudio.pm,v 1.5 2002/10/16 14:22:12 joern Exp $
+# $Id: MergeAudio.pm,v 1.10 2003/01/28 20:19:57 joern Exp $
 
 #-----------------------------------------------------------------------
-# Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
+# Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
+# All Rights Reserved. See file COPYRIGHT for details.
 # 
 # This program is part of Video::DVDRip, which is free software; you can
 # redistribute it and/or modify it under the same terms as Perl itself.
@@ -65,15 +66,18 @@ sub init {
 sub get_diskspace_needed {
 	my $self = shift; $self->trace_in;
 
-	my $bitrate = $self->title->tc_audio_tracks
+	my $video_size = $self->title->tc_target_size * 1024;
+
+	return $video_size if $self->vob_nr == -1;
+	
+	my $bitrate = $self->title->audio_tracks
 				  ->[$self->vob_nr]
 				  ->tc_bitrate;
 
 	my $runtime = $self->title->runtime;
 
-	my $video_size = $self->title->tc_target_size * 1024;
 	my $audio_size = int($runtime * $bitrate / 8);
-	
+
 	return $audio_size + $video_size;
 }
 
@@ -108,7 +112,7 @@ sub parse_output {
 	my $self = shift;
 	my ($line) = @_;
 
-	if ( $self->title->tc_audio_codec eq 'ogg' ) {
+	if ( $self->title->is_ogg ) {
 		$self->set_progress_cnt ($1) if $line =~ /(\d+)/;
 	} else {
 		$self->set_progress_cnt ($1) if $line =~ /\(\d+-(\d+)\)/;

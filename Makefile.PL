@@ -1,4 +1,4 @@
-# $Id: Makefile.PL,v 1.17.2.1 2002/11/23 13:38:53 joern Exp $
+# $Id: Makefile.PL,v 1.19 2002/12/27 00:15:30 joern Exp $
 
 use strict;
 
@@ -17,12 +17,7 @@ WriteMakefile(
     'dist' => {
          COMPRESS => "gzip",
          SUFFIX   => "gz",
-	 PREOP    => 'tools/add_changes;'.
-	 	     'tools/genreadme > README; '.
-	 	     'cp Changes ../dvdrip-web/; '.
-		     'tools/gensplash; '.
-		     'tools/genrpmspec; ',
-	 POSTOP   => 'tools/movedist *.tar.gz',
+	 PREOP    => 'echo "DONT USE THIS - USE tools/mkdist.pl INSTEAD"; exit 1',
     },
 );
 

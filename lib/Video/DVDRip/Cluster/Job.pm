@@ -1,7 +1,8 @@
-# $Id: Job.pm,v 1.13 2002/09/30 21:04:43 joern Exp $
+# $Id: Job.pm,v 1.16 2003/01/28 20:19:57 joern Exp $
 
 #-----------------------------------------------------------------------
-# Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
+# Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
+# All Rights Reserved. See file COPYRIGHT for details.
 # 
 # This program is part of Video::DVDRip, which is free software; you can
 # redistribute it and/or modify it under the same terms as Perl itself.
@@ -53,6 +54,7 @@ sub log {
 	my $self = shift; $self->trace_in;
 	my ($msg) = @_;
 
+	$msg =~ s/\n$//;
 	$msg .= " on node ".$self->node->name;
 	
 	return $self->SUPER::log ($msg);

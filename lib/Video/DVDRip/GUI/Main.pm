@@ -1,7 +1,8 @@
-# $Id: Main.pm,v 1.54.2.1 2002/11/23 13:40:48 joern Exp $
+# $Id: Main.pm,v 1.62 2003/02/08 10:39:43 joern Exp $
 
 #-----------------------------------------------------------------------
-# Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
+# Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
+# All Rights Reserved. See file COPYRIGHT for details.
 # 
 # This module is part of Video::DVDRip, which is free software; you can
 # redistribute it and/or modify it under the same terms as Perl itself.
@@ -17,6 +18,8 @@ use Video::DVDRip::GUI::Project;
 use Video::DVDRip::GUI::Config;
 use Video::DVDRip::GUI::ImageClip;
 use Video::DVDRip::GUI::CheckedEntry;
+use Video::DVDRip::GUI::Setting::Text;
+use Video::DVDRip::GUI::Setting::Checkbox;
 
 use strict;
 use Data::Dumper;
@@ -44,80 +47,69 @@ sub start {
 
 	Gtk->init;
 
-#Gtk::Rc->parse_string(<<"EOF");
-#style "user-font"
-#{
-#  fontset="-adobe-helvetica-medium-r-normal-*-*-100-*-*-*-*-*-*"
-#}
-#widget_class "*" style "user-font"
-#EOF
-
 	Gtk::Widget->set_default_colormap(Gtk::Gdk::Rgb->get_cmap());
 	Gtk::Widget->set_default_visual(Gtk::Gdk::Rgb->get_visual());
 
 	$self->build if not $open_cluster_control;
 
-	my $project;
-	if ( $filename ) {
-		$self->open_project_file (
-			filename => $filename
+	if ( $self->dependencies_ok ) {
+		my $project;
+		if ( $filename ) {
+			$self->open_project_file (
+				filename => $filename
+			);
+			eval { $project = $self->comp('project')->project };
+		}
+
+		$self->log (
+			"Detected transcode version: ".$self->version ("transcode")
 		);
-		eval { $project = $self->comp('project')->project };
-	}
 
-	$self->log (
-		"Detected transcode version: $TC::ORIG_VERSION (=> $TC::VERSION)"
-	);
-	$self->log (
-		"Detected subtitleripper version: $STR::VERSION"
-	);
+		# Open Cluster Control window, if requested
+		$self->cluster_control ( exit_on_close => 1 )
+			if $open_cluster_control;
 
-	$self->check_annoying_red_hat_8_0_perl_BUG;
+		# Error check
 
-	# Open Cluster Control window, if requested
-	$self->cluster_control ( exit_on_close => 1 )
-		if $open_cluster_control;
-
-	# Error check
-
-	if ( ($select_title or $function) and not $project
-	      and $function ne 'preferences' ) {
-		print STDERR "Opening project file failed. Aborting.\n";
-		exit 1;
-	}
-
-	# Select a title, if requested
-	if ( $select_title ) {
-		$self->log ("Selecting title $select_title");
-		my $title = $project->content->titles->{$select_title};
-		if ( $title ) {
-			# unselect old title
-			$self->comp('project')
-			     ->rip_title_widgets
-			     ->{content_clist}
-			     ->unselect_row ($project->selected_title_nr-1, 1);
-			# select new title
-			$self->comp('project')
-			     ->rip_title_widgets
-			     ->{content_clist}
-			     ->select_row ($select_title-1, 1);
-		} else {
-			print STDERR "Can't select title $select_title. Aborting.\n";
+		if ( ($select_title or $function) and not $project
+		      and $function ne 'preferences' ) {
+			print STDERR "Opening project file failed. Aborting.\n";
 			exit 1;
 		}
-	}
 
-	# Execute a function, if requested
-	if ( $function eq 'preferences' ) {
-		$self->edit_preferences;
-	} elsif ( $function ) {
-		my $title = $self->comp('project')->selected_title;
-		$self->comp('project')->gtk_notebook->set_page( 3 );
-		$title->set_tc_exit_afterwards('dont_save');
-		if ( $function eq 'transcode' ) {
-			$self->comp('project')->transcode;
-		} elsif ( $function eq 'transcode_split' ) {
-			$self->comp('project')->transcode ( split => 1 );
+		# Select a title, if requested
+		if ( $select_title ) {
+			$self->log ("Selecting title $select_title");
+			my $title = $project->content->titles->{$select_title};
+			if ( $title ) {
+				# unselect old title
+				$self->comp('project')
+				     ->rip_title_widgets
+				     ->{content_clist}
+				     ->unselect_row ($project->selected_title_nr-1, 1);
+				# select new title
+				$self->comp('project')
+				     ->rip_title_widgets
+				     ->{content_clist}
+				     ->select_row ($select_title-1, 1);
+			} else {
+				print STDERR "Can't select title $select_title. Aborting.\n";
+				exit 1;
+			}
+		}
+
+		# Execute a function, if requested
+		if ( $function eq 'preferences' ) {
+			$self->edit_preferences;
+		} elsif ( $function ) {
+			my $title = $self->comp('project')->selected_title;
+			$self->comp('project')->gtk_notebook->set_page( 3 );
+			$title->set_tc_exit_afterwards('dont_save');
+			if ( $function eq 'transcode' ) {
+				$self->comp('project')->transcode;
+			} elsif ( $function eq 'transcode_split' ) {
+				$self->comp('project')->transcode ( split => 1 );
+			}
 		}
 	}
 
@@ -335,6 +327,8 @@ sub create_menubar {
 		  	return 1 if not $self->project_opened;
 		  	$self->comp('project')->add_to_cluster
 		} },
+		{ path	      => '/_Operate/sep_vobsub',
+		  type	      => '<Separator>' },
                 { path        => '/_Operate/Create splitted _vobsub(s)',
                   callback    => sub {
 		  	return 1 if not $self->project_opened;
@@ -345,6 +339,8 @@ sub create_menubar {
 		  	return 1 if not $self->project_opened;
 		  	$self->comp('project')->create_non_splitted_vobsub
 		} },
+		{ path	      => '/_Operate/sep_info',
+		  type	      => '<Separator>' },
                 { path        => '/_Operate/Create dvdrip-info file',
                   callback    => sub {
 		  	return 1 if not $self->project_opened;
@@ -354,6 +350,14 @@ sub create_menubar {
 				title    => $title,
 				filename => $title->info_file,
 			)->write;
+			1;
+		} },
+		{ path	      => '/_Operate/sep_wav',
+		  type	      => '<Separator>' },
+                { path        => '/_Operate/Create WAV from selected audio track',
+                  callback    => sub {
+		  	return 1 if not $self->project_opened;
+		  	$self->comp('project')->create_wav;
 			1;
 		} },
 
@@ -371,6 +375,10 @@ sub create_menubar {
                 { path        => '/_Debug/Show _Transcode commands...',
 		  accelerator => '<control>t',
                   callback    => sub { $self->show_transcode_commands } },
+
+                { path        => '/_Debug/Check _dependencies...',
+		  accelerator => '<control>d',
+                  callback    => sub { $self->show_dependencies } },
 	);
 
 	my $accel_group = Gtk::AccelGroup->new;
@@ -390,6 +398,8 @@ sub create_menubar {
 sub new_project {
 	my $self = shift;
 	
+	return if not $self->dependencies_ok;
+
 	return if $self->unsaved_project_open (
 		wants => "new_project"
 	);
@@ -452,6 +462,8 @@ sub set_window_title {
 sub open_project {
 	my $self = shift;
 
+	return if not $self->dependencies_ok;
+
 	return if $self->unsaved_project_open (
 		wants => "open_project"
 	);
@@ -472,6 +484,8 @@ sub open_project_file {
 	my %par = @_;
 	my ($filename) = @par{'filename'};
 	
+	return if not $self->dependencies_ok;
+
 	if ( not -r $filename ) {
 		$self->message_window (
 			message => "File '$filename' not found or not readable."
@@ -635,6 +649,8 @@ sub cluster_control {
 	my %par = @_;
 	my ($exit_on_close) = @par{'exit_on_close'};
 
+	return if not $self->dependencies_ok;
+
 	require Video::DVDRip::GUI::Cluster::Control;
 
 	if ( ($self->config('cluster_master_local') or
@@ -717,7 +733,7 @@ sub show_transcode_commands {
 		$commands .= "\n".$title->get_mplex_command( split => 1 ),"\n";
 	}
 
-	if ( $title->tc_audio_codec eq 'ogg' ) {
+	if ( $title->is_ogg ) {
 		$commands .= "\n".$title->get_merge_audio_command (
 			vob_nr => $title->get_first_audio_track,
 			avi_nr => 0,
@@ -786,6 +802,18 @@ sub show_transcode_commands {
 		     "==================\n".
 		     $burn_command;
 
+	$commands .= "\n\n";
+	
+	my $wav_command = eval { $title->get_create_wav_command };
+	
+	if ( $wav_command ) {
+	
+		$commands .= "WAV creation command:\n".
+			     "====================\n".
+			     $wav_command;
+
+	}
+
 	$self->long_message_window (
 		message => $commands
 	);
@@ -793,37 +821,30 @@ sub show_transcode_commands {
 	1;
 }
 
-sub check_annoying_red_hat_8_0_perl_BUG {
+sub show_dependencies {
 	my $self = shift;
 
-	my $warn = 0;
+	require Video::DVDRip::GUI::Depend;
 
-	if ( -x "/bin/rpm" ) {
-		my $rh_release = qx[/bin/rpm -q redhat-release];
-		if ( $rh_release =~ /8\.0/ ) {
-			if ( $ENV{PERLIO} ne 'stdio' and
-			     not -f "$ENV{HOME}/.dvdrip-no-rh8-warn" ) {
-			     	$warn = 1;
-			}
-		}
-	}
-
-	$self->long_message_window (
-	    message =>
-		"You're running RedHat 8.0. The Perl version of this RedHat\n".
-		"release is broken. If you get errors when reading the DVD TOC,\n".
-		"set the following environment variable, before starting dvd::rip:\n".
-		"\n".
-		"  export PERLIO=stdio\n".
-		"\n".
-		"If your RedHat version works without this environment variable,\n".
-		"they obviously fixed the bug in the meantime. Execute the following\n".
-		"command to get rid of this warning message:\n".
-		"\n".
-		"  touch ~/.dvdrip-no-rh8-warn"
-	) if $warn;
+	my $depend = Video::DVDRip::GUI::Depend->new;
+	$depend->open_window;
 	
 	1;
 }
 
+sub dependencies_ok {
+	my $self = shift;
+	
+	return 1 if $self->depend_object->ok;
+
+	$self->show_dependencies;
+	$self->message_window (
+		message =>
+			"One or several mandatory tools are\n".
+			"missing or too old. You must install them\n".
+			"before you can proceed with dvd::rip."
+	);
+
+	return 0;
+}
 1;

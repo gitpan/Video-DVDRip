@@ -1,7 +1,8 @@
-# $Id: Config.pm,v 1.28 2002/10/29 20:46:49 joern Exp $
+# $Id: Config.pm,v 1.42 2003/02/10 11:56:44 joern Exp $
 
 #-----------------------------------------------------------------------
-# Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
+# Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
+# All Rights Reserved. See file COPYRIGHT for details.
 # 
 # This module is part of Video::DVDRip, which is free software; you can
 # redistribute it and/or modify it under the same terms as Perl itself.
@@ -19,16 +20,16 @@ use Data::Dumper;
 use Carp;
 
 sub config			{ shift->{config}			}
+
 sub order			{ shift->{order}			}
 sub presets			{ shift->{presets}			}
-
 sub filename			{ shift->{filename}			}
 sub last_saved_data		{ shift->{last_saved_data}		}
 
+sub set_order			{ shift->{order}		= $_[1] }
+sub set_presets			{ shift->{presets}		= $_[1] }
 sub set_filename		{ shift->{filename}		= $_[1] }
 sub set_last_saved_data		{ shift->{last_saved_data}	= $_[1] }
-sub set_presets			{ shift->{presets}		= $_[1] }
-sub set_order			{ shift->{order}		= $_[1] }
 
 my %CONFIG_PARAMETER = (
 	program_name => {
@@ -59,6 +60,16 @@ my %CONFIG_PARAMETER = (
 		type => 'dir',
 		value => "/cdrom",
 	},
+	writer_device => {
+		label => "Writer device file",
+		type => 'file',
+		value => "/dev/cdrom",
+	},
+	eject_command => {
+		label => "Eject Command",
+		type => 'string',
+		value => "eject",
+	},
 	play_dvd_command => {
 		label => "DVD player command",
 		type  => 'string',
@@ -87,6 +98,14 @@ my %CONFIG_PARAMETER = (
 			'xine stdin://mpeg2 -g -pq -a %a',
 		],
 	},
+	rar_command => {
+		label => "rar command (for vobsub compression)",
+		type  => 'string',
+		value => 'rar',
+		presets => [
+			'rar',
+		],
+	},
 	base_project_dir => {
 		label => "Default data base directory",
 		type => 'dir',
@@ -106,8 +125,38 @@ my %CONFIG_PARAMETER = (
 			'ogm',
 		],
 	},
+	cluster_master_local => {
+		label => "Start cluster control daemon locally",
+		type  => 'switch',
+		value => 1,
+	},
+	cluster_master_server => {
+		label => "Hostname of server with daemon",
+		type  => 'string',
+		value => "",
+	},
+	cluster_master_port => {
+		label => "TCP port number of daemon",
+		type  => 'number',
+		value => 28646,
+	},
+	show_tooltips => {
+		label => "Show tooltips",
+		type  => 'switch',
+		value => 1,
+	},
+	default_video_codec => {
+		label => "Default Video Codec",
+		type  => 'string',
+		value => 'divx4',
+		presets => [
+			"SVCD","VCD","divx4","divx5",
+			"xvid","xvidcvs","ffmpeg","fame",
+			"af6"
+		],
+	},
 	burn_cdrecord_device => {
-		label => "cdrecord device",
+		label => "cdrecord device (n,n,n)",
 		type  => 'string',
 		value => '0,X,0',
 	},
@@ -119,7 +168,16 @@ my %CONFIG_PARAMETER = (
 	},
 	burn_test_mode => {
 		label => "Simulate burning",
+		type  => 'switch',
 		value => 0,
+	},
+	burn_estimate_size => {
+		label => "Estimate ISO size",
+		type  => 'switch',
+		value => 0,
+		tooltip => "Estimate the size before start writing. ".
+			   "Necessary for some TEAC drives for burning ".
+			   "ISO discs on-the-fly",
 	},
 	burn_cdrecord_cmd => {
 		label => "cdrecord command",
@@ -148,52 +206,60 @@ my %CONFIG_PARAMETER = (
 		value => 'cdrdao',
 		presets => ['cdrdao'],
 	},
-	cluster_master_local => {
-		label => "Start cluster control daemon locally",
-		type  => 'switch',
-		value => 1,
-	},
-	cluster_master_server => {
-		label => "Hostname of server with daemon",
+	burn_cdrdao_driver => {
+		label => "cdrdao driver",
 		type  => 'string',
-		value => "",
-	},
-	cluster_master_port => {
-		label => "TCP port number of daemon",
-		type  => 'number',
-		value => 28646,
-	},
-	show_tooltips => {
-		label => "Show tooltips",
-		type  => 'switch',
-		value => 1,
-	},
-	default_video_codec => {
-		label => "Default Video Codec",
-		type  => 'string',
-		value => 'divx4',
+		value => '',
 		presets => [
-			"SVCD","VCD","divx4","divx5",
-			"xvid","xvidcvs","ffmpeg4","fame",
-			"af6"
+			'', 'cdd2600','generic-mmc','generic-mmc-raw','plextor',
+			'plextor-scan','ricoh-mp6200','sony-cdu920',
+			'sony-cdu948','taiyo-yuden','teac-cdr55','toshiba',
+			'yamaha-cdr10x',
 		],
+	},
+	burn_cdrdao_overburn => {
+		label => "Overburning",
+		type  => 'switch',
+		value => 1,
+	},
+	burn_cdrdao_eject => {
+		label => "Eject disc after write",
+		type  => 'switch',
+		value => 1,
+	},
+	burn_cdrdao_buffers => {
+		label => "Buffersize",
+		type  => 'string',
+		value => '',
+	},
+	dvdcss_method => {
+		label => "libdvdcss method",
+		type  => 'string',
+		value => 'title',
+		presets => ['title', 'key', 'disc'],
+		onload => sub { $ENV{DVDCSS_METHOD} = $_[0] }
 	},
 );
 
 my @CONFIG_ORDER = (
 	"Filesystem" => [qw(
 		dvd_device         dvd_mount_point
-		base_project_dir
-		dvdrip_files_dir   ogg_file_ext
+		base_project_dir   dvdrip_files_dir
+		ogg_file_ext
 	)],
-	"Player commands" => [qw(
+	"Commands" => [qw(
 		play_dvd_command   play_file_command
-		play_stdin_command
+		play_stdin_command rar_command
 	)],
 	"CD burning" => [qw(
-		burn_writing_speed   burn_cdrecord_device 
+		writer_device        burn_cdrecord_device
 		burn_cdrecord_cmd    burn_cdrdao_cmd
-		burn_mkisofs_cmd     burn_vcdimager_cmd   
+		burn_mkisofs_cmd     burn_vcdimager_cmd
+		burn_writing_speed   burn_estimate_size
+	)],
+	"cdrdao options" => [qw(
+		burn_cdrdao_driver   burn_cdrdao_overburn
+		burn_cdrdao_eject    burn_cdrdao_buffers
 	)],
 	"Cluster options" => [qw(
 		cluster_master_local cluster_master_server
@@ -202,6 +268,7 @@ my @CONFIG_ORDER = (
 	"Miscellaneous options" => [qw(
 		default_video_codec  show_tooltips
 		main_window_width    main_window_height
+		dvdcss_method        
 	)],
 );
 
@@ -274,8 +341,8 @@ sub new {
 			title => "VCD 4:3, PAL",
 			tc_clip1_top	=> 0,
 			tc_clip1_bottom	=> 0,
-			tc_clip1_left	=> 32,
-			tc_clip1_right	=> 32,
+			tc_clip1_left	=> 0,
+			tc_clip1_right	=> 0,
 			tc_zoom_width	=> 352,
 			tc_zoom_height	=> 288,
 			tc_clip2_top	=> 0,
@@ -290,12 +357,12 @@ sub new {
 			title => "VCD 16:9, PAL",
 			tc_clip1_top	=> 0,
 			tc_clip1_bottom	=> 0,
-			tc_clip1_left	=> 80,
-			tc_clip1_right	=> 80,
+			tc_clip1_left	=> 48,
+			tc_clip1_right	=> 48,
 			tc_zoom_width	=> 352,
-			tc_zoom_height	=> 256,
-			tc_clip2_top	=> -16,
-			tc_clip2_bottom	=> -16,
+			tc_zoom_height	=> 248,
+			tc_clip2_top	=> -20,
+			tc_clip2_bottom	=> -20,
 			tc_clip2_left	=> 0,
 			tc_clip2_right	=> 0,
 			tc_fast_resize  => 1,
@@ -319,7 +386,7 @@ sub new {
 		),
 		Video::DVDRip::Preset->new (
 			name => "svcd_pal",
-			title => "SVCD 16:9 anamorph, PAL",
+			title => "SVCD anamorph, PAL",
 			tc_clip1_top	=> 0,
 			tc_clip1_bottom	=> 0,
 			tc_clip1_left	=> 0,
@@ -336,8 +403,8 @@ sub new {
 		Video::DVDRip::Preset->new (
 			name => "vcd_ntsc_43",
 			title => "VCD 4:3, NTSC",
-			tc_clip1_top	=> 20,
-			tc_clip1_bottom	=> 20,
+			tc_clip1_top	=> 0,
+			tc_clip1_bottom	=> 0,
 			tc_clip1_left	=> 0,
 			tc_clip1_right	=> 0,
 			tc_zoom_width	=> 352,
@@ -354,12 +421,12 @@ sub new {
 			title => "VCD 16:9, NTSC",
 			tc_clip1_top	=> 0,
 			tc_clip1_bottom	=> 0,
-			tc_clip1_left	=> 16,
-			tc_clip1_right	=> 16,
+			tc_clip1_left	=> 32,
+			tc_clip1_right	=> 32,
 			tc_zoom_width	=> 352,
-			tc_zoom_height	=> 208,
-			tc_clip2_top	=> -16,
-			tc_clip2_bottom	=> -16,
+			tc_zoom_height	=> 200,
+			tc_clip2_top	=> -20,
+			tc_clip2_bottom	=> -20,
 			tc_clip2_left	=> 0,
 			tc_clip2_right	=> 0,
 			tc_fast_resize  => 1,
@@ -412,17 +479,29 @@ sub load {
 	my $self = shift;
 	
 	my $filename = $self->filename;
-	confess "no filename set" if not $filename;
-	confess "can't read $filename" if not -r $filename;
+	die "no filename set" if not $filename;
+	die "can't read $filename" if not -r $filename;
 	
 	my $loaded;
 	$loaded = do $filename;
-	confess "can't load $filename. Perl error: $@" if $@;
+	
+	if (  $@ or ref $loaded ne 'Video::DVDRip::Config' ) {
+		print
+		     "\nCan't load $filename (Preferences)\n$@\n".
+		     "File is probably broken.\n".
+	 	     "Remove it (Note: your Preferences will be LOST)\n".
+		     "and try again.\n\n";
+		exit 1;
+	}
 
 	foreach my $par ( keys %{$self->config} ) {
 		if ( exists $loaded->config->{$par} ) {
 			$self->config->{$par}->{value} =
 				$loaded->config->{$par}->{value};
+		}
+		if ( exists $self->config->{$par}->{onload} ) {
+			my $onload = $self->config->{$par}->{onload};
+			&$onload($self->get_value($par));
 		}
 	}
 	
@@ -448,14 +527,14 @@ sub save {
 	my $self = shift; $self->trace_in;
 	
 	my $filename = $self->filename;
-	confess "not filename set" if not $filename;
+	die "not filename set" if not $filename;
 	
 	my $data_sref = $self->get_save_data;
 	
 	my $fh = FileHandle->new;
 
-	open ($fh, "> $filename") or confess "can't write $filename";
-	print $fh q{# $Id: Config.pm,v 1.28 2002/10/29 20:46:49 joern Exp $},"\n";
+	open ($fh, "> $filename") or die "can't write $filename";
+	print $fh q{# $Id: Config.pm,v 1.42 2003/02/10 11:56:44 joern Exp $},"\n";
 	print $fh "# This file was generated by Video::DVDRip Version $Video::DVDRip::VERSION\n\n";
 
 	print $fh ${$data_sref};
@@ -551,20 +630,22 @@ sub get_preset {
 sub test_play_dvd_command   	{ _executable (@_) 	}
 sub test_play_file_command  	{ _executable (@_) 	}
 sub test_play_stdin_command 	{ _executable (@_) 	}
-
+sub test_rar_command 		{ _executable (@_) 	}
 sub test_dvd_device		{ _writable (@_)	}
+sub test_writer_device		{ _writable (@_)	}
 sub test_dvd_mount_point	{ _exists (@_)		}
 sub test_base_project_dir	{ _writable (@_)	}
 sub test_dvdrip_files_dir	{ _writable (@_)	}
-
 sub test_burn_writing_speed	{ _numeric (@_)		}
 sub test_burn_cdrecord_device	{ _device (@_)		}
 sub test_burn_cdrecord_cmd   	{ _executable (@_) 	}
 sub test_burn_cdrdao_cmd   	{ _executable (@_) 	}
 sub test_burn_mkisofs_cmd   	{ _executable (@_) 	}
 sub test_burn_vcdimager_cmd   	{ _executable (@_) 	}
-
+sub test_burn_cdrdao_buffers    { _numeric_or_empty(@_) }
 sub test_cluster_master_port	{ _numeric (@_)		}
+sub test_dvdcss_method		{ _one_of_these (@_, ['disc','title','key'] ) }
+sub test_eject_command		{ _executable (@_) 	}
 
 sub _executable {
 	my $self = shift;
@@ -593,6 +674,8 @@ sub _writable {
 	
 	my $value = $self->get_value ($name);
 
+	return "has whitespace : NOT Ok" if $value =~ /\s/;
+
 	if ( not -w $value ) {
 		return "$value not found : NOT Ok" if not -e $value;
 		return "$value not writable : NOT Ok";
@@ -612,6 +695,16 @@ sub _numeric {
 	} else {
 		return "$value isn't numeric : NOT Ok";
 	}
+}
+
+sub _numeric_or_empty {
+	my $self = shift;
+	my ($name) = @_;
+	
+	my $value = $self->get_value ($name);
+
+	return "is empty : Ok" if $value eq '';
+	return $self->_numeric ($name);
 }
 
 sub _device {
@@ -639,5 +732,19 @@ sub _exists {
 		return "$value doesn't exist : NOT Ok";
 	}
 }
+
+sub _one_of_these {
+	my $self = shift;
+	my ($name, $lref) = @_;
+	
+	my $value = $self->get_value ($name);
+
+	foreach my $val ( @{$lref} ) {
+		return "'$value' is known : Ok" if $val eq $value;
+	}
+
+	return "'$value' unknown: NOT Ok";	
+}
+
 
 1;

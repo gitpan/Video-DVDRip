@@ -1,7 +1,8 @@
-# $Id: Project.pm,v 1.27.2.1 2002/12/02 18:22:38 joern Exp $
+# $Id: Project.pm,v 1.31 2003/01/28 20:19:57 joern Exp $
 
 #-----------------------------------------------------------------------
-# Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
+# Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
+# All Rights Reserved. See file COPYRIGHT for details.
 # 
 # This module is part of Video::DVDRip, which is free software; you can
 # redistribute it and/or modify it under the same terms as Perl itself.
@@ -172,6 +173,17 @@ sub close {
 
 	$self->log ("Project closed.");
 	$self->set_closed(1);
+	
+	1;
+}
+
+sub open_visual_frame_range {
+	my $self = shift;
+	
+	require Video::DVDRip::GUI::VisualFrameRange;
+	
+	my $visual_frame_range = Video::DVDRip::GUI::VisualFrameRange->new;
+	$visual_frame_range->build;
 	
 	1;
 }

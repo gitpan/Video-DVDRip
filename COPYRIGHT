@@ -1,0 +1,43 @@
+Copyright (C) 2001-2003 by Jörn Reder, All Rights Reserved.
+
+dvd::rip is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself (that's either GPL or Artistic License).
+
+Main development is done by Jörn Reder, but these developers (listed
+in chronological order) contributed to the project with patches:
+
+Norbert Preining <preining AT logic.at>
+* 0.24 - Fast resizing bugfix
+* 0.22 - Patch to make dvd::rip work with Perl 5.005
+
+Doug Shea <doug_shea AT alumni.ucsd.edu>
+* 0.31 - Alphabetical order for all generated file names
+
+Martin Hill <mhill AT alumni.uwaterloo.ca>
+* 0.38 - splitpipe.c fix, to compile on PPC architectures
+
+Wolfgang Kinkeldei <kinkeldei AT nureg.de>
+* 0.44 - "Show video from here" feature on Clip/Zoom page
+
+Petros Stavrakakis <petros AT stavrakakis.de>
+* 0.49 - cdrdao settings
+
+Stefan Gmeiner <riddlebox AT freesurf.ch>
+* 0.49 - ISO size estimation for on-the-fly burning
+
+Christoph Bartoschek <bartoschek AT gmx.de>
+* 0.49 - Frame range consideration for bitrate calculation
+
+Matthias Riese <matthias.riese AT Uni-Bremen.DE>
+* 0.49 - Pop existant re-opened single instance windows into foreground
+       - DVD TOC: no fixed width but occupies all space available
+
+Jarkko Hietaniemi <jhi AT iki.fi>
+* 0.49 - To keep dvd::rip's dependencies low, I added Jarkko's
+	 String::Scanf module to the distribution, moving it to
+	 dvd::rip's namespace, so it can't conflict with an
+	 existent original version.
+
+Kianusch Sayah Karadji <kianusch AT sk-tech.net>
+* 0.49 - Open/Close tray buttons on title and burn page
+       - Volume scanning for chapter mode

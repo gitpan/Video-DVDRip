@@ -1,7 +1,8 @@
-# $Id: SubtitleTab.pm,v 1.8.2.1 2002/11/23 13:44:19 joern Exp $
+# $Id: SubtitleTab.pm,v 1.14 2003/02/08 10:40:50 joern Exp $
 
 #-----------------------------------------------------------------------
-# Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
+# Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
+# All Rights Reserved. See file COPYRIGHT for details.
 # 
 # This module is part of Video::DVDRip, which is free software; you can
 # redistribute it and/or modify it under the same terms as Perl itself.
@@ -133,12 +134,11 @@ sub create_subtitle_select {
 
 	$table->attach ($hbox, 1, 2, $row, $row+1, 'fill','expand',0,0);
 
-	my $selected = $TC::VERSION >= 601.2002101 ?
-		"Activated:" : "You need transcode v0.6.2.20021010 or better.";
+	my $selected = "Activated:";
 
 	if ( $selected eq 'Activated:' ) {
-		$selected = "You need subtitleripper 0.3 or better"
-			if $STR::VERSION < 0.3;
+		$selected = "subtitle2pgm is missing or too old"
+			if $self->has("subtitle2pgm");
 	}
 
 	if ( $selected ne 'Activated:' ) {
@@ -214,7 +214,7 @@ sub create_subtitle_preview {
 	$entry->set_usize(60,undef);
 	$hbox->pack_start($entry, 0, 1, 0);
 	$widgets->{tc_preview_img_cnt} = $entry->entry;
-	$entry->entry->signal_connect ("focus-out-event", sub {
+	$entry->entry->signal_connect ("changed", sub {
 		return if $self->in_transcode_init;
 
 		my $subtitle =  $self->selected_title->selected_subtitle;
@@ -245,7 +245,7 @@ sub create_subtitle_preview {
 	$entry->set_usize (80, undef);
 	$hbox->pack_start ($entry, 0, 1, 0);
 	$widgets->{tc_preview_timecode} = $entry;
-	$entry->signal_connect ("focus-out-event", sub {
+	$entry->signal_connect ("changed", sub {
 		return if $self->in_transcode_init;
 		$self->selected_title
 		     ->selected_subtitle
@@ -718,7 +718,7 @@ sub create_subtitle_render {
 	foreach my $name ( qw ( tc_vertical_offset tc_time_shift tc_color_a
 				tc_color_b tc_test_image_cnt ) ) {
 		my $method = "set_$name";
-		$widgets->{$name}->signal_connect ( "focus-out-event", sub {
+		$widgets->{$name}->signal_connect ( "changed", sub {
 			return if $self->in_transcode_init;
 			my $subtitle = $self->selected_title->selected_subtitle;
 			$subtitle->$method($_[0]->get_text);
@@ -848,7 +848,9 @@ sub set_subtitle_sensitive {
 	my $sensitive = 1;
 	$sensitive = 0 if not $title->is_ripped or 
 			  not $subtitles or keys %{$subtitles} == 0 or
-			  $STR::VERSION < 0.3;
+			  not $self->has ("subtitle2pgm");
+
+
 
 	foreach my $type ( "select", "preview", "vobsub", "render" ) {
 		$widgets->{$type}->{frame}->set_sensitive($sensitive);
@@ -1074,7 +1076,7 @@ sub grab_subtitle_preview_images {
 	return 1 if $self->comp('progress')->is_active;
 	return 1 if not $title->selected_subtitle;
 
-	if ( not $self->has ( command => "subtitle2pgm" ) ) {
+	if ( not $self->has ( "subtitle2pgm" ) ) {
 		$self->message_window (
 			message => "Sorry, you need subtitle2pgm for this to work."
 		);
@@ -1336,7 +1338,7 @@ sub view_vobsub {
 	my $subtitle = $title->selected_subtitle;	
 	return 1 if not $subtitle;
 
-	if ( not $self->has ( command => "mplayer" ) ) {
+	if ( not $self->has ( "mplayer" ) ) {
 		$self->message_window (
 			message => "You need Mplayer to view vobsub files."
 		);

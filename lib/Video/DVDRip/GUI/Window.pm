@@ -1,4 +1,4 @@
-# $Id: Window.pm,v 1.1 2001/11/25 10:47:12 joern Exp $
+# $Id: Window.pm,v 1.3 2003/02/08 10:41:55 joern Exp $
 
 package Video::DVDRip::GUI::Window;
 
@@ -50,10 +50,14 @@ sub instance_closed {
 sub open_window {
 	my $self = shift;
 
-	return if $self->single_instance_window and
-	          $self->gtk_window_widget;
-	
-	$self->build(@_);
+	if ($self->single_instance_window and
+	    $self->gtk_window_widget ) {
+		$self->gtk_window_widget->hide();
+		$self->gtk_window_widget->show();
+		return;
+	}
+
+	$self->build(@_) or return 1;
 
 	confess ("Window component didn't set gtk_window_widget")
 		if not $self->gtk_window_widget;

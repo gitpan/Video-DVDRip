@@ -1,7 +1,8 @@
-# $Id: Title.pm,v 1.108.2.4 2002/12/13 22:38:23 joern Exp $
+# $Id: Title.pm,v 1.137 2003/02/10 11:58:52 joern Exp $
 
 #-----------------------------------------------------------------------
-# Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
+# Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
+# All Rights Reserved. See file COPYRIGHT for details.
 # 
 # This module is part of Video::DVDRip, which is free software; you can
 # redistribute it and/or modify it under the same terms as Perl itself.
@@ -11,12 +12,12 @@ package Video::DVDRip::Title;
 
 use base Video::DVDRip::Base;
 
-use Video::DVDRip::Scan;
 use Video::DVDRip::Probe;
 use Video::DVDRip::PSU;
 use Video::DVDRip::Audio;
-use Video::DVDRip::ProbeAudio;
 use Video::DVDRip::Subtitle;
+use Video::DVDRip::BitrateCalc;
+use Video::DVDRip::FilterSettings;
 
 use Carp;
 use strict;
@@ -35,24 +36,43 @@ sub set_project			{ shift->{project}		= $_[1] }
 # These attributes are probed from the DVD
 #------------------------------------------------------------------------
 
-sub width			{ shift->probe_result->width		}
-sub height			{ shift->probe_result->height		}
-sub aspect_ratio		{ shift->probe_result->aspect_ratio	}
-sub video_mode			{ shift->probe_result->video_mode	}
-sub letterboxed			{ shift->probe_result->letterboxed	}
-sub frames			{ shift->probe_result->frames		}
-sub runtime			{ shift->probe_result->runtime		}
-sub frame_rate			{ shift->probe_result->frame_rate	}
-sub audio_size			{ shift->probe_result->audio_size	}
-sub bitrates			{ shift->probe_result->bitrates		}
-sub audio_tracks		{ shift->probe_result->audio_tracks	}
-sub chapters			{ shift->probe_result->chapters		}
-sub viewing_angles		{ shift->probe_result->viewing_angles	}
+sub width			{ shift->{width}			}
+sub height			{ shift->{height}			}
+sub aspect_ratio		{ shift->{aspect_ratio}			}
+sub video_mode			{ shift->{video_mode}			}
+sub letterboxed			{ shift->{letterboxed}			}
+sub frames			{ shift->{frames}			}
+sub runtime			{ shift->{runtime}			}
+sub frame_rate			{ shift->{frame_rate}			}
+sub bitrates			{ shift->{bitrates}			}
+sub audio_tracks		{ shift->{audio_tracks}			}
+sub chapters			{ shift->{chapters}			}
+sub viewing_angles		{ shift->{viewing_angles}		}
+sub dvd_probe_output		{ shift->{dvd_probe_output}		}
+sub vob_probe_output		{ shift->{vob_probe_output}		}
+
+sub set_width			{ shift->{width}		= $_[1]	}
+sub set_height			{ shift->{height}		= $_[1]	}
+sub set_aspect_ratio		{ shift->{aspect_ratio}		= $_[1]	}
+sub set_video_mode		{ shift->{video_mode}		= $_[1]	}
+sub set_letterboxed		{ shift->{letterboxed}		= $_[1]	}
+sub set_frames			{ shift->{frames}		= $_[1]	}
+sub set_runtime			{ shift->{runtime}		= $_[1]	}
+sub set_frame_rate		{ shift->{frame_rate}		= $_[1]	}
+sub set_bitrates		{ shift->{bitrates}		= $_[1]	}
+sub set_audio_tracks		{ shift->{audio_tracks}		= $_[1]	}
+sub set_chapters		{ shift->{chapters}		= $_[1]	}
+sub set_viewing_angles		{ shift->{viewing_angles}	= $_[1]	}
+sub set_dvd_probe_output	{ shift->{dvd_probe_output}	= $_[1]	}
+sub set_vob_probe_output	{ shift->{vob_probe_output}	= $_[1]	}
+
+#------------------------------------------------------------------------
+# Some calculated attributes
+#------------------------------------------------------------------------
 
 sub nr				{ shift->{nr}				}
 sub size			{ shift->{size}				}
 sub audio_channel		{ shift->{audio_channel}		}
-sub probe_result		{ shift->{probe_result}			}
 sub preset			{ shift->{preset}			}
 sub last_applied_preset		{ shift->{last_applied_preset}		}
 sub preview_frame_nr		{ shift->{preview_frame_nr}		}
@@ -69,7 +89,6 @@ sub set_nr			{ shift->{nr}			= $_[1] }
 sub set_frames			{ shift->{frames}		= $_[1]	}
 sub set_size			{ shift->{size}			= $_[1] }
 sub set_audio_channel		{ shift->{audio_channel}	= $_[1] }
-sub set_probe_result		{ shift->{probe_result}		= $_[1] }
 sub set_preset			{ shift->{preset}		= $_[1] }
 sub set_last_applied_preset	{ shift->{last_applied_preset}	= $_[1]	}
 sub set_preview_frame_nr	{ shift->{preview_frame_nr}	= $_[1] }
@@ -85,7 +104,7 @@ sub set_bbox_max_y		{ shift->{bbox_max_y}		= $_[1]	}
 # input parameters for the transcode process.
 #------------------------------------------------------------------------
 
-sub tc_audio_tracks		{ shift->{tc_audio_tracks}		}
+sub tc_container		{ shift->{tc_container}			}
 sub tc_viewing_angle		{ shift->{tc_viewing_angle}      	}
 sub tc_deinterlace		{ shift->{tc_deinterlace} || 0 		}
 sub tc_anti_alias		{ shift->{tc_anti_alias}  || 0 		}
@@ -99,10 +118,11 @@ sub tc_clip2_top		{ shift->{tc_clip2_top}			}
 sub tc_clip2_bottom		{ shift->{tc_clip2_bottom}		}
 sub tc_clip2_left		{ shift->{tc_clip2_left}		}
 sub tc_clip2_right		{ shift->{tc_clip2_right}		}
-sub tc_use_yuv_internal		{ shift->{tc_use_yuv_internal}  	}
 sub tc_video_codec		{ shift->{tc_video_codec}		}
 sub tc_video_af6_codec		{ shift->{tc_video_af6_codec}		}
 sub tc_video_bitrate		{ shift->{tc_video_bitrate}      	}
+sub tc_video_bitrate_manual	{ shift->{tc_video_bitrate_manual}	}
+sub tc_video_bitrate_range	{ shift->{tc_video_bitrate_range}	}
 sub tc_video_framerate		{ shift->{tc_video_framerate}      	}
 sub tc_fast_bisection		{ shift->{tc_fast_bisection}      	}
 sub tc_psu_core			{ shift->{tc_psu_core}      		}
@@ -123,7 +143,6 @@ sub tc_preview			{ shift->{tc_preview}			}
 sub tc_execute_afterwards	{ shift->{tc_execute_afterwards}	}
 sub tc_exit_afterwards		{ shift->{tc_exit_afterwards}		}
 
-sub set_tc_audio_tracks		{ shift->{tc_audio_tracks}	= $_[1]	}
 sub set_tc_viewing_angle	{ shift->{tc_viewing_angle}	= $_[1]	}
 sub set_tc_deinterlace		{ shift->{tc_deinterlace}	= $_[1]	}
 sub set_tc_anti_alias		{ shift->{tc_anti_alias}	= $_[1]	}
@@ -137,10 +156,11 @@ sub set_tc_clip2_top		{ shift->{tc_clip2_top}		= $_[1]	}
 sub set_tc_clip2_bottom		{ shift->{tc_clip2_bottom}	= $_[1]	}
 sub set_tc_clip2_left		{ shift->{tc_clip2_left}	= $_[1]	}
 sub set_tc_clip2_right		{ shift->{tc_clip2_right}	= $_[1]	}
-sub set_tc_use_yuv_internal	{ shift->{tc_use_yuv_internal}  = $_[1]	}
-sub set_tc_video_codec		{ shift->{tc_video_codec}	= $_[1]	}
+# implemented below : sub set_tc_video_codec {}
 sub set_tc_video_af6_codec	{ shift->{tc_video_af6_codec}	= $_[1]	}
 sub set_tc_video_bitrate	{ shift->{tc_video_bitrate}  	= $_[1]	}
+sub set_tc_video_bitrate_manual	{ shift->{tc_video_bitrate_manual}= $_[1]	}
+sub set_tc_video_bitrate_range	{ shift->{tc_video_bitrate_range} = $_[1]	}
 sub set_tc_video_framerate	{ shift->{tc_video_framerate} 	= $_[1]	}
 sub set_tc_fast_bisection	{ shift->{tc_fast_bisection} 	= $_[1]	}
 sub set_tc_psu_core		{ shift->{tc_psu_core} 		= $_[1]	}
@@ -188,218 +208,224 @@ sub set_selected_subtitle_id	{ shift->{selected_subtitle_id}	= $_[1]	}
 sub subtitle_test		{ shift->{subtitle_test}		}
 sub set_subtitle_test		{ shift->{subtitle_test}	= $_[1]	}
 
-#------------------------------------------------------------------------
-# The following methods are for audio options and access the appropriate
-# attributes of the actually selected audio channel.
-#------------------------------------------------------------------------
+#-- Filter Settings -----------------------------------------------------
 
-sub tc_volume_rescale {
+sub tc_filter_settings {
 	my $self = shift;
-	return if $self->audio_channel == -1;
-	$self->tc_audio_tracks
-	     ->[$self->audio_channel]
-	     ->tc_volume_rescale;
+	if ( not $self->{tc_filter_settings} ) {
+		return $self->{tc_filter_settings} =
+			Video::DVDRip::FilterSettings->new;
+	}
+	return $self->{tc_filter_settings};
 }
 
-sub volume_rescale {
+sub tc_filter_setting_id	{ shift->{tc_filter_setting_id}		}
+sub set_tc_filter_setting_id	{ shift->{tc_filter_setting_id}	= $_[1]	}
+
+sub tc_selected_filter_setting	{
 	my $self = shift;
-	return if $self->audio_channel == -1;
-	$self->audio_tracks
-	     ->[$self->audio_channel]
-	     ->volume_rescale;
+	return if not $self->tc_filter_setting_id;
+	return $self->tc_filter_settings->get_filter_instance (
+		id => $self->tc_filter_setting_id
+	);
 }
 
-sub tc_mp3_quality {
-	my $self = shift;
-	return if $self->audio_channel == -1;
-	$self->tc_audio_tracks
-	     ->[$self->audio_channel]
-	     ->tc_mp3_quality;
-}
+sub tc_preview_start_frame	{ shift->{tc_preview_start_frame}	}
+sub tc_preview_end_frame	{ shift->{tc_preview_end_frame}		}
+sub tc_preview_buffer_frames	{ shift->{tc_preview_buffer_frames} || 20 }
 
-sub tc_audio_codec {
-	my $self = shift;
-	return if $self->audio_channel == -1;
-	$self->tc_audio_tracks
-	     ->[$self->audio_channel]
-	     ->tc_audio_codec;
-}
+sub set_tc_preview_start_frame	{ shift->{tc_preview_start_frame}=$_[1]	}
+sub set_tc_preview_end_frame	{ shift->{tc_preview_end_frame}	= $_[1]	}
+sub set_tc_preview_buffer_frames{ shift->{tc_preview_buffer_frames}=$_[1]}
 
-sub tc_audio_bitrate {
-	my $self = shift;
-	return if $self->audio_channel == -1;
-	$self->tc_audio_tracks
-	     ->[$self->audio_channel]
-	     ->tc_bitrate;
-}
-
-sub tc_mp2_bitrate {
-	my $self = shift;
-	return if $self->audio_channel == -1;
-	$self->tc_audio_tracks
-	     ->[$self->audio_channel]
-	     ->tc_mp2_bitrate;
-}
-
-sub tc_mp3_bitrate {
-	my $self = shift;
-	return if $self->audio_channel == -1;
-	$self->tc_audio_tracks
-	     ->[$self->audio_channel]
-	     ->tc_mp3_bitrate;
-}
-
-sub tc_ogg_bitrate {
-	my $self = shift;
-	return if $self->audio_channel == -1;
-	$self->tc_audio_tracks
-	     ->[$self->audio_channel]
-	     ->tc_ogg_bitrate;
-}
-
-sub tc_audio_filter {
-	my $self = shift;
-	return if $self->audio_channel == -1;
-	$self->tc_audio_tracks
-	     ->[$self->audio_channel]
-	     ->tc_audio_filter;
-}
-
-sub tc_option_n {
-	my $self = shift;
-	return if $self->audio_channel == -1;
-	$self->tc_audio_tracks
-	     ->[$self->audio_channel]
-	     ->tc_option_n;
-}
-
-sub tc_target_track {
-	my $self = shift;
-	return -1 if $self->audio_channel == -1;
-	$self->tc_audio_tracks
-	     ->[$self->audio_channel]
-	     ->tc_target_track;
-}
-
-sub set_tc_volume_rescale {
-	my $self = shift;
-	return if $self->audio_channel == -1;
-	$self->tc_audio_tracks
-	     ->[$self->audio_channel]
-	     ->set_tc_volume_rescale ($_[0]);
-}
-
-sub set_tc_mp3_quality {
-	my $self = shift;
-	return if $self->audio_channel == -1;
-	$self->tc_audio_tracks
-	     ->[$self->audio_channel]
-	     ->set_tc_mp3_quality ($_[0]);
-}
-
-sub set_tc_audio_codec {
-	my $self = shift;
-	return if $self->audio_channel == -1;
-	$self->tc_audio_tracks
-	     ->[$self->audio_channel]
-	     ->set_tc_audio_codec ($_[0]);
-}
-
-sub set_tc_audio_bitrate {
-	my $self = shift;
-	return if $self->audio_channel == -1;
-	$self->tc_audio_tracks
-	     ->[$self->audio_channel]
-	     ->set_tc_bitrate ($_[0]);
-}
-
-sub set_tc_mp2_bitrate {
-	my $self = shift;
-	return if $self->audio_channel == -1;
-	$self->tc_audio_tracks
-	     ->[$self->audio_channel]
-	     ->set_tc_mp2_bitrate ($_[0]);
-}
-
-sub set_tc_mp3_bitrate {
-	my $self = shift;
-	return if $self->audio_channel == -1;
-	$self->tc_audio_tracks
-	     ->[$self->audio_channel]
-	     ->set_tc_mp3_bitrate ($_[0]);
-}
-
-sub set_tc_ogg_bitrate {
-	my $self = shift;
-	return if $self->audio_channel == -1;
-	$self->tc_audio_tracks
-	     ->[$self->audio_channel]
-	     ->set_tc_ogg_bitrate ($_[0]);
-}
-
-sub set_tc_audio_filter {
-	my $self = shift;
-	return if $self->audio_channel == -1;
-	$self->tc_audio_tracks
-	     ->[$self->audio_channel]
-	     ->set_tc_audio_filter ($_[0]);
-}
-
-sub set_tc_option_n {
-	my $self = shift;
-	return if $self->audio_channel == -1;
-	$self->tc_audio_tracks
-	     ->[$self->audio_channel]
-	     ->set_tc_option_n ($_[0]);
-}
-
-sub set_tc_target_track {
-	my $self = shift;
-	return if $self->audio_channel == -1;
-	$self->tc_audio_tracks
-	     ->[$self->audio_channel]
-	     ->set_tc_target_track ($_[0]);
-}
-
-sub ogg_container_possible {
+sub tc_use_yuv_internal {
 	my $self = shift;
 
-	my $audio_channel = $self->audio_channel;
-	return 1 if $audio_channel == -1;
-	return 0 if $self->tc_video_codec =~ /^S?VCD$/;
+	# enabled only if all selected filters support YUV
+	# and we have no odd clipping / resizing
+	
+	return 0 if $self->tc_clip1_left % 2 or
+		    $self->tc_clip1_right % 2 or
+		    $self->tc_clip1_top % 2 or
+		    $self->tc_clip1_bottom % 2 or
+		    $self->tc_clip2_left % 2 or
+		    $self->tc_clip2_right % 2 or
+		    $self->tc_clip2_top % 2 or
+		    $self->tc_clip2_bottom % 2 or
+		    $self->tc_zoom_width % 2 or
+		    $self->tc_zoom_height % 2;
 
-	foreach my $audio_track ( @{$self->tc_audio_tracks} ) {
-		return 0 if $audio_track->tc_nr != $audio_channel and
-			    $audio_track->tc_target_track != -1 and
-			    $audio_track->tc_audio_codec ne 'ogg';
+	foreach my $filter_instance ( @{$self->tc_filter_settings->filters} ) {
+		return 0 if not $filter_instance->get_filter->can_yuv;
 	}
 	
 	return 1;
 }
 
-sub avi_container_possible {
+#-- Constructor ---------------------------------------------------------
+
+sub new {
+	my $class = shift;
+	my %par = @_;
+	my ($nr, $project) = @par{'nr','project'};
+
+	my $self = {
+		project	             => $project,
+		nr                   => $nr,
+		size                 => 0,
+		files                => [],
+		audio_channel        => 0,
+		scan_result          => undef,
+		tc_clip1_top	     => 0,
+		tc_clip1_bottom	     => 0,
+		tc_clip1_left	     => 0,
+		tc_clip1_right	     => 0,
+		tc_clip2_top	     => 0,
+		tc_clip2_bottom	     => 0,
+		tc_clip2_left	     => 0,
+		tc_clip2_right	     => 0,
+		tc_selected_chapters => [],
+		program_stream_units => [],
+		chapter_frames       => {},
+		tc_filter_settings   => Video::DVDRip::FilterSettings->new,
+	};
+	
+	return bless $self, $class;
+}
+
+sub set_tc_video_codec {
 	my $self = shift;
+	my ($value) = @_;
 	
-	my $audio_channel = $self->audio_channel;
-	return 1 if $audio_channel == -1;
-	return 0 if $self->tc_video_codec =~ /^S?VCD$/;
+	$self->{tc_video_codec} = $value;
 	
-	foreach my $audio_track ( @{$self->tc_audio_tracks} ) {
-		return 0 if $audio_track->tc_nr != $audio_channel and
-			    $audio_track->tc_target_track != -1 and
-			    $audio_track->tc_audio_codec eq 'ogg';
+	$self->set_tc_video_af6_codec ('mpeg4') if $value eq 'ffmpeg';
+	$self->set_tc_video_af6_codec ('')      if $value ne 'ffmpeg';
+	
+	return $value;
+}
+
+#-- get actually selected audio (or a dummy object, if no track is selected)
+
+sub audio_track {
+	my $self = shift;
+	if ( $self->audio_channel == -1 ) {
+		# no audio track selected. create a dummy object
+		print STDERR "Warning: audio track accessed, but no track selected.\n";
+		return Video::DVDRip::Audio->new;
+	}
+	return $self->audio_tracks->[$self->audio_channel];
+}
+
+sub set_tc_container {
+	my $self = shift;
+	my ($container) = @_;
+
+	return $container if $container eq $self->tc_container;
+
+	$self->log ("Set container format to '$container'");
+	$self->{tc_container} = $container;
+
+	return if not defined $self->audio_tracks;
+	
+	my @messages;
+	
+	if ( $container eq 'avi' ) {
+		# no vorbis and mp2 audio here
+		foreach my $audio ( @{$self->audio_tracks} ) {
+			next if $audio->tc_target_track == -1;
+			if ( $audio->tc_audio_codec eq 'vorbis' ) {
+				push @messages,
+					"Set codec of audio track #".$audio->tc_nr.
+					" to 'mp3', 'vorbis' not supported by AVI";
+				$audio->set_tc_audio_codec ('mp3');
+			} elsif ( $audio->tc_audio_codec eq 'mp2' ) {
+				push @messages,
+					"Set codec of audio track #".$audio->tc_nr.
+					" to 'mp3', 'mp2' not supported by AVI";
+				$audio->set_tc_audio_codec ('mp3');
+			}
+		}
+		
+		# no (S)VCD here
+		if ( $self->tc_video_codec =~ /^S?VCD$/ ) {
+			push @messages,
+				"Set video codec to 'xvid', '".
+				$self->tc_video_codec.
+				"' not supported by AVI";
+			$self->set_tc_video_codec ("xvid");
+		}
+
+	} elsif ( $container eq 'vcd' ) {
+		# only mp2 audio here
+		foreach my $audio ( @{$self->audio_tracks} ) {
+			next if $audio->tc_target_track == -1;
+			if ( $audio->tc_audio_codec ne 'mp2' ) {
+				push @messages,
+					"Set codec of audio track #".$audio->tc_nr.
+					" to 'mp2', '".
+					$audio->tc_audio_codec.
+					"' not supported by (S)VCD";
+				$audio->set_tc_audio_codec ('mp2');
+			}
+		}
+
+		# only (S)VCD here
+		if ( $self->tc_video_codec !~ /S?VCD/ ) {
+			push @messages,
+				"Set video codec to 'SVCD', '".
+				$self->tc_video_codec.
+				"' not supported by AVI";
+			$self->set_tc_video_codec ("SVCD");
+		}
+		
+	} elsif ( $container eq 'ogg' ) {
+		# no mp2 and pcm audio here
+		foreach my $audio ( @{$self->audio_tracks} ) {
+			next if $audio->tc_target_track == -1;
+			if ( $audio->tc_audio_codec eq 'mp2' or
+			     $audio->tc_audio_codec eq 'pcm' ) {
+				push @messages,
+					"Set codec of audio track #".$audio->tc_nr.
+					" to 'vorbis', '".
+					$audio->tc_audio_codec.
+					"' not supported by OGG";
+				$audio->set_tc_audio_codec ('vorbis');
+			}
+		}
+
+		# no (S)VCD here
+		if ( $self->tc_video_codec =~ /S?VCD/ ) {
+			$self->set_tc_video_codec ("xvid");
+			push @messages,
+				"Set video codec to 'xvid', (S)VCD not supported by OGG";
+		}
 	}
 	
-	return 1;
+	foreach my $msg ( @messages ) {
+		$self->log ($msg);
+	}
+
+	return $container;
 }
 
 sub is_ogg {
 	my $self = shift;
+	
+	return $self->tc_container eq 'ogg';
+}
 
-	return 0 if $self->get_first_audio_track < 0;
-	return $self->tc_audio_tracks
-		    ->[$self->get_first_audio_track]
-		    ->tc_audio_codec eq 'ogg';
+sub has_vbr_audio {
+	my $self = shift;
+	
+	return 0 if $self->tc_video_bitrate_manual;
+	
+	foreach my $audio ( @{$self->audio_tracks} ) {
+		next if $audio->tc_target_track == -1;
+		return 1 if $audio->tc_audio_codec eq 'vorbis';
+	}
+	
+	return 0;
 }
 
 sub vob_dir {
@@ -567,14 +593,12 @@ sub target_avi_audio_file {
 	my %par = @_;
 	my ($vob_nr, $avi_nr) = @par{'vob_nr','avi_nr'};
 
-	my $ext = $self->tc_audio_tracks
-		       ->[$vob_nr]
-		       ->tc_audio_codec eq 'ogg' ?
-		       	$self->config('ogg_file_ext') : 'avi';
+	my $ext = $self->is_ogg ? ".".$self->config('ogg_file_ext') : '.avi';
+	$ext = "" if $self->tc_container eq 'vcd';
 
 	my $audio_file = $self->target_avi_file;
 	$audio_file =~ s/\.[^.]+$//;
-	$audio_file = sprintf ("%s-%02d.$ext", $audio_file, $avi_nr);
+	$audio_file = sprintf ("%s-%02d$ext", $audio_file, $avi_nr);
 
 	return $audio_file;
 }
@@ -603,6 +627,18 @@ sub preview_filename {
 	my ($type) = @par{'type'};
 	
 	return 	sprintf("%s/%s-%03d-preview-%s.jpg",
+		$self->project->snap_dir,
+		$self->project->name,
+		$self->nr,
+		$type);
+}
+
+sub preview_scratch_filename {
+	my $self = shift; $self->trace_in;
+	my %par = @_;
+	my ($type) = @par{'type'};
+	
+	return 	sprintf("%s/%s-%03d-preview-scratch-%s.jpg",
 		$self->project->snap_dir,
 		$self->project->name,
 		$self->nr,
@@ -645,33 +681,20 @@ sub has_vob_nav_file {
 	return -f $vob_nav_file;
 }
 
-sub new {
-	my $class = shift;
-	my %par = @_;
-	my ($nr, $project) = @par{'nr','project'};
+sub audio_wav_file {
+	my $self = shift; $self->trace_in;
 
-	my $self = {
-		project	             => $project,
-		nr                   => $nr,
-		size                 => 0,
-		files                => [],
-		audio_channel        => 0,
-		scan_result          => undef,
-		probe_result         => undef,
-		tc_clip1_top	     => 0,
-		tc_clip1_bottom	     => 0,
-		tc_clip1_left	     => 0,
-		tc_clip1_right	     => 0,
-		tc_clip2_top	     => 0,
-		tc_clip2_bottom	     => 0,
-		tc_clip2_left	     => 0,
-		tc_clip2_right	     => 0,
-		tc_selected_chapters => [],
-		program_stream_units => [],
-		chapter_frames       => {},
-	};
-	
-	return bless $self, $class;
+	my $chap;
+	if ( $self->actual_chapter ) {
+		$chap = sprintf ("-C%02d", $self->actual_chapter);
+	}
+
+	return 	sprintf("%s/%s-%03d-%02d$chap.wav",
+		$self->avi_dir,
+		$self->project->name,
+		$self->nr,
+		$self->audio_track->tc_nr,
+	);
 }
 
 sub add_vob {
@@ -795,7 +818,7 @@ sub get_effective_ratio {
 	my $self = shift;
 	my %par = @_;
 	my ($type) = @par{'type'};	# clip1, zoom, clip2
-	
+
 	my $width        = $self->width;
 	my $height       = $self->height;
 	my $clip1_ratio  = $width / $height;
@@ -807,8 +830,8 @@ sub get_effective_ratio {
 
 	return ($from_width, $from_height, $clip1_ratio) if $type eq 'clip1';
 
-	my $zoom_width   = $self->tc_zoom_width  || $width;
-	my $zoom_height  = $self->tc_zoom_height || $height;
+	my $zoom_width   = $self->tc_zoom_width  || $from_width;
+	my $zoom_height  = $self->tc_zoom_height || $from_height;
 	my $zoom_ratio   = ($zoom_width/$zoom_height) * ($width/$height) /
 			   ($from_width/$from_height);
 
@@ -1108,6 +1131,7 @@ sub get_zoom_parameters {
 #print "clip2_width=$clip2_width clip2_height=$clip2_height\n";
 
 	if ( $result_align_clip2 ) {
+		$result_align ||= 16; # fail safe -> prevent division by zero
 		my $rest;
 		if ( $rest = $clip2_width % $result_align ) {
 			$clip2_left  += $rest / 2;
@@ -1244,11 +1268,25 @@ sub set_chapter_length {
 # Methods for Volume Scanning
 #---------------------------------------------------------------------
 
+sub get_tc_scan_command_pipe {
+	my $self = shift; $self->trace_in;
+	
+	my $audio_channel  = $self->audio_channel;
+	my $codec          = $self->audio_track->type =~ /pcm/ ? 'pcm' : 'ac3';
+	my $tcdecode       = $codec eq 'ac3' ? "| tcdecode -x ac3 " : "";
+
+	my $command .=
+	       "tcextract -a $audio_channel -x $codec -t vob ".
+	       $tcdecode.
+	       "| tcscan -x pcm";
+
+	return $command;
+}
+
 sub get_scan_command {
 	my $self = shift; $self->trace_in;
 
 	my $nr             = $self->tc_title_nr;
-	my $audio_channel  = $self->audio_channel;
 	my $name           = $self->project->name;
 	my $data_source    = $self->transcode_data_source;
 	my $vob_dir    	   = $self->vob_dir;
@@ -1261,19 +1299,17 @@ sub get_scan_command {
 	
 	if ( $rip_mode eq 'rip' ) {
 		my $vob_size = $self->get_vob_size;
-		$command = "cat $vob_dir/* | dr_progress -m $vob_size -i 5 | tccat -t vob ";
+		$command = "cat $vob_dir/* | dr_progress -m $vob_size -i 5 | tccat -t vob";
 
 	} else  {
 		$command = "tccat ";
 		delete $source_options->{x};
 		$command .= " -".$_." ".$source_options->{$_} for keys %{$source_options};
-		$command .= "| dr_splitpipe -f /dev/null 0 - - ";
+		$command .= "| dr_splitpipe -f /dev/null 0 - -";
 	}
 
-	$command .=
-	       "| tcextract -a $audio_channel -x ac3 -t vob ".
-	       "| tcdecode -x ac3 ".
-	       "| tcscan -x pcm && echo DVDRIP_SUCCESS";
+	$command .= " | ".$self->get_tc_scan_command_pipe;
+	$command .= " && echo DVDRIP_SUCCESS";
 
 	return $command;
 }
@@ -1305,12 +1341,11 @@ sub get_rip_and_scan_command {
 		"| dr_splitpipe -f $vob_nav_file 1024 $vob_dir/$name vob ";
 
 	if ( $audio_channel != -1 ) {
-		$command .= 
-		       "| tcextract -a $audio_channel -x ac3 -t vob ".
-		       "| tcdecode -x ac3 ".
-		       "| tcscan -x pcm && echo DVDRIP_SUCCESS";
+		$command .= " | ".$self->get_tc_scan_command_pipe;
+		$command .= " && echo DVDRIP_SUCCESS";
+
 	} else {
-		$command .= ">/dev/null";
+		$command .= ">/dev/null && echo DVDRIP_SUCCESS";
 	}
 
 	return $command;
@@ -1319,25 +1354,17 @@ sub get_rip_and_scan_command {
 sub analyze_scan_output {
 	my $self = shift; $self->trace_in;
 	my %par = @_;
-	my ($output) = @par{'output'};
+	my ($output, $count) = @par{'output','count'};
 
 	return 1 if $self->audio_channel == -1;
 
 	$output =~ s/^.*?--splitpipe-finished--\n//s;
 
-	my $scan_result = Video::DVDRip::Scan->analyze (
+	Video::DVDRip::Probe->analyze_scan (
 		scan_output => $output,
+		audio       => $self->audio_track,
+		count	    => $count,
 	);
-
-	$self->audio_tracks
-	     ->[$self->audio_channel]
-	     ->{scan_result} = $scan_result;
-
-	$self->audio_tracks
-	     ->[$self->audio_channel]
-	     ->set_volume_rescale ( $scan_result->volume_rescale );
-
-	$self->set_tc_volume_rescale ( $scan_result->volume_rescale );
 
 	1;
 }
@@ -1352,7 +1379,10 @@ sub get_probe_command {
 	my $nr            = $self->tc_title_nr;
 	my $data_source   = $self->project->rip_data_source;
 
-	my $command =  "tcprobe -i $data_source -T $nr && echo DVDRIP_SUCCESS";
+	my $command =
+		"tcprobe -i $data_source -T $nr && ".
+		"echo DVDRIP_SUCCESS; ".
+		"dvdxchap -t $nr $data_source 2>/dev/null";
 
 	return $command;
 }
@@ -1362,11 +1392,9 @@ sub analyze_probe_output {
 	my %par = @_;
 	my ($output) = @par{'output'};
 
-	$self->set_probe_result (
-		Video::DVDRip::Probe->analyze (
-			probe_output => $output,
-			title        => $self,
-		)
+	Video::DVDRip::Probe->analyze (
+		probe_output => $output,
+		title        => $self,
 	);
 
 	1;
@@ -1406,9 +1434,9 @@ sub analyze_probe_audio_output {
 	my %par = @_;
 	my ($output) = @par{'output'};
 
-	$self->probe_result->analyze_audio (
+	Video::DVDRip::Probe->analyze_audio (
 		probe_output => $output,
-		title  => $self,
+		title        => $self,
 	);
 
 	1;
@@ -1423,17 +1451,26 @@ sub suggest_transcode_options {
 
 	my $rip_mode = $self->project->rip_mode;
 
+	$self->set_tc_container ( 'avi' );
 	$self->set_tc_viewing_angle ( 1 );
-	$self->set_tc_use_yuv_internal ( 1 );
 	$self->set_tc_video_codec ( $self->config('default_video_codec') );
 	$self->set_tc_multipass ( 1 );
-	$self->set_tc_target_size ( 1400 );
-	$self->set_tc_disc_size ( 700 );
+	$self->set_tc_target_size ( 1406 );
+	$self->set_tc_disc_size ( 703 );
 	$self->set_tc_disc_cnt ( 2 );
 	$self->set_tc_video_framerate (
 		$self->video_mode eq 'pal' ? 25 : 23.976
 	);
-	$self->set_tc_psu_core ( $self->video_mode eq 'ntsc' and $rip_mode eq 'rip' );
+	
+	if ( $self->video_mode eq 'ntsc' and $rip_mode eq 'rip' and
+	     @{$self->program_stream_units} > 1 ) {
+		$self->set_tc_psu_core (1);
+		$self->log ("Enabled PSU core. Movie is NTSC and has more than one PSU.");
+
+	} elsif ( $self->video_mode eq 'ntsc' and $rip_mode eq 'rip' ) {
+		$self->log ("Not enabling PSU core, because this movie has only one PSU.");
+	}
+
 	$self->calc_video_bitrate;
 	$self->set_preset ( "auto_medium_fast" );
 
@@ -1459,78 +1496,34 @@ sub calc_video_bitrate {
 	my $video_codec = $self->tc_video_codec;
 
 	if ( $video_codec eq 'VCD' ) {
-		$self->set_tc_video_bitrate ( 1152 );
-		$self->set_tc_audio_bitrate ( 224 );
-		$self->set_tc_audio_codec ( 'mp2' );
+		$self->audio_track->set_tc_bitrate ( 224 );
+		$self->audio_track->set_tc_audio_codec ( 'mp2' );
 		$self->set_tc_multipass ( 0 );
-		return 1;
 	}
 	
 	if ( $video_codec eq 'SVCD' ) {
-		$self->set_tc_audio_codec ( 'mp2' );
+		$self->audio_track->set_tc_audio_codec ( 'mp2' );
 		$self->set_tc_multipass ( 0 );
 	}
 
-	my $video_bitrate = $self->get_optimal_video_bitrate (
-		target_size => $self->tc_target_size
+	return $self->tc_video_bitrate if $self->tc_video_bitrate_manual;
+
+	my $bc = Video::DVDRip::BitrateCalc->new (
+		title => $self,
 	);
 
-	$self->set_tc_video_bitrate ( $video_bitrate );
+	$bc->calculate_video_bitrate;
 
-	return 1;
-}
-
-sub get_overall_audio_size_and_bitrate {
-	my $self = shift;
-
-	my $frames        = $self->frames;
-	my $fps           = $self->frame_rate;
-
-	my $runtime = $frames / $fps;
-
-	my $audio_size;
-	my $audio_bitrate;
-
-	foreach my $audio ( @{$self->tc_audio_tracks} ) {
-		next if $audio->tc_target_track == -1;
-		$audio_size += int($runtime * $audio->tc_bitrate / 1000 / 8);
-		$audio_bitrate += $audio->tc_bitrate;
-	}
-
-	return ($audio_size, $audio_bitrate);
-}
-
-sub get_optimal_video_bitrate {
-	my $self = shift;
-	my %par = @_;
-	my ($target_size) = @par{'target_size'};
-
-	my $frames        = $self->frames;
-	my $fps           = $self->frame_rate;
-
-	my $runtime = $frames / $fps;
-
-	my ($audio_size, $audio_bitrate) = $self->get_overall_audio_size_and_bitrate;
-
-	my $video_size = $target_size - $audio_size;
-
-	my $video_bitrate = int($video_size/$runtime/1000*1024*1024*8);
-	$video_bitrate = 6000 if $video_bitrate > 6000;
-	
-	if ( $self->tc_video_codec eq 'SVCD' and
-	     $video_bitrate + $audio_bitrate > 2748 ) {
-		$video_bitrate = 2748 - $audio_bitrate;
-	}
-	
-	return $video_bitrate;
+	return $self->set_tc_video_bitrate ( $bc->video_bitrate );
 }
 
 sub get_first_audio_track {
 	my $self = shift;
 
 	return -1 if $self->audio_channel == -1;
+	return -1 if not $self->audio_tracks;
 
-	foreach my $audio ( @{$self->tc_audio_tracks} ) {
+	foreach my $audio ( @{$self->audio_tracks} ) {
 		return $audio->tc_nr if $audio->tc_target_track == 0;
 	}
 	
@@ -1541,7 +1534,7 @@ sub get_additional_audio_tracks {
 	my $self = shift;
 	
 	my %avi2vob;
-	foreach my $audio ( @{$self->tc_audio_tracks} ) {
+	foreach my $audio ( @{$self->audio_tracks} ) {
 		next if $audio->tc_target_track == -1;
 		next if $audio->tc_target_track == 0;
 		$avi2vob{$audio->tc_target_track} = $audio->tc_nr;
@@ -1579,6 +1572,11 @@ sub get_transcode_command {
 	my  ($pass, $split, $no_audio, $output_file) =
 	@par{'pass','split','no_audio','output_file'};
 
+	my $bc = Video::DVDRip::BitrateCalc->new (
+		title => $self,
+	);
+	$bc->calculate_video_bitrate;
+
 	my $nr             = $self->nr;
 	my $avi_file       = $output_file || $self->avi_file;
 	my $audio_channel  = $self->get_first_audio_track;
@@ -1589,11 +1587,10 @@ sub get_transcode_command {
 		audio_channel => $audio_channel
 	);
 
-	my ($tc_audio_info, $audio_info);
+	my ($audio_info);
 
 	if ( $audio_channel != -1 ) {
-		$tc_audio_info = $self->tc_audio_tracks->[$audio_channel];
-		$audio_info    = $self->audio_tracks->[$audio_channel];
+		$audio_info = $self->audio_tracks->[$audio_channel];
 	}
 
 	my $nice;
@@ -1613,10 +1610,9 @@ sub get_transcode_command {
 	if ( not $mpeg ) {
 		$command .=
 			" -w ".int($self->tc_video_bitrate).",250,100";
-	} elsif ( $mpeg eq 'svcd' ) {
+	} elsif ( $mpeg eq 'svcd' and $self->tc_video_bitrate ) {
 		$command .=
-			" -w ".int($self->tc_video_bitrate)
-				if $self->tc_video_bitrate;
+			" -w ".int($self->tc_video_bitrate);
 	}
 
 	if ( $self->tc_start_frame ne '' or
@@ -1643,21 +1639,34 @@ sub get_transcode_command {
 	}
 
 	if ( $mpeg ) {
-		my $size = int($self->tc_disc_size * 0.99);
-		my $mpeg2enc_opts = "";
-		$mpeg2enc_opts .= $split ? " -S $size" : "";
-		my ($audio_size, $audio_bitrate) =
-			$self->get_overall_audio_size_and_bitrate;
-		$audio_bitrate = int($audio_bitrate * 1.01);
-		$mpeg2enc_opts .= " -B $audio_bitrate";
-		$mpeg2enc_opts = ",'$mpeg2enc_opts'" if $mpeg2enc_opts;
+		my $size = $bc->disc_size;
+		my $reserve_bitrate = $bc->vcd_reserve_bitrate;
+		my $mpeg2enc_opts = "-B $reserve_bitrate ";
+		if ( $split ) {
+			$mpeg2enc_opts   .= "-S $size ";
+		} else {
+			$mpeg2enc_opts   .= "-S 10000 ";
+		}
 
-		$command .= " -F 5$mpeg2enc_opts" if $mpeg eq 'svcd';
-		$command .= " -F 1$mpeg2enc_opts" if $mpeg eq 'vcd';
+		if ( $self->frame_rate == 23.976 ) {
+			$mpeg2enc_opts .= "-I 0 -p ";
+		}
+
 		if ( $mpeg eq 'svcd' ) {
+			if ( $self->video_mode eq 'pal' ) {
+				$mpeg2enc_opts .= " -g 6 -G 15";
+			} else {
+				$mpeg2enc_opts .= " -g 9 -G 18";
+			}
+
+			$mpeg2enc_opts = ",'$mpeg2enc_opts'" if $mpeg2enc_opts;
+
+			$command .= " -F 5$mpeg2enc_opts";
+
 			if ( $self->aspect_ratio eq '16:9' ) {
 				# 16:9
 				if ( $self->last_applied_preset =~ /4_3/ ) {
+					# 4:3 with black bars
 					$command .= " --export_asr 2";
 				} else {
 					$command .= " --export_asr 3";
@@ -1667,7 +1676,8 @@ sub get_transcode_command {
 				$command .= " --export_asr 2";
 			}
 		} else {
-			$command .= " --export_asr 2";
+			$mpeg2enc_opts = ",'$mpeg2enc_opts'" if $mpeg2enc_opts;
+			$command .= " -F 1$mpeg2enc_opts --export_asr 2";
 		}
 	
 		
@@ -1682,39 +1692,52 @@ sub get_transcode_command {
 
 		if ( $mpeg ) {
 			$command .= " -b ".
-				$tc_audio_info->tc_bitrate;
-		} elsif ( $tc_audio_info->tc_audio_codec =~ /^mp\d/ ) {
+				$audio_info->tc_bitrate;
+		} elsif ( $audio_info->tc_audio_codec =~ /^mp\d/ ) {
 			$command .= " -b ".
-				$tc_audio_info->tc_bitrate.",0,".
-				$tc_audio_info->tc_mp3_quality;
-		} elsif ( $tc_audio_info->tc_audio_codec eq 'ogg' ) {
-			$command .= " -b ".
-				$tc_audio_info->tc_bitrate;
+				$audio_info->tc_bitrate.",0,".
+				$audio_info->tc_mp3_quality;
+		} elsif ( $audio_info->tc_audio_codec eq 'vorbis' ) {
+			if ( $audio_info->tc_vorbis_quality_enable ) {
+				$command .= " -b 0,".
+					$audio_info->tc_vorbis_quality;
+			} else {
+				$command .= " -b ".
+					$audio_info->tc_bitrate;
+			}
 		}
 
-		if ( $tc_audio_info->tc_audio_codec eq 'ac3' or
-		     $tc_audio_info->tc_audio_codec eq 'pcm' ) {
+		if ( $audio_info->tc_audio_codec eq 'ac3' ) {
 			$command .=
-				" -A -N ".$tc_audio_info->tc_option_n;
+				" -A -N ".$audio_info->tc_option_n;
+
+		} elsif ( $audio_info->tc_audio_codec eq 'pcm' ) {
+			$command .=
+				" -N 0x1";
 
 		} else {
-			$command .= " -s ".$tc_audio_info->tc_volume_rescale
-				if $tc_audio_info->tc_volume_rescale != 0 and 
+			$command .= " -s ".$audio_info->tc_volume_rescale
+				if $audio_info->tc_volume_rescale != 0 and 
 				   $audio_info->type ne 'lpcm';
 			$command .= " --a52_drc_off"
-				if $tc_audio_info->tc_audio_filter ne 'a52drc';
+				if $audio_info->tc_audio_filter ne 'a52drc';
 			$command .= " -J normalize"
-				if $tc_audio_info->tc_audio_filter eq 'normalize';
+				if $audio_info->tc_audio_filter eq 'normalize';
 		}
 	}
 
 	$command .= " -V "
-		if $self->tc_use_yuv_internal;
+		if $self->tc_use_yuv_internal and
+		   not $self->tc_deinterlace eq 'smart';
+
 	$command .= " -C ".$self->tc_anti_alias
 		if $self->tc_anti_alias;
 	
 	if ( $self->tc_deinterlace eq '32detect' ) {
 		$command .= " -J 32detect=force_mode=3";
+
+	} elsif ( $self->tc_deinterlace eq 'smart' ) {
+		$command .= " -J smartdeinter=threshold=10:Blend=1:diffmode=2:highq=1";
 
 	} elsif ( $self->tc_deinterlace ) {
 		$command .= " -I ".$self->tc_deinterlace;
@@ -1758,7 +1781,6 @@ sub get_transcode_command {
 			if $zoom =~ /^\d+x\d+$/;
 
 	} else {
-
 		my $multiple_of = 8;
 
 		my ($width_n, $height_n, $err_div32, $err_shrink_expand) =
@@ -1790,25 +1812,43 @@ sub get_transcode_command {
 		$command = "mkdir -m 0775 -p '$dir' && cd $dir && $command";
 		$command .= " -R $pass";
 
-		if ( $pass == 1 ) {
+		if ( $pass == 1 and not $self->has_vbr_audio or
+		     $pass == 2 and     $self->has_vbr_audio ) {
 			$command =~ s/(-x\s+[^\s]+)/$1,null/;
 			$command =~ s/-x\s+([^,]+),null,null/-x $1,null/;
-			$command .= " -y ".$self->tc_video_codec.",null";
-			$avi_file = "/dev/null";
+			$command .= " -y ".$self->tc_video_codec;
+			$command .= ",null" if not $self->has_vbr_audio or $pass == 2;
+			$avi_file = "/dev/null" if not $self->has_vbr_audio;
 		}
 	}
 	
-	if ( not $self->tc_multipass or $pass == 2 ) {
+	if ( not $self->tc_multipass or ( $pass == 2 xor $self->has_vbr_audio ) ) {
 		if ( $mpeg ) {
 			$command .= " -y mpeg2enc,mp2enc -E 44100";
 		} else {
 			$command .= " -y ".$self->tc_video_codec;
-			$command .= ",ogg -m ".$self->target_avi_audio_file (
-				vob_nr => $audio_channel,
-				avi_nr => 0
-			) if $audio_channel != -1 and
-			     $tc_audio_info->tc_audio_codec eq 'ogg';
-			$command .= ",null" if $audio_channel == -1;
+			if ( $self->tc_container eq 'ogg' and
+			     $audio_channel != -1 ) {
+			     	$command .= ",ogg"
+					if $audio_info->tc_audio_codec eq 'vorbis';
+				$command .= " -m ".$self->target_avi_audio_file (
+					vob_nr => $audio_channel,
+					avi_nr => 0
+				);
+			}
+			if ( $audio_channel == -1 ) {
+				$command .= ",null";
+
+			} else {
+				if ( $audio_info->tc_samplerate !=
+				     $audio_info->sample_rate and
+				     $audio_info->tc_samplerate ) {
+					$command .= " -E ".$audio_info->tc_samplerate
+						if $audio_info->tc_samplerate;
+					$command .= " -J resample"
+						if $audio_info->tc_audio_codec eq 'vorbis';
+				}
+			}
 		}
 	}
 
@@ -1820,7 +1860,18 @@ sub get_transcode_command {
 	
 	$command .= " -o $avi_file";
 
-	$command .= " --print_status 20" if $TC::VERSION >= 610;
+	$command .= " --print_status 20";
+
+	# Filters
+	my $config_strings =
+	$self->tc_filter_settings
+	     ->get_filter_config_strings;
+
+	foreach my $config ( @{$config_strings} ) {
+		next if not $config->{enabled};
+		$command .= " -J $config->{filter}";
+		$command .= "=$config->{options}" if $config->{options};
+	}
 
 	$self->create_avi_dir;
 
@@ -1848,8 +1899,7 @@ sub get_transcode_audio_command {
 
 	$source_options->{x} = "null,$source_options->{x}";
 
-	my $tc_audio_info = $self->tc_audio_tracks->[$vob_nr];
-	my $audio_info    = $self->audio_tracks->[$vob_nr];
+	my $audio_info = $self->audio_tracks->[$vob_nr];
 
 	my $audio_file = $self->target_avi_audio_file (
 		vob_nr => $vob_nr,
@@ -1858,14 +1908,27 @@ sub get_transcode_audio_command {
 
 	my $dir = dirname ($audio_file);
 
+	my $nice;
+	$nice = "`which nice` -n ".$self->tc_nice." "
+		if $self->tc_nice =~ /\S/;
+
 	my $command =
-		"mkdir -p $dir && transcode ".
+		"mkdir -p $dir && ".
+		"${nice}transcode ".
 		" -g 0x0 -u 50".
 		" -a $vob_nr".
 		" -y raw";
 
-	if ( $tc_audio_info->tc_audio_codec eq 'ogg' ) {
-		$command .= ",ogg -m $audio_file";
+	if ( $self->is_ogg ) {
+		if ( $audio_info->tc_audio_codec eq 'vorbis' ) {
+			$command .= ",ogg -m $audio_file";
+		} else {
+			$command .= " -m $audio_file";
+		}
+
+	} elsif ( $self->tc_container eq 'vcd' ) {
+		$command .= ",mp2enc -o $audio_file";
+
 	} else {
 		$command .= " -o ".$audio_file;
 	}
@@ -1882,29 +1945,47 @@ sub get_transcode_audio_command {
 		$command .= " -f $fr";
 	}
 
-	if ( $tc_audio_info->tc_audio_codec eq 'ac3' or
-	     $tc_audio_info->tc_audio_codec eq 'pcm' ) {
-		$command .= " -A -N ".
-			$tc_audio_info->tc_option_n;
+	if ( $audio_info->tc_audio_codec eq 'ac3' ) {
+		$command .=
+			" -A -N ".$audio_info->tc_option_n;
+
+	} elsif ( $audio_info->tc_audio_codec eq 'pcm' ) {
+		$command .=
+			" -N 0x1";
+
 	} else {
 
-		if ( $tc_audio_info->tc_audio_codec =~ /^mp\d/ ) {
+		if ( $audio_info->tc_audio_codec =~ /^mp\d/ ) {
 			$command .= " -b ".
-				$tc_audio_info->tc_bitrate.",0,".
-				$tc_audio_info->tc_mp3_quality;
+				$audio_info->tc_bitrate.",0,".
+				$audio_info->tc_mp3_quality;
 
-		} elsif ( $tc_audio_info->tc_audio_codec eq 'ogg' ) {
-			$command .= " -b ".
-				$tc_audio_info->tc_bitrate;
+		} elsif ( $audio_info->tc_audio_codec eq 'vorbis' ) {
+			if ( $audio_info->tc_vorbis_quality_enable ) {
+				$command .= " -b 0,".
+					$audio_info->tc_vorbis_quality;
+			} else {
+				$command .= " -b ".
+					$audio_info->tc_bitrate;
+			}
 		}
 
-		$command .= " -s ".$tc_audio_info->tc_volume_rescale
-			if $tc_audio_info->tc_volume_rescale != 0;
+		$command .= " -s ".$audio_info->tc_volume_rescale
+			if $audio_info->tc_volume_rescale != 0;
 		
 		$command .= " --a52_drc_off "
-			if $tc_audio_info->tc_audio_filter ne 'a52drc';
+			if $audio_info->tc_audio_filter ne 'a52drc';
 		$command .= " -J normalize"
-			if $tc_audio_info->tc_audio_filter eq 'normalize';
+			if $audio_info->tc_audio_filter eq 'normalize';
+
+		if ( $audio_info->tc_samplerate !=
+		     $audio_info->sample_rate and
+		     $audio_info->tc_samplerate ) {
+			$command .= " -E ".$audio_info->tc_samplerate
+				if $audio_info->tc_samplerate;
+			$command .= " -J resample"
+				if $audio_info->tc_audio_codec eq 'vorbis';
+		}
 	}
 
 	if ( $self->tc_start_frame ne '' or
@@ -1936,13 +2017,17 @@ sub get_transcode_audio_command {
 			" --no_split ";
 	}
 
-	$command .= " --print_status 20" if $TC::VERSION >= 601;
+	$command .= " --print_status 20";
 
 	$command = $self->combine_command_options (
 		cmd      => "transcode",
 		cmd_line => $command,
 		options  => $self->tc_options,
 	) if $self->tc_options =~ /\S/;
+
+	if ( $self->tc_container eq 'vcd' ) {
+		$command .= " && rm -f ".$self->target_avi_file;
+	}
 
 	$command .= " && echo DVDRIP_SUCCESS";
 
@@ -1955,24 +2040,34 @@ sub get_merge_audio_command {
 	my ($vob_nr, $target_nr) = @par{'vob_nr','target_nr'};
 
 	my $avi_file      = $self->target_avi_file;
-	my $audio_file    = $self->target_avi_audio_file (
+	my $audio_file;
+	$audio_file       = $self->target_avi_audio_file (
 		vob_nr => $vob_nr,
 		avi_nr => $target_nr
-	);
+	) if $vob_nr != -1;
 
 	my $command;
 
-	if ( $self->tc_audio_codec eq 'ogg' ) {
-		$command =
+	my $nice;
+	$nice = "`which nice` -n ".$self->tc_nice." "
+		if $self->tc_nice =~ /\S/;
+
+	$command = $nice;
+
+	if ( $self->is_ogg ) {
+		$command .=
 			"ogmmerge -o $avi_file.merged ".
 			" $avi_file".
 			" $audio_file &&".
 			" mv $avi_file.merged $avi_file &&".
-			" rm $audio_file &&".
+			" rm -f $audio_file &&".
 			" echo DVDRIP_SUCCESS";
 		
 	} else {
-		$command =
+		die "avimerge without audio isn't possible"
+			if not $audio_file;
+
+		$command .=
 			"avimerge".
 			" -i $avi_file".
 			" -p $audio_file".
@@ -2037,9 +2132,29 @@ sub get_mplex_command {
 
 	my $target_file  = "$avi_file-%d.mpg";
 
+	my $add_audio_tracks;
+	my $add_audio_tracks_href = $self->get_additional_audio_tracks;
+
+	if ( keys %{$add_audio_tracks_href} ) {
+		my ($avi_nr, $vob_nr);
+		foreach $avi_nr ( sort keys %{$add_audio_tracks_href} ) {
+			$vob_nr = $add_audio_tracks_href->{$avi_nr};
+			$add_audio_tracks .= " ".
+			  $self->target_avi_audio_file (
+				vob_nr => $vob_nr,
+				avi_nr => $avi_nr,
+			  ).".mpa";
+		}
+	}
+
+	my $nice;
+	$nice = "`which nice` -n ".$self->tc_nice." "
+		if $self->tc_nice =~ /\S/;
+
 	my $command =
-		"mplex -f $mplex_f $mplex_v ".
-		"-o $target_file $avi_file.$vext $avi_file.mpa && echo DVDRIP_SUCCESS";
+		"${nice}mplex -f $mplex_f $mplex_v ".
+		"-o $target_file $avi_file.$vext $avi_file.mpa ".
+		"$add_audio_tracks && echo DVDRIP_SUCCESS";
 	
 	return $command;
 }
@@ -2064,17 +2179,22 @@ sub get_split_command {
 	);
 
 	my $command;
-	if ( $self->tc_audio_codec eq 'ogg' ) {
+
+	my $nice;
+	$nice = "`which nice` -n ".$self->tc_nice." "
+		if $self->tc_nice =~ /\S/;
+
+	if ( $self->is_ogg ) {
 		$split_mask .= $self->config('ogg_file_ext');
 
-		$command =
+		$command .=
 			"cd $avi_dir && ".
-			"ogmsplit -s $size $avi_file && ".
+			"${nice}ogmsplit -s $size $avi_file && ".
 			"echo DVDRIP_SUCCESS";
 	} else {
-		$command =
+		$command .=
 			"cd $avi_dir && ".
-			"avisplit -s $size -i $avi_file -o $split_mask && ".
+			"${nice}avisplit -s $size -i $avi_file -o $split_mask && ".
 			"echo DVDRIP_SUCCESS";
 	}
 	
@@ -2331,11 +2451,23 @@ sub make_preview_clip {
 	my $new_width  = $width - $left - $right;
 	my $new_height = $height - $top - $bottom;
 
+	my $command =
+		"convert $source_file -crop ".
+	        "${new_width}x${new_height}+$left+$top ".
+		$target_file;
+
 	$self->system (
 		command => "convert $source_file -crop ".
 			   "${new_width}x${new_height}+$left+$top ".
 			   $target_file
 	);
+
+	$self->put_preview_on_scratch (
+		source_file => $target_file,
+		target_file => $self->preview_scratch_filename ( type => $type ),
+		width       => $new_width,
+		height      => $new_height,
+	);	
 
 	1;
 }
@@ -2367,8 +2499,55 @@ sub make_preview_zoom {
 			   $target_file
 	);
 
+	$self->put_preview_on_scratch (
+		source_file => $target_file,
+		target_file => $self->preview_scratch_filename ( type => 'zoom' ),
+		width       => $new_width,
+		height      => $new_height,
+	);	
+
 	1;
 }
+
+sub put_preview_on_scratch {
+	my $self = shift;
+	my %par = @_;
+	my  ($source_file, $target_file, $width, $height) =
+	@par{'source_file','target_file','width','height'};
+return 1;
+
+	my $scratch_width  = $Video::DVDRIP::scratch_width;
+	my $scratch_height = $Video::DVDRIP::scratch_height;
+	
+	my $x = int(($scratch_width-$width) / 2);
+	my $y = int(($scratch_height-$height) / 2);
+
+	my $white_file = $self->project->snap_dir.
+		"/scratch-${scratch_width}x${scratch_height}.png";
+
+	my $command;
+
+	if ( not -f $white_file ) {
+		$command .= "convert -size ${scratch_width}x${scratch_height} ".
+			    " xc:white $white_file";
+	}
+	
+	$command .=
+		" && composite -geometry ${width}x${height}+$x+$y".
+		" $source_file $white_file $target_file";
+	
+	$command =~ s/^ &&//;
+
+print "\n",$command,"\n";
+
+	$self->system (
+		command => $command
+	);
+	
+	1;
+}
+
+#---------------------------------------------------------------------
 
 sub remove_vob_files {
 	my $self = shift;
@@ -2443,9 +2622,10 @@ sub get_view_avi_command {
 
 	} else {
 		my $filename = $self->avi_file;
-		$filename =~ s/\.avi$//;
+		my $ext = $self->get_target_ext;
+		$filename =~ s/\.[^.]+$//;
 		push @filenames, grep !/dvdrip-info/,
-				 glob ("${filename}*");
+				 glob ("${filename}*".$ext);
 	}
 
 	croak "msg:You first have to transcode this title."
@@ -2543,7 +2723,9 @@ sub get_burn_files {
 		$index = $3;
 		$chapter = $4;
 		$group = "$1:$5";
-		$ext   = $5;
+		
+		$base =~ /([^\.]+)$/;
+		$ext   = $1;
 
 		$index =~ s/C//g;
 		$index = $index * -1 if $index < 0;
@@ -2632,14 +2814,32 @@ sub get_create_image_command {
 
 	my $command;
 	if ( $cd_type eq 'iso' ) {
-		$command = $self->config('burn_mkisofs_cmd');
-		$command .= " -quiet" if $on_the_fly;
-		$command .= " -o $image_file" if not $on_the_fly;
-		$command .=
-			" -r -J -jcharset default -l -D -L".
-			" -V '".$self->burn_label."'".
-			" -abstract '".$self->burn_abstract." ".$self->burn_number."'".
-			" ".join(" ", @files );
+		if ( $on_the_fly and $self->config('burn_estimate_size') ) {
+			$command = 'SIZE=$(';
+			$command .= $self->config('burn_mkisofs_cmd');
+			$command .= " -quiet -print-size".
+				" -r -J -jcharset default -l -D -L".
+				" -V '".$self->burn_label."'".
+				" -abstract '".$self->burn_abstract." ".$self->burn_number."'".
+				" ".join(" ", @files );
+			$command .= ") && ";
+			$command .= $self->config('burn_mkisofs_cmd');
+			$command .= " -quiet";
+			$command .=
+				" -r -J -jcharset default -l -D -L".
+				" -V '".$self->burn_label."'".
+				" -abstract '".$self->burn_abstract." ".$self->burn_number."'".
+				" ".join(" ", @files );
+		} else {
+			$command = $self->config('burn_mkisofs_cmd');
+			$command .= " -quiet" if $on_the_fly;
+			$command .= " -o $image_file" if not $on_the_fly;
+			$command .=
+				" -r -J -jcharset default -l -D -L".
+				" -V '".$self->burn_label."'".
+				" -abstract '".$self->burn_abstract." ".$self->burn_number."'".
+				" ".join(" ", @files );
+		}
 	} else {
 		$command = $self->config('burn_vcdimager_cmd').
 			($cd_type eq 'svcd' ? ' --type=svcd' : ' --type=vcd2').
@@ -2689,6 +2889,8 @@ sub get_burn_command {
 			" -eject -pad -ignsize";
 
 		$command .= " -dummy" if $self->config('burn_test_mode');
+
+		$command .= ' tsize=${SIZE}s' if ( ( not $is_image ) and $self->config('burn_estimate_size') );
 		
 		if ( not $is_image ) {
 			$command .= " -";
@@ -2705,10 +2907,19 @@ sub get_burn_command {
 		}
 
 		$command .=
-			" --eject".
 			" --device ".$self->config('burn_cdrecord_device').
 			" --speed ".$self->config('burn_writing_speed');
 
+		$command .=
+			" --driver ".$self->config('burn_cdrdao_driver')
+				if $self->config('burn_cdrdao_driver');
+
+		$command .=
+			" --buffers ".$self->config('burn_cdrdao_buffers')
+				if $self->config('burn_cdrdao_buffers');
+
+		$command .= " --eject"    if $self->config('burn_cdrdao_eject');
+		$command .= " --overburn" if $self->config('burn_cdrdao_overburn');
 		$command .= " --simulate" if $self->config('burn_test_mode');
 
 		$command .=
@@ -3055,6 +3266,8 @@ sub get_create_vobsub_command {
 		$vobsub_ifo_file = "$vobsub_prefix.ifo";
 	}
 
+	my $rar = $self->config('rar_command');
+
 	my $command =
 		"mkdir -p $avi_dir && ".
 		"cp $ifo_file $avi_dir/$vobsub_ifo_file && ".
@@ -3065,10 +3278,13 @@ sub get_create_vobsub_command {
 		"subtitle2vobsub $range".
 		" -i $vobsub_ifo_file ".
 		" -o $vobsub_prefix && ".
-		"echo DVDRIP_SUCCESS && ".
-		"test -x \$(which rar) && ".
-		"rar a $vobsub_prefix $vobsub_prefix.{idx,ifo,sub} && ".
-		"rm $vobsub_prefix.{idx,ifo,sub}";
+		"echo DVDRIP_SUCCESS";
+
+	if ( $self->has ( "rar" ) ) {
+		$command .=
+			" && $rar a $vobsub_prefix $vobsub_prefix.{idx,ifo,sub} && ".
+			"rm $vobsub_prefix.{idx,ifo,sub}";
+	}
 	
 	return $command;
 }
@@ -3138,6 +3354,101 @@ sub has_vobsub_subtitles {
 	}
 	
 	return 0;
+}
+
+# transcode -T 1,2 -i /dev/dvd -x null -y null,wav -o test1.wav
+
+sub get_create_wav_command {
+	my $self = shift;
+	
+	return "echo 'No audio channel selected'"
+		if $self->audio_channel == -1;
+	
+	my $audio_wav_file = $self->audio_wav_file;
+	my $dir            = dirname($audio_wav_file);
+	my $nr             = $self->nr;
+	my $source         = $self->transcode_data_source;
+	my $audio_nr       = $self->audio_track->tc_nr;
+
+	my $source_options = $self->data_source_options;
+	$source_options->{x} = "null";
+
+	my $command =
+		"mkdir -p $dir &&".
+		" transcode -a $audio_nr ".
+		" -y null,wav -u 100 -o $audio_wav_file";
+
+	$command .= " -$_ $source_options->{$_}" for keys %{$source_options};
+
+	$command .= " -d" if $self->audio_track->type eq 'lpcm';
+
+	if ( $self->tc_start_frame ne '' or
+	     $self->tc_end_frame ne '' ) {
+		my $start_frame = $self->tc_start_frame;
+		my $end_frame   = $self->tc_end_frame;
+		$start_frame ||= 0;
+		$end_frame   ||= $self->frames;
+
+		if ( $start_frame != 0 ) {
+			my $options = $self->get_frame_grab_options (
+				frame => $start_frame
+			);
+			$options->{c} =~ /(\d+)/;
+			my $c1 = $1;
+			my $c2 = $c1 + $end_frame - $start_frame;
+			$command .= " -c $c1-$c2";
+			$command .= " -L $options->{L}"
+				if $options->{L} ne '';
+
+		} else {
+			$command .= " -c $start_frame-$end_frame";
+		}
+	}
+
+	$command .= " && echo DVDRIP_SUCCESS";
+
+	return $command;	
+}
+
+sub check_svcd_geometry {
+	my $self = shift;
+	
+	return if not $self->tc_container eq 'vcd';
+	
+	my $codec = $self->tc_video_codec;
+	my $mode  = $self->video_mode;
+	
+	my $width =
+		($self->tc_zoom_width || $self->width) -
+		$self->tc_clip2_left - $self->tc_clip2_right;
+
+	my $height =
+		($self->tc_zoom_height || $self->height) -
+		$self->tc_clip2_top - $self->tc_clip2_bottom;
+	
+	my %valid_values = (
+		"VCD:pal:width"  	=> 352,
+		"VCD:pal:height" 	=> 288,
+		"VCD:ntsc:width"  	=> 352,
+		"VCD:ntsc:height" 	=> 240,
+		"SVCD:pal:width"  	=> 480,
+		"SVCD:pal:height" 	=> 576,
+		"SVCD:ntsc:width"  	=> 480,
+		"SVCD:ntsc:height" 	=> 480,
+	);
+	
+	my $should_width  = $valid_values{"$codec:$mode:width"};
+	my $should_height = $valid_values{"$codec:$mode:height"};
+	
+	$mode = uc($mode);
+	
+	if ( $width  != $should_width or $height != $should_height ) {
+		return	"Your frame size isn't conform to the standard,\n".
+			"which is ${should_width}x${should_height} for $codec/$mode, but you ".
+			"configured ${width}x${height}."
+	}
+
+	return;
 }
 
 1;

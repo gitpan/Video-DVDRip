@@ -1,7 +1,8 @@
-# $Id: TranscodeTabAudio.pm,v 1.5.2.1 2002/11/23 13:45:00 joern Exp $
+# $Id: TranscodeTabAudio.pm,v 1.13 2003/01/28 20:19:57 joern Exp $
 
 #-----------------------------------------------------------------------
-# Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
+# Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
+# All Rights Reserved. See file COPYRIGHT for details.
 # 
 # This module is part of Video::DVDRip, which is free software; you can
 # redistribute it and/or modify it under the same terms as Perl itself.
@@ -16,7 +17,7 @@ my $TABLE_SPACING = 5;
 
 my %AUDIO_CODECS = (
 	mp3    => { nr => 0, name => "MP3" 	},
-	ogg    => { nr => 1, name => "Vorbis" 	},
+	vorbis => { nr => 1, name => "Vorbis" 	},
 	ac3    => { nr => 2, name => "AC3" 	},
 	pcm    => { nr => 3, name => "PCM" 	},
 	mp2    => { nr => 4, name => "MP2" 	},
@@ -150,8 +151,8 @@ sub create_audio_options {
 		my $title = $self->selected_title;
 		return 1 if not $title;
 		return 1 if $self->in_transcode_init;
-		$title->set_tc_audio_codec ( $page2codec{$to_page} );
-		if ( $title->tc_audio_codec eq 'ogg' ) {
+		$title->audio_track->set_tc_audio_codec ( $page2codec{$to_page} );
+		if ( $title->is_ogg ) {
 			$widgets->{view_avi_button}->child->set("View OGG");
 			$widgets->{avisplit_button}->child->set("Split OGG");
 		} else {
@@ -224,7 +225,7 @@ sub create_audio_mp3_tab {
 	return $frame_hbox;
 }
 
-sub create_audio_ogg_tab {
+sub create_audio_vorbis_tab {
 	my $self = shift;
 	my %par = @_;
 	my ($hsize_group) = @par{'hsize_group'};
@@ -247,7 +248,7 @@ sub create_audio_ogg_tab {
 	# Audio Bitrate
 	$row = 0;
 	$self->create_audio_bitrate (
-		type  => "ogg",
+		type  => "vorbis",
 		table => $table,
 		row   => $row,
 		hsize_group => $hsize_group
@@ -256,7 +257,7 @@ sub create_audio_ogg_tab {
 	# Audio Filter
 	++$row;
 	$self->create_audio_filter (
-		type  => "ogg",
+		type  => "vorbis",
 		table => $table,
 		row   => $row,
 		hsize_group => $hsize_group
@@ -265,7 +266,16 @@ sub create_audio_ogg_tab {
 	# Volume Rescale
 	++$row;
 	$self->create_audio_volume_rescale (
-		type  => "ogg",
+		type  => "vorbis",
+		table => $table,
+		row   => $row,
+		hsize_group => $hsize_group
+	);
+	
+	# MP3 Quality
+	++$row;
+	$self->create_audio_vorbis_quality (
+		type  => "vorbis",
 		table => $table,
 		row   => $row,
 		hsize_group => $hsize_group
@@ -304,14 +314,15 @@ sub create_audio_ac3_tab {
 	);
 	
 	$self->transcode_widgets->{tc_ac3_bitrate_combo}->set_sensitive ( 0 );
+	$self->transcode_widgets->{tc_ac3_samplerate_combo}->set_sensitive ( 0 );
 
 	# Passthrough note
 	++$row;
 	++$row;
 	$label = Gtk::Label->new (
-		"AC3 sound is passed through. The\n".
-		"bitrate is detected from the source,\n".
-		"so you can't change it here."
+		"AC3 sound is passed through. Bit- and\n".
+		"samplerate are detected from the source,\n".
+		"so you can't change them here."
 	);
 	$label->show;
 	$label->set_justify ("left");
@@ -321,6 +332,8 @@ sub create_audio_ac3_tab {
 	$hbox->pack_start ($label, 0, 1, 0);
 
 	$table->attach_defaults ($hbox, 0, 2, $row, $row+1);
+
+	$self->transcode_widgets->{tc_ac3_samplerate_combo}->set_sensitive ( 0 );
 
 	return $frame_hbox;
 }
@@ -355,14 +368,15 @@ sub create_audio_pcm_tab {
 	);
 	
 	$self->transcode_widgets->{tc_pcm_bitrate_combo}->set_sensitive ( 0 );
+	$self->transcode_widgets->{tc_pcm_samplerate_combo}->set_sensitive ( 0 );
 
 	# Passthrough note
 	++$row;
 	++$row;
 	$label = Gtk::Label->new (
-		"PCM sound is passed through. The\n".
-		"bitrate is detected from the source,\n".
-		"so you can't change it here."
+		"PCM sound is passed through. Bit- and\n".
+		"samplerate are detected from the source,\n".
+		"so you can't change them here."
 	);
 	$label->show;
 	$label->set_justify ("left");
@@ -423,6 +437,9 @@ sub create_audio_mp2_tab {
 		hsize_group => $hsize_group
 	);
 	
+	$self->transcode_widgets->{tc_mp2_samplerate}->set_text ( 44100 );
+	$self->transcode_widgets->{tc_mp2_samplerate_combo}->set_sensitive ( 0 );
+
 	return $frame_hbox;
 }
 
@@ -440,7 +457,7 @@ sub create_audio_bitrate {
 	# Audio bitrate
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new ("Audio bitrate");
+	$label = Gtk::Label->new ("Bit-/Samplerate");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 	$table->attach ($hbox, 0, 1, $row, $row+1, 'fill','expand',0,0);
@@ -454,7 +471,7 @@ sub create_audio_bitrate {
 	);
 	$entry->show;
 	$entry->set_popdown_strings (64, 96, 128, 160, 192, 256, 320, 384);
-	$entry->set_usize(80,undef);
+	$entry->set_usize(60,undef);
 	$hbox->pack_start($entry, 0, 1, 0);
 
 	$label = Gtk::Label->new ("kbit/s");
@@ -473,8 +490,36 @@ sub create_audio_bitrate {
 		my $title = $self->selected_title;
 		return 1 if not $title;
 		return 1 if $self->in_transcode_init;
-		$title->$method ($_[0]->get_text);
+		$title->audio_track->$method ($_[0]->get_text);
 		$self->calc_video_bitrate;
+		1;
+	});
+	
+	# Samplerate
+	$entry = Video::DVDRip::CheckedCombo->new (
+		is_number	=> 1,
+		is_min		=> 1,
+	);
+	$entry->show;
+	$entry->set_popdown_strings (24000, 44100, 48000);
+	$entry->set_usize(70,undef);
+	$hbox->pack_start($entry, 0, 1, 0);
+
+	$label = Gtk::Label->new ("hz");
+	$label->show;
+	$hbox->pack_start ($label, 0, 1, 0);
+
+	my $attr = "tc_${type}_samplerate";
+	my $method = "set_$attr";
+
+	$widgets->{$attr} = $entry->entry;
+	$widgets->{$attr."_combo"} = $entry;
+
+	$entry->entry->signal_connect ("changed", sub {
+		my $title = $self->selected_title;
+		return 1 if not $title;
+		return 1 if $self->in_transcode_init;
+		$title->audio_track->$method ($_[0]->get_text);
 		1;
 	});
 
@@ -506,7 +551,7 @@ sub create_audio_filter {
 	$popup = Gtk::OptionMenu->new;
 	$popup->show;
 	$popup->set_menu($popup_menu);
-	$popup->set_usize (215,undef);
+	$popup->set_usize (195,undef);
 
 	my $i = 0;
 	foreach my $key ( qw ( rescale a52drc normalize ) ) {
@@ -520,7 +565,7 @@ sub create_audio_filter {
 				return 1 if $self->in_transcode_init;
 				my $title = $self->selected_title;
 				return 1 if not $title;
-				$title->set_tc_audio_filter($k);
+				$title->audio_track->set_tc_audio_filter($k);
 				foreach my $codec ( keys %AUDIO_CODECS ) {
 					next if $type eq $codec;
 					next if not exists
@@ -531,21 +576,19 @@ sub create_audio_filter {
 						->set_history($h);
 				}
 				if ( $key eq 'normalize' ) {
-					$title->set_tc_volume_rescale('');
+					$title->audio_track->set_tc_volume_rescale('');
 					$self->transcode_widgets
 					     ->{"audio_$type"}
 					     ->{tc_volume_rescale}
 					     ->set_text ('');
 				} else {
-					$title->set_tc_volume_rescale (
-						$title->audio_tracks
-						      ->[$title->audio_channel]
-						      ->volume_rescale
+					$title->audio_track->set_tc_volume_rescale (
+						$title->audio_track->volume_rescale
 					);
 					$self->transcode_widgets
 					     ->{"audio_$type"}
 					     ->{tc_volume_rescale}
-					     ->set_text ( $title->volume_rescale );
+					     ->set_text ( $title->audio_track->volume_rescale );
 				}
 			}, $key, $i
 		);
@@ -597,11 +640,11 @@ sub create_audio_volume_rescale {
 
 	$widgets->{"audio_$type"}->{tc_volume_rescale} = $entry;
 
-	$entry->signal_connect ("focus-out-event", sub {
+	$entry->signal_connect ("changed", sub {
 		my $title = $self->selected_title;
 		return 1 if not $title;
 		return 1 if $self->in_transcode_init;
-		$title->set_tc_volume_rescale ($_[0]->get_text);
+		$title->audio_track->set_tc_volume_rescale ($_[0]->get_text);
 		foreach my $codec ( keys %AUDIO_CODECS ) {
 			next if $type eq $codec;
 			next if not exists $widgets->{"audio_$codec"}
@@ -649,6 +692,7 @@ sub create_audio_mp3_quality {
 	$popup = Gtk::OptionMenu->new;
 	$popup->show;
 	$popup->set_menu($popup_menu);
+	$popup->set_usize (195,undef);
 
 	%popup_entries = (
 		0 => "0 - best but slower",
@@ -672,6 +716,7 @@ sub create_audio_mp3_quality {
 				return 1 if not $self->selected_title;
 				return 1 if $self->in_transcode_init;
 				$self->selected_title
+				     ->audio_track
 				     ->set_tc_mp3_quality($key)
 			}, $key
 		);
@@ -680,6 +725,72 @@ sub create_audio_mp3_quality {
 	$table->attach ($popup, 1, 2, $row, $row+1, 'fill','expand',0,0);
 
 	$widgets->{tc_mp3_quality_popup} = $popup;
+
+	return $frame_hbox;
+}
+
+sub create_audio_vorbis_quality {
+	my $self = shift;
+	my %par = @_;
+	my  ($type, $table, $row, $hsize_group) =
+	@par{'type','table','row','hsize_group'};
+
+	my ($frame, $frame_hbox, $hbox, $label, $entry, $vbox, $sep, $notebook);
+	my ($popup_menu, $popup, $item, %popup_entries, $radio_yes, $radio_no, $button);
+
+	my $widgets = $self->transcode_widgets;
+
+	# Vorbis Encoder Quality
+	$hbox = Gtk::HBox->new;
+	$hbox->show;
+	$label = Gtk::Label->new ("Quality");
+	$label->show;
+	$hbox->pack_start($label, 0, 1, 0);
+	$table->attach ($hbox, 0, 1, $row, $row+1, 'fill','expand',0,0);
+	$hsize_group->add ($hbox);
+
+	$hbox = Gtk::HBox->new;
+	$hbox->show;
+	$entry = Video::DVDRip::CheckedCombo->new (
+		is_number	=> 1,
+		is_min		=> 0,
+		is_max		=> 10,
+		may_fractional  => 1,
+	);
+	$entry->show;
+	$entry->set_popdown_strings (0,1.00,2.00,3.00,4.00,5.00,6.00,7.00,8.00,9.00,10.00);
+	$entry->set_usize(60,undef);
+	$hbox->pack_start($entry, 0, 1, 0);
+
+	$entry->entry->signal_connect ("changed", sub {
+		my $title = $self->selected_title;
+		return 1 if not $title;
+		return 1 if $self->in_transcode_init;
+		$title->audio_track->set_tc_vorbis_quality($_[0]->get_text);
+		$self->init_audio_values;
+		$self->calc_video_bitrate;
+		1;
+	});
+
+	$table->attach_defaults ($hbox, 1, 2, $row, $row+1);
+
+	my $checkbox = Gtk::CheckButton->new ("Use quality mode");
+	$checkbox->show;
+	$hbox->pack_start($checkbox, 0, 1, 0);
+
+	$checkbox->signal_connect ("clicked", sub {
+		my $title = $self->selected_title;
+		return 1 if not $title;
+		return 1 if $self->in_transcode_init;
+		$title->audio_track->set_tc_vorbis_quality_enable ( $_[0]->active );
+		$self->init_audio_values;
+		$self->calc_video_bitrate;
+		1;
+	});
+
+	$widgets->{tc_vorbis_quality}          = $entry->entry;
+	$widgets->{tc_vorbis_quality_combo}    = $entry;
+	$widgets->{tc_vorbis_quality_checkbox} = $checkbox;
 
 	return $frame_hbox;
 }
@@ -701,14 +812,14 @@ sub init_audio_values {
 	$self->set_in_transcode_init(1);
 
 	$widgets->{tc_target_audio_channel_popup}->set_history (
-		$title->tc_target_track + 1
+		$title->audio_track->tc_target_track + 1
 	) if not $dont_set_target_popup;
 
 	my $notebook = $widgets->{tc_audio_codec_notebook};
 
-	my $audio_codec  = $title->tc_audio_codec;
-	my $audio_filter = $title->tc_audio_filter;
-	my $mp3_quality  = $title->tc_mp3_quality;
+	my $audio_codec  = $title->audio_track->tc_audio_codec;
+	my $audio_filter = $title->audio_track->tc_audio_filter;
+	my $mp3_quality  = $title->audio_track->tc_mp3_quality;
 
 	$notebook->set_page( $AUDIO_CODECS{$audio_codec}->{nr} );
 
@@ -722,66 +833,39 @@ sub init_audio_values {
 		$self->transcode_widgets->{select_audio_channel_popup}->set_history($audio_channel);
 	}
 
-	my $ogg_show = "hide";
-	my $mp3_show = "hide";
-	my $ac3_show = "hide";
-	my $mp2_show = "hide";
-	my $pcm_show = "hide";
+	my $vorbis_show = "hide";
+	my $mp3_show    = "hide";
+	my $ac3_show    = "hide";
+	my $mp2_show    = "hide";
+	my $pcm_show    = "hide";
 
-	$mp2_show = $title->tc_video_codec =~ /^S?VCD$/ ? "show" : "hide";
+	if ( $title->tc_container eq 'vcd' ) {
+		$mp2_show = "show";
+	} else {
+		$vorbis_show = "show" if $title->is_ogg;
+		$mp3_show    = "show";
 
-	if ( $title->ogg_container_possible ) {
-		$ogg_show = "show";
-	}
-
-	if ( $title->avi_container_possible ) {
-		$mp3_show = "show";
-
-		if ( $title->audio_tracks->[$title->audio_channel]->ac3_ok ) {
+		if ( $title->audio_track->ac3_ok ) {
 			$ac3_show = "show";
-			$title->tc_audio_tracks->[$title->audio_channel]->set_tc_ac3_bitrate(
-				$title->audio_tracks->[$title->audio_channel]->bitrate
+			$title->audio_track->set_tc_ac3_bitrate(
+				$title->audio_track->bitrate
 			);
 		}
-		if ( $title->audio_tracks->[$title->audio_channel]->pcm_ok ) {
+		if ( $title->audio_track->pcm_ok and not $title->is_ogg ) {
 			$pcm_show = "show";
-			$title->tc_audio_tracks->[$title->audio_channel]->set_tc_pcm_bitrate(
-				$title->audio_tracks->[$title->audio_channel]->bitrate
+			$title->audio_track->set_tc_pcm_bitrate(
+				$title->audio_track->bitrate
 			);
 		}
 	}
-
-	$pcm_show = "hide";	# doesn't work on my system
 
 	my @pages = $widgets->{tc_audio_codec_notebook}->children;
 
 	$pages[$AUDIO_CODECS{ac3}->{nr}]->child->$ac3_show();
 	$pages[$AUDIO_CODECS{mp2}->{nr}]->child->$mp2_show();
 	$pages[$AUDIO_CODECS{mp3}->{nr}]->child->$mp3_show();
-	$pages[$AUDIO_CODECS{ogg}->{nr}]->child->$ogg_show();
 	$pages[$AUDIO_CODECS{pcm}->{nr}]->child->$pcm_show();
-
-	if ( $ogg_show eq 'show' and $mp3_show ne 'show' and
-	     $audio_codec ne 'ogg' ) {
-		# ogg is possible but mp3 not: so we should pre-select
-		# the ogg codec page
-		$notebook->set_page( $AUDIO_CODECS{ogg}->{nr} );
-		$title->set_tc_audio_codec("ogg");
-	}
-
-	if ( $ogg_show ne 'show' and $mp3_show eq 'show' and
-	     $audio_codec ne 'mp3' and $audio_codec ne 'ac3' ) {
-		# mp3 is possible but ogg not: so we should pre-select
-		# the mp3 codec page, if ogg is currently selected
-		$notebook->set_page( $AUDIO_CODECS{mp3}->{nr} );
-		$title->set_tc_audio_codec("mp3");
-	}
-
-	if ( $mp2_show eq 'show' and $audio_codec ne 'mp2' ) {
-		# mp2 is posibble, so it should be pre-selected
-		$notebook->set_page( $AUDIO_CODECS{mp2}->{nr} );
-		$title->set_tc_audio_codec("mp2");
-	}
+	$pages[$AUDIO_CODECS{vorbis}->{nr}]->child->$vorbis_show();
 
 	foreach my $codec ( keys %AUDIO_CODECS ) {
 		next if not exists $widgets->{"audio_$codec"}
@@ -800,16 +884,14 @@ sub init_audio_values {
 					   ->{tc_volume_rescale};
 		$widgets->{"audio_$codec"}
 			->{tc_volume_rescale}
-			->set_text ( $title->tc_volume_rescale );
+			->set_text ( $title->audio_track->tc_volume_rescale );
 	}
 
 	my $method;
 	foreach my $codec ( keys %AUDIO_CODECS ) {
 		my $method = "tc_$codec"."_bitrate";
 		$widgets->{"tc_$codec"."_bitrate"}->set_text (
-			$title->tc_audio_tracks
-			      ->[$audio_channel]
-			      ->$method
+			$title->audio_track->$method
 		);
 	}
 
@@ -820,13 +902,35 @@ sub init_audio_values {
 	}
 
 	$widgets->{tc_audio_codec_notebook}->set_sensitive (
-		$title->tc_target_track != -1
+		$title->audio_track->tc_target_track != -1
 	);
+
+	$widgets->{tc_mp3_samplerate}->set_text ( $title->audio_track->tc_mp3_samplerate );
+	$widgets->{tc_vorbis_samplerate}->set_text ( $title->audio_track->tc_vorbis_samplerate );
+	$widgets->{tc_vorbis_quality}->set_text ( $title->audio_track->tc_vorbis_quality );
+
+	if ( $title->audio_channel != -1 ) {
+		$self->transcode_widgets->{tc_ac3_samplerate}->set_text (
+			$title->audio_tracks->[$title->audio_channel]->sample_rate
+		);
+		$self->transcode_widgets->{tc_pcm_samplerate}->set_text (
+			$title->audio_tracks->[$title->audio_channel]->sample_rate
+		);
+	}
+
+	if ( $title->audio_track->tc_vorbis_quality_enable ) {
+		$widgets->{tc_vorbis_quality_checkbox}->set_active(1);
+		$widgets->{tc_vorbis_quality_combo}->set_sensitive(1);
+		$widgets->{tc_vorbis_bitrate_combo}->set_sensitive(0);
+	} else {
+		$widgets->{tc_vorbis_quality_checkbox}->set_active(0);
+		$widgets->{tc_vorbis_quality_combo}->set_sensitive(0);
+		$widgets->{tc_vorbis_bitrate_combo}->set_sensitive(1);
+	}
 
 	$self->set_in_transcode_init(0);
 
 	1;
 }
-
 
 1;

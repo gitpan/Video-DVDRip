@@ -1,7 +1,8 @@
-# $Id: TranscodeVideo.pm,v 1.6.2.1 2002/11/24 10:07:57 joern Exp $
+# $Id: TranscodeVideo.pm,v 1.10 2003/01/28 20:19:57 joern Exp $
 
 #-----------------------------------------------------------------------
-# Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
+# Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
+# All Rights Reserved. See file COPYRIGHT for details.
 # 
 # This program is part of Video::DVDRip, which is free software; you can
 # redistribute it and/or modify it under the same terms as Perl itself.
@@ -27,12 +28,14 @@ sub pass			{ shift->{pass}				}
 sub single_pass			{ shift->{single_pass}			}
 sub split			{ shift->{split}			}
 sub subtitle_test		{ shift->{subtitle_test}		}
+sub bc				{ shift->{bc}				}
 
 sub set_chapter			{ shift->{chapter}		= $_[1]	}
 sub set_pass			{ shift->{pass}			= $_[1]	}
 sub set_single_pass		{ shift->{single_pass}		= $_[1]	}
 sub set_split			{ shift->{split}		= $_[1]	}
 sub set_subtitle_test		{ shift->{subtitle_test}	= $_[1]	}
+sub set_bc			{ shift->{bc}			= $_[1]	}
 
 sub type {
 	return "transcode";
@@ -146,6 +149,19 @@ sub commit {
 		title    => $title,
 		filename => $title->info_file,
 	)->write;
+	
+	if ( $self->bc ) {
+		my $nr = $title->get_first_audio_track;
+		return 1 if $nr == -1;
+		my $vob_nr = $title->audio_tracks->[$nr]->tc_nr;
+		my $avi_nr = $title->audio_tracks->[$nr]->tc_target_track;
+		my $audio_file = $title->target_avi_audio_file (
+			vob_nr => $vob_nr,
+			avi_nr => $avi_nr,
+		);
+
+		$self->bc->add_audio_size ( bytes => -s $audio_file );
+	}
 	
 	1;
 }

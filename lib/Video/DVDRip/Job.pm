@@ -1,7 +1,8 @@
-# $Id: Job.pm,v 1.6 2002/11/01 13:31:46 joern Exp $
+# $Id: Job.pm,v 1.10 2003/01/28 20:19:57 joern Exp $
 
 #-----------------------------------------------------------------------
-# Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
+# Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
+# All Rights Reserved. See file COPYRIGHT for details.
 # 
 # This program is part of Video::DVDRip, which is free software; you can
 # redistribute it and/or modify it under the same terms as Perl itself.
@@ -120,6 +121,9 @@ sub set_cb_job_aborted		{ shift->{cb_job_aborted}	= $_[1]	}
 sub cb_update_progress		{ shift->{cb_update_progress}		}
 sub set_cb_update_progress	{ shift->{cb_update_progress}	= $_[1]	}
 
+sub last_percent_logged		{ shift->{last_percent_logged}		}
+sub set_last_percent_logged	{ shift->{last_percent_logged}	= $_[1]	}
+
 sub new {
 	my $class = shift;
 	my %par = @_;
@@ -163,7 +167,7 @@ sub start_job {
 		need_output  => $self->need_output,
 		cb_line_read => sub { $self->parse_output ($_[0]);
 				      &$cb_update_progress( job => $self )
-				      	if $cb_update_progress 	  },
+					if $cb_update_progress 	  },
 		cb_finished  => sub { $self->finish_job           },
 	);
 
@@ -202,18 +206,19 @@ sub commit_job {
 
 	my $cb_finished = $self->cb_finished;
 	eval {
-		$self->commit if $self->can ('commit');
+		$self->commit        if $self->can ('commit');
 		&$cb_finished($self) if $cb_finished
 	};
 
 	if ( $@ ) {
 		$self->set_job_aborted(1);
-		$self->set_error_message($@);#$self->stripped_exception);
+		$self->set_error_message($@);
+		$self->log ("Job aborted: $@");
 	} else {
 		$self->log ("Successfully finished job ($nr): ".$self->info);
 	}
 
-	$self->pipe->close;
+	$self->pipe->close if $self->pipe;
 
 	$self->set_progress_end_time (time);
 
@@ -325,6 +330,12 @@ sub calc_progress {
 		$eta = ", ETA: ".$self->format_time (
 			time => int ( $time * $max / $cnt ) - $time
 		) if $cnt > 50;
+		my $int_percent = int($cnt / $max * 100);
+		if ( $int_percent % 10 == 0 and
+		     $int_percent > $self->last_percent_logged ) {
+		     	$self->log ($self->info.": $int_percent% done.");
+			$self->set_last_percent_logged($int_percent);
+		}
 	} else {
 		$eta = ", ETA: unknown";
 		$fps =~ s/, //;
@@ -373,11 +384,11 @@ sub calc_dep_string {
 
 sub dependency_ok {
 	my $self = shift;
-	
+
 	foreach my $job ( @{$self->depends_on_jobs} ) {
 		return if not $job->state eq 'finished';
 	}
-	
+
 	return 1;
 }
 

@@ -1,7 +1,8 @@
-# $Id: BurnCD.pm,v 1.2 2002/10/06 14:52:29 joern Exp $
+# $Id: BurnCD.pm,v 1.6 2003/02/05 22:17:25 joern Exp $
 
 #-----------------------------------------------------------------------
-# Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
+# Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
+# All Rights Reserved. See file COPYRIGHT for details.
 # 
 # This program is part of Video::DVDRip, which is free software; you can
 # redistribute it and/or modify it under the same terms as Perl itself.
@@ -23,8 +24,8 @@ sub set_test_mode		{ shift->{test_mode}		= $_[1]	}
 sub wait_for_start		{ shift->{wait_for_start}		}
 sub set_wait_for_start		{ shift->{wait_for_start}	= $_[1]	}
 
-sub fixiating			{ shift->{fixiating}			}
-sub set_fixiating		{ shift->{fixiating}		= $_[1]	}
+sub fixating			{ shift->{fixating}			}
+sub set_fixating		{ shift->{fixating}		= $_[1]	}
 
 
 sub type {
@@ -47,8 +48,8 @@ sub info {
 	} elsif ( $self->wait_for_start ) {
 		$info = "Burn CD $test_mode- starting in ".$self->wait_for_start. " seconds";
 
-	} elsif ( $self->fixiating ) {
-		$info = "Fixiating CD $test_mode";
+	} elsif ( $self->fixating ) {
+		$info = "Fixating CD $test_mode";
 
 	} else {
 		$info = "Burn CD $test_mode";
@@ -98,20 +99,21 @@ sub parse_output {
 		}
 	}
 
-	if ( $self->title->burning_an_image and
+	if ( ( $self->title->burning_an_image or 
+	       ( ( not $self->title->burning_an_image ) and $self->title->config('burn_estimate_size') ) ) and
 	     $line =~ m!(\d+)\s+of\s+(\d+)\s+MB!i ) {
 #print "IMAGE: PROGRESS: $1 of $2\n";
 		$self->set_progress_cnt ( int(10000*$1/$2) );
-		$self->set_fixiating(1) if $1 >= $2;
-#print "IMAGE: FIXIATING" if $1 >= $2;
+		$self->set_fixating(1) if $1 >= $2;
+#print "IMAGE: fixating" if $1 >= $2;
 		$self->set_wait_for_start ( 0 );
 
-	} elsif ( not $self->title->burning_an_image and
+	} elsif ( ( not $self->title->burning_an_image ) and ( not $self->title->config('burn_estimate_size') ) and 
 	          $line =~ m!:\s+(\d+)\s+MB! ) {
 		$self->set_progress_cnt ( int(10000*$1/$self->max_size) );
 #print "FLY: PROGRESS: $1 of ".$self->max_size,"\n";
-		$self->set_fixiating(1) if $1 >= $self->max_size;
-#print "FLY: FIXIATING" if $1 >= $self->max_size;
+		$self->set_fixating(1) if $1 >= $self->max_size;
+#print "FLY: fixating" if $1 >= $self->max_size;
 		$self->set_wait_for_start ( 0 );
 	}
 

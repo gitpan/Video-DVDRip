@@ -1,7 +1,8 @@
-# $Id: Base.pm,v 1.26 2002/10/15 21:06:45 joern Exp $
+# $Id: Base.pm,v 1.31 2003/02/10 11:56:28 joern Exp $
 
 #-----------------------------------------------------------------------
-# Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
+# Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
+# All Rights Reserved. See file COPYRIGHT for details.
 # 
 # This module is part of Video::DVDRip, which is free software; you can
 # redistribute it and/or modify it under the same terms as Perl itself.
@@ -10,6 +11,7 @@
 package Video::DVDRip::Base;
 
 use Video::DVDRip::Config;
+use Video::DVDRip::FilterList;
 
 use Carp;
 use strict;
@@ -18,10 +20,19 @@ use IO::Pipe;
 use Fcntl;
 use Data::Dumper;
 
+# load preferences ---------------------------------------------------
 my $CONFIG_OBJECT = Video::DVDRip::Config->new;
 $CONFIG_OBJECT->set_filename ("$ENV{HOME}/.dvdriprc");
 $CONFIG_OBJECT->save if not -f "$ENV{HOME}/.dvdriprc";
 $CONFIG_OBJECT->load;
+
+# detect installed tool versions -------------------------------------
+require Video::DVDRip::Depend;
+my $DEPEND_OBJECT = Video::DVDRip::Depend->new;
+
+# pre load transcode's filter list -----------------------------------
+Video::DVDRip::FilterList->get_filter_list
+	if $DEPEND_OBJECT->version ("transcode") >= 603;
 
 sub config {
 	my $thingy = shift;
@@ -38,6 +49,24 @@ sub set_config {
 
 sub config_object {
 	$CONFIG_OBJECT;
+}
+
+sub depend_object {
+	$DEPEND_OBJECT;
+}
+
+sub has {
+	my $self = shift;
+	my ($command) = @_;
+
+	return $self->depend_object->has ( $command );
+}
+
+sub version {
+	my $self = shift;
+	my ($command) = @_;
+
+	return $self->depend_object->version ( $command );
 }
 
 sub debug_level		{ $Video::DVDRip::DEBUG || shift->{debug_level}	}
@@ -109,6 +138,7 @@ sub trace_out {
 
 sub dump {
 	my $self = shift;
+	push @_, $self if not @_;
 
 	my $dd = Data::Dumper->new ( \@_ );
 	$dd->Indent(1);
@@ -425,29 +455,6 @@ sub search_perl_inc {
 	}
 
 	return $file;
-}
-
-{
-	my %COMMANDS_DETECTED;
-
-	sub has {
-		my $self = shift;
-		my %par = @_;
-		my ($command) = $par{'command'};
-
-		return $COMMANDS_DETECTED{$command}
-			if exists $COMMANDS_DETECTED{$command};
-
-		my $rc = Video::DVDRip::Config->_executable (
-			"", $command
-		);
-
-		if ( $rc =~ /NOT/ ) {
-			return $COMMANDS_DETECTED{$command} = 0;
-		} else {
-			return $COMMANDS_DETECTED{$command} = 1;
-		}
-	}
 }
 
 1;

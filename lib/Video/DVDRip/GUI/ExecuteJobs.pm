@@ -1,14 +1,14 @@
-# $Id: ExecuteJobs.pm,v 1.7.2.1 2002/12/02 18:21:59 joern Exp $
+# $Id: ExecuteJobs.pm,v 1.13 2003/02/08 10:38:39 joern Exp $
 
 #-----------------------------------------------------------------------
-# Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
+# Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
+# All Rights Reserved. See file COPYRIGHT for details.
 # 
 # This module is part of Video::DVDRip, which is free software; you can
 # redistribute it and/or modify it under the same terms as Perl itself.
 #-----------------------------------------------------------------------
 
 package Video::DVDRip::GUI::ExecuteJobs;
-
 
 use base Video::DVDRip::GUI::Base;
 
@@ -29,6 +29,7 @@ use Video::DVDRip::Job::GrabSubtitleImages;
 use Video::DVDRip::Job::ExtractPS1;
 use Video::DVDRip::Job::CreateVobsub;
 use Video::DVDRip::Job::CountFramesInFile;
+use Video::DVDRip::Job::CreateWav;
 
 use strict;
 
@@ -241,8 +242,6 @@ sub job_aborted {
 				$job->pipe->output
 		);
 	}
-	# try hard
-	$self->execute_jobs ( no_diskspace_check => 1);
 
 	1;
 }
