@@ -1,6 +1,44 @@
-$Id: Changes,v 1.8 2001/12/09 12:50:21 joern Exp $
+$Id: Changes,v 1.11 2001/12/13 22:10:47 joern Exp $
 
 Revision history for Perl extension Video::DVDRip
+
+0.24 Thu Dec 13 2001, joern
+	Just a major release, no changes since pre-release.
+
+0.24_02  Tue Dec 11 2001, joern
+	Features:
+	- You can open a debugging window, which shows all transcode
+	  commands executed by dvd::rip by pressing Ctrl+T or selecting the
+	  "Debug/Show Transcode Commands..." menu item. Thanks to
+	  Norbert Preining for his suggestion. This should help finding
+	  bugs in dvd::rip, where wrong transcode options are genereated,
+	  or something similar.
+	- modified 16:9 anamorph fast resizing Preset: added 2nd Clipping
+	  to get rid of 4 black top and bottom lines
+	- Added a transcode title number field to the rip tab. This way
+	  you can workaround the transcode/libdvdread bug which results
+	  to wrong assigned titles. Please use this with care and only
+	  if you know, what you do. This fields changes only the title
+	  number passed to all transcode commands. The dvd::rip filenames
+	  will be named with the orignally (maybe wrong) scanned title nr.
+	  Thanks to Bjoern Buerger <b.buerger AT tu-bs.de> for his
+	  suggestion.
+
+	Bugfixes:
+	- Preset "16:9 Anam. Enc., No Letterbox, Fast Resize" did not
+	  switch fast resizing on
+	- Fast Resizing: 32 pixel boundary must be given only for
+	  axes which are resized. Thanks to Norbert Preining for
+	  his patch.
+	- dvd::rip now checks, whether VOB files are already ripped,
+	  even if the project file says, they're not (e.g. if you
+	  forget to save after ripping, restart dvd::rip and create
+	  a new project for this DVD). Thanks to Norbert Preining
+	  for the hint.
+	- dvd::rip now checks if the needed programs (transcode,
+	  ImageMagick etc.) are installed and complains if not.
+	  Thanks to Michal Szymanski <msz AT astrouw.edu.pl> for his
+	  bugreport.
 
 0.23  Sun Dec 09 2001, joern
 	Bugfixes:

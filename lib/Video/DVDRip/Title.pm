@@ -1,4 +1,4 @@
-# $Id: Title.pm,v 1.30 2001/12/09 12:49:22 joern Exp $
+# $Id: Title.pm,v 1.33 2001/12/11 22:16:04 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -95,6 +95,7 @@ sub tc_start_frame	    	{ shift->{tc_start_frame}		}
 sub tc_end_frame	    	{ shift->{tc_end_frame}			}
 sub tc_fast_resize	    	{ shift->{tc_fast_resize}		}
 sub tc_multipass	    	{ shift->{tc_multipass}			}
+sub tc_title_nr	    		{ $_[0]->{tc_title_nr} || $_[0]->{nr}	}
 
 sub set_project			{ shift->{project}		= $_[1] }
 sub set_tc_viewing_angle	{ shift->{tc_viewing_angle}	= $_[1]	}
@@ -124,6 +125,7 @@ sub set_tc_start_frame		{ shift->{tc_start_frame}    	= $_[1]	}
 sub set_tc_end_frame		{ shift->{tc_end_frame}    	= $_[1]	}
 sub set_tc_fast_resize		{ shift->{tc_fast_resize}    	= $_[1]	}
 sub set_tc_multipass		{ shift->{tc_multipass}    	= $_[1]	}
+sub set_tc_title_nr	    	{ shift->{tc_title_nr}    	= $_[1]	}
 
 sub vob_dir {
 	my $self = shift; $self->trace_in;
@@ -209,10 +211,21 @@ sub apply_preset {
 # Methods for Ripping
 #---------------------------------------------------------------------
 
+sub is_ripped {
+	my $self = shift;
+	
+	my $vob_dir    = $self->vob_dir;
+	my $name       = $self->project->name;
+	
+	return -f "$vob_dir/$name-001.vob";
+}
+
 sub get_rip_command {
 	my $self = shift; $self->trace_in;
 
-	my $nr         = $self->nr;
+	$self->project->check_installation;
+
+	my $nr         = $self->tc_title_nr;
 	my $name       = $self->project->name;
 	my $dvd_device = $self->project->dvd_device;
 	my $vob_dir    = $self->vob_dir;
@@ -222,7 +235,7 @@ sub get_rip_command {
 			or croak "Can't mkpath directory '$vob_dir'";
 	}
 
-	my $command = "rm -f $vob_dir/$name-???.vob; ".
+	my $command = "rm -f $vob_dir/$name-???.vob;\n".
 	           "tccat -t dvd -T $nr,-1 -i $dvd_device ".
 	           "| splitpipe 1024 $vob_dir/$name vob >/dev/null";
 
@@ -290,7 +303,8 @@ sub rip_async_stop {
 sub get_scan_command {
 	my $self = shift; $self->trace_in;
 
-	my $nr            = $self->nr;
+	$self->project->check_installation;
+
 	my $vob_dir       = $self->vob_dir;
 	my $audio_channel = $self->audio_channel;
 
@@ -393,7 +407,9 @@ sub analyze_scan_output {
 sub get_rip_and_scan_command {
 	my $self = shift; $self->trace_in;
 
-	my $nr            = $self->nr;
+	$self->project->check_installation;
+
+	my $nr            = $self->tc_title_nr;
 	my $audio_channel = $self->audio_channel;
 	my $name          = $self->project->name;
 	my $dvd_device    = $self->project->dvd_device;
@@ -405,14 +421,12 @@ sub get_rip_and_scan_command {
 	}
 
 	my $command =
-	       "rm -f $vob_dir/$name-???.vob; ".
+	       "rm -f $vob_dir/$name-???.vob;\n".
 	       "tccat -t dvd -T $nr,-1 -i $dvd_device ".
 	       "| splitpipe 1024 $vob_dir/$name vob ".
 	       "| tcextract -a $audio_channel -x ac3 -t vob ".
 	       "| tcdecode -x ac3 ".
 	       "| tcscan -x pcm";
-
-print $command,"\n";
 
 	return $command;
 }
@@ -494,7 +508,9 @@ sub rip_and_scan_async_stop {
 sub get_probe_command {
 	my $self = shift; $self->trace_in;
 	
-	my $nr            = $self->nr;
+	$self->project->check_installation;
+
+	my $nr            = $self->tc_title_nr;
 	my $dvd_device    = $self->project->dvd_device;
 
 	return "tcprobe -i $dvd_device -T $nr";
@@ -503,7 +519,6 @@ sub get_probe_command {
 sub probe {
 	my $self = shift; $self->trace_in;
 	
-	my $nr            = $self->nr;
 	my $dvd_device    = $self->project->dvd_device;
 
 	my $output = $self->system (
@@ -666,6 +681,8 @@ sub get_transcode_command {
 	my %par = @_;
 	my ($pass) = @par{'pass'};
 
+	$self->project->check_installation;
+
 	my $nr       = $self->nr;
 	my $avi_file = $self->avi_file;
 
@@ -777,9 +794,9 @@ sub get_fast_resize_options {
 
 	my ($err_div32, $err_shrink_expand);
 
-	if ( ($width_n != 0 and $zoom_width % 32 != 0) or
-	     ($height_n != 0 and $zoom_height % 32 != 0) or
-	     ($width % 32 != 0 or $height % 32 != 0) or () ) {
+	if ( ($width_n != 0 and $zoom_width % 32 != 0 and $width % 32 != 0) or
+	     ($height_n != 0 and $zoom_height % 32 != 0 and $height % 32 != 0) 
+	     or () ) {
 		$err_div32 = 1;
 	}
 
@@ -849,6 +866,8 @@ sub transcode_async_stop {
 sub get_split_command {
 	my $self = shift; $self->trace_in;
 	
+	$self->project->check_installation;
+
 	my $avi_file = $self->avi_file;
 	my $size     = $self->tc_disc_size;
 
@@ -861,8 +880,6 @@ sub get_split_command {
 
 	my $command = "avisplit -s $size -i $avi_file";
 	
-print $command,"\n";
-
 	return $command;
 }
 
@@ -956,6 +973,8 @@ sub get_take_snapshot_command {
 	my %par = @_;
 	my ($frame) = @par{'frame'};
 
+	$self->project->check_installation;
+
 	my $nr      = $self->nr;
 	my $tmp_dir = "/tmp/lightrip$$.ppm";
 	
@@ -966,8 +985,6 @@ sub get_take_snapshot_command {
 	       " -z -k -i ".$self->project->vob_dir."/$nr".
 	       " -o snapshot".
 	       " -x vob -y ppm -c $frame-".($frame+1);
-
-print $command,"\n";
 
 	return $command;
 }

@@ -1,4 +1,4 @@
-# $Id: TranscodeTab.pm,v 1.14 2001/12/09 12:48:51 joern Exp $
+# $Id: TranscodeTab.pm,v 1.15 2001/12/10 20:43:26 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -712,7 +712,7 @@ sub transcode {
 	return 1 if not $title;
 	return 1 if $self->comp('progress')->is_active;
 
-	if ( not $title->rip_time ) {
+	if ( not $title->is_ripped ) {
 		$self->message_window (
 			message => "You first have to rip this title."
 		);

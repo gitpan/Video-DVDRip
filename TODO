@@ -1,4 +1,4 @@
-$Id: TODO,v 1.8 2001/12/09 12:00:51 joern Exp $
+$Id: TODO,v 1.11 2001/12/13 22:10:47 joern Exp $
 
 KNOWN BUGS:
 - Some DVDs can confuse the TOC reading algorithm of dvd::rip. First
@@ -27,15 +27,10 @@ KNOWN BUGS:
        title number. This helps determining the correct title number.
 
 TODO
+- create logfile of all processes, display it in a separate logging tab
+- chapter mode ripping, suggested by Norbert Preining
+- on the fly ripping & transcoding, requested by many users
 - extensive checking of user input. most input is currently
   passed through without examination.
 - exact letterbox autodetection
-- button for vieweing the generated transcode command
 - create personal clip&zoom preferences
-
-DONE
-- works not with Perl 5.005, but it should (fixed in 0.22)
-- problems with automounter. check if the dvd is already mounted
-  should fix the problem (fixed in 0.22)
-- use fast resizing, when transcode hsize bug is fixed (done in 0.22)
-- support multipass DivX encoding (done in 0.22)

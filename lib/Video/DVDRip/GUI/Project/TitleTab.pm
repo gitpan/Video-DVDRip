@@ -1,4 +1,4 @@
-# $Id: TitleTab.pm,v 1.9 2001/12/09 00:19:24 joern Exp $
+# $Id: TitleTab.pm,v 1.10 2001/12/11 22:15:02 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -20,6 +20,9 @@ sub set_clist_row2title_nr	{ shift->{clist_row2title_nr}	= $_[1] }
 
 sub gtk_audio_popup		{ shift->{gtk_audio_popup}		}	# lref
 sub set_gtk_audio_popup		{ shift->{gtk_audio_popup}	= $_[1] }
+
+sub gtk_tc_title_nr		{ shift->{gtk_tc_title_nr}		}
+sub set_gtk_tc_title_nr		{ shift->{gtk_tc_title_nr}	= $_[1] }
 
 #------------------------------------------------------------------------
 # Build RIP Title Tab
@@ -71,7 +74,7 @@ sub create_title_tab {
 		"Title", "Size (MB)", "Additional Information"
 	);
 	$clist->show,
-	$clist->set_usize (400, 200);
+	$clist->set_usize (400, 300);
 	$clist->set_selection_mode( 'browse' ); 
 	$clist->signal_connect ("select_row", sub { $self->cb_select_title (@_) } );
 	$self->set_gtk_content_clist ($clist);
@@ -109,13 +112,46 @@ sub create_title_tab {
 		"to rip. The popup above shows you\n".
 		"the audio channels available for\n".
 		"this title. Both settings will be\n".
-		"used for all subsequent steps.\n\n"
+		"used for all subsequent steps.\n"
 	);
 	$label->show;
 	$label->set_justify('left');
 	$audio_vbox->pack_start ($label, 0, 1, 0);
 
-	# 5 . Show and RIP  Buttons
+	# 4a) transcode title mapping
+	$label = Gtk::Label->new (
+		"This is for hackers!\n".
+		"Enter real transcode title number,\n".
+		"if probing does not work\n".
+		"(for the currently selected title)"
+	);
+	$label->show;
+	$label->set_justify('left');
+	$audio_vbox->pack_start ($label, 0, 0, 0);
+
+	my $nr_hbox = Gtk::HBox->new;
+	$nr_hbox->show;
+	$audio_vbox->pack_start ($nr_hbox, 0, 1, 0);
+
+	$label = Gtk::Label->new ("transcode title nr:");
+	$label->show;
+	$nr_hbox->pack_start ($label, 0, 1, 0);
+	
+	my $entry = Gtk::Entry->new;
+	$entry->show;
+	$entry->set_usize(60,undef);
+	$nr_hbox->pack_start ($entry, 0, 1, 0);
+
+	$entry->signal_connect ("changed", sub {
+		my $title = $self->selected_title;
+		return 1 if not $title;
+		$title->set_tc_title_nr ($_[0]->get_text);
+	} );
+
+	$self->set_gtk_tc_title_nr ($entry);
+
+
+	# 5. Show and RIP  Buttons
 	$hbox = Gtk::HBox->new (1);
 	$hbox->set_border_width(5);
 	$hbox->show;
@@ -199,6 +235,8 @@ sub init_audio_popup {
 	}
 
 	$audio_popup->set_history($title->audio_channel+1);
+
+	$self->gtk_tc_title_nr->set_text($title->tc_title_nr);
 
 	1;
 }

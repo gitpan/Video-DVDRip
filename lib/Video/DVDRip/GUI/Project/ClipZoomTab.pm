@@ -1,4 +1,4 @@
-# $Id: ClipZoomTab.pm,v 1.9 2001/12/09 11:58:25 joern Exp $
+# $Id: ClipZoomTab.pm,v 1.10 2001/12/10 20:43:26 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -642,7 +642,7 @@ sub grab_preview_frame {
 
 	return 1 if not defined $frame_nr;
 
-	if ( not $title->rip_time ) {
+	if ( not $title->is_ripped ) {
 		$self->message_window (
 			message => "You first have to rip this title."
 		);

@@ -1,4 +1,4 @@
-# $Id: Main.pm,v 1.14 2001/12/07 20:17:59 joern Exp $
+# $Id: Main.pm,v 1.16 2001/12/11 21:41:25 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -49,6 +49,14 @@ sub start {
 		$self->open_project_file (
 			filename => $filename
 		);
+	}
+
+	eval {
+		Video::DVDRip::Project->check_installation;
+	};
+	if ( $@ ) {
+		my $msg = $self->stripped_exception;
+		$self->message_window ( message => $msg );
 	}
 
 	while ( 1 ) {
@@ -182,9 +190,19 @@ sub create_menubar {
 		  accelerator => '<control>Q',
                   callback    => sub { $self->exit_program } },
 
+		{ path        => '/_Edit',
+                  type        => '<Branch>' },
+
                 { path        => '/_Edit/Edit _Preferences...',
 		  accelerator => '<control>p',
                   callback    => sub { $self->edit_preferences } },
+
+		{ path        => '/_Debug',
+                  type        => '<Branch>' },
+
+                { path        => '/_Debug/Show _Transcode commands...',
+		  accelerator => '<control>t',
+                  callback    => sub { $self->show_transcode_commands } },
 	);
 
 	my $accel_group = Gtk::AccelGroup->new;
@@ -239,6 +257,8 @@ sub new_project {
 	$self->set_project_opened(1);
 	
 	$self->set_window_title;
+
+	$project->check_installation;
 
 	1;
 }
@@ -309,7 +329,6 @@ sub open_project_file {
 		$self->config('dvd_mount_point')
 	);
 
-	
 	1;
 }
 
@@ -415,6 +434,43 @@ sub edit_preferences {
 	
 	my $pref = Video::DVDRip::GUI::Config->new;
 	$pref->open_window;
+	
+	1;
+}
+
+sub show_transcode_commands {
+	my $self = shift;
+	
+	my $title = $self->comp('project')->selected_title;
+	return if not $title;
+
+	my $commands = "";
+	
+	$commands = "Rip Command:\n".
+		    "============\n".
+		    $title->get_rip_and_scan_command()."\n";
+
+	$commands .= "\n\n";
+	
+	$commands .= "Probe Command:\n".
+		     "==============\n".
+		     $title->get_probe_command()."\n";
+
+	$commands .= "\n\n";
+
+	$commands .= "Transcode Command:\n".
+		     "==================\n";
+
+	if ( $title->tc_multipass ) {
+		$commands .= $title->get_transcode_command ( pass => 1 )."\n".
+			     $title->get_transcode_command ( pass => 2 )."\n";
+	} else {
+		$commands .= $title->get_transcode_command()."\n";
+	}
+	
+	$self->long_message_window (
+		message => $commands
+	);
 	
 	1;
 }
