@@ -1,4 +1,4 @@
-# $Id: Base.pm,v 1.31.2.2 2003/02/17 21:09:30 joern Exp $
+# $Id: Base.pm,v 1.31.2.3 2003/02/23 21:39:12 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -455,28 +455,6 @@ sub search_perl_inc {
 	}
 
 	return $file;
-}
-
-sub get_child_pid {
-	my $self = shift;
-	my %par = @_;
-	my ($pid) = @par{'pid'};
-
-	my $fh = FileHandle->new;
-	open ($fh, "ps -H |") or die "can't fork ps";
-
-	my $child_pid = $pid;
-	FINDPID: while ( <$fh> ) {
-		next if ! /^.*$pid\s/;
-		FINDCHILD: while ( <$fh> ) {
-			($child_pid) = ( /(\d+)/ );
-			next FINDCHILD if /<defunct>/;
-			last FINDPID;
-		}
-	}
-	close $fh;
-
-	return $child_pid;	
 }
 
 1;

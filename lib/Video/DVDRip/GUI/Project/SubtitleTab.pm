@@ -1,4 +1,4 @@
-# $Id: SubtitleTab.pm,v 1.14.2.2 2003/02/15 09:38:20 joern Exp $
+# $Id: SubtitleTab.pm,v 1.14.2.3 2003/02/19 21:24:09 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -66,10 +66,11 @@ sub create_subtitle_tab {
 	$table->set_col_spacings ( $TABLE_SPACING );
 	$vbox->pack_start ($table, 1, 1, 0);
 
-	$table->attach_defaults ($select, 	0, 1, 0, 1);
+	$table->attach ($select, 0, 1, 0, 1,['fill',],['fill'],0,0);
 	$table->attach_defaults ($preview, 	0, 1, 1, 2);
-	$table->attach_defaults ($render, 	0, 1, 2, 3);
-	$table->attach_defaults ($vobsub, 	0, 1, 3, 4);
+#	$table->attach ($preview, 0, 1, 1, 2,['fill'],['fill'],0,0);
+	$table->attach ($render, 0, 1, 2, 3,['fill'],['fill'],0,0);
+	$table->attach ($vobsub, 0, 1, 3, 4,['fill'],['fill'],0,0);
 
 	return $vbox;
 }
@@ -193,7 +194,7 @@ sub create_subtitle_preview {
 	$row = 0;
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$table->attach ($hbox, 0, 1, $row, $row+1, 'fill','expand',0,0);
+	$table->attach ($hbox, 0, 1, $row, $row+1, 'fill','fill',0,0);
 
 	$button = Gtk::Button->new ("    Grab    ");
 	$button->show;
@@ -263,10 +264,14 @@ sub create_subtitle_preview {
 	$sw->set_usize ($self->config('main_window_width')-50, 150);
 	$sw->set_policy( 'automatic', 'automatic' );
 	
+	my $vbox = Gtk::VBox->new;
+	$vbox->show;
+	$vbox->pack_start ($sw, 1, 1, 0);
+	
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
 	$sw->add_with_viewport( $hbox );
-	$table->attach ($sw, 0, 1, $row, $row+1, 'fill','fill',0,0);
+	$table->attach ($vbox, 0, 1, $row, $row+1, ['fill','expand'],['fill','expand'],0,0);
 
 	$widgets->{preview_images_sw} = $sw;
 	$widgets->{preview_images_hbox} = $hbox;
@@ -313,7 +318,7 @@ sub create_subtitle_render {
 	$label = Gtk::Label->new ("Activate this subtitle");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
-	$table->attach ($hbox, 0, 1, $row, $row+1, 'fill','expand',0,0);
+	$table->attach ($hbox, 0, 1, $row, $row+1, ['fill','expand'],'expand',0,0);
 	$hsize_group->add ($hbox);
 
 	$hbox = Gtk::HBox->new;
@@ -321,7 +326,7 @@ sub create_subtitle_render {
 	$checkbox = Gtk::CheckButton->new ("for rendering");
 	$checkbox->show;
 	$hbox->pack_start ($checkbox, 0, 1, 0);
-	$table->attach ($hbox, 1, 2, $row, $row+1, 'fill','expand',0,0);
+	$table->attach ($hbox, 1, 2, $row, $row+1, ['fill','expand'],'expand',0,0);
 
 	$widgets->{tc_render} = $checkbox;
 
@@ -344,7 +349,7 @@ sub create_subtitle_render {
 	$label = Gtk::Label->new ("Vertical offset");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
-	$table->attach ($hbox, 0, 1, $row, $row+1, 'fill','expand',0,0);
+	$table->attach ($hbox, 0, 1, $row, $row+1, ['fill','expand'],'expand',0,0);
 	$hsize_group->add ($hbox);
 
 	$hbox = Gtk::HBox->new;
@@ -361,7 +366,7 @@ sub create_subtitle_render {
 	$label = Gtk::Label->new ("rows");
 	$label->show;
 	$hbox->pack_start ($label, 0, 1, 0);
-	$table->attach ($hbox, 1, 2, $row, $row+1, 'fill','expand',0,0);
+	$table->attach ($hbox, 1, 2, $row, $row+1, ['fill','expand'],'expand',0,0);
 
 	$widgets->{tc_vertical_offset_label} = $label;
 	$widgets->{tc_vertical_offset} = $entry;
@@ -373,7 +378,7 @@ sub create_subtitle_render {
 	$label = Gtk::Label->new ("Time shift");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
-	$table->attach ($hbox, 0, 1, $row, $row+1, 'fill','expand',0,0);
+	$table->attach ($hbox, 0, 1, $row, $row+1, ['fill','expand'],'expand',0,0);
 	$hsize_group->add ($hbox);
 
 	$hbox = Gtk::HBox->new;
@@ -390,7 +395,7 @@ sub create_subtitle_render {
 	$label = Gtk::Label->new ("ms");
 	$label->show;
 	$hbox->pack_start ($label, 0, 1, 0);
-	$table->attach ($hbox, 1, 2, $row, $row+1, 'fill','expand',0,0);
+	$table->attach ($hbox, 1, 2, $row, $row+1, ['fill','expand'],'expand',0,0);
 
 	$widgets->{tc_time_shift_label} = $label;
 	$widgets->{tc_time_shift} = $entry;
@@ -403,7 +408,7 @@ sub create_subtitle_render {
 	$checkbox->show;
 	$hbox->pack_start($checkbox, 0, 1, 0);
 
-	$table->attach ($hbox, 0, 1, $row, $row+1, 'fill','expand',0,0);
+	$table->attach ($hbox, 0, 1, $row, $row+1, ['fill','expand'],'expand',0,0);
 
 	$widgets->{tc_postprocess}  = $checkbox;
 
@@ -423,7 +428,7 @@ sub create_subtitle_render {
 	$checkbox->show;
 	$hbox->pack_start ($checkbox, 0, 1, 0);
 
-	$table->attach ($hbox, 1, 2, $row, $row+1, 'fill','expand',0,0);
+	$table->attach ($hbox, 1, 2, $row, $row+1, ['fill','expand'],'expand',0,0);
 
 	$widgets->{tc_antialias} = $checkbox;
 
@@ -445,7 +450,7 @@ sub create_subtitle_render {
 	$label = Gtk::Label->new ("Colors");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
-	$table->attach ($hbox, 2, 3, $row, $row+1, 'fill','expand',0,0);
+	$table->attach ($hbox, 2, 3, $row, $row+1, ['fill','expand'],'expand',0,0);
 
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
@@ -453,7 +458,7 @@ sub create_subtitle_render {
 	$checkbox->show;
 	$hbox->pack_start ($checkbox, 0, 1, 0);
 
-	$table->attach ($hbox, 3, 5, $row, $row+1, 'fill','expand',0,0);
+	$table->attach ($hbox, 3, 5, $row, $row+1, ['fill','expand'],'expand',0,0);
 
 	$widgets->{tc_color_manip_label} = $label;
 	$widgets->{tc_color_manip} = $checkbox;
@@ -476,7 +481,7 @@ sub create_subtitle_render {
 	$label = Gtk::Label->new ("Gray A/B");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
-	$table->attach ($hbox, 2, 3, $row, $row+1, 'fill','expand',0,0);
+	$table->attach ($hbox, 2, 3, $row, $row+1, ['fill','expand'],'expand',0,0);
 
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
@@ -495,7 +500,7 @@ sub create_subtitle_render {
 	$widgets->{tc_color_a_label} = $label;
 	$widgets->{tc_color_a} = $entry;
 
-	$table->attach ($hbox, 3, 4, $row, $row+1, 'fill','expand',0,0);
+	$table->attach ($hbox, 3, 4, $row, $row+1, ['fill','expand'],'expand',0,0);
 
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
@@ -514,7 +519,7 @@ sub create_subtitle_render {
 	$widgets->{tc_color_b_label} = $label;
 	$widgets->{tc_color_b} = $entry;
 
-	$table->attach ($hbox, 4, 5, $row, $row+1, 'fill','expand',0,0);
+	$table->attach ($hbox, 4, 5, $row, $row+1, ['fill','expand'],'expand',0,0);
 
 	# Assign Color A / B
 	++$row ;
@@ -523,7 +528,7 @@ sub create_subtitle_render {
 	$label = Gtk::Label->new ("Index A/B");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
-	$table->attach ($hbox, 2, 3, $row, $row+1, 'fill','expand',0,0);
+	$table->attach ($hbox, 2, 3, $row, $row+1, ['fill','expand'],'expand',0,0);
 
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
@@ -560,7 +565,7 @@ sub create_subtitle_render {
 	$widgets->{tc_assign_color_a_label} = $label;
 	$widgets->{tc_assign_color_a} = $popup;
 
-	$table->attach ($hbox, 3, 4, $row, $row+1, 'fill','expand',0,0);
+	$table->attach ($hbox, 3, 4, $row, $row+1, ['fill','expand'],'expand',0,0);
 
 	# Assign Color B
 	$hbox = Gtk::HBox->new;
@@ -598,7 +603,7 @@ sub create_subtitle_render {
 	$widgets->{tc_assign_color_b_label} = $label;
 	$widgets->{tc_assign_color_b} = $popup;
 
-	$table->attach ($hbox, 4, 5, $row, $row+1, 'fill','expand',0,0);
+	$table->attach ($hbox, 4, 5, $row, $row+1, ['fill','expand'],'expand',0,0);
 
 	#-------------------------------------------------------------
 	# Suggest buttons
@@ -609,14 +614,14 @@ sub create_subtitle_render {
 	$label = Gtk::Label->new ("Suggest");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
-	$table->attach ($hbox, 2, 3, $row, $row+1, 'fill','expand',0,0);
+	$table->attach ($hbox, 2, 3, $row, $row+1, ['fill','expand'],'expand',0,0);
 
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
 	$button = Gtk::Button->new (" Values for letterbox ");
 	$button->show;
 	$hbox->pack_start ($button, 1, 1, 0);
-	$table->attach ($hbox, 3, 5, $row, $row+1, 'fill','expand',0,0);
+	$table->attach ($hbox, 3, 5, $row, $row+1, ['fill','expand'],'expand',0,0);
 
 	$widgets->{suggest_black_bars_label} = $label;
 	$widgets->{suggest_black_bars_button} = $button;
@@ -630,7 +635,7 @@ sub create_subtitle_render {
 	$button = Gtk::Button->new (" Values for full size movie ");
 	$button->show;
 	$hbox->pack_start ($button, 1, 1, 0);
-	$table->attach ($hbox, 5, 7, $row, $row+1, 'fill','expand',0,0);
+	$table->attach ($hbox, 5, 7, $row, $row+1, ['fill','expand'],'expand',0,0);
 
 	$widgets->{suggest_full_size_label} = $label;
 	$widgets->{suggest_full_size_button} = $button;
@@ -647,7 +652,7 @@ sub create_subtitle_render {
 	$label = Gtk::Label->new ("Test image count");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
-	$table->attach ($hbox, 5, 6, $row, $row+1, 'fill','expand',0,0);
+	$table->attach ($hbox, 5, 6, $row, $row+1, ['fill','expand'],'expand',0,0);
 
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
@@ -660,7 +665,7 @@ sub create_subtitle_render {
 	$entry->set_usize($ENTRY_SIZE,undef);
 	$hbox->pack_start ($entry, 0, 1, 0);
 
-	$table->attach ($hbox, 6, 7, $row, $row+1, 'fill','expand',0,0);
+	$table->attach ($hbox, 6, 7, $row, $row+1, ['fill','expand'],'expand',0,0);
 
 	$widgets->{tc_test_image_cnt_label} = $label;
 	$widgets->{tc_test_image_cnt} = $entry;
@@ -672,7 +677,7 @@ sub create_subtitle_render {
 	$label = Gtk::Label->new ("Test transcode");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
-	$table->attach ($hbox, 5, 6, $row, $row+1, 'fill','expand',0,0);
+	$table->attach ($hbox, 5, 6, $row, $row+1, ['fill','expand'],'expand',0,0);
 
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
@@ -680,7 +685,7 @@ sub create_subtitle_render {
 	$button->set_usize (80, undef);
 	$button->show;
 	$hbox->pack_start ($button, 0, 1, 0);
-	$table->attach ($hbox, 6, 7, $row, $row+1, 'fill','expand',0,0);
+	$table->attach ($hbox, 6, 7, $row, $row+1, ['fill','expand'],'expand',0,0);
 
 	$widgets->{test_transcode_button_label} = $label;
 	$widgets->{test_transcode_button} = $button;
@@ -696,7 +701,7 @@ sub create_subtitle_render {
 	$label = Gtk::Label->new ("Test view");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
-	$table->attach ($hbox, 5, 6, $row, $row+1, 'fill','expand',0,0);
+	$table->attach ($hbox, 5, 6, $row, $row+1, ['fill','expand'],'expand',0,0);
 
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
@@ -704,7 +709,7 @@ sub create_subtitle_render {
 	$button->set_usize (80, undef);
 	$button->show;
 	$hbox->pack_start ($button, 0, 1, 0);
-	$table->attach ($hbox, 6, 7, $row, $row+1, 'fill','expand',0,0);
+	$table->attach ($hbox, 6, 7, $row, $row+1, ['fill','expand'],'expand',0,0);
 
 	$widgets->{test_view_button_label} = $label;
 	$widgets->{test_view_button} = $button;

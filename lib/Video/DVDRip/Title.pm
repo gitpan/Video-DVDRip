@@ -1,4 +1,4 @@
-# $Id: Title.pm,v 1.137.2.2 2003/02/15 09:39:19 joern Exp $
+# $Id: Title.pm,v 1.137.2.4 2003/02/23 21:41:30 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -1237,8 +1237,8 @@ sub get_rip_command {
 
 	my $angle = $self->tc_viewing_angle || 1;
 
-	my $command = "rm -f $vob_dir/$name-???.vob &&\n".
-	           "tccat -t dvd -T $nr,$chapter,$angle -i $dvd_device ".
+	my $command = "rm -f $vob_dir/$name-???.vob && ".
+	           "dr_exec tccat -t dvd -T $nr,$chapter,$angle -i $dvd_device ".
 	           "| dr_splitpipe -f $vob_nav_file 1024 ".
 		   "  $vob_dir/$name vob >/dev/null && echo DVDRIP_SUCCESS";
 
@@ -1276,7 +1276,7 @@ sub get_tc_scan_command_pipe {
 	my $tcdecode       = $codec eq 'ac3' ? "| tcdecode -x ac3 " : "";
 
 	my $command .=
-	       "tcextract -a $audio_channel -x $codec -t vob ".
+	       "dr_exec tcextract -a $audio_channel -x $codec -t vob ".
 	       $tcdecode.
 	       "| tcscan -x pcm";
 
@@ -1299,16 +1299,19 @@ sub get_scan_command {
 	
 	if ( $rip_mode eq 'rip' ) {
 		my $vob_size = $self->get_vob_size;
-		$command = "cat $vob_dir/* | dr_progress -m $vob_size -i 5 | tccat -t vob";
+		$command = "dr_exec cat $vob_dir/* | dr_progress -m $vob_size -i 5 | tccat -t vob";
 
 	} else  {
-		$command = "tccat ";
+		$command = "dr_exec tccat ";
 		delete $source_options->{x};
 		$command .= " -".$_." ".$source_options->{$_} for keys %{$source_options};
 		$command .= "| dr_splitpipe -f /dev/null 0 - -";
 	}
 
-	$command .= " | ".$self->get_tc_scan_command_pipe;
+	my $scan_command = $self->get_tc_scan_command_pipe;
+	$scan_command =~ s/dr_exec\s+//;
+
+	$command .= " | $scan_command";
 	$command .= " && echo DVDRIP_SUCCESS";
 
 	return $command;
@@ -1337,12 +1340,13 @@ sub get_rip_and_scan_command {
 
 	my $command =
 		"rm -f $vob_dir/$name-???.vob && ".
-		"tccat -t dvd -T $nr,$chapter,$angle -i $dvd_device ".
+		"dr_exec tccat -t dvd -T $nr,$chapter,$angle -i $dvd_device ".
 		"| dr_splitpipe -f $vob_nav_file 1024 $vob_dir/$name vob ";
 
 	if ( $audio_channel != -1 ) {
-		$command .= " | ".$self->get_tc_scan_command_pipe;
-		$command .= " && echo DVDRIP_SUCCESS";
+		my $scan_command = $self->get_tc_scan_command_pipe;
+		$scan_command =~ s/dr_exec\s+//;
+		$command .= " | $scan_command && echo DVDRIP_SUCCESS";
 
 	} else {
 		$command .= ">/dev/null && echo DVDRIP_SUCCESS";
@@ -1380,9 +1384,9 @@ sub get_probe_command {
 	my $data_source   = $self->project->rip_data_source;
 
 	my $command =
-		"tcprobe -i $data_source -T $nr && ".
+		"dr_exec tcprobe -i $data_source -T $nr && ".
 		"echo DVDRIP_SUCCESS; ".
-		"dvdxchap -t $nr $data_source 2>/dev/null";
+		"dr_exec dvdxchap -t $nr $data_source 2>/dev/null";
 
 	return $command;
 }
@@ -1410,7 +1414,7 @@ sub get_probe_audio_command {
 	my $nr      = $self->tc_title_nr;
 	my $vob_dir = $self->vob_dir;
 
-	return "tcprobe -i $vob_dir && echo DVDRIP_SUCCESS";
+	return "dr_exec tcprobe -i $vob_dir && echo DVDRIP_SUCCESS";
 }
 
 sub probe_audio {
@@ -1601,7 +1605,7 @@ sub get_transcode_command {
 	$mpeg = "svcd" if $self->tc_video_codec =~ /^SVCD$/;
 	$mpeg = "vcd"  if $self->tc_video_codec =~ /^VCD$/;
 
-	my $command = $nice."transcode";
+	my $command = $nice."dr_exec transcode";
 
 	$command .= " -a $audio_channel" if $audio_channel != -1;
 
@@ -1698,7 +1702,7 @@ sub get_transcode_command {
 				$audio_info->tc_mp3_quality;
 		} elsif ( $audio_info->tc_audio_codec eq 'vorbis' ) {
 			if ( $audio_info->tc_vorbis_quality_enable ) {
-				$command .= " -b 0,".
+				$command .= " -b 0,1,".
 					$audio_info->tc_vorbis_quality;
 			} else {
 				$command .= " -b ".
@@ -1727,7 +1731,8 @@ sub get_transcode_command {
 
 	$command .= " -V "
 		if $self->tc_use_yuv_internal and
-		   not $self->tc_deinterlace eq 'smart';
+		   ( $self->version ("transcode") >= 603 or
+		     $self->tc_deinterlace ne 'smart' );
 
 	$command .= " -C ".$self->tc_anti_alias
 		if $self->tc_anti_alias;
@@ -1913,7 +1918,7 @@ sub get_transcode_audio_command {
 
 	my $command =
 		"mkdir -p $dir && ".
-		"${nice}transcode ".
+		"${nice}dr_exec transcode ".
 		" -g 0x0 -u 50".
 		" -a $vob_nr".
 		" -y raw";
@@ -2055,7 +2060,7 @@ sub get_merge_audio_command {
 
 	if ( $self->is_ogg ) {
 		$command .=
-			"ogmmerge -o $avi_file.merged ".
+			"dr_exec ogmmerge -o $avi_file.merged ".
 			" $avi_file".
 			" $audio_file &&".
 			" mv $avi_file.merged $avi_file &&".
@@ -2067,7 +2072,7 @@ sub get_merge_audio_command {
 			if not $audio_file;
 
 		$command .=
-			"avimerge".
+			"dr_exec avimerge".
 			" -i $avi_file".
 			" -p $audio_file".
 			" -a $target_nr".
@@ -2125,7 +2130,7 @@ sub get_mplex_command {
 	my $avi_file = $self->target_avi_file;
 	my $size     = $self->tc_disc_size;
 
-	my $mplex_f  = $video_codec eq 'SVCD' ? 4 : 1;
+	my $mplex_f  = $video_codec eq 'SVCD' ? 5 : 1;
 	my $mplex_v  = $video_codec eq 'SVCD' ? "-V" : "";
 	my $vext     = $video_codec eq 'SVCD' ? 'm2v' : 'm1v';
 
@@ -2151,7 +2156,7 @@ sub get_mplex_command {
 		if $self->tc_nice =~ /\S/;
 
 	my $command =
-		"${nice}mplex -f $mplex_f $mplex_v ".
+		"${nice}dr_exec mplex -f $mplex_f $mplex_v ".
 		"-o $target_file $avi_file.$vext $avi_file.mpa ".
 		"$add_audio_tracks && echo DVDRIP_SUCCESS";
 	
@@ -2188,12 +2193,12 @@ sub get_split_command {
 
 		$command .=
 			"cd $avi_dir && ".
-			"${nice}ogmsplit -s $size $avi_file && ".
+			"${nice}dr_exec ogmsplit -s $size $avi_file && ".
 			"echo DVDRIP_SUCCESS";
 	} else {
 		$command .=
 			"cd $avi_dir && ".
-			"${nice}avisplit -s $size -i $avi_file -o $split_mask && ".
+			"${nice}dr_exec avisplit -s $size -i $avi_file -o $split_mask && ".
 			"echo DVDRIP_SUCCESS";
 	}
 	
@@ -2297,7 +2302,7 @@ sub get_take_snapshot_command {
 	my $command =
 	       "mkdir -m 0775 $tmp_dir; ".
 	       "cd $tmp_dir; ".
-	       "transcode ".
+	       "dr_exec transcode ".
 	       " -z -k ".
 	       " -o snapshot ".
 	       " -y ppm,null ";
@@ -2309,10 +2314,10 @@ sub get_take_snapshot_command {
 	$command .= " -".$_." ".$grab_options->{$_} for keys %{$grab_options};
 
 	$command .= " && ".
-		"convert".
+		"dr_exec convert".
 		" -size ".$self->width."x".$self->height.
 		" $tmp_dir/snapshot*.ppm $filename && ".
-		"convert".
+		"dr_exec convert".
 		" -size ".$self->width."x".$self->height.
 		" $tmp_dir/snapshot*.ppm gray:$raw_filename &&".
 		" rm -r $tmp_dir && ".
@@ -2684,7 +2689,7 @@ sub get_view_vob_image_command {
 	my $angle         = $self->tc_viewing_angle;
 
 	my $command =
-		"tccat -i ".$self->project->dvd_device.
+		"dr_exec tccat -i ".$self->project->dvd_device.
 		" -a $audio_channel -L ".
 		" -T $nr,1,$angle | $command_tmpl";
 
@@ -2822,7 +2827,7 @@ sub get_create_image_command {
 				" -abstract '".$self->burn_abstract." ".$self->burn_number."'".
 				" ".join(" ", @files );
 			$command .= ") && ";
-			$command .= $self->config('burn_mkisofs_cmd');
+			$command .= "dr_exec ".$self->config('burn_mkisofs_cmd');
 			$command .= " -quiet";
 			$command .=
 				" -r -J -jcharset default -l -D -L".
@@ -2830,7 +2835,7 @@ sub get_create_image_command {
 				" -abstract '".$self->burn_abstract." ".$self->burn_number."'".
 				" ".join(" ", @files );
 		} else {
-			$command = $self->config('burn_mkisofs_cmd');
+			$command = "dr_exec ".$self->config('burn_mkisofs_cmd');
 			$command .= " -quiet" if $on_the_fly;
 			$command .= " -o $image_file" if not $on_the_fly;
 			$command .=
@@ -2840,7 +2845,7 @@ sub get_create_image_command {
 				" ".join(" ", @files );
 		}
 	} else {
-		$command = $self->config('burn_vcdimager_cmd').
+		$command = "dr_exec ".$self->config('burn_vcdimager_cmd').
 			($cd_type eq 'svcd' ? ' --type=svcd' : ' --type=vcd2').
 			" --iso-volume-label='".uc($self->burn_label)."'".
 			" --info-album-id='".uc($self->burn_abstract." ".$self->burn_number)."'".
@@ -2878,7 +2883,7 @@ sub get_burn_command {
 			);
 			$command .= " | ".$self->config('burn_cdrecord_cmd');
 		} else {
-			$command = $self->config('burn_cdrecord_cmd');
+			$command = "dr_exec ".$self->config('burn_cdrecord_cmd');
 		}
 
 		$command .=
@@ -2899,7 +2904,7 @@ sub get_burn_command {
 	} else {
 		$command = "rm -f $files[0].bin; ln -s $files[0] $files[0].bin && ";
 
-		$command .= $self->config('burn_cdrdao_cmd');
+		$command .= "dr_exec ".$self->config('burn_cdrdao_cmd');
 		
 		if ( $command !~ /\bwrite\b/ ) {
 			$command .= " write";
@@ -2948,11 +2953,11 @@ sub get_cat_vob_command {
 		$cat = "cat ".$self->vob_dir."/*";
 
 	} elsif ( $rip_mode eq 'dvd' ) {
-		$cat =	"tccat -i ".$self->config('dvd_device').
+		$cat =	"dr_exec tccat -i ".$self->config('dvd_device').
 			" -T ".$self->tc_title_nr;
 
 	} else {
-		$cat =	"tccat -i ".$self->project->dvd_image_dir.
+		$cat =	"dr_exec tccat -i ".$self->project->dvd_image_dir.
 			" -T ".$self->tc_title_nr;
 	}
 
@@ -3272,7 +3277,7 @@ sub get_create_vobsub_command {
 		"cp $ifo_file $avi_dir/$vobsub_ifo_file && ".
 		"cd $avi_dir && ".
 		"chmod 644 $vobsub_ifo_file && ".
-		"cat $vobsub_ps1_file | ".
+		"dr_exec cat $vobsub_ps1_file | ".
 		"dr_progress -m $ps1_size -i 1 | ".
 		"subtitle2vobsub $range".
 		" -i $vobsub_ifo_file ".
@@ -3374,7 +3379,7 @@ sub get_create_wav_command {
 
 	my $command =
 		"mkdir -p $dir &&".
-		" transcode -a $audio_nr ".
+		" dr_exec transcode -a $audio_nr ".
 		" -y null,wav -u 100 -o $audio_wav_file";
 
 	$command .= " -$_ $source_options->{$_}" for keys %{$source_options};

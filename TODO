@@ -1,4 +1,4 @@
-$Id: TODO,v 1.117.2.1 2003/02/15 09:41:25 joern Exp $
+$Id: TODO,v 1.117.2.2 2003/02/23 21:42:37 joern Exp $
 
 KNOWN BUGS:
 ===========
@@ -25,11 +25,15 @@ may be implemented soon, some eventually never... ;)
 
 TODO:
 =====
+- add an "uninstall HOWTO" to the FAQ
 - write error messages of executed tools in dvd::rip's log.
   Suggested by Felix Enning <felix AT hfsclub.de>.
 - global nice preference, which apply to all started processes.
   It's not necessary to adjust this per project. Suggested by
   Spencer Ogden.
+- drop constant 6GB per disc guess for ripping free disc space
+  calculation. Use (total disk used/total number of frames)*title's
+  number of frames instead. Suggested by Ole Tange.
 - transcode all selected titles on the rip tab in a row,
   suggested by James Dowlearn <alwjdd AT utdallas.edu>
 - on-the-fly/dvd-image mode: rip a small ammount to harddisk, to get ac3

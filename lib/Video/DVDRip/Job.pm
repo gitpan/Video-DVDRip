@@ -1,4 +1,4 @@
-# $Id: Job.pm,v 1.10.2.1 2003/02/15 09:38:56 joern Exp $
+# $Id: Job.pm,v 1.10.2.2 2003/02/23 21:41:06 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -333,10 +333,10 @@ sub calc_progress {
 			time => int ( $time * $max / $cnt ) - $time
 		) if $cnt > 50;
 		my $int_percent = int($cnt / $max * 100);
-		if ( $int_percent % 10 == 0 and
-		     $int_percent > $self->last_percent_logged ) {
-		     	$self->log ($self->info.": $int_percent% done.");
+		if ( $int_percent > $self->last_percent_logged + 10 ) {
+			$int_percent = int($int_percent/10)*10;
 			$self->set_last_percent_logged($int_percent);
+		     	$self->log ($self->info.": $int_percent% done.");
 		}
 	} else {
 		$eta = ", ETA: unknown";

@@ -1,4 +1,4 @@
-# $Id: Depend.pm,v 1.2.2.3 2003/02/17 22:16:02 joern Exp $
+# $Id: Depend.pm,v 1.2.2.4 2003/02/23 21:40:30 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -49,27 +49,6 @@ my %TOOLS = (
 	convert 	=> 'default',
 	min 		=> "4.0.0",
 	suggested 	=> "5.5.3",
-    },
-    'ps -H' => {
-    	order		=> ++$ORDER,
-    	comment		=> "Needed to determine child PID's",
-	optional	=> 0,
-	get_version 	=> sub {
-		my $pid = $$;
-		my $test_child_pid = open (IN, "cat /dev/zero |")
-			or die "can't fork ps";
-		my $child_pid = Video::DVDRip::Base->get_child_pid (
-			pid => $pid
-		);
-		close IN;
-		wait;	# saw zombies on a Slackware system without it.
-
-		return 1 if $test_child_pid == $child_pid;
-		return 0;
-	},
-	convert 	=> 'default',
-	min 		=> "1",
-	suggested 	=> "1",
     },
     subtitle2pgm => {
      	order		=> ++$ORDER,

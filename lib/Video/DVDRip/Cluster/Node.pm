@@ -1,4 +1,4 @@
-# $Id: Node.pm,v 1.25 2003/01/28 20:19:57 joern Exp $
+# $Id: Node.pm,v 1.25.2.1 2003/02/23 21:39:33 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -256,6 +256,7 @@ sub start {
 	$self->save;
 
 	Video::DVDRip::Cluster::Master->get_master->node_check;
+	Video::DVDRip::Cluster::Master->get_master->job_control;
 	
 	1;
 }

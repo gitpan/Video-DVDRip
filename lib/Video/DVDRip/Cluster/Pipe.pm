@@ -1,4 +1,4 @@
-# $Id: Pipe.pm,v 1.10.2.1 2003/02/17 21:09:48 joern Exp $
+# $Id: Pipe.pm,v 1.10.2.2 2003/02/23 21:39:57 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -78,10 +78,9 @@ sub open {
 		close STDERR;
 		open (STDERR, ">&STDOUT")
 			or croak "can't dup STDOUT to STDERR";
-		
-		# simply call exec with one argument, this
-		# will execute the command using a shell
-		exec ($command)
+		my $command = $self->command;
+		$command = "dr_exec $command" if $command !~ /dr_exec/;
+		exec ($self->command)
 			or croak "can't exec program: $!";
 	}
 
@@ -183,6 +182,15 @@ sub input {
 		last if $line_buffer =~ /password: $/;
 	}
 
+	# get job's PID
+	my ($pid) = ( $line_buffer =~ /DVDRIP_JOB_PID=(\d+)/ );
+	if ( defined $pid ) {
+		$self->set_pid ( $pid );
+		$self->log ("Job has PID $pid");
+		$line_buffer =~ s/DVDRIP_JOB_PID=(\d+)//;
+		$rc =~ s/DVDRIP_JOB_PID=(\d+)//;
+	}
+
 	# append line to lifo
 	$self->add_lifo_line ( $line_buffer."\n" );
 
@@ -215,40 +223,13 @@ sub close {
 sub cancel {
 	my $self = shift;
 
-	# $self->pid belong to the sh we started with exec,
-	# but we want to kill it's child
-	my $child_pid = $self->get_child_pid ( pid => $self->pid );
-
-	# kill the child
-	$self->log ("Aborting command. Sending signal 1 to PID $child_pid...");
-	kill 1, $child_pid;
-
-	# close this pipe
-	$self->close;
-
-	1;
-}
-
-sub cancel_pstree {
-	my $self = shift;
-
-	# this pid belong to the sh we started with exec
 	my $pid = $self->pid;
-	
-	# but we want to have its child. We use pstree for that.
-	my $pstree = qx[pstree -p $pid];
-	$pstree =~ /\($pid\).*?\((\d+)/;
-	my $child_pid = $1;
 
-	# if there was no sh with a further child, we have to kill
-	# our child process directly
-	$child_pid ||= $pid;
+	if ( $pid ) {
+		$self->log ("Aborting command. Sending signal 1 to PID $pid...");
+		kill 1, $pid;
+	}
 
-	# kill the child
-	$self->log ("Aborting command. Sending signal 2 to PID $child_pid...");
-	kill 2, $child_pid;
-
-	# close this pipe
 	$self->close;
 
 	1;

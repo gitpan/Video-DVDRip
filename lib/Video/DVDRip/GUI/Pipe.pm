@@ -1,4 +1,4 @@
-# $Id: Pipe.pm,v 1.8.2.2 2003/02/17 21:10:05 joern Exp $
+# $Id: Pipe.pm,v 1.8.2.3 2003/02/23 21:40:43 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -58,11 +58,10 @@ sub open {
 	my $self = shift;
 
 	my $fh  = FileHandle->new;
-	my $pid;
 	
 	# we use fork & exec, because we want to have
 	# STDERR on STDOUT in the child.
-	$pid = open($fh, "-|");
+	my $pid = open($fh, "-|");
 	croak "can't fork child process" if not defined $pid;
 
 	$fh->blocking(0);
@@ -72,17 +71,16 @@ sub open {
 		close STDERR;
 		open (STDERR, ">&STDOUT")
 			or croak "can't dup STDOUT to STDERR";
-		
-		# simply call exec with one argument, this
-		# will execute the command using a shell
+		my $command = $self->command;
+		$command = "dr_exec $command" if $command !~ /dr_exec/;
 		exec ($self->command)
 			or croak "can't exec program: $!";
 	}
 
-	$self->log ("Executing command: ".$self->command. " (PID=$pid)");
+	$self->log ("Executing command: ".$self->command);
 
-	$self->set_pid ( $pid );
 	$self->set_fh ( $fh );
+	$self->set_pid ( $pid );
 	$self->set_output ( "" );
 	
 	Gtk::Gdk->input_remove ( $self->gtk_input )
@@ -109,6 +107,14 @@ sub progress {
 		$buffer .= $tmp;
 	}
 	my $finished = $! != EAGAIN;
+
+	# get job's PID
+	my ($pid) = ( $buffer =~ /DVDRIP_JOB_PID=(\d+)/ );
+	if ( defined $pid ) {
+		$self->set_pid ( $pid );
+		$self->log ("Job has PID $pid");
+		$buffer =~ s/DVDRIP_JOB_PID=(\d+)//;
+	}
 
 	# store output
 	if ( $self->need_output ) {
@@ -152,40 +158,13 @@ sub close {
 sub cancel {
 	my $self = shift;
 
-	# $self->pid belong to the sh we started with exec,
-	# but we want to kill it's child
-	my $child_pid = $self->get_child_pid ( pid => $self->pid );
-
-	# kill the child
-	$self->log ("Aborting command. Sending signal 1 to PID $child_pid...");
-	kill 1, $child_pid;
-
-	# close this pipe
-	$self->close;
-
-	1;
-}
-
-sub cancel_pstree {
-	my $self = shift;
-
-	# this pid belong to the sh we started with exec
 	my $pid = $self->pid;
-	
-	# but we want to have its child. We use pstree for that.
-	my $pstree = qx[pstree -p $pid];
-	$pstree =~ /\($pid\).*?\((\d+)/;
-	my $child_pid = $1;
 
-	# if there was no sh with a further child, we have to kill
-	# our child process directly
-	$child_pid ||= $pid;
+	if ( $pid ) {
+		$self->log ("Aborting command. Sending signal 1 to PID $pid...");
+		kill 1, $pid;
+	}
 
-	# kill the child
-	$self->log ("Aborting command. Sending signal 1 to PID $child_pid...");
-	kill 1, $child_pid;
-
-	# close this pipe
 	$self->close;
 
 	1;

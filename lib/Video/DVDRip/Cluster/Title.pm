@@ -1,4 +1,4 @@
-# $Id: Title.pm,v 1.38 2003/02/08 10:37:49 joern Exp $
+# $Id: Title.pm,v 1.38.2.1 2003/02/23 21:40:19 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -266,7 +266,7 @@ sub get_merge_audio_command {
 			   $self->audio_video_psu_file ne $target_file;
 
 		$command .=
-			"ogmmerge -o $avi_file.merged ".
+			"dr_exec ogmmerge -o $avi_file.merged ".
 			" $avi_file".
 			" $audio_file &&".
 			" mv $avi_file.merged $target_file &&".
@@ -275,7 +275,7 @@ sub get_merge_audio_command {
 		
 	} else {
 		$command .=
-			"avimerge".
+			"dr_exec avimerge".
 			" -i $avi_file".
 			" -p $audio_file".
 			" -a $target_nr".
@@ -312,7 +312,7 @@ sub get_merge_video_audio_command {
 
 	my $command =
 		"mkdir -m 0775 -p '$audio_video_psu_dir' && ".
-		"${nice}avimerge -i $avi_chunks_dir/*".
+		"${nice}dr_exec avimerge -i $avi_chunks_dir/*".
 		" -o $audio_video_psu_file ";
 	
 	$command .= " -p $audio_psu_file " if not $self->is_ogg;
@@ -343,7 +343,7 @@ sub get_merge_psu_command {
 
 	my $command =
 		"mkdir -m 0775 -p '$target_avi_dir' && ".
-		"${nice} avimerge -o '$target_avi_file' ".
+		"${nice}dr_exec avimerge -o '$target_avi_file' ".
 		" -i $audio_video_psu_dir/*.avi";
 
 	$command .= " && echo DVDRIP_SUCCESS";

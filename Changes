@@ -1,6 +1,26 @@
-$Id: Changes,v 1.131.2.6 2003/02/17 22:22:16 joern Exp $
+$Id: Changes,v 1.131.2.8 2003/02/23 21:49:56 joern Exp $
 
 Revision history and release notes for dvd::rip.
+
+0.50.4 [stable branch] Sun 24 Feb 2003, joern
+	Features:
+	- Minor layout improvements. GUI should now look better with
+	  bigger fonts.
+	- I removed the ps command dependency - found a completely
+	  different and more flexible solution, which doesn't depend
+	  on external tools. A new helper program called dr_exec
+	  is used to print the main PID of the current job, which is
+	  needed for cancellation.
+
+	Bugfixes:
+	- Wrong options were passed to transcode for Vorbis quality
+	  encoding. Thanks for the report to Brian Healy <brianhealy
+	  AT vodafone.ie>.
+	- mplex SVCD command used wrong profile for SVCD. Thanks for
+	  the report to Davros <tashuu AT newsguy.com>.
+	- Using the smart deinterlacer switched off YUV processing,
+	  which isn't necessary for transcode >= 0.6.3 anymore. Thanks
+	  for the report to Mark Dirix.
 
 0.50.3 [stable branch] Mon 17 Feb 2003, joern
 	Bugfixes:

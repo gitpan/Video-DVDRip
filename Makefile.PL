@@ -1,4 +1,4 @@
-# $Id: Makefile.PL,v 1.19 2002/12/27 00:15:30 joern Exp $
+# $Id: Makefile.PL,v 1.19.2.1 2003/02/23 21:42:37 joern Exp $
 
 use strict;
 
@@ -10,7 +10,7 @@ $| = 1;
 WriteMakefile(
     'NAME'	=> 'Video::DVDRip',
     'VERSION_FROM' => 'lib/Video/DVDRip.pm',
-    'EXE_FILES' => [ 'dvdrip', 'dvdrip-master',
+    'EXE_FILES' => [ 'dvdrip', 'dvdrip-master', 'dr_exec',
     		     'dr_splitpipe', 'dr_progress' ],
     'PREREQ_PM' => { 'Gtk' => 0.7008, 'Gtk::Gdk::Pixbuf' => 0 },
     'clean' => { FILES => 'dr_splitpipe src/dr_splitpipe dr_progress src/dr_progress' },
