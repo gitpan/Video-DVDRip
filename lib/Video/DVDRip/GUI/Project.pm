@@ -1,4 +1,4 @@
-# $Id: Project.pm,v 1.14 2001/11/23 20:21:51 joern Exp $
+# $Id: Project.pm,v 1.15 2001/12/15 00:16:23 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -22,6 +22,7 @@ use Video::DVDRip::GUI::Project::StorageTab;
 use Video::DVDRip::GUI::Project::TitleTab;
 use Video::DVDRip::GUI::Project::ClipZoomTab;
 use Video::DVDRip::GUI::Project::TranscodeTab;
+use Video::DVDRip::GUI::Project::LoggingTab;
 
 use Carp;
 use strict;
@@ -34,6 +35,12 @@ sub set_selected_title		{ shift->{selected_title}	= $_[1] }
 
 sub gtk_title_labels		{ shift->{gtk_title_labels}		}	# lref
 sub set_gtk_title_labels	{ shift->{gtk_title_labels}	= $_[1] }
+
+sub logger			{ shift->{logger}			}
+sub set_logger			{ shift->{logger}		= $_[1] }
+
+sub closed			{ shift->{closed}			}
+sub set_closed			{ shift->{closed}		= $_[1] }
 
 #------------------------------------------------------------------------
 # Build Project GUI
@@ -70,6 +77,9 @@ sub build {
 	$label = Gtk::Label->new ("Transcode");
 	$notebook->append_page ($self->create_transcode_tab, $label);
 
+	$label = Gtk::Label->new ("Logging");
+	$notebook->append_page ($self->create_logging_tab, $label);
+
 	$vbox->pack_start ($notebook, 1, 1, 0);
 
 	my $frame = Gtk::Frame->new ("Status");
@@ -89,6 +99,12 @@ sub build {
 	$self->set_widget($vbox);
 	$self->set_comp ( project => $self );
 
+	if ( $self->project->filename ) {
+		$self->log ("Open project from file '".$self->project->filename."'");
+	} else {
+		$self->log ("Create new project.");
+	}
+
 	return $vbox;
 }
 
@@ -100,6 +116,22 @@ sub fill_with_values {
 	$self->init_adjust_values;
 	$self->init_transcode_values;
 
+	1;
+}
+
+sub close {
+	my $self = shift;
+	return if $self->closed;
+
+	$self->log ("Project closed.");
+	$self->set_closed(1);
+	
+	1;
+}
+
+sub log {
+	my $self = shift;
+	$self->logger->log (@_);
 	1;
 }
 

@@ -1,4 +1,4 @@
-$Id: TODO,v 1.11 2001/12/13 22:10:47 joern Exp $
+$Id: TODO,v 1.14 2001/12/15 20:14:11 joern Exp $
 
 KNOWN BUGS:
 - Some DVDs can confuse the TOC reading algorithm of dvd::rip. First
@@ -27,10 +27,17 @@ KNOWN BUGS:
        title number. This helps determining the correct title number.
 
 TODO
-- create logfile of all processes, display it in a separate logging tab
-- chapter mode ripping, suggested by Norbert Preining
-- on the fly ripping & transcoding, requested by many users
+- rip without audio scanning
 - extensive checking of user input. most input is currently
-  passed through without examination.
+  passed through without examination
+- chapter mode ripping, suggested by Norbert Preining
+- calculate and show real aspect ratio of all processing steps,
+  particularly needed for the fast resize option
+- on the fly ripping & transcoding, requested by many users
+- bypass tcprobe mode, if tcprobe is unable to analyze the DVD correctly,
+  requested by XI <xizard AT enib.fr>.
 - exact letterbox autodetection
 - create personal clip&zoom preferences
+- mplayer support
+
+

@@ -1,4 +1,4 @@
-# $Id: Progress.pm,v 1.8 2001/12/09 11:57:54 joern Exp $
+# $Id: Progress.pm,v 1.9 2001/12/15 00:15:52 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -103,6 +103,7 @@ sub open_steps_progress {
 	$self->set_cancel_callback($cancel_callback);
 	$self->set_open_next_step_callback($open_next_step_callback);
 	$self->set_close_step_callback($close_step_callback);
+	$self->set_step(0);
 
 	$self->set_gtk_idle ( $idle );
 	$self->set_fh ( undef );
@@ -294,7 +295,7 @@ sub execute_finished_callback {
 		&$finished_callback( output => $self->output );
 	};
 
-	if ( not $rc or $@ ) {
+	if ( not $rc or ref $rc or $@ ) {
 		$self->close_progress;
 	} elsif ( $rc ) {
 		$self->set_finished(0);
@@ -305,6 +306,8 @@ sub execute_finished_callback {
 			message => $self->stripped_exception,
 		);
 	}
+
+	&$rc() if ref $rc;
 
 	1;
 }

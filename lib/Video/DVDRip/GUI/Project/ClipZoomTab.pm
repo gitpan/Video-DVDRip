@@ -1,4 +1,4 @@
-# $Id: ClipZoomTab.pm,v 1.10 2001/12/10 20:43:26 joern Exp $
+# $Id: ClipZoomTab.pm,v 1.11 2001/12/15 00:16:44 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -243,6 +243,7 @@ sub create_adjust_tab {
 			name => $title->preset
 		);
 		return if not $preset;
+		$self->log ("Applied preset '".$preset->title."'.");
 		$title->apply_preset ( preset => $preset );
 		$self->make_previews;
 		$self->init_adjust_values;
@@ -662,6 +663,12 @@ sub grab_preview_frame {
 		filename => $filename,
 	);
 
+	$self->log (
+		"Start grabbing preview frame $frame_nr of title ".
+		$title->nr
+	);
+	$self->log ("Command: ".$title->get_take_snapshot_command );
+
 	$self->comp('progress')->open_continious_progress (
 		max_value => $frame_nr,
 		label     => "Grabbing Preview Image",
@@ -673,13 +680,22 @@ sub grab_preview_frame {
 			return $1;
 		},
 		finished_callback => sub {
+			$self->log ("Convert PPM to JPEG");
+			$self->log (
+				"Command:".
+				$title->get_convert_snapshot_command (
+					filename => $title->snapshot_filename
+				)
+			);
 			$title->take_snapshot_async_stop ( fh => $fh );
 			$self->make_previews;
 			$self->show_preview_images;
+			$self->log ("Preview grabbing finished.");
 			return;
 		},
 		cancel_callback => sub {
 			close $fh;
+			$self->log ("User cancelled preview grabbing.");
 		},
 	);
 	

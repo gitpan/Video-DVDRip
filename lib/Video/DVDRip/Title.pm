@@ -1,4 +1,4 @@
-# $Id: Title.pm,v 1.33 2001/12/11 22:16:04 joern Exp $
+# $Id: Title.pm,v 1.35 2001/12/15 20:11:16 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -96,6 +96,7 @@ sub tc_end_frame	    	{ shift->{tc_end_frame}			}
 sub tc_fast_resize	    	{ shift->{tc_fast_resize}		}
 sub tc_multipass	    	{ shift->{tc_multipass}			}
 sub tc_title_nr	    		{ $_[0]->{tc_title_nr} || $_[0]->{nr}	}
+sub tc_use_chapter_mode    	{ shift->{tc_use_chapter_mode}	}
 
 sub set_project			{ shift->{project}		= $_[1] }
 sub set_tc_viewing_angle	{ shift->{tc_viewing_angle}	= $_[1]	}
@@ -126,6 +127,7 @@ sub set_tc_end_frame		{ shift->{tc_end_frame}    	= $_[1]	}
 sub set_tc_fast_resize		{ shift->{tc_fast_resize}    	= $_[1]	}
 sub set_tc_multipass		{ shift->{tc_multipass}    	= $_[1]	}
 sub set_tc_title_nr	    	{ shift->{tc_title_nr}    	= $_[1]	}
+sub set_tc_use_chapter_mode 	{ shift->{tc_use_chapter_mode}	= $_[1]	}
 
 sub vob_dir {
 	my $self = shift; $self->trace_in;
@@ -689,10 +691,16 @@ sub get_transcode_command {
 	my $command =
 		"transcode".
 		" -i ".$self->project->vob_dir."/$nr".
-		" -o $avi_file".
 		" -x vob".
 		" -a ".$self->audio_channel.
 		" -w ".int($self->tc_video_bitrate).",250,100";
+
+	if ( $self->tc_use_chapter_mode ) {
+		$avi_file =~ s/\.avi$//;
+		$command .= qq{ -U $avi_file -J skip="0-2" };
+	} else {
+		$command .= " -o $avi_file";
+	}
 	
 	if ( $self->tc_start_frame ne '' and
 	     $self->tc_end_frame ne '' ) {
@@ -773,8 +781,6 @@ sub get_transcode_command {
 			or croak "Can't mkpath directory '$avi_dir'";
 	}
 	
-print "$command\n";
-
 	return $command;
 }
 
@@ -873,10 +879,10 @@ sub get_split_command {
 
 	croak "No AVI file found: '$avi_file'" if not -f $avi_file;
 
-	if ( -s $avi_file < $size*1024*1024 ) {
-		warn "$avi_file is smaller than $size MB, no need to split.";
-		return;
-	}
+#	if ( -s $avi_file < $size*1024*1024 ) {
+#		warn "$avi_file is smaller than $size MB, no need to split.";
+#		return;
+#	}
 
 	my $command = "avisplit -s $size -i $avi_file";
 	
@@ -1007,8 +1013,8 @@ sub take_snapshot {
 	1;
 }
 
-sub convert_snapshot {
-	my $self = shift; $self->trace_in;
+sub get_convert_snapshot_command {
+	my $self = shift;
 	my %par = @_;
 	my ($filename) = @par{'filename'};
 
@@ -1016,13 +1022,22 @@ sub convert_snapshot {
 
 	my $dirname = dirname ($filename);
 
-	my $command =
-		"mkdir -p $dirname; ".
+	return	"mkdir -p $dirname; ".
 		"convert".
 		" -size ".$self->width."x".$self->height.
 		" $tmp_dir/snapshot00000.ppm $filename;".
 		" rm -r $tmp_dir";
 
+}
+sub convert_snapshot {
+	my $self = shift; $self->trace_in;
+	my %par = @_;
+	my ($filename) = @par{'filename'};
+
+	my $command = $self->get_convert_snapshot_command (
+		filename => $filename
+	);
+	
 	$self->system (
 		command => $command
 	);

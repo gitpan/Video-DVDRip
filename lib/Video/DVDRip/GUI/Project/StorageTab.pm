@@ -1,4 +1,4 @@
-# $Id: StorageTab.pm,v 1.4 2001/11/24 08:18:25 joern Exp $
+# $Id: StorageTab.pm,v 1.6 2001/12/15 14:37:12 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -49,7 +49,7 @@ sub create_storage_tab {
 		  	$self->project->set_avi_dir (shift->get_text)
 		  },
 		},
-		{ label => "Preview Image Directory",
+		{ label => "Temp Directory",
 		  value => $self->project->snap_dir,
 		  type  => 'text',
 		  onchange => sub {
@@ -61,6 +61,11 @@ sub create_storage_tab {
 	# changes of project name should also change
 	# vob- and avi-dir, if they are not touched yet
 	$widgets->[0]->signal_connect ("changed", sub {
+		if ( $widgets->[0]->get_text =~ /\s/ ) {
+			# spaces in project name not allowed
+			$widgets->[0]->set_text ( $self->project->name );
+			return 1;
+		}
 		if ( $widgets->[1]->get_text eq
 		     $self->config('base_project_dir')."/".
 		     $self->project->name."/vob" ) {
@@ -81,10 +86,10 @@ sub create_storage_tab {
 		}
 		if ( $widgets->[3]->get_text eq
 		     $self->config('base_project_dir')."/".
-		     $self->project->name."/snap" ) {
+		     $self->project->name."/tmp" ) {
 			$self->project->set_snap_dir (
 				$self->config('base_project_dir')."/".
-				$widgets->[0]->get_text."/snap"
+				$widgets->[0]->get_text."/tmp"
 			);
 			$widgets->[3]->set_text ( $self->project->snap_dir );
 		}

@@ -1,4 +1,4 @@
-# $Id: TitleTab.pm,v 1.10 2001/12/11 22:15:02 joern Exp $
+# $Id: TitleTab.pm,v 1.13 2001/12/15 20:09:51 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -287,6 +287,8 @@ sub read_dvd_toc {
 
 	$self->clear_content_list;
 
+	$self->log ("Start reading DVD TOC...");
+
 	# read TOC
 	eval {
 		$content->read_title_listing;
@@ -326,15 +328,18 @@ sub read_dvd_toc {
 			};
 			if ( not $@ ) {
 				$self->append_content_list ( title => $titles->[$step] );
+				$self->log ("Successfully probed title #".($step+1));
 			} else {
 				$self->message_window (
 					message => "Can't probe Track #$step\n\n".
 						   "Track will not be listed.\n\n".
 						   "Output of tcprobe was:\n\n$output\n\n$@"
 				);
+				$self->log ("Error probing title #".($step+1));
 			}
 		},
 		finished_callback => sub {
+			$self->log ("Finished reading DVD TOC.");
 			my $nr = $self->clist_row2title_nr->{0};
 			$self->project->set_selected_title_nr ($nr);
 			my $title = $self->project->content->titles->{$nr};
@@ -461,6 +466,16 @@ sub rip_title {
 	my $fh = $title->$start_method();
 	my $max_value = int ($title->size / 1024);
 
+	$self->log (
+		"Start ripping title #".$title->nr.
+		" (transcode title #".$title->tc_title_nr.")"
+	);
+	my $command = $start_method;
+	$command =~ s/_async_start$//;
+	$command = "get_${command}_command";
+	$self->log ("Command: ".$title->$command());
+
+	my $log_percent = 0;
 	$self->comp('progress')->open_continious_progress (
 		max_value => $max_value,
 		label     => "Ripping Track",
@@ -473,6 +488,10 @@ sub rip_title {
 			my ($chunk, $bytes) = ($1, $2);
 			my $progress = ($chunk-1)*1024*1024 + int($bytes/1024);
 			$progress = $max_value if not $chunk;
+			if ( int((100 * $progress / $max_value)/10+1)*10 > $log_percent ) {
+				$self->log("Ripped $log_percent \%...");
+				$log_percent = int((100 * $progress / $max_value)/10+1)*10;
+			}
 			return $progress;
 		},
 		finished_callback => sub {
@@ -484,11 +503,13 @@ sub rip_title {
 			);
 			$title->suggest_transcode_options;
 			$self->fill_with_values;
+			$self->log ("Ripping finished.");
 			return;
 		},
 		cancel_callback => sub {
 			close $fh;
 			$title->remove_vob_files;
+			$self->log ("User cancelled ripping.");
 		},
 	);
 	

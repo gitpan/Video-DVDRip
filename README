@@ -152,9 +152,25 @@ SEE ALSO
     perl(1).
 
 CHANGES
-    $Id: Changes,v 1.11 2001/12/13 22:10:47 joern Exp $
+    $Id: Changes,v 1.12 2001/12/15 20:14:11 joern Exp $
 
     Revision history for Perl extension Video::DVDRip
+
+    0.25 Sat Dec 15 2001, joern
+	Features:
+	- create logfile of all processes, display it in a separate
+	  logging tab
+	- renamed "Snapshot Directory" to "Temp Directory", because
+	  it's used not only for the snapshot images. DivX4 analyze logs
+	  and the dvd::rip log are also stored here.
+
+	Bugfixes:
+	- "transcode & split" did not work
+	- spaces in project name not allowed, thanks to
+	  Matthias Rieber <matthias AT lsoe.uni-karlsruhe.de>
+	  for the bug report. dvd::rip did not work correctly
+	  with spaces in the project name. Checking of other
+	  user supplied values is still on my TODO list.
 
     0.24 Thu Dec 13 2001, joern
 	Just a major release, no changes since pre-release.

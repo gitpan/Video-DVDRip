@@ -1,4 +1,4 @@
-# $Id: Main.pm,v 1.16 2001/12/11 21:41:25 joern Exp $
+# $Id: Main.pm,v 1.18 2001/12/15 14:23:52 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -128,7 +128,7 @@ sub create_window {
 	
 	my $win = new Gtk::Window -toplevel;
 	$win->set_title($self->config('program_name'));
-	$win->signal_connect("destroy" => \&Gtk::main_quit);
+	$win->signal_connect("destroy", sub { $self->exit_program (force => 1) } );
 	$win->border_width(0);
 	$win->set_uposition (10,10);
 	$win->set_default_size (
@@ -239,7 +239,7 @@ sub new_project {
 		$self->config('base_project_dir')."/unnamed/avi",
 	);
 	$project->set_snap_dir (
-		$self->config('base_project_dir')."/unnamed/snap",
+		$self->config('base_project_dir')."/unnamed/tmp",
 	);
 	$project->set_mount_point (
 		$self->config('dvd_mount_point'),
@@ -384,6 +384,7 @@ sub close_project {
 	return if not $self->project_opened;
 	return if not $dont_ask and $self->unsaved_project_open;
 	
+	$self->comp('project')->close;
 	$self->gtk_box->remove ($self->comp('project')->widget);
 	$self->comp( project => undef );
 	$self->set_project_opened (0);
@@ -421,11 +422,17 @@ sub unsaved_project_open {
 
 sub exit_program {
 	my $self = shift;
+	my %par = @_;
+	my ($force) = @par{'force'};
 
-	return if $self->unsaved_project_open (
+	return if not $force and $self->unsaved_project_open (
 		wants => "exit_program"
 	);
-	
+
+	if ( $self->project_opened ) {
+		$self->comp('project')->close if $self->comp('project');
+	}
+
 	Gtk->exit( 0 ); 
 }
 
@@ -446,18 +453,24 @@ sub show_transcode_commands {
 
 	my $commands = "";
 	
-	$commands = "Rip Command:\n".
-		    "============\n".
-		    $title->get_rip_and_scan_command()."\n";
-
-	$commands .= "\n\n";
-	
 	$commands .= "Probe Command:\n".
 		     "==============\n".
 		     $title->get_probe_command()."\n";
 
 	$commands .= "\n\n";
 
+	$commands .= "Rip Command:\n".
+		    "============\n".
+		    $title->get_rip_and_scan_command()."\n";
+
+	$commands .= "\n\n";
+	
+	$commands .= "Grab Preview Image Command:\n".
+		    "===========================\n".
+		    $title->get_take_snapshot_command()."\n";
+
+	$commands .= "\n\n";
+	
 	$commands .= "Transcode Command:\n".
 		     "==================\n";
 
