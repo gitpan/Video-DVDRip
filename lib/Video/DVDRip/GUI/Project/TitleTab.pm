@@ -1,4 +1,4 @@
-# $Id: TitleTab.pm,v 1.32 2002/04/10 21:41:41 joern Exp $
+# $Id: TitleTab.pm,v 1.34 2002/05/14 22:13:48 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -450,8 +450,6 @@ sub read_dvd_toc {
 	my $close_callback = sub {
 		my %par = @_;
 		my ($progress, $output) = @par{'progress','output'};
-
-# print "---gotoutput:$output\n---end-of-gotoutput\n\n";
 		eval {
 			$titles->[$step]->probe_async_stop (
 				fh     => $progress->fh,
@@ -650,6 +648,8 @@ sub rip_title {
 	return $self->rip_title_chapters ( title => $title, sel_idx => $sel_idx )
 		if $title->tc_use_chapter_mode;
 
+	$title->set_actual_chapter ( undef );
+
 	my $with_scanning = $title->audio_channel != -1;
 
 	my $start_method = $with_scanning ? "rip_and_scan_async_start" :
@@ -740,7 +740,7 @@ sub rip_title_chapters {
 	my @chapters  = @{$title->get_chapters};
 	my $max_value = $chapter_mode eq 'select' ?
 				@chapters : 
-				int ($title->size / 1024);
+				$title->frames;
 
 	if ( not @chapters ) {
 		$self->message_window (
@@ -761,16 +761,13 @@ sub rip_title_chapters {
 		return $title->rip_async_start;
 	};
 
+	my $frames = 0;
 	my $progress_callback = sub {
 		return $cnt if $chapter_mode eq 'select';
 		my %par = @_;
 		my ($buffer) = @par{'buffer'};
-		$buffer =~ /(\d+)-(\d+)\n[^\n]*$/s;
-		my ($chunk, $bytes) = ($1, $2);
-		my $progress = $base_progress + ($chunk-1)*1024*1024 + int($bytes/1024);
-		$progress = $old_progress if $progress < $old_progress;
-		$old_progress = $progress if $progress > 0;
-		return $base_progress + ($chunk-1)*1024*1024 + int($bytes/1024);
+		$frames += $buffer =~ tr/\n/\n/;
+		return $frames;
 	};
 
 	my $close_callback = sub {
@@ -823,7 +820,7 @@ sub rip_title_chapters {
 		need_output       => 0,
 		show_percent      => ($chapter_mode ne 'select'),
 		show_eta          => ($chapter_mode ne 'select'),
-		show_fps          => 0,
+		show_fps          => ($chapter_mode ne 'select'),
 		max_value         => $max_value,
 		open_callback     => $open_callback,
 		progress_callback => $progress_callback,

@@ -1,4 +1,4 @@
-# $Id: Base.pm,v 1.15 2002/04/06 10:14:50 joern Exp $
+# $Id: Base.pm,v 1.17 2002/05/14 22:10:43 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -94,7 +94,10 @@ sub dump {
 sub print_debug {
 	my $self = shift;
 	
-	if ( $self->debug_level ) {
+	my $debug = $Video::DVDRip::DEBUG;
+	$debug = $self->{debug_level} if ref $self and $self->{debug_level};
+
+	if ( $debug ) {
 		print STDERR join ("\n", @_), "\n";
 	}
 	
@@ -232,7 +235,7 @@ sub combine_command_options {
 	$cmd_line =~ s/\s+$//;
 	$cmd_line .= ";" if $cmd_line !~ /;$/;
 	my @parts = grep !/^$/, (
-		$cmd_line =~ m!(.*?)\s*(\(|\)|;|&&|\|\||\`which nice\`\s+-n\s+\d+)\s*!g
+		$cmd_line =~ m!(.*?)\s*(\(|\)|;|&&|\|\||\`which nice\`\s+-n\s+[\d-]+)\s*!g
 	);
 
 	# walk through and process requested command

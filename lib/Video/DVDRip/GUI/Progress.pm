@@ -1,4 +1,4 @@
-# $Id: Progress.pm,v 1.16 2002/03/24 22:54:09 joern Exp $
+# $Id: Progress.pm,v 1.18 2002/05/14 22:13:18 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -71,7 +71,7 @@ my %KNOWN_STATES = (
 );
 
 sub set_state {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 	my ($state) = @_;
 	
 	croak "Unknown progress state '$state'"
@@ -86,7 +86,7 @@ sub set_state {
 }
 
 sub is_active {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 	return $self->state ne 'idle';
 }
 
@@ -165,7 +165,7 @@ sub open {
 }
 
 sub init_pipe {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 	my %par = @_;
 	my ($fh) = @par{'fh'};
 
@@ -175,14 +175,31 @@ sub init_pipe {
 	$self->set_state ('running');
 
 	Gtk::Gdk->input_remove ( $self->gtk_input ) if defined $self->gtk_input;
-	$self->set_gtk_input ( Gtk::Gdk->input_add ( $fh->fileno, 'read', sub { $self->progress } ) );
+
+	# This is a evil "workaround". If the executed command fails,
+	# for "some" reasons the process consumes 99% CPU if the
+	# input_add is done before. So we wait half a second and check
+	# if the ->progress call returned command exit and skip
+	# the input_add in this case. This only works for errors, which
+	# occur immediataly, so this is shit but better than nothing for now.
+
+	Gtk->timeout_add( 500, sub {
+		my $rc = $self->progress;
+		if ( $rc != 2 ) {
+			$self->set_gtk_input (
+				Gtk::Gdk->input_add ( $fh->fileno, 'read', sub { $self->progress } )
+			);
+		}
+		return;
+	} );
+
 
 	1;
 }
 
 sub progress {
 	my $self = shift; $self->trace_in;
-	
+
 	my $fh = $self->fh;
 
 	# read all date from the pipe
@@ -191,14 +208,12 @@ sub progress {
 		$buffer .= $tmp;
 	}
 
-# print "buffer=---$buffer---eob\n\n";
-
 	# store output
-	if ( $self->need_output or length($self->{output}) < 16384 ) {
+	if ( $self->need_output ) {
 		$self->{output} .= $buffer;
+	} else {
+		$self->{output} = substr($self->{output}.$buffer,-16384);
 	}
-
-# print "output=---$self->{output}---outputend\n\n";
 
 	# are we finished?
 	if ( $! != EAGAIN ) {
@@ -218,7 +233,7 @@ sub progress {
 		} else {
 			croak "Illegal close_callback return value '$rc'";
 		}
-		return 1;
+		return 2;
 	}
 
 	my $progress_callback = $self->progress_callback;
@@ -234,7 +249,8 @@ sub progress {
 	}
 
 	my $max_value = $self->max_value;
-	while ( $value > $max_value ) {
+
+	while ( $value > $max_value and $max_value ) {
 		$value = $value - $max_value;
 	}
 
@@ -291,7 +307,9 @@ sub close {
 	$self->gtk_progress->set_show_text(0);
 	$self->gtk_progress->set_value(0);
 
-	Gtk::Gdk->input_remove ( $self->gtk_input );
+	$self->print_debug ("remove Gdk-Input ".$self->gtk_input);
+
+	Gtk::Gdk->input_remove ( $self->gtk_input ) if $self->gtk_input ;
 
 	$self->set_gtk_input(undef);
 	$self->set_fh ( undef );
@@ -306,7 +324,7 @@ sub close {
 }
 
 sub cancel {
-	my $self = shift;
+	my $self = shift; $self->trace_in;
 	
 	$self->set_state ('cancelled');
 	
@@ -321,34 +339,3 @@ sub cancel {
 }
 
 1;
-
-__END__
-
-Progress Phasen:
-----------------
-
-1. Initialisierung
-   - Progress Bar anzeigen
-   - callback aufrufen
-     - Pipe öffnen
-   - Max Value setzen
-   - idle callback setzen
-
-2. Progress Bar updaten
-   - callback aufrufen
-     - progress value zurückgeben
-   - Bar ausgeben
-   - ETA berechnen und ausgeben
-   - Ausgabe ins Logfile
-
-3. Cancel
-   - callback aufrufen
-   - Progress Bar beenden
-
-4. Progress Bar beenden
-   - callback aufrufen
-     - je nach Rückgabewert Progress Bar nicht beenden,
-       => Wiederbenutzung / Steps Progress
-   - Progress Bar unsichtbar machen
-   - idle callback löschen
-

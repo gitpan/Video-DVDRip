@@ -1,4 +1,4 @@
-# $Id: Main.pm,v 1.37 2002/04/17 20:08:47 joern Exp $
+# $Id: Main.pm,v 1.39 2002/05/14 22:12:18 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -59,6 +59,7 @@ sub start {
 	$self->log ("Detected transcode version: ".$TC::VERSION);
 
 	while ( 1 ) {
+		$self->print_debug ("Entering Gtk->main loop");
 		eval { Gtk->main };
 		if ( $@ =~ /^msg:\s*(.*)\s+at.*?line\s+\d+/s ) {
 			$self->message_window (
@@ -70,9 +71,12 @@ sub start {
 				"An internal exception was thrown!\n".
 				"The error message was:\n\n$@";
 
-			$self->message_window (
+			$self->long_message_window (
 				message => $error
 			);
+			if ( $self->comp('progress')->is_active ) {
+				$self->comp('progress')->cancel;
+			}
 			next;
 		} else {
 			last;
@@ -157,9 +161,9 @@ __EOT
 sub create_window {
 	my $self = shift; $self->trace_in;
 	
-	my $win = new Gtk::Window -toplevel;
+	my $win = Gtk::Window->new; # new Gtk::Window -toplevel;
 	$win->set_title($self->config('program_name'));
-	$win->signal_connect("destroy", sub { $self->exit_program (force => 1) } );
+	$win->signal_connect("delete-event", sub { $self->exit_program (force => 0) } );
 	$win->border_width(0);
 	$win->set_uposition (10,10);
 	$win->set_default_size (
@@ -379,11 +383,10 @@ sub save_project {
 			confirm  => 1,
 			cb       => sub {
 				$self->comp('project')->project->set_filename($_[0]);
-				$self->comp('project')->project->save;
-				$self->set_window_title;
+				$self->save_project;
 			},
 		);
-		return 1;
+		return 0;
 	}
 }
 
@@ -458,7 +461,7 @@ sub exit_program {
 	my %par = @_;
 	my ($force) = @par{'force'};
 
-	return if not $force and $self->unsaved_project_open (
+	return 1 if not $force and $self->unsaved_project_open (
 		wants => "exit_program"
 	);
 

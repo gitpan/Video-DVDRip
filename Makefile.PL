@@ -1,4 +1,4 @@
-# $Id: Makefile.PL,v 1.12 2002/03/31 08:10:53 joern Exp $
+# $Id: Makefile.PL,v 1.13 2002/05/11 17:34:03 joern Exp $
 
 use strict;
 
@@ -17,7 +17,7 @@ WriteMakefile(
          COMPRESS => "gzip",
          SUFFIX   => "gz",
 	 PREOP    => 'tools/genreadme > README; tools/add_changes; tools/gensplash',
-	 POSTOP   => "cp *.tar.gz htdocs/dist/; test -d dist || mkdir dist; mv *.tar.gz dist",
+	 POSTOP   => 'tools/movedist *.tar.gz',
     },
 );
 

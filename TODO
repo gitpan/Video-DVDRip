@@ -1,4 +1,4 @@
-$Id: TODO,v 1.66 2002/04/27 15:40:56 joern Exp $
+$Id: TODO,v 1.68 2002/05/14 22:27:11 joern Exp $
 
 KNOWN BUGS
 - cluster mode
@@ -6,16 +6,34 @@ KNOWN BUGS
 - canceling a transcode process (in standard mode) kills all
   transcode processes, in case of several dvd::rip instances
   are started. Reported by Torsten Howard <torsten AT inetw.net>
-- error message after preview frame grabbing with transcode 0.5.3,
-  reported by Torsten Howard <torsten AT inetw.net>
 - negative cropping isn't visualized in the preview image
   (all calculations and the transcoding itself work, so
    it's not that big problem ;)
 - Jure Pecar <pegasus AT telemach.net> reported a bug with
   endless operation in while ripping multiple titles. I currently
   can't reproduce it, but I'll keep an eye on it ;)
-  
+- "make test" complains about missing "splitpipe" on first time
+  installation, if user doesn't have "." in PATH
+- transcode long options are not supported by the transcode
+  options field
+
 TODO
+- checkbox for --a52_drc_off, suggested by Christian Lambert.
+- cluster mode
+  - cleanup all files in tmp/ and cluster/ if VOB cleanup is
+    enabled. Suggested by Stefan Opsomer <stefan.opsomer AT wanadoo.be>
+  - no VOB cleanup if AVI size > requested size,
+    suggested by Stefan Opsomer <stefan.opsomer AT wanadoo.be>
+  - verify double audio problem reported by Philippe <sweafty AT free.fr>
+- add a preference option whether dvd::rip project data files
+  should be saved in the project directory by default,
+  suggested by Davide Ferrari
+- add a dvd::rip window manager icon
+- export some sort of Makefile export for transcoding as a
+  simple batch mode, suggested by Moritz Bunkus <moritz AT bunkus.org>
+- support transcodes new --psu mode to solve NTSC sync problems
+- set $frame_cnt/2 as default for frame grabber, suggested by
+  Michael Dodwell <elmer AT trellian.com>
 - option for forking the transcode process into the background,
   suggested by Akos Maroy <darkeye AT tyrell.hu>
 - support generating multilanguage AVIs
@@ -23,6 +41,7 @@ TODO
 - support rendering subtitles
 - support for transcode's -r option for fast frame bisection
   (and very fast deinterlacing)
+- autosave function (after ripping, every X seconds or something)
 - check for negative nice value if not run as root
 - merge chapter avi's in two modes: all into one file,
   or adjacent chapters in separate files. Suggested by

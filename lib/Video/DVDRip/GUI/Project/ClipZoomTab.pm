@@ -1,4 +1,4 @@
-# $Id: ClipZoomTab.pm,v 1.22 2002/04/10 21:19:43 joern Exp $
+# $Id: ClipZoomTab.pm,v 1.23 2002/05/14 22:14:30 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -758,7 +758,7 @@ sub grab_preview_frame {
 
 	my $close_callback = sub {
 		my %par = @_;
-		my ($progress) = @par{'progress'};
+		my ($progress, $output) = @par{'progress','output'};
 
 		$progress->set_label ("Convert PPM to JPEG");
 
@@ -770,7 +770,10 @@ sub grab_preview_frame {
 			)
 		);
 
-		$title->take_snapshot_async_stop ( fh => $progress->fh );
+		$title->take_snapshot_async_stop (
+			fh => $progress->fh,
+			output => $output
+		);
 
 		$title->apply_preset ( 
 			preset => $self->config_object->get_preset (

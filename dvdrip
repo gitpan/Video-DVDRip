@@ -1,6 +1,6 @@
 #!/usr/local/bin/perl
 
-# $Id: dvdrip,v 1.10 2002/03/24 22:54:09 joern Exp $
+# $Id: dvdrip,v 1.11 2002/05/14 22:24:50 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -21,6 +21,7 @@ use Video::DVDRip::GUI::Main;
 my $USAGE = <<'_USAGE';
 
 usage: dvdrip [-c] [-d level] [filename]
+       dvdrip --version | -version | -v
 
        -c open cluster control window
        -d set debugging level
@@ -28,6 +29,11 @@ usage: dvdrip [-c] [-d level] [filename]
 _USAGE
 
 main: {
+	if ( $ARGV[0] =~ /^-(v|-?version)$/ ) {
+		print $Video::DVDRip::VERSION,"\n";
+		exit 0;
+	}
+
 	# get options
 	my %opt;
 	my $opt_ok = getopts ('cd:', \%opt);

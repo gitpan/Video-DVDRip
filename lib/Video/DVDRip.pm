@@ -1,8 +1,8 @@
-# $Id: DVDRip.pm,v 1.60 2002/04/27 14:10:42 joern Exp $
+# $Id: DVDRip.pm,v 1.62 2002/05/14 22:24:38 joern Exp $
 
 package Video::DVDRip;
 
-$VERSION = "0.39";
+$VERSION = "0.40";
 
 use Carp;
 use FileHandle;
@@ -50,6 +50,12 @@ init: {
 
 	$TC::VERSION = $1*10000+$2*100+$3;
 	$TC::VERSION ||= 0;
+
+	if ( $TC::VERSION < 600 ) {
+		print "Sorry, transcode versions prior 0.6.0pre4 are no longer supported.\n".
+		      "Please upgrade transcode.\n";
+		exit 1;
+	}
 
 	1;
 }

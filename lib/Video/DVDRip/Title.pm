@@ -1,4 +1,4 @@
-# $Id: Title.pm,v 1.72 2002/04/27 14:11:53 joern Exp $
+# $Id: Title.pm,v 1.74 2002/05/14 22:15:31 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -56,6 +56,7 @@ sub bbox_min_x			{ shift->{bbox_min_x}			}
 sub bbox_min_y			{ shift->{bbox_min_y}			}
 sub bbox_max_x			{ shift->{bbox_max_x}			}
 sub bbox_max_y			{ shift->{bbox_max_y}			}
+sub chapter_frames		{ shift->{chapter_frames} ||= {}	}
 
 sub set_nr			{ shift->{nr}			= $_[1] }
 sub set_size			{ shift->{size}			= $_[1] }
@@ -304,6 +305,7 @@ sub new {
 		tc_clip2_right	     => 0,
 		tc_selected_chapters => [],
 		program_stream_units => [],
+		chapter_frames       => {},
 	};
 	
 	return bless $self, $class;
@@ -717,7 +719,7 @@ sub get_rip_command {
 	$self->create_vob_dir;
 
 	my $chapter =
-		$self->tc_use_chapter_mode ? $self->actual_chapter : -1;
+		$self->tc_use_chapter_mode ? $self->actual_chapter : "-1";
 
 	my $angle = $self->tc_viewing_angle || 1;
 
@@ -740,6 +742,8 @@ sub rip {
 	$self->system (
 		command => $self->get_rip_command,
 	);
+
+	$self->set_chapter_length if $self->tc_use_chapter_mode;
 	
 	1;
 }
@@ -750,10 +754,12 @@ sub rip_with_callback {
 	my ($callback) = @par{'callback'};
 	
 	$self->popen (
-		command => $self->get_rip_command,
+		command  => $self->get_rip_command,
 		callback => $callback,
 	);
 	
+	$self->set_chapter_length if $self->tc_use_chapter_mode;
+
 	1;
 }
 
@@ -778,6 +784,27 @@ sub rip_async_stop {
 
 	my $rc = close $fh;
 	croak ($message) if $?;
+
+	$self->set_chapter_length if $self->tc_use_chapter_mode;
+
+	1;
+}
+
+sub set_chapter_length {
+	my $self = shift; $self->trace_in;
+	
+	my $chapter      = $self->actual_chapter;
+	my $vob_nav_file = $self->vob_nav_file;
+
+	my $fh = FileHandle->new;
+	open ($fh, $vob_nav_file) or
+		croak "Can't read VOB navigation file '$vob_nav_file'";
+
+	my ($frames, $block_offset, $frame_offset);
+	++$frames while <$fh>;
+	close $fh;
+	
+	$self->chapter_frames->{$chapter} = $frames;
 
 	1;
 }
@@ -896,7 +923,7 @@ sub get_rip_and_scan_command {
 	$self->create_vob_dir;
 
 	my $chapter =
-		$self->tc_use_chapter_mode ? $self->actual_chapter : -1;
+		$self->tc_use_chapter_mode ? $self->actual_chapter : "-1";
 
 	my $angle = $self->tc_viewing_angle || 1;
 
@@ -927,6 +954,8 @@ sub rip_and_scan {
 	$self->analyze_scan_output (
 		output => $output
 	);
+
+	$self->set_chapter_length if $self->tc_use_chapter_mode;
 	
 	1;
 }
@@ -945,6 +974,8 @@ sub rip_and_scan_with_callback {
 	$self->analyze_scan_output (
 		output => $output
 	);
+
+	$self->set_chapter_length if $self->tc_use_chapter_mode;
 
 	1;
 }
@@ -976,6 +1007,8 @@ sub rip_and_scan_async_stop {
 		output => $output
 	);
 	
+	$self->set_chapter_length if $self->tc_use_chapter_mode;
+
 	1;
 }
 
@@ -1242,7 +1275,7 @@ sub get_transcode_command {
 				$command .= " --export_asr 2";
 			}
 		} else {
-			$command .= " --export_asr 1";
+			$command .= " --export_asr 2";
 		}
 	} else {
 		$command .= " -F ".$self->tc_video_af6_codec
@@ -1476,38 +1509,44 @@ sub get_mplex_command {
 	my %par = @_;
 	my ($split) = @par{'split'};
 
+	my $video_codec = $self->tc_video_codec;
+
 	my $avi_file = $self->target_avi_file;
 	my $size     = $self->tc_disc_size;
-	my $mplex_f  = $self->tc_video_codec eq 'SVCD' ? 4 : 1;
-	my $mplex_v  = $self->tc_video_codec eq 'SVCD' ? "-V" : "";
-	my $vext     = $self->tc_video_codec eq 'SVCD' ? 'm2v' : 'm1v';
 
-	my $split_option = $split ? "-S $size" : "";
+	my $mplex_f  = $video_codec eq 'SVCD' ? 4 : 1;
+	my $mplex_v  = $video_codec eq 'SVCD' ? "-V" : "";
+	my $vext     = $video_codec eq 'SVCD' ? 'm2v' : 'm1v';
+
+	my $split_option = $split ? "-S $size -M " : "";
+	my $target_file  = $split ? "$avi_file-%d.mpg" : "$avi_file.mpg";
 
 	my $command =
 		"mplex -f $mplex_f $mplex_v $split_option ".
-		"-o $avi_file.mpg $avi_file.$vext $avi_file.mpa";
+		"-o $target_file $avi_file.$vext $avi_file.mpa";
 	
 	return $command;
 }
 
 sub mplex_async_start {
 	my $self = shift; $self->trace_in;
-
+	my %par = @_;
+	my ($split) = @par{'split'};
+	
 	return $self->popen (
-		command => $self->get_mplex_command,
+		command => $self->get_mplex_command ( split => $split ),
 	);
 }
 
 sub mplex_async_stop {
 	my $self = shift; $self->trace_in;
 	my %par = @_;
-	my ($fh, $output) = @par{'fh','output'};
+	my ($fh, $output, $split) = @par{'fh','output','split'};
 
 	$output = "\n\nOutput was:\n\n$output" if $output;
 
 	my $message =   "Error executing:\n\n".
-			$self->get_mplex_command.
+			$self->get_mplex_command ( split => $split ).
 			$output;
 
 	close $fh;
@@ -1526,7 +1565,10 @@ sub get_split_command {
 	my $avi_file = $self->target_avi_file;
 	my $size     = $self->tc_disc_size;
 
-	my $command = "avisplit -s $size -i $avi_file";
+	my $avi_dir = dirname $avi_file;
+	$avi_file   = basename $avi_file;
+
+	my $command = "cd $avi_dir; avisplit -s $size -i $avi_file";
 	
 	return $command;
 }

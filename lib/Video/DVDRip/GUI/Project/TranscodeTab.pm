@@ -1,4 +1,4 @@
-# $Id: TranscodeTab.pm,v 1.39 2002/04/17 20:09:14 joern Exp $
+# $Id: TranscodeTab.pm,v 1.42 2002/05/14 22:14:30 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -299,7 +299,7 @@ sub create_video_options {
 
 	$entry = Gtk::Combo->new;
 	$entry->show;
-	$entry->set_popdown_strings ("SVCD","VCD","divx4","xvid","xvidcvs","fame","af6","opendivx");
+	$entry->set_popdown_strings ("SVCD","VCD","divx4","divx5","xvid","xvidcvs","fame","af6","opendivx");
 	$entry->set_usize(80,undef);
 	$hbox->pack_start($entry, 0, 1, 0);
 
@@ -634,12 +634,14 @@ sub create_video_bitrate_calc {
 				return 1 if not $title;
 				return 1 if $self->in_transcode_init;
 				$title->set_tc_disc_cnt($key);
-				$title->set_tc_target_size(
-					$key * $title->tc_disc_size,
-				);
-				$self->transcode_widgets
-				     ->{tc_target_size}
-				     ->set_text ($title->tc_target_size);
+				if ( $title->tc_video_codec ne 'VCD' ) {
+					$title->set_tc_target_size(
+						$key * $title->tc_disc_size,
+					);
+					$self->transcode_widgets
+					     ->{tc_target_size}
+					     ->set_text ($title->tc_target_size);
+				}
 			}, $key
 		);
 	}
@@ -673,12 +675,14 @@ sub create_video_bitrate_calc {
 				return 1 if not $title;
 				return 1 if $self->in_transcode_init;
 				$title->set_tc_disc_size($key);
-				$title->set_tc_target_size(
-					$key * $title->tc_disc_cnt,
-				);
-				$self->transcode_widgets
-				     ->{tc_target_size}
-				     ->set_text ($title->tc_target_size);
+				if ( $title->tc_video_codec ne 'VCD' ) {
+					$title->set_tc_target_size(
+						$key * $title->tc_disc_cnt,
+					);
+					$self->transcode_widgets
+					     ->{tc_target_size}
+					     ->set_text ($title->tc_target_size);
+				}
 			}, $key
 		);
 	}
@@ -1121,7 +1125,6 @@ sub switch_to_mpeg_encoding {
 	if ( $video_codec eq 'VCD' ) {
 		$widgets->{tc_video_bitrate}->set_sensitive(0);
 		$widgets->{tc_disc_cnt_popup}->set_sensitive(0);
-		$widgets->{tc_disc_size_popup}->set_sensitive(0);
 		$widgets->{tc_target_size}->set_text("");
 		$widgets->{tc_target_size}->set_sensitive(0);
 	} else {
@@ -1342,14 +1345,7 @@ sub transcode_chapters {
 		return 1;
 	}
 
-	if ( $title->tc_video_codec =~ /^S?VCD$/ ) {
-		$self->message_window (
-			message => "(S)VCD in chapter mode currently not supported."
-		);
-		return 1;
-	}
-
-
+	my $mpeg     = $title->tc_video_codec =~ /^S?VCD$/;
 	my @chapters = @{$title->get_chapters};
 
 	if ( not @chapters ) {
@@ -1376,7 +1372,6 @@ sub transcode_chapters {
 	};
 
 	my $progress_callback = sub {
-		return $cnt if $chapter_mode eq 'select';
 		my %par = @_;
 		my ($buffer) = @par{'buffer'};
 		$buffer =~ /\[\d{6}-(\d+)\]/;
@@ -1384,6 +1379,7 @@ sub transcode_chapters {
 		return $sum_frames+$frames;
 	};
 
+	my $multiplexed = 0;
 	my $close_callback = sub {
 		my %par = @_;
 		my ($output, $progress) = @par{'output','progress'};
@@ -1407,11 +1403,24 @@ sub transcode_chapters {
 			);
 			return 'continue';
 
+		}
+
+		if ( $mpeg and not $multiplexed ) {
+			$progress->set_label (
+				"Multiplexing MPEG Video and Audio of chapter $chapter"
+			);
+			$progress->init_pipe (
+				fh => $title->mplex_async_start ( split => $split )
+			);
+			$multiplexed = 1;
+			return "continue";
+		
 		} else {
 			$chapter = shift @chapters;
 			return 'finished' if not defined $chapter;
 
 			$pass = 1;
+			$multiplexed = 0;
 			$title->set_actual_chapter($chapter);
 
 			if ( $multipass ) {
@@ -1449,18 +1458,17 @@ sub transcode_chapters {
 	     $title->tc_end_frame ne '' ) {
 		$max_value = $title->tc_end_frame;
 		$self->log (
-			"Frame selection detected: only the first ".
+			"Frame selection in chapter mode: only the first ".
 			"chapter will be processed"
 		);
 		@chapters = ();
 
-	} elsif ( $chapter_mode eq 'select' ) {
-		$max_value = @chapters + 1;
-
 	} else {
-		$max_value = $title->frames;
+		$max_value += $title->chapter_frames->{$_}
+			for ( $chapter, @chapters );
 	}
 
+	$max_value ||= $title->frames;	# fallback, if no chapter frame cnt avail.
 	$max_value *= 2 if $multipass;
 
 	my $label;
@@ -1475,9 +1483,9 @@ sub transcode_chapters {
 	$self->comp('progress')->open (
 		label             => $label,
 		need_output       => 0,
-		show_percent      => ($chapter_mode ne 'select'),
-		show_fps	  => ($chapter_mode ne 'select'),
-		show_eta	  => ($chapter_mode ne 'select'),
+		show_percent      => 1,
+		show_fps	  => 1,
+		show_eta	  => 1,
 		max_value         => $max_value,
 		open_callback     => $open_callback,
 		progress_callback => $progress_callback,
@@ -1527,8 +1535,11 @@ sub avisplit {
 
 	my $close_callback = sub {
 		my %par = @_;
-		my ($progress) = @par{'progress'};
-		$title->split_async_stop ( fh => $progress->fh );
+		my ($progress, $output) = @par{'progress','output'};
+		$title->split_async_stop (#
+			fh     => $progress->fh,
+			output => $output
+		);
 		return 'finished';
 	};
 
@@ -1574,15 +1585,19 @@ sub mplex {
 	}
 
 	my $open_callback = sub {
-		return $title->mplex_async_start;
+		return $title->mplex_async_start ( split => $split );
 	};
 
 	my $progress_callback = sub { return 0 };
 
 	my $close_callback = sub {
 		my %par = @_;
-		my ($progress) = @par{'progress'};
-		$title->mplex_async_stop ( fh => $progress->fh );
+		my ($progress, $output) = @par{'progress','output'};
+		$title->mplex_async_stop (
+			fh => $progress->fh,
+			output => $output,
+			split => $split,
+		);
 		return 'finished';
 	};
 

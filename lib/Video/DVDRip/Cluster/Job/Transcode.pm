@@ -1,4 +1,4 @@
-# $Id: Transcode.pm,v 1.5 2002/03/17 18:53:11 joern Exp $
+# $Id: Transcode.pm,v 1.6 2002/05/14 22:12:01 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -58,7 +58,7 @@ sub start {
 		command      => $command,
 		cb_line_read => sub {
 			my ($line) = @_;
-			if ( $line =~ /split.*?frames.*?-c\s+\d+-(\d+)/ ) {
+			if ( $line =~ /split.*?mapped.*?-c\s+\d+-(\d+)/ ) {
 				$self->set_progress_frames_cnt ($1);
 				$frames_cnt = $1;
 				$self->set_progress_start_time(time);

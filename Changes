@@ -1,7 +1,77 @@
-$Id: Changes,v 1.78 2002/04/27 15:40:56 joern Exp $
+$Id: Changes,v 1.80 2002/05/14 22:27:11 joern Exp $
 
 Revision history for dvd::rip
 
+0.40 Tue May 13 2002, joern
+	Note:
+	- please install at least transcode-0.6.0pre5-20020514.
+	  Some older versions have a bug with chapter selection
+	  which crashes dvd::rip's ripping procedure.
+	  
+	Features:
+	- dvdrip command now supports --version (or -version or -v)
+	  to print the version number, suggested by Michael Bushey
+	- unexpected error message with command output are now
+	  displayed in a textarea, so they're cut and pastable
+	  (better for bug reporting ;)
+
+	Bugfixes:
+	- many enhancements regarding the handling of
+	  unexpected errors
+	  - no need to cancel the operation manually anymore
+	  - error output of some commands was missing
+	  - dvd::rip consumed 99% of CPU, thanks for the report
+	    to Andreas Theofilu <andreas AT mehlbox.at>. I didn't
+	    really solved this problem but added a workaround
+	    which should help in most situations. Otherwise
+	    you should restart dvd::rip after a fatal error which
+	    let dvd::rip itself occupating the whole CPU. This seems
+	    to be a very strange bug around Gtk::input_add...
+	- cluster mode transcode progress information was messed up
+	  due to slightly changes of transcode's output format.
+	- newer versions of avisplit croak on absolute filename
+	  parameters (I reported this already as a bug to Thomas),
+	  so dvd::rip now changes into the data directory and uses
+	  relative filenames. Thanks to Davide Ferrari for his bug
+	  report.
+	- mplex segfaulted if Transcode+Split was chosen (used %s
+	  instead of %d in the output pattern)
+	- VCD mode: --export-asr is set to 2 instead of 1. Thanks
+	  for the hint to Andreas Theofilu
+	
+0.40_01 Sat May 11 2002, joern
+	Note:
+	- this and all subsequent dvd::rip releases require transcode
+	  0.6.0pre4 or better.
+
+	Features:
+	- added a Credits file, which lists all users who helped me
+	  making dvd::rip a better tool.
+	- added "divx5" to the video codec popup
+	- chapter mode has now
+	  - (S)VCD transcoding
+	  - transcode progress information (you need to rip the
+	    chapters again until this works)
+
+	Bugfixes:
+	- dvd::rip didn't confirm program exit in case of unsaved
+	  changes if the window was closed using the window manager
+	  Thanks to Davide "Vide" Ferrari <bshark AT libero.it>
+	  for his bug report.
+	- appending transcode options did not work if a negative
+	  nice value was given. Thanks to Torsten Howard for his
+	  bugreport.
+	- (S)VCD mode:
+	  - splitting using mplex -S often results in smaller chunks.
+	    I added -M to prevent that (must be tested, don't know if
+	    this really solves the problem). Also there was a %s missing
+	    in mplex's file output pattern, which made split mode fail.
+	    Thanks to Michael Bushey <dvdrip AT michael.mailshell.com>
+	    for his report.
+	  - disc size popup was disabled in VCD mode, which made
+	    it impossible to select a proper disc size for splitting.
+	- fixed a progress bug in chapter mode 'all' ripping
+	
 0.39 Sat Apr 27 2002, joern
 	Bugfixes:
 	- "4:3 No Letterbox, Fast Resize" preset violated
@@ -182,7 +252,7 @@ Revision history for dvd::rip
 	- with transcode version 0.6.0pre4 dvd::rip supports the
 	  new fast resize mode which can be used with multiple
 	  of 8 frame sizes. All fast resize presets use this
-	  if possible for hitting the aspect ration more exactly.
+	  if possible for hitting the aspect ratio more exactly.
 	- new "Autoadjust Presets" with big, medium and small target
 	  frame sizes, with or without fast resize option. Everything
 	  is detected automatically: letterbox/black bars, aspect
