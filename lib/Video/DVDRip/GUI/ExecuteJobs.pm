@@ -1,4 +1,4 @@
-# $Id: ExecuteJobs.pm,v 1.13.2.3 2003/08/16 15:42:02 joern Exp $
+# $Id: ExecuteJobs.pm,v 1.13.2.4 2004/04/18 14:19:59 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -167,7 +167,7 @@ sub execute_jobs {
 
 		if ( $@ ) {
 			$self->long_message_window (
-				message => $self->stripped_exception
+				message => $@,
 			);
 			$job_started = 0;
 			next;

@@ -119,7 +119,7 @@ deb http://marillat.free.fr/ unstable main
    You can get dvd::rip and transcode from the official gentoo package
    repository:
 
-     http://www.gentoo.org/packages/media-video/dvdrip.html
+     http://packages.gentoo.org/search/?sstring=dvdrip
 
 1.1.6 FreeBSD port
 
@@ -143,8 +143,8 @@ deb http://marillat.free.fr/ unstable main
    Local download of the latest stable release: (currently no unstable
    release available)
 
-     Video-DVDRip-0.50.17.tar.gz
-     Video-DVDRip-0.50.17.tar.gz.asc (GnuPG signature, get key)
+     Video-DVDRip-0.50.18.tar.gz
+     Video-DVDRip-0.50.18.tar.gz.asc (GnuPG signature, get key)
 
    CPAN download directory: (list of mirrors)
 
@@ -417,7 +417,7 @@ chmod u+s /usr/sbin/fping
    generate the Makefile and execute make:
 
 # as a normal user
-tar xfz Video-DVDRip-0.50.17.tar.gz
+tar xfz Video-DVDRip-0.50.18.tar.gz
 cd Video-DVDRip-x.xx
 perl Makefile.PL
 make
@@ -471,7 +471,7 @@ make install
    otherwise some dvd::rip helper binaries may be taken from another
    place.
 
-tar xvfz Video-DVDRip-0.50.17.tar.gz
+tar xvfz Video-DVDRip-0.50.18.tar.gz
 cd Video-DVDRip-x.xx
 perl Makefile.PL && make
 export PATH=.:$PATH
@@ -701,21 +701,13 @@ URL References
   15. http://wwwkeys.de.pgp.net:11371/pks/lookup?op=get&search=0x285CF473
 
 VI. CHANGES
-   $Id: Changes,v 1.131.2.50 2004/04/10 09:44:33 joern Exp $
+   $Id: Changes,v 1.131.2.52 2004/04/18 14:28:15 joern Exp $
 
    Revision history and release notes for dvd::rip.
 
-   0.50.17 [stable branch] Sat Apr 10 2004, joern
-	Features:
-	- support for another transcode deinterlacer (I=5),
-	  suggested by Jean-Yves Simon <lethalwp AT tiscali.be>
-
+   0.50.18 [stable branch] Sun Apr 18 2004, joern
 	Bugfixes:
-	- mp3 samplerate setting didn't work, only 48khz
-	  for CVD. Thanks for the report to Neverstopdreaming
-	  <neverstopdreaming AT tiscali.it>.
-	- dvd::rip couldn't open empty project files
-	- prevent timeouts when encoding Ogg/Vorbis in cluster mode
-	- vobsub creation now splits with millisecond precision,
-	  thanks for the patch to Jean-Yves Simon
+	- ac3 passthrough was broken. Thanks for reporting
+	  to James Broberg <jbrobergAT cs.rmit.edu.au> and
+	  TOSOVSKY Ales <tosovsky AT znalecka.cz>
 

@@ -1,4 +1,4 @@
-# $Id: Title.pm,v 1.137.2.29 2004/04/10 09:19:11 joern Exp $
+# $Id: Title.pm,v 1.137.2.30 2004/04/18 14:19:58 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -1917,7 +1917,8 @@ sub get_transcode_command {
 				$command .= ",null";
 
 			} else {
-				if ( $audio_info->tc_samplerate !=
+				if ( not $audio_info->is_passthrough and
+				     $audio_info->tc_samplerate !=
 				     $audio_info->sample_rate and
 				     $audio_info->tc_samplerate ) {
 					$command .= " -E ".$audio_info->tc_samplerate

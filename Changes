@@ -1,6 +1,12 @@
-$Id: Changes,v 1.131.2.50 2004/04/10 09:44:33 joern Exp $
+$Id: Changes,v 1.131.2.52 2004/04/18 14:28:15 joern Exp $
 
 Revision history and release notes for dvd::rip.
+
+0.50.18 [stable branch] Sun Apr 18 2004, joern
+	Bugfixes:
+	- ac3 passthrough was broken. Thanks for reporting
+	  to James Broberg <jbrobergAT cs.rmit.edu.au> and
+	  TOSOVSKY Ales <tosovsky AT znalecka.cz>
 
 0.50.17 [stable branch] Sat Apr 10 2004, joern
 	Features:
