@@ -1,4 +1,4 @@
-# $Id: Title.pm,v 1.145 2005/02/13 21:21:43 joern Exp $
+# $Id: Title.pm,v 1.153 2005/05/16 08:07:26 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -132,11 +132,14 @@ sub tc_clip2_right		{ shift->{tc_clip2_right}		}
 sub tc_video_codec		{ shift->{tc_video_codec}		}
 sub tc_video_af6_codec		{ shift->{tc_video_af6_codec}		}
 sub tc_video_bitrate		{ shift->{tc_video_bitrate}      	}
+sub tc_video_bpp		{ shift->{tc_video_bpp}      		}
+sub tc_video_bitrate_last_edit	{ shift->{tc_video_bitrate_last_edit}	}
 sub tc_video_bitrate_manual	{ shift->{tc_video_bitrate_manual}	}
 sub tc_video_bitrate_range	{ shift->{tc_video_bitrate_range}	}
 sub tc_video_framerate		{ shift->{tc_video_framerate}      	}
 sub tc_fast_bisection		{ shift->{tc_fast_bisection}      	}
 sub tc_psu_core			{ shift->{tc_psu_core}      		}
+sub tc_keyframe_interval	{ shift->{tc_keyframe_interval}	|| 250	}
 
 sub tc_target_size		{ shift->{tc_target_size}		}
 sub tc_disc_cnt 	    	{ shift->{tc_disc_cnt}			}
@@ -171,11 +174,14 @@ sub set_tc_clip2_right		{ shift->{tc_clip2_right}	= $_[1]	}
 # implemented below : sub set_tc_video_codec {}
 sub set_tc_video_af6_codec	{ shift->{tc_video_af6_codec}	= $_[1]	}
 sub set_tc_video_bitrate	{ shift->{tc_video_bitrate}  	= $_[1]	}
+sub set_tc_video_bpp		{ shift->{tc_video_bpp}  	= $_[1]	}
+sub set_tc_video_bitrate_last_edit { shift->{tc_video_bitrate_last_edit} = $_[1]}
 sub set_tc_video_bitrate_manual	{ shift->{tc_video_bitrate_manual}= $_[1]}
 sub set_tc_video_bitrate_range	{ shift->{tc_video_bitrate_range} = $_[1]}
 sub set_tc_video_framerate	{ shift->{tc_video_framerate} 	= $_[1]	}
 sub set_tc_fast_bisection	{ shift->{tc_fast_bisection} 	= $_[1]	}
 sub set_tc_psu_core		{ shift->{tc_psu_core} 		= $_[1]	}
+sub set_tc_keyframe_interval	{ shift->{tc_keyframe_interval}	= $_[1]	}
 
 sub set_tc_target_size		{ shift->{tc_target_size}    	= $_[1]	}
 sub set_tc_disc_cnt		{ shift->{tc_disc_cnt}    	= $_[1]	}
@@ -269,7 +275,7 @@ sub tc_use_yuv_internal {
 		    $self->tc_zoom_height % 2;
 
 	foreach my $filter_instance ( @{$self->tc_filter_settings->filters} ) {
-		return 0 if $filter_instance->can_video and not
+		return 0 if $filter_instance->get_filter->can_video and not
 			    $filter_instance->get_filter->can_yuv;
 	}
 	
@@ -1491,6 +1497,7 @@ sub suggest_transcode_options {
 	$self->set_tc_target_size ( 1400 );
 	$self->set_tc_disc_size ( 700 );
 	$self->set_tc_disc_cnt ( 2 );
+	$self->set_tc_keyframe_interval ( 50 );
 
 	my $container = $self->config('default_container');
 	# Internal value for MPEG/X*S*VCD/CVD container is 'vcd',
@@ -1518,7 +1525,6 @@ sub suggest_transcode_options {
 		$self->log (__"Not enabling PSU core, because this movie has only one PSU.");
 	}
 
-	$self->calc_video_bitrate;
 	$self->set_preset ( "auto_medium_fast" );
 
 	if ( $rip_mode eq 'rip' ) {
@@ -1551,6 +1557,15 @@ sub suggest_transcode_options {
 		}
 	}
 
+	if ( $self->config('default_bpp') ne '<none>' ) {
+		$self->set_tc_video_bitrate_manual(1);
+		$self->set_tc_video_bpp($self->config('default_bpp'));
+		$self->set_tc_video_bitrate_last_edit("bpp");
+		$self->calc_video_bitrate;
+	} else {
+		$self->calc_video_bitrate;
+	}
+
 	1;
 }
 
@@ -1569,15 +1584,13 @@ sub calc_video_bitrate {
 		$self->set_tc_multipass ( 0 );
 	}
 
-	return $self->tc_video_bitrate if $self->tc_video_bitrate_manual;
+	my $bc = Video::DVDRip::BitrateCalc->new ( title => $self );
+	$bc->calculate;
+	
+	$self->set_tc_video_bpp     ( $bc->video_bpp     );
+	$self->set_tc_video_bitrate ( $bc->video_bitrate );
 
-	my $bc = Video::DVDRip::BitrateCalc->new (
-		title => $self,
-	);
-
-	$bc->calculate_video_bitrate;
-
-	return $self->set_tc_video_bitrate ( $bc->video_bitrate );
+	return $bc->video_bitrate;
 }
 
 sub get_first_audio_track {
@@ -1631,16 +1644,21 @@ sub get_transcode_frame_cnt {
 	return $frames;
 }
 
+sub multipass_log_is_reused {
+	my $self = shift;
+	
+	return $self->tc_multipass_reuse_log &&
+	       -f $self->multipass_log_dir."/divx4.log"
+}
+
 sub get_transcode_command {
 	my $self = shift; $self->trace_in;
 	my %par = @_;
 	my  ($pass, $split, $no_audio, $output_file) =
 	@par{'pass','split','no_audio','output_file'};
 
-	my $bc = Video::DVDRip::BitrateCalc->new (
-		title => $self,
-	);
-	$bc->calculate_video_bitrate;
+	my $bc = Video::DVDRip::BitrateCalc->new ( title => $self );
+	$bc->calculate;
 
 	my $nr             = $self->nr;
 	my $avi_file       = $output_file || $self->avi_file;
@@ -1672,7 +1690,10 @@ sub get_transcode_command {
 
 	$command .= " -".$_." ".$source_options->{$_} for keys %{$source_options};
 
-	$command .= " -w ".int($self->tc_video_bitrate) if $self->tc_video_bitrate;
+	if ( $self->tc_video_bitrate ) {
+		$command .= " -w ".int($self->tc_video_bitrate).",".
+			    $self->tc_keyframe_interval;
+	}
 	
 #	if ( not $mpeg ) {
 #		$command .=
@@ -1909,7 +1930,10 @@ sub get_transcode_command {
 		$avi_file = "/dev/null" if $pass == 1;
 
 		if ( $pass == 1 and not $self->has_vbr_audio or
-		     $pass == 2 and     $self->has_vbr_audio ) {
+		     (
+		       $pass == 2 and     $self->has_vbr_audio
+		       and not $self->multipass_log_is_reused
+		     ) ) {
 			$command =~ s/(-x\s+[^\s]+)/$1,null/;
 			$command =~ s/-x\s+([^,]+),null,null/-x $1,null/;
 			$command .= " -y ".$self->tc_video_codec;
@@ -1923,7 +1947,8 @@ sub get_transcode_command {
 		}
 	}
 
-	if ( not $self->tc_multipass or ( $pass == 2 xor $self->has_vbr_audio ) ) {
+	if ( not $self->tc_multipass or ( $pass == 2 xor $self->has_vbr_audio )
+	     or ( $pass == 2 and $self->multipass_log_is_reused ) ) {
 		if ( $mpeg ) {
 			$command .= " -y mpeg2enc,mp2enc";
 			$command .= " -E ".$audio_info->tc_samplerate
@@ -2261,10 +2286,8 @@ sub get_mplex_command {
 	my $opt_r;
 	if ( $video_codec =~ /^(XS?VCD|CVD)$/ ) {
 		#-- get overall bitrate, needed for X(S)VCD.
-		my $bc = Video::DVDRip::BitrateCalc->new (
-			title => $self,
-		);
-		$bc->calculate_video_bitrate;
+		my $bc = Video::DVDRip::BitrateCalc->new ( title => $self );
+		$bc->calculate;
 		my $bitrate = 
 			$bc->video_bitrate +
 			$bc->audio_bitrate +
@@ -2730,6 +2753,7 @@ sub get_view_dvd_command {
 		a => $self->audio_channel,
 		m => $self->tc_viewing_angle,
 		b => $base_audio_code,
+		d => $self->config("dvd_device"),
 	} );
 		
 	if ( $self->tc_use_chapter_mode eq 'select' ) {
@@ -3031,9 +3055,13 @@ sub get_burn_command {
 			$command = "dr_exec ".$self->config('burn_cdrecord_cmd');
 		}
 
+		my $gracetime =
+			$self->config('burn_cdrecord_cmd') =~ /cdrecord/ ?
+				'gracetime=5' : '';
+
 		$command .=
 			" dev=".$self->config('burn_cdrecord_device').
-			" fs=4096k -v -overburn gracetime=5".
+			" fs=4096k -v -overburn $gracetime".
 			" speed=".$self->config('burn_writing_speed').
 			" -eject -pad -overburn";
 
@@ -3199,11 +3227,11 @@ sub get_subtitle_test_frame_range {
 
 	my $frame_from = $self->get_frame_of_time (
 		time => $time_code_from,
-		add  => -2,
+		add  => -15,
 	 );
 	my $frame_to   = $self->get_frame_of_time (
 		time => $time_code_to,
-		add  => 2,
+		add  => 15,
 	);
 
 	$frame_to = $frame_from if $frame_to < $frame_from;

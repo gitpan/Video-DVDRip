@@ -1,4 +1,4 @@
-# $Id: Config.pm,v 1.21 2004/04/11 23:36:20 joern Exp $
+# $Id: Config.pm,v 1.22 2005/04/23 14:32:47 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -85,6 +85,7 @@ sub build {
 		foreach my $field ( @{$order} ) {
 			push @{$page2params{$page_no}}, $field;
 			my %field = %{$config_object->config->{$field}};
+			$field{name} = $field;
 			my $onload = $field{onload};
 			if ( $field{type} eq 'switch' ) {
 				$field{onchange} = sub {

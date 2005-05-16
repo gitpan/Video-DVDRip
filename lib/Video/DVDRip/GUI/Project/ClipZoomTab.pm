@@ -1,4 +1,4 @@
-# $Id: ClipZoomTab.pm,v 1.42 2005/03/13 10:57:03 joern Exp $
+# $Id: ClipZoomTab.pm,v 1.43 2005/04/23 14:33:32 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -574,10 +574,14 @@ if ( 0 ) {
        			       tc_clip2_top  tc_clip2_bottom
 			       tc_clip2_left tc_clip2_right )) {
 		$widgets->{$attr}->signal_connect ("changed", sub {
-			return 1 if not $self->selected_title;
+			my $title = $self->selected_title;
+			return 1 if not $title;
+			$self->update_storage_labels
+				if $attr ne 'preview_frame_nr' &&
+				   $title->tc_video_bitrate_manual;
 			return 1 if $self->in_adjust_init;
 			my ($widget, $method) = @_;
-			$self->selected_title->$method ( $widget->get_text );
+			$title->$method ( $widget->get_text );
 			$self->update_fast_resize_info;
 			$self->show_preview_labels;
 			1;
@@ -628,11 +632,6 @@ sub init_adjust_values {
        			       tc_clip2_top  tc_clip2_bottom
 			       tc_clip2_left tc_clip2_right )) {
 		$widgets->{$attr}->set_text ($self->selected_title->$attr());
-if ( 0 ) {
-		if ( $attr =~ /^tc/ ) {
-			$widgets->{$attr}->set_sensitive(!$fast_bisection);
-		}
-}
 	}
 
 	my $preset_name = $title->preset;
@@ -649,13 +648,6 @@ if ( 0 ) {
 	$widgets->{tc_fast_resize_yes}->set_active($fast_resize);
 	$widgets->{tc_fast_resize_no}->set_active(!$fast_resize);
 
-if ( 0 ) {
-	$widgets->{tc_fast_resize_yes}->set_sensitive(!$fast_bisection);
-	$widgets->{tc_fast_resize_no}->set_sensitive(!$fast_bisection);
-
-	$widgets->{tc_fast_bisection_yes}->set_active($fast_bisection);
-	$widgets->{tc_fast_bisection_no}->set_active(!$fast_bisection);
-}
 	$self->update_fast_resize_info;
 
 	$self->set_in_adjust_init(0);

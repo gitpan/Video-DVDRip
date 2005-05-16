@@ -1,4 +1,4 @@
-$Id: TODO,v 1.120 2004/10/10 13:51:06 joern Exp $
+$Id: TODO,v 1.121 2005/04/23 14:40:37 joern Exp $
 
 KNOWN BUGS:
 ===========
@@ -33,6 +33,7 @@ may be implemented soon, some eventually never... ;)
 
 TODO:
 =====
+- allow mono audio
 - make transcode's -H option configurable to solve A/V sync
   problems with some material. Suggested by Wayne Hogue
   <mythtv AT chiphead.net>
@@ -123,8 +124,6 @@ TODO:
   Suggested by Bodo Bauer <bb AT bb-zone.com>
 - overall video bitrate calculation for a collection of
   selected titles. Requested by Felix Knecht <felixknecht AT web.de>
-- print actual bits/pixel somewhere on the clip&zoom tab,
-  suggested by Florin Andrei
 - probe audio on the ripped VOB data. Some DVD's report wrong
   information when probed from the DVD.
 - xvid properties window as a frontend for the xvid.cfg file,

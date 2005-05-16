@@ -1,4 +1,4 @@
-# $Id: Master.pm,v 1.32 2004/04/13 20:47:01 joern Exp $
+# $Id: Master.pm,v 1.33 2005/05/16 08:03:45 joern Exp $
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
 # All Rights Reserved. See file COPYRIGHT for details.
@@ -183,6 +183,7 @@ sub node_check {
 	Video::DVDRip::Cluster::Pipe->new (
 		timeout      => 8,
 		command      => $command,
+		no_log       => 1,
 		cb_line_read => sub {
 			$buffer .= $_[0]."\n";
 			1;

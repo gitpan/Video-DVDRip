@@ -1,4 +1,4 @@
-# $Id: BitrateCalc.pm,v 1.6 2004/04/11 23:36:20 joern Exp $
+# $Id: BitrateCalc.pm,v 1.7 2005/04/24 12:30:39 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -121,7 +121,7 @@ sub init_calc_list {
 		title      => $title,
 		with_sheet => 1,
 	);
-	$bc->calculate_video_bitrate;
+	$bc->calculate;
 	my $sheet = $bc->sheet;
 	
 	my ($clist, $rows);

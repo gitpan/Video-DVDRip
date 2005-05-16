@@ -1,4 +1,4 @@
-# $Id: MergeAudio.pm,v 1.11 2004/04/11 23:36:20 joern Exp $
+# $Id: MergeAudio.pm,v 1.12 2005/05/16 08:06:12 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -115,10 +115,12 @@ sub parse_output {
 	my $self = shift;
 	my ($line) = @_;
 
-	if ( $self->title->is_ogg ) {
-		$self->set_progress_cnt ($1) if $line =~ /(\d+)/;
-	} else {
-		$self->set_progress_cnt ($1) if $line =~ /\(\d+-(\d+)\)/;
+	if ( $line =~ /\(\d+-(\d+)\)/ ) {
+		# avimerge
+		$self->set_progress_cnt ($1);
+	} elsif ( $line =~ /(\d+)/ ) {
+		# ogmmerge
+		$self->set_progress_cnt ($1);
 	}
 
 	$self->set_operation_successful ( 1 )

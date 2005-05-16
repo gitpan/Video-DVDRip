@@ -1,4 +1,4 @@
-# $Id: Base.pm,v 1.23 2004/04/11 23:36:20 joern Exp $
+# $Id: Base.pm,v 1.25 2005/05/06 11:27:56 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -282,7 +282,7 @@ sub create_dialog {
 			$self->create_tooltip( text => $field->{tooltip}, widget => $radio_no);
 			$self->create_tooltip( text => $field->{tooltip}, widget => $radio_yes);
 			
-		} elsif ( $field->{type} eq 'string' and $field->{presets} ) {
+		} elsif ( $field->{type} =~ /string|number/ and $field->{presets} ) {
 			my $entry = Gtk::Combo->new;
 			$entry->show;
 			$entry->set_popdown_strings (@{$field->{presets}});
@@ -296,7 +296,7 @@ sub create_dialog {
 			push @widgets, $entry;
 			$table->attach_defaults ($entry, 1, 2, $i, $i+1);
 
-			$self->create_tooltip( text => $field->{tooltip}, widget => $entry );
+			$self->create_tooltip( text => $field->{tooltip}, widget => $entry->entry );
 
 		} else {
 			my $entry;

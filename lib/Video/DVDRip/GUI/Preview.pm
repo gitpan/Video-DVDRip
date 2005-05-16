@@ -1,4 +1,4 @@
-# $Id: Preview.pm,v 1.9 2004/04/11 23:36:20 joern Exp $
+# $Id: Preview.pm,v 1.11 2005/05/06 12:20:04 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -110,53 +110,60 @@ sub open {
 	
 	$self->set_transcode_pipe ( $transcode_pipe );
 
-	my $time = time;
-	while ( not -e $socket_file ) {
-		last if time - $time >= 2;
-	}
-
-	if ( not -e $socket_file ) {
-		$self->stop;
-		croak "msg:Couldn't start transcode.";
-	}
-
-	# start remote control
+	my $start_time = time();
 	
-	my $transcode_remote = Video::DVDRip::TranscodeRC->new (
-		socket_file => $socket_file,
-		error_cb => sub {
-			my ($line) = @_;
-			$self->long_message_window (
-				message => __"Error executing a transcode socket command:\n\n".
-					   $line
-			);
-			1;
-		},
-		selection_cb => $self->selection_cb,
-	);
-
-	$transcode_remote->connect;
-	
-	my $socket_fileno = $transcode_remote->socket->fileno;
-	
-	my $gdk_input = Gtk::Gdk->input_add (
-		$socket_fileno,
-		'read', sub {
-			my $rc = $transcode_remote->receive;
-			if ( defined $rc ) {
-				$self->process_transcode_remote_output (
-					line => $rc,
-				) if $rc ne '';
+	my $timer;
+	$timer = Gtk->timeout_add ( 200, sub {
+		if ( not -e $socket_file ) {
+			if ( time - $start_time >= 10 ) {
+				$self->stop;
+				Gtk->timeout_remove($timer);
+				croak "msg:Couldn't start transcode.";
 			}
-			1;
+			return 1;
 		}
-	);
 
-	$self->set_gdk_input($gdk_input);
+		Gtk->timeout_remove($timer);
 
-	$self->set_transcode_remote ( $transcode_remote );
-	
-	$self->apply_filter_settings;
+		# start remote control
+		my $transcode_remote = Video::DVDRip::TranscodeRC->new (
+			socket_file => $socket_file,
+			error_cb => sub {
+				my ($line) = @_;
+				$self->long_message_window (
+					message => __"Error executing a transcode socket command:\n\n".
+						   $line
+				);
+				1;
+			},
+			selection_cb => $self->selection_cb,
+		);
+
+		$transcode_remote->connect;
+
+		my $socket_fileno = $transcode_remote->socket->fileno;
+
+		my $gdk_input = Gtk::Gdk->input_add (
+			$socket_fileno,
+			'read', sub {
+				my $rc = $transcode_remote->receive;
+				if ( defined $rc ) {
+					$self->process_transcode_remote_output (
+						line => $rc,
+					) if $rc ne '';
+				}
+				1;
+			}
+		);
+
+		$self->set_gdk_input($gdk_input);
+
+		$self->set_transcode_remote ( $transcode_remote );
+
+		$self->apply_filter_settings;
+		
+		return 0;
+	});
 	
 	1;
 }
@@ -258,6 +265,11 @@ sub process_transcode_remote_output {
 	if ( $line =~ /preview window close/ ) {
 		my $closed_cb = $self->closed_cb;
 		&$closed_cb() if $closed_cb;
+		if ( $self->transcode_pipe ) {
+			$self->transcode_pipe->cancel;
+			Gtk::Gdk->input_remove( $self->gdk_input );
+			$self->close;
+		}
 	}
 	
 	1;

@@ -1,4 +1,4 @@
-# $Id: Title.pm,v 1.42 2004/12/11 15:01:34 joern Exp $
+# $Id: Title.pm,v 1.44 2005/05/16 10:45:48 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -348,7 +348,7 @@ sub get_merge_psu_command {
 		"${nice}dr_exec ";
 
 	if ( $self->is_ogg ) {
-		$command .="ogmcat -v -v ";
+		$command .="ogmcat -v -v";	# -v -v to prevent timeouts
 	} else {
 		$command .="avimerge ";
 	}

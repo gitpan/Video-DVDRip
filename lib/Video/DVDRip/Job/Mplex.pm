@@ -1,4 +1,4 @@
-# $Id: Mplex.pm,v 1.7 2004/04/11 23:36:20 joern Exp $
+# $Id: Mplex.pm,v 1.8 2005/04/24 12:30:39 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -57,7 +57,7 @@ sub get_diskspace_needed {
 		with_sheet	=> 0,
 	);
 
-	$bc->calculate_video_bitrate;
+	$bc->calculate;
 
 	$title->set_actual_chapter(undef);
 

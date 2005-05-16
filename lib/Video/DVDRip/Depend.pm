@@ -1,4 +1,4 @@
-# $Id: Depend.pm,v 1.5 2005/01/04 13:44:40 joern Exp $
+# $Id: Depend.pm,v 1.8 2005/04/23 12:26:53 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -98,9 +98,14 @@ my %TOOLS = (
    	comment		=> __"Needed for subtitle vobsub viewing",
 	optional	=> 1,
 	get_version 	=> sub {
-		qx[mplayer --help 2>&1] =~ /MPlayer\s+(\d+\.\d+(\.\d+)?)/i;
+		my $out = qx[mplayer --help 2>&1];
 		wait;	# saw zombies on a Slackware system without it.
-		return $1;
+		if ( $out =~ /CVS/i ) {
+		  return "cvs";
+		} else {
+		  $out =~ /MPlayer\s+(\d+\.\d+(\.\d+)?)/i;
+		  return $1;
+		}
 	},
 	convert 	=> 'default',
 	min 		=> "0.90",
@@ -186,7 +191,7 @@ my %TOOLS = (
     },
     cdrecord => {
     	order		=> ++$ORDER,
-    	comment		=> __"Needed for AVI/OGG burning",
+    	comment		=> __"Needed for AVI/OGG burning on CD",
 	optional	=> 1,
 	get_version 	=> sub {
 		qx[cdrecord -version 2>&1] =~ /(\d+\.\d+(\.\d+)?)/i;
@@ -196,6 +201,19 @@ my %TOOLS = (
 	convert 	=> 'default',
 	min 		=> "0.7.12",
 	suggested 	=> "2.0",
+    },
+    dvdrecord => {
+    	order		=> ++$ORDER,
+    	comment		=> __"Needed for AVI/OGG burning on DVD",
+	optional	=> 1,
+	get_version 	=> sub {
+		qx[dvdrecord -version 2>&1] =~ /(\d+\.\d+(\.\d+)?)/i;
+		wait;	# saw zombies on a Slackware system without it.
+		return $1;
+	},
+	convert 	=> 'default',
+	min 		=> "0.2.0",
+	suggested 	=> "0.2.1",
     },
     xine => {
     	order		=> ++$ORDER,
@@ -229,6 +247,7 @@ my $OBJECT;
 
 sub convert_default {
 	my ($ver) = @_;
+	return 990000 if $ver eq 'cvs';
 	$ver =~ m/(\d+)(\.(\d+))?(\.(\d+))?(\.\d+)?/;
 	$ver = $1*10000+$3*100+$5;
 	$ver = $ver - 1 + $6 if $6;
@@ -263,9 +282,10 @@ sub new {
 		my $version = &$get_version($OBJECT);
 
 		if ( $version ne '' ) {
-			$DEBUG && print "$version\n";
+			$DEBUG && print "$version ";
 			$def->{installed} = $version;
 			$def->{installed_num} = &$convert($version);
+			$DEBUG && print "=> $def->{installed_num}\n";
 		} else {
 			$DEBUG && print "NOT INSTALLED\n";
 			$def->{installed} = "missing";

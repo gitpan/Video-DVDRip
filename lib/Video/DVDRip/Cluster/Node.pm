@@ -1,4 +1,4 @@
-# $Id: Node.pm,v 1.27 2004/04/11 23:36:19 joern Exp $
+# $Id: Node.pm,v 1.29 2005/05/16 08:04:03 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -193,8 +193,15 @@ sub get_popen_code {
 	my $self = shift;
 	my %par = @_;
 	my ($command) = @par{'command'};
+
+	$command = "umask 0002; $command";
 	
 	return $command if $self->is_master;
+
+	#-- Set LD_ASSUME_KERNEL on the nodes as well,
+	#-- if set on the master.
+	$command = "export LD_ASSUME_KERNEL=$ENV{LD_ASSUME_KERNEL}; $command"
+		if $ENV{LD_ASSUME_KERNEL};
 
 	my $username = $self->username;
 	my $name     = $self->hostname;

@@ -1,4 +1,4 @@
-# $Id: BitrateCalc.pm,v 1.4 2004/04/11 23:36:19 joern Exp $
+# $Id: BitrateCalc.pm,v 1.5 2005/04/24 12:30:39 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -38,7 +38,7 @@ sub commit {
 	my $title = $self->project->title;
 
 	$bc->set_title ( $title );
-	$title->set_tc_video_bitrate ( $bc->calculate_video_bitrate );
+	$title->set_tc_video_bitrate ( $bc->calculate );
 	$bc->set_title ( undef );
 	
 	1;

@@ -163,8 +163,8 @@ deb ftp://ftp.nerim.net/debian-marillat unstable main
    Local download of the latest stable release: (currently no unstable
    release available)
 
-     Video-DVDRip-0.52.3.tar.gz
-     Video-DVDRip-0.52.3.tar.gz.asc (GnuPG signature, get key)
+     Video-DVDRip-0.52.4.tar.gz
+     Video-DVDRip-0.52.4.tar.gz.asc (GnuPG signature, get key)
 
    CPAN download directory: (list of mirrors)
 
@@ -259,7 +259,8 @@ cd dvdrip; cvs -z3 update
    cdrdao Needed for (S)VCD burning No 1.1.7 1.1.7 -
    vcdimager Needed for (S)VCD burning No 0.7.12 0.7.12 -
    mkisofs Needed for AVI/OGG burning No 2.0 1.15 -
-   cdrecord Needed for AVI/OGG burning No 2.0 0.7.12 -
+   cdrecord Needed for AVI/OGG burning on CD No 2.0 0.7.12 -
+   dvdrecord Needed for AVI/OGG burning on DVD No 0.2.1 0.2.0 -
    xine Can be used to view DVD's/files No 0.9.15 0.9.13 -
    fping Only for cluster mode master No 2.4 2.2 -
 
@@ -492,7 +493,7 @@ chmod u+s /usr/sbin/fping
    generate the Makefile and execute make:
 
 # as a normal user
-tar xfz Video-DVDRip-0.52.3.tar.gz
+tar xfz Video-DVDRip-0.52.4.tar.gz
 cd Video-DVDRip-x.xx
 perl Makefile.PL
 make
@@ -546,7 +547,7 @@ make install
    otherwise some dvd::rip helper binaries may be taken from another
    place.
 
-tar xvfz Video-DVDRip-0.52.3.tar.gz
+tar xvfz Video-DVDRip-0.52.4.tar.gz
 cd Video-DVDRip-x.xx
 perl Makefile.PL && make
 export PATH=.:$PATH
@@ -776,28 +777,78 @@ URL References
   15. http://wwwkeys.de.pgp.net:11371/pks/lookup?op=get&search=0x285CF473
 
 VI. CHANGES
-   $Id: Changes,v 1.150 2005/03/13 11:06:13 joern Exp $
+   $Id: Changes,v 1.156 2005/05/16 11:56:54 joern Exp $
 
    Revision history and release notes for dvd::rip.
 
-   0.52.3 [stable branch] Sun Mar 13 2005, joern
-	Features
-	- Updated french translation from Christophe Combelles
-	  <ccomb AT free.fr>
+   0.52.4 [stable branch] Mon May 16 2005, joern
+	Features:
+	- Full featured support for BPP (bits per pixel) resp.
+	  quality based video bitrate calculation (based on a
+	  request by Daniel Faber <mail AT daniel-faber.de>):
+	  - Permanent display of the bpp value on the transcode
+	    tab in a combo box
+	  - BPP value may be edited, video bitrate is recalculated
+	    accordingly, a list of reasonable preset values is
+	    available for convenience. BPP and bitrate follow
+	    changes of the frame size immediately.
+	  - A new preset "Default BPP" (in the misc section) is used
+	    by default for newly ripped titles once set.
+	- Bitrate calculation sheet now shows different calculations
+	  depending on whether a manual bitrate was set or not.
+	  Suggested by Daniel Faber.
+	- Subtitle preview improved; old tedious test transcoding
+	  dropped, instead you can open a realtime transcode preview
+	  window straight from the Subtitle tab without opening
+	  the transcode Filter dialog first. Movie starts with a
+	  leadtime of 15 seconds before the first subtitle timestamp.
+	- Keyframe interval can be edited on the transcode page.
+	  transcode defaults internally to 250, now you can change
+	  this (dvd::rip defaults to 50).
+	- Added a patch from Larry Siden <lsiden AT gmail.com>
+	  which makes dvd::rip compatible with dvdrecord. Just
+	  select "dvdrecord" as the CD burning command (a
+	  correspondent preset was added) and dvd::rip will
+	  generate a proper command line for dvdrecord.
+	- Added DVD device placeholder %d to the DVD player command
+	  template and extended the xine and mplayer default commands
+	  accordingly. This is necessary if DVD devices located at a
+	  different path as the /dev/dvd default.
+	- dvd::rip now workarounds transcode NPTL bugs by setting
+	  LD_ASSUME_KERNEL. If you encounter problems with this
+	  you can switch this off in the Preferences / Misc section.
+	- Cluster mode
+	  - Execute jobs with umask 0002. This helps solving
+	    permission problems, if commands are executed by
+	    different users on the nodes. With this umask the
+	    correponding users merely need to be in the same group.
+	    Based on a request from Triffid Hunter <triffid_hunter
+	    AT funkmunch.net>.
+	  - Don't log fping command. It's useless and too noisy.
+	  - Set LD_ASSUME_KERNEL on the nodes as well if set on
+	    the master.
 
 	Bugfixes:
-	- PCM passthrough didn't work.
-	- Newer transcode release seem not to need -d for
-	  PCM audio tracks anymore, so it's used only with
-	  versions < 0.6.13.
-	- Mistaken switch to RGB color space if audio only
-	  filters are added to the filter chain. Reported
-	  by Dag Rune Sneeggen <contactus AT dudcore.net>.
-	- Applied a patch from Fabio Russo fixing a potential
-	  problem with mplayer playback of DVD titles with
-	  an audio codec reported by transcode as 'mpeg1',
-	  although neither Fabio nor I ever had such a DVD
-	  in the hand ;)
-	- Removed POSIX::setlocale(), since it's not necessary
-	  and probably the reason for a crash on Mandrake.
+	- mplayer CVS versions are now recognized properly. A
+	  CVS version always satisfies the dependency module,
+	  assuming people using CVS versions know what they're
+	  doing ;) Thanks for reports and hints to Philippe Monroux
+	  <monroux-listes AT wanadoo.fr>, Christian Marillat and
+	  Fabio Russo.
+	- xvid4conf didn't read the defauls properly from
+	  ~/.transcode/xvid4.cfg, looks like ~ isn't substituted,
+	  although this is xvid4conf's own default. Now dvd::rip
+	  passes the full path.
+	- Filters didn't work since 0.52.3. Thanks for the report
+	  to Christian Marillat.
+	- Combo box tooltips didn't appear in the Preferences
+	  dialog.
+	- OGG overhead wasn't calculated correctly if a frame
+	  range was set. Thanks for the report to Daniel Faber.
+	- Filter preview window: fixed a race condition when
+	  starting transcode; now wait max. 10 seconds on transcode
+	  startup using a Glib timer. Thanks for the bug report
+	  to Mathias Anselmann <M.Anselmann AT web.de>.
+	- Cluster mode: when merging video chunks of a PSU in an
+	  OGG/Vorbis project the progress information was missing.
 

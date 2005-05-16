@@ -1,4 +1,4 @@
-# $Id: TranscodeTab.pm,v 1.85 2004/04/11 23:36:20 joern Exp $
+# $Id: TranscodeTab.pm,v 1.91 2005/05/07 12:06:16 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -101,11 +101,14 @@ sub create_transcode_tab {
 	
 	# text entry signals
 	foreach my $attr (qw ( tc_video_codec tc_options tc_nice
-			       tc_video_af6_codec tc_video_bitrate
-			       tc_video_framerate tc_execute_afterwards
+			       tc_video_af6_codec tc_video_bitrate tc_video_bpp
+			       tc_video_framerate tc_keyframe_interval
+			        tc_execute_afterwards
 			       tc_start_frame tc_end_frame
 			       tc_target_size )) {
-		$widgets->{$attr}->signal_connect ("changed", sub {
+		my $widget = $widgets->{$attr};
+		$widget = $widget->entry if $attr eq 'tc_video_bpp';
+		$widget->signal_connect ("changed", sub {
 			my ($widget, $method) = @_;
 			return 1 if not $self->selected_title;
 			return 1 if $self->in_transcode_init;
@@ -116,9 +119,14 @@ sub create_transcode_tab {
 			$title->$method ( $value );
 			if ( $method eq "set_tc_target_size" ) {
 				$self->calc_video_bitrate;
-			}
-			$self->update_storage_labels
-				if $method eq 'set_tc_video_bitrate';
+			} elsif ( $method eq 'set_tc_video_bitrate' ) {
+				$title->set_tc_video_bitrate_last_edit('bitrate');
+				$self->update_storage_labels;
+			} elsif ( $method eq 'set_tc_video_bpp' ) {
+				$title->set_tc_video_bitrate_last_edit('bpp');
+				$self->update_storage_labels;
+			}			
+
 			if ( $attr eq 'tc_video_codec' ) {
 				if ( $value eq 'VCD' or $value eq 'XVCD') {
 					$self->burn_widgets
@@ -360,8 +368,9 @@ sub create_video_options {
 	$table->attach ($hbox, 0, 1, $row, $row+1, 'fill','expand',0,0);
 	$hsize_group->add ($hbox);
 
-	$hbox = Gtk::HBox->new;
+	$hbox = Gtk::HBox->new (0, 20);
 	$hbox->show;
+
 	$entry = Gtk::Entry->new;
 	$entry->show;
 	$entry->set_usize(80,undef);
@@ -369,6 +378,27 @@ sub create_video_options {
 	$table->attach_defaults ($hbox, 1, 2, $row, $row+1);
 
 	$self->transcode_widgets->{tc_video_af6_codec} = $entry;
+
+	# Keyframe interval
+	my $hbox2 = Gtk::HBox->new;
+	$hbox2->show;
+	$hbox->pack_start($hbox2, 0, 1, 0);
+
+	$label = Gtk::Label->new (__"Keyframe interval");
+	$label->show;
+	$hbox2->pack_start($label, 0, 1, 0);
+
+	$entry = Video::DVDRip::CheckedCombo->new(
+		is_number => 1,
+		may_empty => 0,
+		may_fractional => 0,
+	);
+	$entry->show;
+	$entry->set_popdown_strings (25, 50, 100, 150, 250);
+	$entry->set_usize(60,undef);
+	$hbox2->pack_start($entry, 0, 1, 0);
+
+	$self->transcode_widgets->{tc_keyframe_interval} = $entry->entry;
 
 	# Video Framerate
 	++$row;
@@ -683,10 +713,28 @@ sub create_video_bitrate_calc {
 	$label->show;
 	$hbox->pack_start ($label, 0, 1, 0);
 	
+	$self->transcode_widgets->{tc_video_bitrate} = $entry;
+
+	# bpp
+	$entry = Video::DVDRip::CheckedCombo->new (
+		is_number      => 1,
+		may_fractional => 1,
+		may_empty      => 0,
+	);
+	$entry->show;
+	my @bpp;
+	for ( my $b = 1.0; $b > 0 && push @bpp, sprintf("%.2f",$b); $b -= 0.05 ) {};
+	$entry->set_popdown_strings (@bpp);
+	$entry->set_usize(60,undef);
+	$hbox->pack_start($entry, 0, 1, 0);
+
+	$label = Gtk::Label->new ("bpp");
+	$label->show;
+	$hbox->pack_start ($label, 0, 1, 0);
+
+	$self->transcode_widgets->{tc_video_bpp} = $entry;
 
 	$table->attach_defaults ($hbox, 1, 2, $row, $row+1);
-
-	$self->transcode_widgets->{tc_video_bitrate} = $entry;
 
 	$hbox = Gtk::HBox->new;
 	$hbox->show;	
@@ -700,6 +748,7 @@ sub create_video_bitrate_calc {
 			return 1 if $self->in_transcode_init;
 			$title->set_tc_video_bitrate_manual($_[0]->active);
 			if ( not $title->tc_video_bitrate_manual ) {
+				$title->set_tc_video_bitrate_last_edit("bitrate");
 				$self->calc_video_bitrate;
 			}
 			$self->init_transcode_values;
@@ -997,7 +1046,7 @@ sub create_calculated_storage {
 	$frame->add ($frame_hbox);
 
 	# Table
-	$table = Gtk::Table->new ( 3, 4, 0 );
+	$table = Gtk::Table->new ( 3, 5, 0 );
 	$table->show;
 	$table->set_row_spacings ( $TABLE_SPACING );
 	$table->set_col_spacings ( $TABLE_SPACING + 5 );
@@ -1016,24 +1065,31 @@ sub create_calculated_storage {
 
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new (__"Non video");
+	$label = Gtk::Label->new (__"Audio");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 	$table->attach_defaults ($hbox, 1, 2, $row, $row+1);
 
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new (__"Total");
+	$label = Gtk::Label->new (__"Other");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 	$table->attach_defaults ($hbox, 2, 3, $row, $row+1);
 
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
+	$label = Gtk::Label->new (__"Total");
+	$label->show;
+	$hbox->pack_start($label, 0, 1, 0);
+	$table->attach_defaults ($hbox, 3, 4, $row, $row+1);
+
+	$hbox = Gtk::HBox->new;
+	$hbox->show;
 	$button = Gtk::Button->new (" Details... ");
 	$button->show;
 	$hbox->pack_start($button, 0, 1, 0);
-	$table->attach_defaults ($hbox, 3, 4, $row, $row+1);
+	$table->attach_defaults ($hbox, 4, 5, $row, $row+1);
 
 	$button->signal_connect ("clicked", sub { $self->show_calc_details } );
 
@@ -1041,7 +1097,7 @@ sub create_calculated_storage {
 	++$row;
 	my $sep = Gtk::HSeparator->new;
 	$sep->show;
-	$table->attach_defaults ($sep, 0, 3, $row, $row+1);
+	$table->attach_defaults ($sep, 0, 4, $row, $row+1);
 
 	# Values
 
@@ -1074,6 +1130,17 @@ sub create_calculated_storage {
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 	$table->attach_defaults ($hbox, 2, 3, $row, $row+1);
+	$self->transcode_widgets->{label_size_other} = $label;
+	$label = Gtk::Label->new ("MB");
+	$label->show;
+	$hbox->pack_start($label, 0, 1, 0);
+
+	$hbox = Gtk::HBox->new;
+	$hbox->show;
+	$label = Gtk::Label->new ("");
+	$label->show;
+	$hbox->pack_start($label, 0, 1, 0);
+	$table->attach_defaults ($hbox, 3, 4, $row, $row+1);
 	$self->transcode_widgets->{label_size_total} = $label;
 	$label = Gtk::Label->new ("MB");
 	$label->show;
@@ -1098,10 +1165,13 @@ sub init_transcode_values {
 	foreach my $attr (qw ( tc_options tc_nice
 			       tc_video_af6_codec tc_video_bitrate
 			       tc_video_framerate tc_target_size
+			       tc_keyframe_interval
 			       tc_start_frame tc_end_frame
 			       tc_execute_afterwards )) {
 		$widgets->{$attr}->set_text ($self->selected_title->$attr());
 	}
+
+	$widgets->{tc_video_bpp}->entry->set_text($self->selected_title->tc_video_bpp);
 
 	my $chapter_mode    = $title->tc_use_chapter_mode;
 	my $multipass       = $title->tc_multipass;
@@ -1165,13 +1235,19 @@ sub init_transcode_values {
 
 	my $manual_sensitive;
 	my $bitrate_sensitive;
-
-	$manual_sensitive  = $title->tc_video_codec !~ /^S?VCD$/;
-	$bitrate_sensitive = $title->tc_video_bitrate_manual;
-	$bitrate_sensitive = 0 if $title->tc_video_codec eq 'VCD';
+	my $target_size_sensitive;
+	
+	$manual_sensitive      = $title->tc_video_codec !~ /^S?VCD$/;
+	$bitrate_sensitive     = $title->tc_video_bitrate_manual;
+	$bitrate_sensitive     = 0 if $title->tc_video_codec eq 'VCD';
+	$target_size_sensitive = !$title->tc_video_bitrate_manual;
 	
 	$widgets->{tc_video_bitrate_manual}->set_sensitive($manual_sensitive);
 	$widgets->{tc_video_bitrate}->set_sensitive($bitrate_sensitive);
+	$widgets->{tc_video_bpp}->set_sensitive($bitrate_sensitive);
+	
+	$widgets->{$_}->set_sensitive($target_size_sensitive)
+		for qw(tc_disc_cnt_popup tc_target_size);
 	
 	$self->set_in_transcode_init(1);
 	if ( not $manual_sensitive ) {
@@ -1298,7 +1374,9 @@ sub calc_video_bitrate {
 	return 1 if not $title;
 	
 	$title->calc_video_bitrate;
+
 	$self->transcode_widgets->{tc_video_bitrate}->set_text($title->tc_video_bitrate);
+	$self->transcode_widgets->{tc_video_bpp}->entry->set_text($title->tc_video_bpp);
 	
 	1;
 }
@@ -1309,21 +1387,33 @@ sub update_storage_labels {
 	my $title = $self->selected_title;
 	return 1 if not $title;
 
-	my $bc = Video::DVDRip::BitrateCalc->new (
-		title => $title,
-	);
-	$bc->calculate_video_bitrate;
+	my $bc = Video::DVDRip::BitrateCalc->new ( title => $title );
+	$bc->calculate;
 
 	my $video_label = $self->transcode_widgets->{label_size_video};
 	my $audio_label = $self->transcode_widgets->{label_size_audio};
+	my $other_label = $self->transcode_widgets->{label_size_other};
 	my $total_label = $self->transcode_widgets->{label_size_total};
 
 	$video_label->set_text(sprintf("%.2f",$bc->video_size));
-	$audio_label->set_text(sprintf("%.2f",$bc->non_video_size));
-	$total_label->set_text(sprintf("%.2f",$bc->video_size + $bc->non_video_size));
+	$audio_label->set_text(sprintf("%.2f",$bc->audio_size ));
+	$other_label->set_text(sprintf("%.2f",$bc->other_size + $bc->cont_overhead_size ));
+	$total_label->set_text(sprintf("%.2f",$bc->file_size));
 
 	my $bc_window = eval { $self->comp('bitrate_calc') };
 	$bc_window->init_calc_list if $bc_window;
+
+	if ( $title->tc_video_bitrate_manual ) {
+		$self->set_in_transcode_init(1);
+		if ( $title->tc_video_bitrate_last_edit eq 'bpp' ) {
+			$title->set_tc_video_bitrate($bc->video_bitrate);
+			$self->transcode_widgets->{tc_video_bitrate}->set_text($title->tc_video_bitrate);
+		} else {
+			$title->set_tc_video_bpp($bc->video_bpp);
+			$self->transcode_widgets->{tc_video_bpp}->entry->set_text($title->tc_video_bpp);
+		}
+		$self->set_in_transcode_init(0);
+	}
 
 	1;
 }
@@ -1431,7 +1521,8 @@ sub transcode {
 		subtitle_test => $subtitle_test
 	) if not $subtitle_test
 	     and $title->has_vbr_audio
-	     and $title->tc_multipass;
+	     and $title->tc_multipass
+	     and not $title->multipass_log_is_reused;
 
 	my $nr;
 	my $job;
@@ -1448,8 +1539,7 @@ sub transcode {
 		$job->set_split ($split);
 
 		if ( not $subtitle_test and $title->tc_multipass ) {
-			if ( $title->tc_multipass_reuse_log and
-			     -f $title->multipass_log_dir."/divx4.log" ) {
+			if ( $title->multipass_log_is_reused ) {
 				$self->log (
 					__"Skipping 1st pass as requested by ".
                                          "reusing existent multipass logfile."
@@ -1590,9 +1680,7 @@ sub transcode_multipass_with_vbr_audio {
 		$chapters = [ undef ];
 	}
 
-	my $bc = Video::DVDRip::BitrateCalc->new (
-		title => $title,
-	);
+	my $bc = Video::DVDRip::BitrateCalc->new ( title => $title );
 
 	my $nr;
 	my $job;
@@ -1634,10 +1722,11 @@ sub transcode_multipass_with_vbr_audio {
 	
 	# 3. after 1st pass: calculate video bitrate (real audio size known)
 	$last_job->set_cb_finished (sub {
-		$title->set_tc_video_bitrate ( $bc->calculate_video_bitrate );
-		$self->log (__"Adjusted video bitrate to ".
-			    $title->tc_video_bitrate.
-			    __" after vbr audio transcoding");
+		$bc->calculate;
+		$title->set_tc_video_bitrate ( $bc->video_bitrate );
+		$self->log (__x("Adjusted video bitrate to {video_bitrate} ".
+			       "after vbr audio transcoding",
+			       video_bitrate => $bc->video_bitrate) );
 		$self->init_transcode_values;
 		1;
 	});
@@ -1987,7 +2076,7 @@ sub open_video_configure_window {
 	my $out_filename = $in_filename;
 
 	if ( not -f $in_filename ) {
-		system ("xvid4conf '$out_filename' &");
+		system ("xvid4conf '$out_filename' '$ENV{HOME}/.transcode/xvid4.cfg' &");
 	} else {
 		system ("xvid4conf '$out_filename' '$in_filename' &");
 	}

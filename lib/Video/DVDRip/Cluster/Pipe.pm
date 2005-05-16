@@ -1,4 +1,4 @@
-# $Id: Pipe.pm,v 1.12 2004/04/11 23:36:19 joern Exp $
+# $Id: Pipe.pm,v 1.13 2005/05/16 08:04:24 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -28,6 +28,9 @@ sub timeout			{ shift->{timeout}			}
 sub cb_finished			{ shift->{cb_finished}			}
 sub cb_line_read		{ shift->{cb_line_read}			}
 
+sub no_log			{ shift->{no_log}			}
+sub set_no_log			{ shift->{no_log}		= $_[1]	}
+
 sub lifo			{ shift->{lifo}				}
 sub lifo_idx			{ shift->{lifo_idx}			}
 
@@ -44,8 +47,8 @@ sub set_line_buffer		{ shift->{line_buffer}		= $_[1]	}
 sub new {
 	my $class = shift;
 	my %par = @_;
-	my  ($command, $cb_line_read, $cb_finished, $timeout) =
-	@par{'command','cb_line_read','cb_finished','timeout'};
+	my  ($command, $cb_line_read, $cb_finished, $timeout, $no_log) =
+	@par{'command','cb_line_read','cb_finished','timeout','no_log'};
 
 	$timeout ||= 30;
 
@@ -54,6 +57,7 @@ sub new {
 		command		=> $command,
 		cb_line_read	=> $cb_line_read,
 		cb_finished	=> $cb_finished,
+		no_log		=> $no_log,
 		event_waiter	=> undef,
 		output_lifo	=> [ ( undef ) x $LIFO_SIZE ],
 		lifo_idx	=> -1,
@@ -113,7 +117,7 @@ sub open {
 	$self->log (3,
 		__x("execute command: {command} (timeout={timeout})",
 		    command =>$command, timeout => $timeout)
-	);
+	) unless $self->no_log;
 
 	return $self;
 }
@@ -148,7 +152,8 @@ sub output_tail {
 sub timeout_expired {
 	my $self = shift;
 
-	$self->log (__"Command cancelled due to timeout");
+	$self->log (__"Command cancelled due to timeout")
+		unless $self->no_log;
 
 	kill 15, $self->pid;
 	$self->cancel;
@@ -192,7 +197,8 @@ sub input {
 	my ($pid) = ( $line_buffer =~ /DVDRIP_JOB_PID=(\d+)/ );
 	if ( defined $pid ) {
 		$self->set_pid ( $pid );
-		$self->log (__x("Job has PID {pid}", pid => $pid));
+		$self->log (__x("Job has PID {pid}", pid => $pid))
+			unless $self->no_log;
 		$line_buffer =~ s/DVDRIP_JOB_PID=(\d+)//;
 		$rc =~ s/DVDRIP_JOB_PID=(\d+)//;
 	}
@@ -221,7 +227,8 @@ sub close {
 	close $fh;
 	waitpid $self->pid, 0;
 
-	$self->log (5, "command finished: ".$self->command);
+	$self->log (5, "command finished: ".$self->command)
+		unless $self->no_log;
 	
 	1;
 }
@@ -232,7 +239,8 @@ sub cancel {
 	my $pid = $self->pid;
 
 	if ( $pid ) {
-		$self->log (__x("Aborting command. Sending signal 1 to PID {pid}...", pid => $pid));
+		$self->log (__x("Aborting command. Sending signal 1 to PID {pid}...", pid => $pid))
+			unless $self->no_log;
 		kill 1, $pid;
 	}
 

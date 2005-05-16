@@ -1,4 +1,4 @@
-# $Id: SubtitleTab.pm,v 1.16 2004/04/11 23:36:20 joern Exp $
+# $Id: SubtitleTab.pm,v 1.17 2005/05/06 11:35:00 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -649,7 +649,7 @@ sub create_subtitle_render {
 	$row = 0;
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new (__"Test image count");
+	$label = Gtk::Label->new (__"Preview image count");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 	$table->attach ($hbox, 5, 6, $row, $row+1, ['fill','expand'],'expand',0,0);
@@ -670,52 +670,33 @@ sub create_subtitle_render {
 	$widgets->{tc_test_image_cnt_label} = $label;
 	$widgets->{tc_test_image_cnt} = $entry;
 
-	# Test transcode
-	++$row;
-	$hbox = Gtk::HBox->new;
-	$hbox->show;
-	$label = Gtk::Label->new (__"Test transcode");
-	$label->show;
-	$hbox->pack_start($label, 0, 1, 0);
-	$table->attach ($hbox, 5, 6, $row, $row+1, ['fill','expand'],'expand',0,0);
-
-	$hbox = Gtk::HBox->new;
-	$hbox->show;
-	$button = Gtk::Button->new (" Transcode ");
-	$button->set_usize (80, undef);
-	$button->show;
-	$hbox->pack_start ($button, 0, 1, 0);
-	$table->attach ($hbox, 6, 7, $row, $row+1, ['fill','expand'],'expand',0,0);
-
-	$widgets->{test_transcode_button_label} = $label;
-	$widgets->{test_transcode_button} = $button;
-
-	$button->signal_connect ("clicked", sub {
-		$self->subtitle_test_transcode
-	} );
-
 	# View test transcoding
 	++$row;
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$label = Gtk::Label->new (__"Test view");
+	$label = Gtk::Label->new (__"Preview window");
 	$label->show;
 	$hbox->pack_start($label, 0, 1, 0);
 	$table->attach ($hbox, 5, 6, $row, $row+1, ['fill','expand'],'expand',0,0);
 
 	$hbox = Gtk::HBox->new;
 	$hbox->show;
-	$button = Gtk::Button->new (__"View");
+	$button = Gtk::Button->new (__"Open");
 	$button->set_usize (80, undef);
 	$button->show;
 	$hbox->pack_start ($button, 0, 1, 0);
 	$table->attach ($hbox, 6, 7, $row, $row+1, ['fill','expand'],'expand',0,0);
 
+	my $tooltips = new Gtk::Tooltips();
+        $tooltips->set_tip( $button, __"Close the window with [ESC]", "" );
+	$tooltips->set_delay( 0 );
+ 
 	$widgets->{test_view_button_label} = $label;
 	$widgets->{test_view_button} = $button;
 
 	$button->signal_connect ("clicked", sub {
-		$self->subtitle_test_view
+		$self->subtitle_preview_window;
+#		$self->subtitle_test_view
 	} );
 
 	# connect signals ============================================
@@ -1508,6 +1489,36 @@ sub create_non_splitted_vobsub {
 
 	$exec->execute_jobs;
 
+	1;
+}
+
+sub subtitle_preview_window {
+	my $self = shift;
+	
+	my $title = $self->selected_title;
+
+	my $orig_preview_start_frame = $title->tc_preview_start_frame;
+	my $orig_preview_end_frame   = $title->tc_preview_end_frame;
+
+	my ($from, $to) = $title->get_subtitle_test_frame_range;
+
+	$title->set_tc_preview_start_frame ($from);
+	$title->set_tc_preview_end_frame ($to);
+
+	my $restore_cb = sub {
+		$title->set_tc_preview_start_frame($orig_preview_start_frame);
+		$title->set_tc_preview_end_frame ($orig_preview_end_frame);
+	};
+
+	require Video::DVDRip::GUI::Preview;
+	
+	my $preview = Video::DVDRip::GUI::Preview->new(
+		closed_cb => $restore_cb,
+		eof_cb    => $restore_cb,
+	);
+
+	$preview->open;
+	
 	1;
 }
 
