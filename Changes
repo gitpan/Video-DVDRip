@@ -1,6 +1,15 @@
-$Id: Changes,v 1.156 2005/05/16 11:56:54 joern Exp $
+$Id: Changes,v 1.157 2005/05/16 12:48:20 joern Exp $
 
 Revision history and release notes for dvd::rip.
+
+0.52.5 [stable branch] Mon May 16 2005, joern
+	Features:
+	- Updated italian translation from Fabio Russo, which was
+	  *one* minute too late for the 0.52.4 release ;)
+	
+	Bugfixes:
+	- Cluster mode: merging PSU chunks for a OGG/Vorbis title
+	  failed due to a dump typo.
 
 0.52.4 [stable branch] Mon May 16 2005, joern
 	Features:
