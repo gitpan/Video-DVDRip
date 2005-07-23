@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# $Id: dvdrip,v 1.20 2005/03/13 10:55:28 joern Exp $
+# $Id: dvdrip,v 1.23 2005/07/23 10:44:40 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -13,6 +13,7 @@ package Video::DVDRip;
 
 use strict;
 use lib 'lib';
+
 use Getopt::Std;
 
 use Locale::TextDomain ("video.dvdrip");
@@ -161,7 +162,7 @@ on the dvd::rip homepage:
 
 =head1 COPYRIGHT
 
-Copyright (C) 2001-2003 by Joern Reder, All Rights Reserved.
+Copyright (C) 2001-2005 by Joern Reder, All Rights Reserved.
 
 This library is free software; you can redistribute it
 and/or modify it under the same terms as Perl itself.

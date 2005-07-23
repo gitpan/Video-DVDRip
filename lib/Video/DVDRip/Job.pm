@@ -1,4 +1,4 @@
-# $Id: Job.pm,v 1.14 2004/04/13 21:53:19 joern Exp $
+# $Id: Job.pm,v 1.15 2005/07/23 08:14:15 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -162,13 +162,18 @@ sub start_job {
 	my $pipe_class         = $self->pipe_class;
 	my $cb_update_progress = $self->cb_update_progress;
 
+	my $last_progress_update;
 	my $pipe = $self->pipe_class->new (
 		command      => $self->get_job_command,
 		timeout      => $self->timeout,
 		need_output  => $self->need_output,
-		cb_line_read => sub { $self->parse_output ($_[0]);
-				      &$cb_update_progress( job => $self )
-					if $cb_update_progress 	  },
+		cb_line_read => sub {
+			$self->parse_output ($_[0]);
+			return 1 if $last_progress_update == time();
+			$last_progress_update = time();
+			&$cb_update_progress( job => $self )
+				if $cb_update_progress
+		},
 		cb_finished  => sub { $self->finish_job           },
 	);
 
@@ -251,7 +256,7 @@ sub cancel {
 
 sub abort_job {
 	my $self = shift;
-	
+
 	$self->pipe->cancel if $self->pipe;
 
 	$self->set_job_aborted (1);

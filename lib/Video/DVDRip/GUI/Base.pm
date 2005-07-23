@@ -1,4 +1,4 @@
-# $Id: Base.pm,v 1.26 2005/06/19 13:41:07 joern Exp $
+# $Id: Base.pm,v 1.27 2005/07/23 08:14:15 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -12,6 +12,7 @@ package Video::DVDRip::GUI::Base;
 use Locale::TextDomain qw (video.dvdrip);
 
 use base Video::DVDRip::Base;
+use Video::DVDRip::GUI::ExecuteJobs;
 
 use strict;
 use Carp;
@@ -20,12 +21,60 @@ use Cwd;
 
 my %COMPONENTS;
 
-sub comp {
+sub get_form_factory		{ shift->{form_factory}			}
+sub set_form_factory		{ shift->{form_factory}		= $_[1]	}
+
+sub get_context			{ shift->{form_factory}->get_context	}
+sub get_context_object		{ $_[0]->get_context->get_object($_[1]) }
+
+sub new {
+	my $class = shift;
+	my %par = @_;
+	my ($form_factory) = @par{'form_factory'};
+
+	my $self = bless {
+		form_factory	=> $form_factory,
+	}, $class;
+	
+	return $self;
+}
+
+sub create_text_tag {
 	my $self = shift;
-	my ($name) = @_;
-	confess "unknown component '$name'"
-		if not defined $COMPONENTS{$name};
-	return $COMPONENTS{$name};
+	my $name = shift;
+	my %par = @_;
+	
+	my $cb = delete $par{cb};
+	
+	my $tag = Gtk2::TextTag->new ($name);
+	$tag->set(%par);
+	
+	$tag->signal_connect ("event", $cb) if $cb;
+	
+	return $tag;
+}
+
+sub project {
+	my $self = shift;
+	return $self->get_context->get_object("project");
+}
+
+sub selected_title {
+	my $self = shift;
+	return $self->get_context->get_object("title");
+}
+
+sub progress {
+	my $self = shift;
+	return $self->get_context->get_object("progress");
+}
+
+sub progress_is_active {
+	return $_[0]->progress->is_active;
+}
+
+sub comp {
+	$_[0]->get_context_object($_[1]);
 }
 
 sub set_comp {
@@ -37,103 +86,48 @@ sub set_comp {
 sub show_file_dialog {
 	my $self = shift;
 	my %par = @_;
-	my  ($dir, $filename, $cb, $title, $confirm) =
-	@par{'dir','filename','cb','title','confirm'};
+	my  ($type, $dir, $filename, $cb, $title, $confirm) =
+	@par{'type','dir','filename','cb','title','confirm'};
+	
+	$type ||= "open";
 	
 	my $cwd = cwd;
 	chdir ( $dir );
 	
 	# Create a new file selection widget
-	my $dialog = new Gtk::FileSelection( $title );
-
-	# Connect the ok_button to file_ok_sel function
-	$dialog->ok_button->signal_connect(
-		"clicked",
-		sub { $self->cb_commit_file_dialog (@_, $confirm) },
-		$cb, $dialog
+	my $dialog = Gtk2::FileChooserDialog->new (
+	   $title,
+	   $self->get_context->get_object("main")
+	   	->get_form_factory
+		->get_form_factory_gtk_window,
+	   "save",
+	   'gtk-cancel' => 'cancel',
+           'gtk-ok'     => 'ok'
 	);
 
-	# Connect the cancel_button to destroy the widget
-	$dialog->cancel_button->signal_connect(
-		"clicked", sub { $dialog->destroy }
-	);
+	$dialog->set_current_name( $filename );
 
-	$dialog->set_filename( $filename );
-	$dialog->set_position ( "mouse" );
-	$dialog->show();
-	
-	chdir ($cwd);
+	my $response = $dialog->run;
 
-	1;
-}
+	my $filename = $dialog->get_filename;
 
-sub cb_commit_file_dialog {
-	my $self = shift;
-	my ($button, $cb, $dialog, $confirm) = @_;
-	
-	my $filename = $dialog->get_filename();
-	
-	if ( -f $filename and $confirm ) {
+	$dialog->destroy;
+	chdir ( $cwd );
+
+	if ( $response eq 'ok' ) {
+	    if ( -f $filename and $confirm ) {
 		$self->confirm_window (
-			message => __x("Overwrite existing file '{filename}'?", filename => $filename),
-			yes_callback => sub { &$cb($filename); $dialog->destroy },
-			position => 'mouse'
+			message => __x(
+			    "Overwrite existing file '{filename}'?",
+			    filename => $filename
+			),
+			yes_callback => sub { &$cb($filename) },
 		);
-	} else {
+	    } else {
 		&$cb($filename);
-		$dialog->destroy;
+	    }
 	}
-
-	1;
-}
-
-sub confirm_window {
-	my $self = shift;
-	my %par = @_;
-	my  ($message, $yes_callback, $no_callback, $position, $yes_label, $no_label) =
-	@par{'message','yes_callback','no_callback','position','yes_label','no_label'};
-	my  ($omit_cancel) =
-	@par{'omit_cancel'};
-
-	$yes_label ||= "Ok";
-	$position ||= "center";
-
-	my $confirm = Gtk::Dialog->new;
-	my $label = Gtk::Label->new ($message);
-	$label->show;
-	my $hbox = Gtk::HBox->new;
-	$hbox->show;
-	$hbox->set_border_width(20);
-	$hbox->pack_start ($label, 0, 1, 0);
-	$confirm->vbox->pack_start ($hbox, 1, 1, 0);
-	$confirm->border_width(10);
-	$confirm->set_title (__"Confirmation");
-
-	if ( not $omit_cancel ) {
-		my $cancel = Gtk::Button->new (__"Cancel");
-		$confirm->action_area->pack_start ( $cancel, 1, 1, 0 );
-		$cancel->signal_connect( "clicked", sub { $confirm->destroy } );
-		$cancel->show;
-	}
-
-	if ( $no_label ) {
-		my $no = Gtk::Button->new ($no_label);
-		$confirm->action_area->pack_start ( $no, 1, 1, 0 );
-		$no->signal_connect( "clicked", sub { $confirm->destroy; &$no_callback } );
-		$no->show;
-	}
-
-	my $ok = Gtk::Button->new ($yes_label);
-	$confirm->action_area->pack_start ( $ok, 1, 1, 0 );
-	$ok->can_default(1);
-	$ok->grab_default;
-	$ok->signal_connect( "clicked", sub { $confirm->destroy; &$yes_callback } );
-	$ok->show;
-
-	$confirm->set_position ($position);
-	$confirm->set_modal (1);
-	$confirm->show;
-
+	
 	1;
 }
 
@@ -141,270 +135,154 @@ sub message_window {
 	my $self = shift;
 	my %par = @_;
 	my ($message) = @par{'message'};
-	
-	my $dialog = Gtk::Dialog->new;
 
-	my $label = Gtk::Label->new ("\n".$message."\n");
-	$label->set_justify("left");
-	$label->show;
-	my $hbox = Gtk::HBox->new;
-	$hbox->show;
-	$hbox->pack_start ($label, 0, 1, 0);
-	$dialog->vbox->pack_start ($hbox, 1, 1, 0);
-	$dialog->border_width(10);
-	$dialog->set_title (__"dvd::rip Message");
-	$dialog->set_default_size (250, 150);
+	my $dialog = Gtk2::MessageDialog->new_with_markup (
+		$self->get_form_factory
+		     ->get_form_factory_gtk_window,
+		["destroy-with-parent"],
+		"info",
+		"none",
+		$message
+	);
 
-	my $ok = Gtk::Button->new ("Ok");
-	$dialog->action_area->pack_start ( $ok, 1, 1, 0 );
-	$ok->signal_connect( "clicked", sub { $dialog->destroy } );
-	$ok->show;
+	$dialog->set_position( "center-on-parent" );
+	$dialog->add_buttons ("gtk-ok", "ok");
 
-	$dialog->set_position ("center");
+	$dialog->signal_connect("response", sub {
+		my ($widget, $answer) = @_;
+		$widget->destroy;
+		1;
+	});
+
 	$dialog->show;
 
 	1;	
 	
 }
 
-sub gdk_color {
-	my $self = shift;
-	my ($html_color) = @_;
-	
-	$html_color =~ s/^#//;
-	
-	my ($r, $g, $b) = ( $html_color =~ /(..)(..)(..)/ );
-
-	my $cmap = Gtk::Gdk::Colormap->get_system();
-	my $color = {
-		red   => hex($r) * 256,
-		green => hex($g) * 256,
-		blue  => hex($b) * 256,
-	};
-	
-	if ( not $cmap->color_alloc ($color) ) {
-		warn ("Couldn't allocate color $html_color");
-	}
-	
-	return $color;
-}
-
-sub create_text_entry {
+sub error_window {
 	my $self = shift;
 	my %par = @_;
-	my ($label, $value) = @par{'label','value'};
+	my ($message) = @par{'message'};
+
+	my $dialog = Gtk2::MessageDialog->new_with_markup (
+		$self->get_form_factory
+		     ->get_form_factory_gtk_window,
+		["modal","destroy-with-parent"],
+		"error",
+		"none",
+		$message
+	);
+
+	$dialog->set_position( "center-on-parent" );
+	$dialog->add_buttons ("gtk-ok", "ok");
+
+	$dialog->signal_connect("response", sub {
+		my ($widget, $answer) = @_;
+		$widget->destroy;
+		1;
+	});
+
+	$dialog->show;
+
+	1;	
 	
-	my ($hbox, $e, $l);
-	
-	$l = Gtk::Label->new ($label);
-	$l->show;
-	$e = Gtk::Entry->new;
-	$e->set_text($value);
-	$e->show;
-	$hbox = Gtk::HBox->new;
-	$hbox->show;
-	$hbox->pack_start ($l, 0, 1, 0);
-	$hbox->pack_start ($e, 0, 1, 0);
-	
-	return $hbox;
-}
-
-sub create_tooltip {
-	my $self = shift;
-	my %par = @_;
-	my  ($text, $widget) =
-	@par{'text','widget'};
-
-	return if not $text;
-
-	my $tooltip = Gtk::Tooltips->new;
-	$tooltip->set_tip ($widget, $text, "");
-	$tooltip->enable;
-	$tooltip->set_delay(0);
-	
-	1;
-}
-
-sub create_dialog {
-	my $self = shift;
-	my @fields = @_;
-
-	my $table = Gtk::Table->new ( scalar(@fields), 2, 0 );
-	$table->show;
-
-	my ($chain_master_widget, $chain_widget);
-
-	my ($i, @widgets, $last_widget_hbox, $label, $hbox);
-	foreach my $field ( @fields ) {
-		if ( $field->{chained} ) {
-			--$i;
-		} else {
-			$label = Gtk::Label->new ($field->{label});
-			$label->show;
-			$hbox = Gtk::HBox->new;
-			$hbox->show;
-			$hbox->pack_start($label, 0, 1, 0);
-			$table->attach_defaults ($hbox, 0, 1, $i, $i+1);
-		}
-		
-		if ( $field->{readonly} and $field->{type} eq 'switch' ) {
-			$label = Gtk::Label->new ( $field->{value} ? 'Yes' : 'No' );
-			$label->show;
-			$table->attach_defaults ($label, 1, 2, $i, $i+1);
-
-		} elsif ( $field->{readonly} ) {
-			$label = Gtk::Label->new ( $field->{value} );
-			$label->show;
-			$table->attach_defaults ($label, 1, 2, $i, $i+1);
-		
-		} elsif ( $field->{type} eq 'switch' ) {
-			$hbox = Gtk::HBox->new;
-			$hbox->show;
-			my $radio_yes = Gtk::RadioButton->new (__"Yes");
-			$radio_yes->show;
-			$hbox->pack_start($radio_yes, 0, 1, 0);
-			my $radio_no = Gtk::RadioButton->new (__"No", $radio_yes);
-			$radio_no->show;
-			$hbox->pack_start($radio_no, 0, 1, 0);
-
-			$table->attach_defaults ($hbox, 1, 2, $i, $i+1);
-			$last_widget_hbox = $hbox;
-
-			if ( $field->{onchange} ) {
-				my $cb = $field->{onchange};
-				$radio_yes->signal_connect (
-					"clicked", sub { &$cb(1) }
-				);
-				$radio_no->signal_connect (
-					"clicked", sub { &$cb(0) }
-				);
-			}
-
-			if ( $fields[$i+1] && $fields[$i+1]->{chained} ) {
-				$chain_master_widget = $radio_yes;
-				$radio_yes->signal_connect (
-					"clicked", sub { $chain_widget->set_sensitive(1) if $chain_widget }
-				);
-				$radio_no->signal_connect (
-					"clicked", sub { $chain_widget->set_sensitive(0) if $chain_widget }
-				);
-			}
-
-			if ( $field->{value} ) {
-				$radio_yes->set_active(1);
-			} else {
-				$radio_no->set_active(1);
-			}
-
-			$self->create_tooltip( text => $field->{tooltip}, widget => $radio_no);
-			$self->create_tooltip( text => $field->{tooltip}, widget => $radio_yes);
-			
-		} elsif ( $field->{type} =~ /string|number/ and $field->{presets} ) {
-			my $entry = Gtk::Combo->new;
-			$entry->show;
-			$entry->set_popdown_strings (@{$field->{presets}});
-			$entry->set_usize(($field->{width}||300),undef);
-			$entry->entry->set_text ($field->{value});
-			if ( $field->{onchange} ) {
-				$entry->entry->signal_connect (
-					"changed", $field->{onchange},
-				);
-			}
-			push @widgets, $entry;
-			$table->attach_defaults ($entry, 1, 2, $i, $i+1);
-
-			$self->create_tooltip( text => $field->{tooltip}, widget => $entry->entry );
-
-		} else {
-			my $entry;
-			$entry = Gtk::Entry->new;
-			$entry->set_visibility (0) if $field->{type} eq 'password'; 
-			$entry->set_text ($field->{value});
-			$entry->set_usize(($field->{width}||300),undef) unless $field->{chained};
-			$entry->show;
-			if ( $field->{onchange} ) {
-				$entry->signal_connect (
-					"changed", $field->{onchange}
-				);
-			}
-			
-			if ( $field->{chained} && $last_widget_hbox ) {
-				$chain_widget = Gtk::HBox->new;
-				$chain_widget->show;
-				$label = Gtk::Label->new ($field->{label});
-				$label->show;
-				$chain_widget->pack_start($label, 0, 1, 0);
-				$chain_widget->pack_start($entry, 0, 1, 0);
-				$last_widget_hbox->pack_start($chain_widget, 0, 1, 0);
-				if ( $chain_master_widget->get_active ) {
-					$chain_widget->set_sensitive(1);
-				} else {
-					$chain_widget->set_sensitive(0);
-				}
-			} else {
-				$table->attach_defaults ($entry, 1, 2, $i, $i+1);
-			}
-
-			$self->create_tooltip( text => $field->{tooltip}, widget => $entry );
-			push @widgets, $entry;
-		}
-			
-		++$i;
-	}
-
-	$table->set_row_spacings ( 10 );
-	$table->set_col_spacings ( 10 );
-
-	return $table if not wantarray;
-	return ($table, \@widgets);
 }
 
 sub long_message_window {
 	my $self = shift;
 	my %par = @_;
-	my ($message) = @par{'message'};
+	my ($message, $title, $fixed) = @par{'message','title','fixed'};
 
-	my $win = Gtk::Window->new;
-	$win->set_title (__"dvd::rip Message");
-	$win->set_default_size (620, 400);
-	$win->set_position ("center");
+	my $frame_title = $title;
 
-	my $vbox = Gtk::VBox->new;
-	$vbox->show;
-	$vbox->set_border_width(10);
-	$win->add($vbox);
+	$title   = "dvd::rip - ".$title if $title;
+	$title ||= __"dvd::rip - Message";
 
-	my $text_table = new Gtk::Table( 2, 2, 0 );
-	$text_table->show();
-	$text_table->set_row_spacing( 0, 2 );
-	$text_table->set_col_spacing( 0, 2 );
-	$vbox->pack_start($text_table, 1, 1, 0);
+	my $ff;
+	$ff = Gtk2::Ex::FormFactory->new (
+	    parent_ff => $self->get_form_factory,
+	    sync    => 1,
+	    content => [
+	        Gtk2::Ex::FormFactory::Window->new (
+		    title       => $title,
+		    closed_hook => sub { $ff->close },
+		    customize_hook => sub {
+		      my ($gtk_window) = @_;
+		      $_[0]->parent->set(
+		        default_width  => 600,
+		        default_height => 440,
+		      );
+		      1;
+		    },
+		    content     => [
+		        Gtk2::Ex::FormFactory::VBox->new (
+			    expand => 1,
+			    content => [
+		        	Gtk2::Ex::FormFactory::VBox->new (
+				    title   => $frame_title,
+				    expand  => 1,
+				    content => [
+			        	Gtk2::Ex::FormFactory::TextView->new (
+					    scrollbars => [ "never", "always" ],
+					    expand     => 1,
+					    properties => {
+						editable       => 0,
+						cursor_visible => 0,
+						wrap_mode      => "word",
+					    },
+					    customize_hook => sub {
+			        		my ($gtk_text_view) = @_;
+						if ( $fixed ) {
+						    my $font = Gtk2::Pango::FontDescription->from_string("mono");
+						    $gtk_text_view->modify_font ($font);
+						}
+						$gtk_text_view->get_buffer->set_text($message);
+						1;
+					    },
+					),
+				    ],
+				),
+				Gtk2::Ex::FormFactory::DialogButtons->new,
+			    ],
+			),
+		    ],
+		),
+	    ],
+	);
 
-	my $text = new Gtk::Text( undef, undef );
-	$text->show;
-	$text->set_usize (undef, 100);
-	$text->set_editable( 0 );
-	$text->set_word_wrap ( 0 );
-	$text->insert (undef, undef, undef, $message);
-	$text_table->attach( $text, 0, 1, 0, 1,
-        	       [ 'expand', 'shrink', 'fill' ],
-        	       [ 'expand', 'shrink', 'fill' ],
-        	       0, 0 );
+	$ff->build;
+	$ff->update;
+	$ff->show;
+	
+	1;
+}
 
-	my $vscrollbar = new Gtk::VScrollbar( $text->vadj );
-	$vscrollbar->show();
-	$text_table->attach( $vscrollbar, 1, 2, 0, 1, 'fill',
-        	       [ 'expand', 'shrink', 'fill' ], 0, 0 );
+sub confirm_window {
+	my $self = shift;
+	my %par = @_;
+	my  ($message, $yes_callback, $no_callback, $position, $with_cancel) =
+	@par{'message','yes_callback','no_callback','position','with_cancel'};
 
-	my $ok = Gtk::Button->new (" Ok ");
-	$ok->show;
-	$ok->signal_connect( "clicked", sub { $win->destroy } );
+	$self->get_context->get_object("main")
+	     ->get_form_factory->open_confirm_window (
+		message      => $message,
+		yes_callback => $yes_callback,
+		no_callback  => $no_callback,
+		position     => $position,
+		with_cancel  => $with_cancel,
+	);
 
-	$vbox->pack_start ( $ok, 0, 1, 0 );
+	1;
+}
 
-	$win->show;
+sub new_job_executor {
+	my $self = shift;
 
-	return $text;
+	return Video::DVDRip::GUI::ExecuteJobs->new (
+		form_factory => $self->get_form_factory,
+		@_,
+	);
 }
 
 1;

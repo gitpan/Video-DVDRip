@@ -1,4 +1,4 @@
-# $Id: Probe.pm,v 1.23 2004/04/11 23:36:19 joern Exp $
+# $Id: Probe.pm,v 1.24 2005/07/23 08:14:15 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -104,6 +104,7 @@ sub analyze {
 	$i = 0;
 	foreach my $audio ( @audio_tracks ) {
 		push @audio_track_objects, Video::DVDRip::Audio->new (
+			title		=> $title,
 			type		=> $audio->{type},
 			lang		=> $audio->{lang},
 			channels	=> $audio->{channels},
@@ -138,8 +139,6 @@ sub analyze {
 	if ( defined $sid ) {
 		# we have subtitles
 		$title->set_selected_subtitle_id (0);
-	} else {
-		$title->set_selected_subtitle_id (-1);
 	}
 
 	# Chapter frame counter
@@ -192,6 +191,7 @@ sub analyze_audio {
 			++$i;
 			$lines[$i] =~ /bitrate\s*=(\d+)/;
 			$title->audio_tracks->[$nr]->set_bitrate($1);
+			$title->audio_tracks->[$nr]->set_tc_ac3_bitrate($1);
 		}
 	}
 	

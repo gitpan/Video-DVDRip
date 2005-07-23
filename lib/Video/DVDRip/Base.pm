@@ -1,4 +1,4 @@
-# $Id: Base.pm,v 1.34 2004/12/11 15:20:14 joern Exp $
+# $Id: Base.pm,v 1.36 2005/07/23 08:38:20 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -23,6 +23,7 @@ use Data::Dumper;
 
 # load preferences ---------------------------------------------------
 my $CONFIG_OBJECT = Video::DVDRip::Config->new;
+$Video::DVDRip::PREFERENCE_FILE ||= "$ENV{HOME}/.dvdriprc";
 $CONFIG_OBJECT->set_filename ($Video::DVDRip::PREFERENCE_FILE);
 $CONFIG_OBJECT->save if not -f $Video::DVDRip::PREFERENCE_FILE;
 $CONFIG_OBJECT->load;
@@ -34,6 +35,11 @@ my $DEPEND_OBJECT = Video::DVDRip::Depend->new;
 # pre load transcode's filter list -----------------------------------
 Video::DVDRip::FilterList->get_filter_list
 	if $DEPEND_OBJECT->version ("transcode") >= 603;
+
+sub new {
+	my $class = shift;
+	return bless {}, $class;
+}
 
 sub config {
 	my $thingy = shift;
@@ -453,7 +459,7 @@ sub search_perl_inc {
 
 	foreach my $INC ( @INC ) {
 		$file = "$INC/$rel_path";
-		last if -f $file;
+		last if -e $file;
 		$file = "";
 	}
 

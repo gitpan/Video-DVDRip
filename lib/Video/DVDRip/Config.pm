@@ -1,4 +1,4 @@
-# $Id: Config.pm,v 1.49 2005/06/19 13:38:24 joern Exp $
+# $Id: Config.pm,v 1.50 2005/07/23 08:14:15 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -35,44 +35,76 @@ sub set_last_saved_data		{ shift->{last_saved_data}	= $_[1] }
 my @BPP = '<none>';
 for ( my $b = 1.0; $b > 0 && push @BPP, sprintf("%.2f",$b); $b -= 0.05 ) {};
 
+my @LANG = (
+    "en - English", "de - Deutsch", "fr - Francais", "es - Espanol",
+    "it - Italiano", "nl - Nederlands",
+    "aa - Afar", "ab - Abkhazian", "af - Afrikaans", "am - Amharic",
+    "ar - Arabic", "as - Assamese", "ay - Aymara", "az - Azerbaijani",
+    "ba - Bashkir", "be - Byelorussian", "bg - Bulgarian", "bh - Bihari",
+    "bi - Bislama", "bn - Bengali / Bangla", "bo - Tibetan",
+    "br - Breton", "ca - Catalan", "co - Corsican", "cs - Czech", "cy - Welsh",
+    "da - Dansk", "dz - Bhutani", "el - Greek",
+    "eo - Esperanto", "et - Estonian",
+    "eu - Basque", "fa - Persian", "fi - Suomi", "fj - Fiji", "fo - Faroese",
+    "fy - Frisian", "ga - Gaelic", "gd - Scots Gaelic",
+    "gl - Galician", "gn - Guarani", "gu - Gujarati",
+    "ha - Hausa", "he - Hebrew", "hi - Hindi", "hr - Hrvatski", "hu - Magyar",
+    "hy - Armenian", "ia - Interlingua", "id - Indonesian",
+    "ie - Interlingue", "ik - Inupiak", "in - Indonesian", "is - Islenska",
+    "iu - Inuktitut", "iw - Hebrew", "ja - Japanese", 
+    "ji - Yiddish", "jw - Javanese", "ka - Georgian", "kk - Kazakh",
+    "kl - Greenlandic", "km - Cambodian", "kn - Kannada", "ko - Korean",
+    "ks - Kashmiri", "ku - Kurdish", "ky - Kirghiz", "la - Latin",
+    "ln - Lingala", "lo - Laothian", "lt - Lithuanian", "lv - Latvian, Lettish",
+    "mg - Malagasy", "mi - Maori", "mk - Macedonian", "ml - Malayalam",
+    "mn - Mongolian", "mo - Moldavian", "mr - Marathi", "ms - Malay",
+    "mt - Maltese", "my - Burmese", "na - Nauru", "ne - Nepali", 
+    "no - Norsk", "oc - Occitan", "om - Oromo", "or - Oriya", "pa - Punjabi",
+    "pl - Polish", "ps - Pashto, Pushto", "pt - Portugues", "qu - Quechua",
+    "rm - Rhaeto-Romance", "rn - Kirundi", "ro - Romanian", "ru - Russian",
+    "rw - Kinyarwanda", "sa - Sanskrit", "sd - Sindhi", "sg - Sangho",
+    "sh - Serbo-Croatian", "si - Sinhalese", "sk - Slovak", "sl - Slovenian",
+    "sm - Samoan", "sn - Shona", "so - Somali", "sq - Albanian", "sr - Serbian",
+    "ss - Siswati", "st - Sesotho", "su - Sundanese", "sv - Svenska",
+    "sw - Swahili", "ta - Tamil", "te - Telugu", "tg - Tajik", "th - Thai",
+    "ti - Tigrinya", "tk - Turkmen", "tl - Tagalog", "tn - Setswana",
+    "to - Tonga", "tr - Turkish", "ts - Tsonga", "tt - Tatar", "tw - Twi",
+    "ug - Uighur", "uk - Ukrainian", "ur - Urdu", "uz - Uzbek", "vi - Vietnamese",
+    "vo - Volapuk", "wo - Wolof", "xh - Xhosa", "yi - Yiddish", "yo - Yoruba",
+    "za - Zhuang", "zh - Chinese", "zu - Zulu",
+);
+
+my   @LANG_POPUP = ( [ "", "<none>" ] );
+push @LANG_POPUP, [ $_, $_ ] for @LANG;
+
 my %CONFIG_PARAMETER = (
 	program_name => {
 		type  => 'string',
 		value => "dvd::rip",
 	},
-	main_window_width => {
-		label => __"Startup window width",
-		type  => 'number',
-		value => 660,
-	},
-	main_window_height => {
-		label => __"Startup window height",
-		type  => 'number',
-		value => 650,
-	},
-	thumbnail_factor => {
-		type  => 'number',
-		value => 4.2,
-	},
 	dvd_device => {
 		label => __"DVD device",
 		type => 'file',
 		value => "/dev/dvd",
+		rules => "file-writable",
 	},
 	dvd_mount_point => {
 		label => __"DVD mount point",
 		type => 'dir',
 		value => "/cdrom",
+		rules => "file-readable",
 	},
 	writer_device => {
 		label => __"Writer device file",
 		type => 'file',
 		value => "/dev/cdrom",
+		rules => "file-writable",
 	},
 	eject_command => {
 		label => __"Eject Command",
-		type => 'string',
+		type  => 'string',
 		value => "eject",
+		rules => "executable-command",
 	},
 	play_dvd_command => {
 		label => __"DVD player command",
@@ -82,6 +114,7 @@ my %CONFIG_PARAMETER = (
 			'mplayer <dvd://%t -aid %(%a+%b) -chapter %c -dvdangle %m -dvd-device %d>',
 			'xine -a %a -p <dvd://%d/%t.%c>',
 		],
+		rules => "executable-command",
 	},
 	play_file_command => {
 		label => __"File player command",
@@ -91,6 +124,7 @@ my %CONFIG_PARAMETER = (
 			'xine -p <%f>',
 			'mplayer <%f>',
 		],
+		rules => "executable-command",
 	},
 	play_stdin_command => {
 		label => __"STDIN player command",
@@ -100,6 +134,7 @@ my %CONFIG_PARAMETER = (
 			'mplayer -aid %(%a+128) -',
 			'xine stdin://mpeg2 -g -pq -a %a',
 		],
+		rules => "executable-command",
 	},
 	rar_command => {
 		label => __"rar command (for vobsub compression)",
@@ -108,16 +143,19 @@ my %CONFIG_PARAMETER = (
 		presets => [
 			'rar',
 		],
+		rules => "executable-command",
 	},
 	base_project_dir => {
 		label => __"Default data base directory",
 		type => 'dir',
 		value => "/CHANGE_ME",
+		rules => "dir-writable",
 	},
 	dvdrip_files_dir => {
 		label => __"Default directory for .rip project files",
 		type => 'dir',
 		value => "/CHANGE_ME",
+		rules => "dir-writable",
 	},
 	ogg_file_ext => {
 		label => __"OGG file extension",
@@ -142,11 +180,7 @@ my %CONFIG_PARAMETER = (
 		label => __"TCP port number of daemon",
 		type  => 'number',
 		value => 28646,
-	},
-	show_tooltips => {
-		label => __"Show tooltips",
-		type  => 'switch',
-		value => 1,
+		rules => "positive-integer",
 	},
 	default_video_codec => {
 		label => __"Default video codec",
@@ -161,9 +195,9 @@ my %CONFIG_PARAMETER = (
 	},
 	default_container => {
 		label => __"Default container format",
-		type  => 'string',
+		type  => 'popup',
 		value => 'avi',
-		presets => [ "avi", "ogg", "mpeg" ],
+		presets => [ ["avi", "avi" ], [ "ogg", "ogg" ], [ "mpeg", "mpeg" ] ],
 	},
 	default_bpp => {
 		label => __"Default BPP value",
@@ -172,6 +206,7 @@ my %CONFIG_PARAMETER = (
 		presets => \@BPP,
 		tooltip => __"If this option is set dvd::rip automatically ".
 		             "calculates the video bitrate using this BPP value",
+		rules => "positive-float",
 	},
 	burn_cdrecord_device => {
 		label => __"cdrecord device (n,n,n or filename)",
@@ -183,6 +218,7 @@ my %CONFIG_PARAMETER = (
 		type  => 'string',
 		value => '16',
 		presets => [1,2,4,8,12,16,20,24,30,40],
+		rules => "positive-integer",
 	},
 	burn_test_mode => {
 		label => __"Simulate burning",
@@ -204,24 +240,28 @@ my %CONFIG_PARAMETER = (
 			'cdrecord',
 			'dvdrecord',
 		],
+		rules => "executable-command",
 	},
 	burn_mkisofs_cmd => {
 		label => __"mkisofs command",
 		type  => 'string',
 		value => 'mkisofs',
 		presets => ['mkisofs'],
+		rules => "executable-command",
 	},
 	burn_vcdimager_cmd => {
 		label => __"vcdimager command",
 		type  => 'string',
 		value => 'vcdimager',
 		presets => ['vcdimager'],
+		rules => "executable-command",
 	},
 	burn_cdrdao_cmd => {
 		label => __"cdrdao command",
 		type  => 'string',
 		value => 'cdrdao',
 		presets => ['cdrdao'],
+		rules => "executable-command",
 	},
 	burn_cdrdao_driver => {
 		label => __"cdrdao driver",
@@ -248,60 +288,24 @@ my %CONFIG_PARAMETER = (
 		label => __"Buffersize",
 		type  => 'string',
 		value => '',
+		rules => [ "positive-integer", "or-empty" ],
 	},
 	burn_blank_method => {
 		label => __"CD-RW blank method",
-		type  => 'string',
+		type  => 'popup',
 		value => 'fast - minimally blank the entire disk',
 		presets => [
-			'all - blank the entire disk',
-			'fast - minimally blank the entire disk',
+			[ 'all - blank the entire disk', 'all - blank the entire disk' ],
+			[ 'fast - minimally blank the entire disk',
+			  'fast - minimally blank the entire disk' ],
 		],
 	},
 
 	preferred_lang => {
 		label => __"Preferred language",
-		type  => 'string',
+		type  => 'popup',
 		value => '<none>',
-		presets => [
-			'<none>',
-			"en - English", "de - Deutsch", "fr - Francais", "es - Espanol",
-			"it - Italiano", "nl - Nederlands",
-			"aa - Afar", "ab - Abkhazian", "af - Afrikaans", "am - Amharic",
-			"ar - Arabic", "as - Assamese", "ay - Aymara", "az - Azerbaijani",
-			"ba - Bashkir", "be - Byelorussian", "bg - Bulgarian", "bh - Bihari",
-			"bi - Bislama", "bn - Bengali / Bangla", "bo - Tibetan",
-			"br - Breton", "ca - Catalan", "co - Corsican", "cs - Czech", "cy - Welsh",
-			"da - Dansk", "dz - Bhutani", "el - Greek",
-			"eo - Esperanto", "et - Estonian",
-			"eu - Basque", "fa - Persian", "fi - Suomi", "fj - Fiji", "fo - Faroese",
-			"fy - Frisian", "ga - Gaelic", "gd - Scots Gaelic",
-			"gl - Galician", "gn - Guarani", "gu - Gujarati",
-			"ha - Hausa", "he - Hebrew", "hi - Hindi", "hr - Hrvatski", "hu - Magyar",
-			"hy - Armenian", "ia - Interlingua", "id - Indonesian",
-			"ie - Interlingue", "ik - Inupiak", "in - Indonesian", "is - Islenska",
-			"iu - Inuktitut", "iw - Hebrew", "ja - Japanese", 
-			"ji - Yiddish", "jw - Javanese", "ka - Georgian", "kk - Kazakh",
-			"kl - Greenlandic", "km - Cambodian", "kn - Kannada", "ko - Korean",
-			"ks - Kashmiri", "ku - Kurdish", "ky - Kirghiz", "la - Latin",
-			"ln - Lingala", "lo - Laothian", "lt - Lithuanian", "lv - Latvian, Lettish",
-			"mg - Malagasy", "mi - Maori", "mk - Macedonian", "ml - Malayalam",
-			"mn - Mongolian", "mo - Moldavian", "mr - Marathi", "ms - Malay",
-			"mt - Maltese", "my - Burmese", "na - Nauru", "ne - Nepali", 
-			"no - Norsk", "oc - Occitan", "om - Oromo", "or - Oriya", "pa - Punjabi",
-			"pl - Polish", "ps - Pashto, Pushto", "pt - Portugues", "qu - Quechua",
-			"rm - Rhaeto-Romance", "rn - Kirundi", "ro - Romanian", "ru - Russian",
-			"rw - Kinyarwanda", "sa - Sanskrit", "sd - Sindhi", "sg - Sangho",
-			"sh - Serbo-Croatian", "si - Sinhalese", "sk - Slovak", "sl - Slovenian",
-			"sm - Samoan", "sn - Shona", "so - Somali", "sq - Albanian", "sr - Serbian",
-			"ss - Siswati", "st - Sesotho", "su - Sundanese", "sv - Svenska",
-			"sw - Swahili", "ta - Tamil", "te - Telugu", "tg - Tajik", "th - Thai",
-			"ti - Tigrinya", "tk - Turkmen", "tl - Tagalog", "tn - Setswana",
-			"to - Tonga", "tr - Turkish", "ts - Tsonga", "tt - Tatar", "tw - Twi",
-			"ug - Uighur", "uk - Ukrainian", "ur - Urdu", "uz - Uzbek", "vi - Vietnamese",
-			"vo - Volapuk", "wo - Wolof", "xh - Xhosa", "yi - Yiddish", "yo - Yoruba",
-			"za - Zhuang", "zh - Chinese", "zu - Zulu",
-		],
+		presets => \@LANG_POPUP,
 	},
 	workaround_nptl_bugs => {
 		label	=> __"Workaround transcode NPTL bugs",
@@ -344,8 +348,7 @@ my @CONFIG_ORDER = (
 	__"Miscellaneous options" => [qw(
 		default_video_codec  default_container
 		default_bpp
-		main_window_width    main_window_height
-		preferred_lang       show_tooltips
+		preferred_lang       
 		workaround_nptl_bugs nptl_ld_assume_kernel
 	)],
 );
@@ -692,7 +695,7 @@ sub save {
 	my $fh = FileHandle->new;
 
 	open ($fh, "> $filename") or die "can't write $filename";
-	print $fh q{# $Id: Config.pm,v 1.49 2005/06/19 13:38:24 joern Exp $},"\n";
+	print $fh q{# $Id: Config.pm,v 1.50 2005/07/23 08:14:15 joern Exp $},"\n";
 	print $fh "# This file was generated by Video::DVDRip Version $Video::DVDRip::VERSION\n\n";
 
 	print $fh ${$data_sref};
@@ -875,7 +878,7 @@ sub _cdrecord_device {
 	if ( $value =~ /^\d+,\d+,\d+$/ ) {
 		return "$value has format n,n,n : Ok";
 	} elsif ( -e $value ) {
-		return __x("{value} exists : Ok", value => $value)."\n";
+		return __x("{value} exists : Ok", value => $value);
 	} else {
 		return __x("{value} has not format n,n,n and is no file : NOT Ok", value => $value);
 	}

@@ -1,4 +1,4 @@
-# $Id: Subtitle.pm,v 1.6 2004/04/11 23:36:19 joern Exp $
+# $Id: Subtitle.pm,v 1.7 2005/07/23 08:14:15 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -106,27 +106,20 @@ sub new {
 	return bless $self, $class;
 }
 
+sub info {
+	my $self = shift;
+	
+	my $lang = $self->lang;
+	$lang = "??" if $lang eq "<unknown>";
+	return sprintf("%02d - %s", $self->id, $lang);
+}
+
 sub reset_preview_images {
 	my $self = shift;
 	
 	$self->set_preview_images ([]);
 	
 	1;
-}
-
-sub add_preview_image {
-	my $self = shift;
-	my %par = @_;
-	my ($filename, $time) = @par{'filename','time'};
-
-	my $image = Video::DVDRip::Subtitle::PreviewImage->new (
-		filename => $filename,
-		time     => $time,
-	);
-	
-	push @{$self->preview_images}, $image;
-	
-	return 1;
 }
 
 sub vobsub_prefix {
@@ -181,6 +174,47 @@ sub vobsub_file_exists {
 	return scalar(@files);
 }
 
+sub add_preview_image {
+	my $self = shift;
+	my %par = @_;
+	my ($filename) = @par{'filename'};
+
+	my $srtx_file = $filename;
+	$srtx_file =~ s/\d+\.pgm//;
+	$srtx_file .= ".srtx";
+
+	my $fh = FileHandle->new;
+	open ($fh, $srtx_file) or die "can't read $srtx_file";
+	my $time;
+	while (<$fh>) {
+		if ( /^(\d+:\d+:\d+)/ ) {
+			$time = $1;
+		}
+		last if /^$filename/;
+	}
+	close $fh;
+
+	my $image = Video::DVDRip::Subtitle::PreviewImage->new (
+		filename => $filename,
+		time     => $time,
+	);
+	
+	push @{$self->preview_images}, $image;
+	
+	return $image;
+}
+
+sub init_preview_images {
+	my $self = shift;
+	
+	$self->reset_preview_images;
+	
+	my $dir = $self->title->get_subtitle_preview_dir;
+	
+	$self->add_preview_image ( filename => $_ ) for glob ("$dir/*.pgm");
+
+	1;	
+}
 
 package Video::DVDRip::Subtitle::PreviewImage;
 use Locale::TextDomain qw (video.dvdrip);

@@ -1,4 +1,4 @@
-# $Id: Content.pm,v 1.18 2004/04/11 23:36:19 joern Exp $
+# $Id: Content.pm,v 1.19 2005/07/23 08:14:15 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -18,10 +18,12 @@ use Video::DVDRip::Title;
 use Carp;
 use strict;
 
-sub project		{ shift->{project}		}
-sub titles		{ shift->{titles}  		} # href/undef
+sub project			{ shift->{project}			}
+sub titles			{ shift->{titles}  			}
+sub selected_titles		{ shift->{selected_titles}		}
 
-sub set_titles		{ shift->{titles}	= $_[1] }
+sub set_titles			{ shift->{titles}		= $_[1] }
+sub set_selected_titles		{ shift->{selected_titles}	= $_[1]	}
 
 sub set_project	{
 	my $self = shift;
@@ -37,6 +39,9 @@ sub set_project	{
 		foreach my $subtitle ( values %{$title->subtitles} ) {
 			$subtitle->set_title ( $title );
 		}
+		foreach my $audio_track ( @{$title->audio_tracks} ) {
+			$audio_track->set_title ( $title );
+		}
 	}
 	
 	return $project;
@@ -49,8 +54,9 @@ sub new {
 	@par{'project'};
 
 	my $self = {
-		project => $project,
-		titles  => undef,
+		project         => $project,
+		titles          => undef,
+		selected_titles => [],
 	};
 	
 	return bless $self, $class;
@@ -72,6 +78,31 @@ sub get_titles_by_nr {
 	my @titles = sort { $a->nr <=> $b->nr } values %{$self->titles};
 
 	return \@titles;
+}
+
+sub set_selected_title_nr {
+	my $self = shift;
+	my ($nr) = @_;
+	die "msg: ".__x("Illegal title number {nr}", nr => $nr )
+		unless exists $self->titles->{$nr};
+	$self->set_selected_titles([$nr-1]);
+	return $nr;
+}
+	
+sub selected_title_nr {
+	my $self = shift;
+	my $selected_titles = $self->selected_titles;
+	return if not $selected_titles;
+	return if @{$selected_titles} == 0;
+	return $self->titles->{$selected_titles->[0]+1}->nr;
+}
+
+sub selected_title {
+	my $self = shift;
+	my $selected_titles = $self->selected_titles;
+	return if not $selected_titles;
+	return if @{$selected_titles} == 0;
+	return $self->titles->{$selected_titles->[0]+1};
 }
 
 1;

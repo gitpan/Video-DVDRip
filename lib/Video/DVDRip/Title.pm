@@ -1,4 +1,4 @@
-# $Id: Title.pm,v 1.154 2005/06/19 13:58:01 joern Exp $
+# $Id: Title.pm,v 1.155 2005/07/23 08:14:15 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -132,14 +132,16 @@ sub tc_clip2_right		{ shift->{tc_clip2_right}		}
 sub tc_video_codec		{ shift->{tc_video_codec}		}
 sub tc_video_af6_codec		{ shift->{tc_video_af6_codec}		}
 sub tc_video_bitrate		{ shift->{tc_video_bitrate}      	}
-sub tc_video_bpp		{ shift->{tc_video_bpp}      		}
-sub tc_video_bitrate_last_edit	{ shift->{tc_video_bitrate_last_edit}	}
 sub tc_video_bitrate_manual	{ shift->{tc_video_bitrate_manual}	}
+sub tc_video_bpp		{ shift->{tc_video_bpp}      		}
+sub tc_video_bpp_manual		{ shift->{tc_video_bpp_manual}		}
+sub tc_video_bitrate_mode	{ shift->{tc_video_bitrate_mode}	}
 sub tc_video_bitrate_range	{ shift->{tc_video_bitrate_range}	}
 sub tc_video_framerate		{ shift->{tc_video_framerate}      	}
 sub tc_fast_bisection		{ shift->{tc_fast_bisection}      	}
 sub tc_psu_core			{ shift->{tc_psu_core}      		}
 sub tc_keyframe_interval	{ shift->{tc_keyframe_interval}	|| 250	}
+sub tc_split			{ shift->{tc_split}			}
 sub tc_force_slow_grabbing	{ shift->{tc_force_slow_grabbing}	}
 
 sub tc_target_size		{ shift->{tc_target_size}		}
@@ -151,7 +153,7 @@ sub tc_fast_resize	    	{ shift->{tc_fast_resize}		}
 sub tc_multipass	    	{ shift->{tc_multipass}			}
 sub tc_multipass_reuse_log	{ shift->{tc_multipass_reuse_log}	}
 sub tc_title_nr	    		{ $_[0]->{tc_title_nr} || $_[0]->{nr}	}
-sub tc_use_chapter_mode    	{ shift->{tc_use_chapter_mode}		}
+sub tc_use_chapter_mode    	{ shift->{tc_use_chapter_mode} || 0	}
 sub tc_selected_chapters	{ shift->{tc_selected_chapters}		}
 sub tc_options			{ shift->{tc_options}			}
 sub tc_nice			{ shift->{tc_nice}			}
@@ -162,45 +164,62 @@ sub tc_exit_afterwards		{ shift->{tc_exit_afterwards}		}
 sub set_tc_viewing_angle	{ shift->{tc_viewing_angle}	= $_[1]	}
 sub set_tc_deinterlace		{ shift->{tc_deinterlace}	= $_[1]	}
 sub set_tc_anti_alias		{ shift->{tc_anti_alias}	= $_[1]	}
-sub set_tc_clip1_top		{ shift->{tc_clip1_top}		= $_[1]	}
-sub set_tc_clip1_bottom		{ shift->{tc_clip1_bottom}	= $_[1]	}
-sub set_tc_clip1_left		{ shift->{tc_clip1_left}	= $_[1]	}
-sub set_tc_clip1_right		{ shift->{tc_clip1_right}	= $_[1]	}
-sub set_tc_zoom_width		{ shift->{tc_zoom_width}	= $_[1]	}
-sub set_tc_zoom_height		{ shift->{tc_zoom_height}	= $_[1]	}
-sub set_tc_clip2_top		{ shift->{tc_clip2_top}		= $_[1]	}
-sub set_tc_clip2_bottom		{ shift->{tc_clip2_bottom}	= $_[1]	}
-sub set_tc_clip2_left		{ shift->{tc_clip2_left}	= $_[1]	}
-sub set_tc_clip2_right		{ shift->{tc_clip2_right}	= $_[1]	}
+# implemented below : sub set_tc_clip1_top {}
+# implemented below : sub set_tc_clip1_bottom {}
+# implemented below : sub set_tc_clip1_left {}
+# implemented below : sub set_tc_clip1_right {}
+# implemented below : sub set_tc_zoom_width {}
+# implemented below : sub set_tc_zoom_height {}
+# implemented below : sub set_tc_clip2_top {}
+# implemented below : sub set_tc_clip2_bottom {}
+# implemented below : sub set_tc_clip2_left {}
+# implemented below : sub set_tc_clip2_right {}
 # implemented below : sub set_tc_video_codec {}
 sub set_tc_video_af6_codec	{ shift->{tc_video_af6_codec}	= $_[1]	}
 sub set_tc_video_bitrate	{ shift->{tc_video_bitrate}  	= $_[1]	}
+# implemented below : sub set_tc_video_bitrate_manual {}
 sub set_tc_video_bpp		{ shift->{tc_video_bpp}  	= $_[1]	}
-sub set_tc_video_bitrate_last_edit { shift->{tc_video_bitrate_last_edit} = $_[1]}
-sub set_tc_video_bitrate_manual	{ shift->{tc_video_bitrate_manual}= $_[1]}
-sub set_tc_video_bitrate_range	{ shift->{tc_video_bitrate_range} = $_[1]}
+# implemented below : sub set_tc_video_bpp_manual {}
+# implemented below : sub set_tc_video_bitrate_mode {}
+# implemented below : sub set_tc_video_bitrate_range {}
 sub set_tc_video_framerate	{ shift->{tc_video_framerate} 	= $_[1]	}
 sub set_tc_fast_bisection	{ shift->{tc_fast_bisection} 	= $_[1]	}
 sub set_tc_psu_core		{ shift->{tc_psu_core} 		= $_[1]	}
 sub set_tc_keyframe_interval	{ shift->{tc_keyframe_interval}	= $_[1]	}
+sub set_tc_split		{ shift->{tc_split}		= $_[1]	}
 sub set_tc_force_slow_grabbing	{ shift->{tc_force_slow_grabbing}= $_[1]}
 
-sub set_tc_target_size		{ shift->{tc_target_size}    	= $_[1]	}
-sub set_tc_disc_cnt		{ shift->{tc_disc_cnt}    	= $_[1]	}
-sub set_tc_disc_size		{ shift->{tc_disc_size}    	= $_[1]	}
-sub set_tc_start_frame		{ shift->{tc_start_frame}    	= $_[1]	}
-sub set_tc_end_frame		{ shift->{tc_end_frame}    	= $_[1]	}
+# implemented below : sub set_tc_disc_cnt
+# implemented below : sub set_tc_disc_size
+# implemented below : sub set_tc_target_size
+# implemented below : sub set_tc_start_frame
+# implemented below : sub set_tc_end_frame
 sub set_tc_fast_resize		{ shift->{tc_fast_resize}    	= $_[1]	}
 sub set_tc_multipass		{ shift->{tc_multipass}    	= $_[1]	}
 sub set_tc_multipass_reuse_log	{ shift->{tc_multipass_reuse_log}= $_[1]}
 sub set_tc_title_nr	    	{ shift->{tc_title_nr}    	= $_[1]	}
-sub set_tc_use_chapter_mode 	{ shift->{tc_use_chapter_mode}	= $_[1]	}
+sub set_tc_use_chapter_mode 	{ shift->{tc_use_chapter_mode}	= $_[1] }
 sub set_tc_selected_chapters	{ shift->{tc_selected_chapters}	= $_[1] }
 sub set_tc_options		{ shift->{tc_options}		= $_[1] }
 sub set_tc_nice			{ shift->{tc_nice}		= $_[1] }
 sub set_tc_preview		{ shift->{tc_preview}		= $_[1] }
 sub set_tc_execute_afterwards	{ shift->{tc_execute_afterwards}= $_[1]	}
 sub set_tc_exit_afterwards	{ shift->{tc_exit_afterwards}	= $_[1]	}
+
+#-- Attributes for storage ----------------------------------------------
+
+sub storage_video_size      	{ shift->{storage_video_size}	    	}
+sub storage_audio_size      	{ shift->{storage_audio_size}	    	}
+sub storage_other_size      	{ shift->{storage_other_size}	    	}
+sub storage_total_size      	{ shift->{storage_total_size}	    	}
+
+sub set_storage_video_size	{ shift->{storage_video_size}	= $_[1]	}
+sub set_storage_audio_size	{ shift->{storage_audio_size}	= $_[1]	}
+sub set_storage_other_size	{ shift->{storage_other_size}	= $_[1]	}
+sub set_storage_total_size	{ shift->{storage_total_size}	= $_[1]	}
+
+sub bitrate_calc		{ shift->{bitrate_calc}			}
+sub set_bitrate_calc		{ shift->{bitrate_calc}		= $_[1]	}
 
 #-- Attributes for CD burning -------------------------------------------
 
@@ -323,6 +342,17 @@ sub set_tc_video_codec {
 	
 	$self->set_tc_video_af6_codec ('mpeg4') if $value eq 'ffmpeg';
 	$self->set_tc_video_af6_codec ('')      if $value ne 'ffmpeg';
+
+	if ( $value eq 'VCD' ) {
+		$self->audio_track->set_tc_bitrate ( 224 );
+		$self->audio_track->set_tc_audio_codec ( 'mp2' );
+		$self->set_tc_multipass ( 0 );
+
+	} elsif ( $value =~ /^(X?S?VCD|CVD)$/ ) {
+		$self->audio_track->set_tc_audio_codec ( 'mp2' );
+		$self->set_tc_multipass ( 0 );
+	}
+
 	$self->set_tc_video_bitrate_manual (0)
 		if $value eq 'VCD';
 
@@ -342,7 +372,7 @@ sub audio_track {
 	if ( $self->audio_channel == -1 ) {
 		# no audio track selected. create a dummy object.
 		# (probably this title has no audio at all)
-		return Video::DVDRip::Audio->new;
+		return Video::DVDRip::Audio->new ( title => $self );
 	}
 	return $self->audio_tracks->[$self->audio_channel];
 }
@@ -436,20 +466,166 @@ sub set_tc_container {
 		$self->log ($msg);
 	}
 
+	$self->calc_video_bitrate;
+
 	return $container;
+}
+
+sub set_tc_disc_cnt	{
+	my $self = shift;
+	my ($cnt) = @_;
+	$self->{tc_disc_cnt} = $cnt;
+	$self->set_tc_target_size($cnt*$self->tc_disc_size);
+	return $cnt;
+}
+
+sub set_tc_disc_size {
+	my $self = shift;
+	my ($size) = @_;
+	$self->{tc_disc_size} = $size;
+	$self->set_tc_target_size($self->tc_disc_cnt*$size);
+	return $size;
+}
+
+sub set_tc_target_size	{
+	my $self = shift;
+	my ($value) = @_;
+	$self->{tc_target_size} = $value;
+	$self->calc_video_bitrate;
+	return $value;
+}
+
+sub set_tc_video_bitrate_manual	{
+	my $self = shift;
+	my ($size) = @_;
+	$self->{tc_video_bitrate_manual} = $size;
+	$self->calc_video_bitrate;
+	return $size;
+}
+
+sub set_tc_video_bpp_manual	{
+	my $self = shift;
+	my ($value) = @_;
+	$self->{tc_video_bpp_manual} = $value;
+	$self->calc_video_bitrate;
+	return $value;
+}
+
+sub set_tc_video_bitrate_mode	{
+	my $self = shift;
+	my ($value) = @_;
+	$self->{tc_video_bitrate_mode} = $value;
+	$self->calc_video_bitrate;
+	return $value;
+}
+
+sub set_tc_video_bitrate_range	{
+	my $self = shift;
+	my ($value) = @_;
+	$self->{tc_video_bitrate_range} = $value;
+	$self->calc_video_bitrate;
+	return $value;
+}
+
+sub set_tc_start_frame	{
+	my $self = shift;
+	my ($value) = @_;
+	$self->{tc_start_frame} = $value;
+	$self->calc_video_bitrate;
+	return $value;
+}
+
+sub set_tc_end_frame	{
+	my $self = shift;
+	my ($value) = @_;
+	$self->{tc_end_frame} = $value;
+	$self->calc_video_bitrate;
+	return $value;
+}
+
+#---------------------
+
+sub set_tc_clip1_top	{
+	my $self = shift;
+	my ($value) = @_;
+	$self->{tc_clip1_top} = $value;
+	$self->calc_video_bitrate;
+	return $value;
+}
+sub set_tc_clip1_bottom	{
+	my $self = shift;
+	my ($value) = @_;
+	$self->{tc_clip1_bottom} = $value;
+	$self->calc_video_bitrate;
+	return $value;
+}
+sub set_tc_clip1_left	{
+	my $self = shift;
+	my ($value) = @_;
+	$self->{tc_clip1_left} = $value;
+	$self->calc_video_bitrate;
+	return $value;
+}
+sub set_tc_clip1_right	{
+	my $self = shift;
+	my ($value) = @_;
+	$self->{tc_clip1_right} = $value;
+	$self->calc_video_bitrate;
+	return $value;
+}
+sub set_tc_zoom_width	{
+	my $self = shift;
+	my ($value) = @_;
+	$self->{tc_zoom_width} = $value;
+	$self->calc_video_bitrate;
+	return $value;
+}
+sub set_tc_zoom_height	{
+	my $self = shift;
+	my ($value) = @_;
+	$self->{tc_zoom_height} = $value;
+	$self->calc_video_bitrate;
+	return $value;
+}
+sub set_tc_clip2_top	{
+	my $self = shift;
+	my ($value) = @_;
+	$self->{tc_clip2_top} = $value;
+	$self->calc_video_bitrate;
+	return $value;
+}
+sub set_tc_clip2_bottom	{
+	my $self = shift;
+	my ($value) = @_;
+	$self->{tc_clip2_bottom} = $value;
+	$self->calc_video_bitrate;
+	return $value;
+}
+sub set_tc_clip2_left	{
+	my $self = shift;
+	my ($value) = @_;
+	$self->{tc_clip2_left} = $value;
+	$self->calc_video_bitrate;
+	return $value;
+}
+sub set_tc_clip2_right	{
+	my $self = shift;
+	my ($value) = @_;
+	$self->{tc_clip2_right} = $value;
+	$self->calc_video_bitrate;
+	return $value;
 }
 
 sub is_ogg {
 	my $self = shift;
-	
 	return $self->tc_container eq 'ogg';
 }
 
 sub has_vbr_audio {
 	my $self = shift;
 	
-	return 0 if $self->tc_video_bitrate_manual;
-	
+	return 0 if $self->tc_video_bitrate_mode eq 'manual';
+
 	foreach my $audio ( @{$self->audio_tracks} ) {
 		next if $audio->tc_target_track == -1;
 		return 1 if $audio->tc_audio_codec eq 'vorbis';
@@ -489,6 +665,30 @@ sub get_vob_size {
 	$vob_size = int ($vob_size/1024/1024);
 	
 	return $vob_size;
+}
+
+sub get_title_info {
+	my $self = shift;
+	
+	my $fps = $self->frame_rate;
+	$fps =~ s/\.0+$//;
+
+	my $length = $self->runtime-1;
+	my $h = int($length/3600);
+	my $m = int(($length-$h*3600)/60);
+	my $s = $length-$h*3600-$m*60;
+
+	$length = sprintf ("%02d:%02d:%02d", $h, $m, $s);
+
+	return $length.", ".
+	       uc($self->video_mode).", ".
+	       $self->chapters." ".__("Chp").", ".
+	       scalar(@{$self->audio_tracks})." ".__("Aud").", ".
+	       "$fps fps, ".
+	       $self->aspect_ratio.", ".
+	       $self->frames." ".__("frames").", ".
+	       $self->width."x".$self->height
+	
 }
 
 sub transcode_data_source {
@@ -663,6 +863,22 @@ sub preview_filename {
 		$type);
 }
 
+sub preview_filename_orig {
+	shift->preview_filename(type => "orig");
+}
+
+sub preview_filename_clip1 {
+	shift->preview_filename(type => "clip1");
+}
+
+sub preview_filename_zoom {
+	shift->preview_filename(type => "zoom");
+}
+
+sub preview_filename_clip2 {
+	shift->preview_filename(type => "clip2");
+}
+
 sub preview_scratch_filename {
 	my $self = shift; $self->trace_in;
 	my %par = @_;
@@ -673,6 +889,69 @@ sub preview_scratch_filename {
 		$self->project->name,
 		$self->nr,
 		$type);
+}
+
+sub preview_label {
+	my $self = shift; $self->trace_in;
+	my %par = @_;
+	my ($type) = @par{'type'};
+
+	my ($width, $height, $warn_width, $warn_height, $text, $ratio, $phys_ratio);
+	($width, $height, $ratio) = $self->get_effective_ratio ( type => $type );
+
+	$ratio   = "4:3"  if $ratio >= 1.32 and $ratio <= 1.34;
+	$ratio   = "16:9" if $ratio >= 1.76 and $ratio <= 1.78;
+
+	($ratio) = $ratio =~ /(\d+[.,]\d{1,2})/ if $ratio !~ /:/;
+
+	$phys_ratio = $width/$height;
+	($phys_ratio) = $phys_ratio =~ /(\d+[.,]\d{1,2})/;
+
+	$warn_width  = ($type eq 'clip2' and $width  % 16) ? "!":"";
+	$warn_height = ($type eq 'clip2' and $height % 16) ? "!":"";
+
+	$warn_width  ||= ($width  % 2) ? "!":"";
+	$warn_height ||= ($height % 2) ? "!":"";
+
+	if ( $type eq 'clip1' ) {
+		$warn_height  ||= "!" if $self->tc_clip1_top %2 or
+					 $self->tc_clip1_bottom %2;
+		$warn_width   ||= "!" if $self->tc_clip1_left %2 or
+					 $self->tc_clip1_right %2;
+	}
+
+	if ( $type eq 'clip2' ) {
+		$warn_height  ||= "!" if $self->tc_clip2_top %2 or
+					 $self->tc_clip2_bottom %2;
+		$warn_width   ||= "!" if $self->tc_clip2_left %2 or
+					 $self->tc_clip2_right %2;
+	}
+
+	my $type_text =
+		$type eq 'clip1' ? __"After 1st clipping" :
+		$type eq 'clip2' ? __"After 2nd clipping" :
+				   __"After zoom";
+
+	$text = sprintf (
+		"<u>$type_text</u>: <b>%d%sx%d%s</b>\n".
+		__x("Eff. ratio: <b>{eff}</b>, phys. ratio: <b>{phys}</b>",
+		    eff => $ratio, phys => $phys_ratio),
+		$width, $warn_width, $height, $warn_height,
+	);
+
+	return $text;
+}
+
+sub preview_label_clip1 {
+	shift->preview_label(type => "clip1");
+}
+
+sub preview_label_zoom {
+	shift->preview_label(type => "zoom");
+}
+
+sub preview_label_clip2 {
+	shift->preview_label(type => "clip2");
 }
 
 sub vob_nav_file {
@@ -1500,6 +1779,9 @@ sub suggest_transcode_options {
 	$self->set_tc_disc_size ( 700 );
 	$self->set_tc_disc_cnt ( 2 );
 	$self->set_tc_keyframe_interval ( 50 );
+	$self->set_tc_video_bitrate_mode ("size");
+	$self->set_tc_video_bitrate_manual (1800);
+	$self->set_tc_video_bpp_manual (0.5);
 
 	my $container = $self->config('default_container');
 	# Internal value for MPEG/X*S*VCD/CVD container is 'vcd',
@@ -1560,12 +1842,8 @@ sub suggest_transcode_options {
 	}
 
 	if ( $self->config('default_bpp') ne '<none>' ) {
-		$self->set_tc_video_bitrate_manual(1);
+		$self->set_tc_video_bitrate_mode('bpp');
 		$self->set_tc_video_bpp($self->config('default_bpp'));
-		$self->set_tc_video_bitrate_last_edit("bpp");
-		$self->calc_video_bitrate;
-	} else {
-		$self->calc_video_bitrate;
 	}
 
 	1;
@@ -1576,21 +1854,20 @@ sub calc_video_bitrate {
 
 	my $video_codec = $self->tc_video_codec;
 
-	if ( $video_codec eq 'VCD' ) {
-		$self->audio_track->set_tc_bitrate ( 224 );
-		$self->audio_track->set_tc_audio_codec ( 'mp2' );
-		$self->set_tc_multipass ( 0 );
-
-	} elsif ( $video_codec =~ /^(X?S?VCD|CVD)$/ ) {
-		$self->audio_track->set_tc_audio_codec ( 'mp2' );
-		$self->set_tc_multipass ( 0 );
-	}
-
-	my $bc = Video::DVDRip::BitrateCalc->new ( title => $self );
+	my $bc = Video::DVDRip::BitrateCalc->new (
+		title      => $self,
+		with_sheet => 1,
+	);
 	$bc->calculate;
-	
-	$self->set_tc_video_bpp     ( $bc->video_bpp     );
-	$self->set_tc_video_bitrate ( $bc->video_bitrate );
+
+	$self->set_tc_video_bpp       ( $bc->video_bpp );
+	$self->set_tc_video_bitrate   ( $bc->video_bitrate );
+	$self->set_storage_video_size ( int($bc->video_size) );
+	$self->set_storage_audio_size ( int($bc->audio_size) );
+	$self->set_storage_other_size ( int($bc->other_size) );
+	$self->set_storage_total_size ( int($bc->file_size) );
+
+	$self->set_bitrate_calc($bc);
 
 	return $bc->video_bitrate;
 }
@@ -2250,6 +2527,14 @@ sub get_fast_resize_options {
 	return ($width_n, $height_n, $err_div32, $err_shrink_expand);
 }
 
+sub fast_resize_possible {
+	my $self = shift;
+	my (undef, undef, $err1, $err2) = $self->get_fast_resize_options;
+	my $ok = !($err1 || $err2);
+	$self->set_tc_fast_resize(0) unless $ok;
+	return $ok;
+}
+
 #---------------------------------------------------------------------
 # Methods for MPEG multiplexing
 #---------------------------------------------------------------------
@@ -2627,13 +2912,6 @@ sub make_preview_clip {
 			   $target_file
 	);
 
-	$self->put_preview_on_scratch (
-		source_file => $target_file,
-		target_file => $self->preview_scratch_filename ( type => $type ),
-		width       => $new_width,
-		height      => $new_height,
-	);	
-
 	1;
 }
 
@@ -2664,51 +2942,6 @@ sub make_preview_zoom {
 			   $target_file
 	);
 
-	$self->put_preview_on_scratch (
-		source_file => $target_file,
-		target_file => $self->preview_scratch_filename ( type => 'zoom' ),
-		width       => $new_width,
-		height      => $new_height,
-	);	
-
-	1;
-}
-
-sub put_preview_on_scratch {
-	my $self = shift;
-	my %par = @_;
-	my  ($source_file, $target_file, $width, $height) =
-	@par{'source_file','target_file','width','height'};
-return 1;
-
-	my $scratch_width  = $Video::DVDRIP::scratch_width;
-	my $scratch_height = $Video::DVDRIP::scratch_height;
-	
-	my $x = int(($scratch_width-$width) / 2);
-	my $y = int(($scratch_height-$height) / 2);
-
-	my $white_file = $self->project->snap_dir.
-		"/scratch-${scratch_width}x${scratch_height}.png";
-
-	my $command;
-
-	if ( not -f $white_file ) {
-		$command .= "convert -size ${scratch_width}x${scratch_height} ".
-			    " xc:white $white_file";
-	}
-	
-	$command .=
-		" && composite -geometry ${width}x${height}+$x+$y".
-		" $source_file $white_file $target_file";
-	
-	$command =~ s/^ &&//;
-
-print "\n",$command,"\n";
-
-	$self->system (
-		command => $command
-	);
-	
 	1;
 }
 
@@ -3137,17 +3370,6 @@ sub selected_subtitle {
 	my $self = shift;
 	return undef if not $self->subtitles;
 	return undef if not defined $self->selected_subtitle_id;
-	
-	if ( not $self->subtitles->{$self->selected_subtitle_id} ) {
-		$self->subtitles->{$self->selected_subtitle_id} =
-			Video::DVDRip::Subtitle->new (
-				id    => $self->selected_subtitle_id,
-				lang  => "<unknown>",
-				title => $self,
-			);
-
-	}
-	
 	return $self->subtitles->{$self->selected_subtitle_id};
 }
 
@@ -3676,6 +3898,87 @@ sub check_svcd_geometry {
 	}
 
 	return;
+}
+
+sub move_clip2_to_clip1 {
+	my $self = shift;
+	
+	my $clip1_top    = $self->tc_clip1_top;
+	my $clip1_bottom = $self->tc_clip1_bottom;
+	my $clip1_left   = $self->tc_clip1_left;
+	my $clip1_right  = $self->tc_clip1_right;
+
+	if ( $clip1_top or $clip1_bottom or $clip1_left or $clip1_right ) {
+		die "msg:".
+		     __"2nd clipping parameters can only be\nmoved to 1st ".
+		       "clipping parameters, if\n1st clipping is not defined.";
+		return 1;
+	}
+	
+	my $width        = $self->width;
+	my $height       = $self->height;
+	
+	my $zoom_width   = $self->tc_zoom_width  || $self->width;
+	my $zoom_height  = $self->tc_zoom_height || $self->height;
+	
+	my $x_factor = $zoom_width/$width;
+	my $y_factor = $zoom_height/$height;
+	
+       	my $clip2_top    = $self->tc_clip2_top;
+	my $clip2_bottom = $self->tc_clip2_bottom;
+	my $clip2_left   = $self->tc_clip2_left;
+	my $clip2_right  = $self->tc_clip2_right;
+
+	my $clip1_top    = $clip2_top    / $y_factor;
+	my $clip1_bottom = $clip2_bottom / $y_factor;
+	my $clip1_left   = $clip2_left   / $x_factor;
+	my $clip1_right  = $clip2_right  / $x_factor;
+	
+	$width  = $width  - $clip1_left - $clip1_right;
+	$height = $height - $clip1_top  - $clip1_bottom;
+	
+	$zoom_width  = $width  * $x_factor;
+	$zoom_height = $height * $y_factor;
+	
+	# no odd clip values
+	if ( $clip1_left % 2 and $clip1_right %2 ) {
+		if ( $clip1_left > $clip1_right ) {
+			--$clip1_left;
+			++$clip1_right;
+		} else {
+			++$clip1_left;
+			--$clip1_right;
+		}
+	} else {
+		--$clip1_left  if $clip1_left  % 2;
+		--$clip1_right if $clip1_right % 2;
+	}
+
+	if ( $clip1_top % 2 and $clip1_bottom %2 ) {
+		if ( $clip1_left > $clip1_bottom ) {
+			--$clip1_top;
+			++$clip1_bottom;
+		} else {
+			++$clip1_top;
+			--$clip1_bottom;
+		}
+	} else {
+		--$clip1_top    if $clip1_top    % 2;
+		--$clip1_bottom if $clip1_bottom % 2;
+	}
+
+	$self->set_tc_clip1_top    (int($clip1_top));
+	$self->set_tc_clip1_bottom (int($clip1_bottom));
+	$self->set_tc_clip1_left   (int($clip1_left));
+	$self->set_tc_clip1_right  (int($clip1_right));
+	$self->set_tc_zoom_width   (int($zoom_width));
+	$self->set_tc_zoom_height  (int($zoom_height));
+	$self->set_tc_clip2_top    (0);
+	$self->set_tc_clip2_bottom (0);
+	$self->set_tc_clip2_left   (0);
+	$self->set_tc_clip2_right  (0);
+	
+	1;
 }
 
 1;

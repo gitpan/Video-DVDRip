@@ -1,4 +1,4 @@
-# $Id: ExecuteJobs.pm,v 1.16 2004/04/25 16:01:58 joern Exp $
+# $Id: ExecuteJobs.pm,v 1.17 2005/07/23 08:14:15 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -68,13 +68,13 @@ sub new {
 	my  ($cb_finished, $reuse_progress) =
 	@par{'cb_finished','reuse_progress'};
 
-	my $self = {
-		jobs		=> [],
-		cb_finished 	=> $cb_finished,
-		reuse_progress	=> $reuse_progress,
-	};
-	
-	return bless $self, $class;
+	my $self = $class->SUPER::new(@_);
+
+	$self->{jobs}		= [];
+	$self->{cb_finished}	= $cb_finished;
+	$self->{reuse_progress}	= $reuse_progress;
+
+	return $self;
 }
 
 sub add_job {
@@ -96,7 +96,7 @@ sub execute_jobs {
 	my $jobs = $self->jobs;
 
 	my $job_started;
-	my $title = $self->comp('project')->selected_title;
+	my $title = $self->get_context->get_object("title");
 
 	if ( $title and not $no_diskspace_check ) {
 		$max_diskspace_needed ||=
@@ -133,6 +133,8 @@ sub execute_jobs {
 		}
 	}
 
+	my $progress = $self->progress;
+
 	foreach my $job ( @{$jobs} ) {
 		next if $job->state ne 'waiting';
 		next if not $job->dependency_ok;
@@ -149,8 +151,8 @@ sub execute_jobs {
 			sub { $self->update_progress(@_) }
 		);
 
-		if ( not $self->comp('progress')->is_active ) {
-			$self->comp('progress')->open (
+		if ( not $progress->is_active ) {
+			$progress->open (
 				max_value => $job->progress_max,
 				label     => $job->calc_progress,
 				cb_cancel => sub {
@@ -197,8 +199,8 @@ sub next_job {
 		);
 	}
 
-	$self->comp('progress')->close
-		if not $self->reuse_progress;
+	$self->progress->close
+		unless $self->reuse_progress;
 	
 	$self->execute_jobs ( no_diskspace_check => 1);
 	
@@ -208,8 +210,8 @@ sub next_job {
 sub finished {
 	my $self = shift;
 
-	$self->comp('progress')->close
-		if $self->comp('progress')->is_active;
+	my $progress = $self->progress;
+	$progress->close if $progress->is_active;
 
 	my $cb_finished = $self->cb_finished;
 	&$cb_finished() if $cb_finished;
@@ -224,8 +226,8 @@ sub job_aborted {
 
 	$self->set_errors_occured(1);
 
-	$self->comp('progress')->close
-		if not $self->reuse_progress;
+	$self->progress->close
+		unless $self->reuse_progress;
 
 	if ( $job->cancelled ) {
 		$self->set_cancelled(1);
@@ -260,8 +262,8 @@ sub update_progress {
 	my ($job) = @par{'job'};
 
 	return 1 if $self->cancelled;
-
-	$self->comp('progress')->update (
+	
+	$self->progress->update (
 		value => $job->progress_cnt,
 		label => $job->progress,
 	);

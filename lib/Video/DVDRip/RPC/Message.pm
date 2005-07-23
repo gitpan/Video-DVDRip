@@ -1,4 +1,4 @@
-# $Id: Message.pm,v 1.6 2005/06/19 13:41:53 joern Exp $
+# $Id: Message.pm,v 1.7 2005/07/23 08:14:15 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -42,4 +42,3 @@ sub unpack {
 }
 
 1;
-

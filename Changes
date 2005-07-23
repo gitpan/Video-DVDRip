@@ -1,6 +1,48 @@
-$Id: Changes,v 1.162.2.2 2005/07/23 09:06:42 joern Exp $
+$Id: Changes.unstable,v 1.44 2005/07/23 11:05:53 joern Exp $
 
 Revision history and release notes for dvd::rip.
+
+0.97.1 [unstable branch] Sat Jul 23 2005, joern
+	Features:
+	- Extensive GUI redesign. dvd::rip now uses Gtk2 and
+	  Gtk2::Ex::FormFactory, so we have new dependencies
+	  here.
+	  
+	  The Perl Gtk2 binding should be part of every modern
+	  Linux distribution, e.g. Debian has a libgtk2-perl package.
+	  Otherwise grab it from CPAN (see URL below). I personally
+	  use version 1.082, but lower versions may work as well.
+	  
+	  Gtk2::Ex::FormFactory is rather new and not yet packaged
+	  for any Linux distro, at least I'm not aware of. Installation
+	  is straight forward (perl Makefile.PL && make test && make install).
+	  Version 0.56 is required.
+
+	  You can grab both Gtk2 and Gtk2::Ex::FormFactory from here:
+
+	  http://www.cpan.org/modules/by-module/Gtk2/
+
+	- A bunch of smaller features / changes, in particular making
+	  the GUI more comfortable. Too many to list them all, just
+	  poke around to find them ;)
+
+	Notes:
+	- This is an ALPHA release, so please use with care, but *please*
+	  use it and report any bugs to the dvdrip-users list.
+	- The project file format didn't change significantly. Files
+	  from older dvd::rip versions will just work. Even opening
+	  files created with 0.97.1 should work in older versions.
+	  As usual you should make backups nevertheless.
+	- The redesign is not yet fully completed. The cluster,
+	  transcode filter & preview and burning stuff is currently missing.
+	  Cluster stuff will be added soon, filter stuff a bit later
+	  and burning stuff probably never: depends on user feedback ;)
+	- Only the German translation is complete, other languages
+	  will follow.
+	- The online web documentation still covers the old Gtk1
+	  based version. This will change with the 0.98 stable release
+	  based on this 0.97 branch. Since the main functionality didn't
+	  change much this should be no problem at all.
 
 0.52.6 [stable branch] Sat Jul 23 2005, joern
 	Notes:

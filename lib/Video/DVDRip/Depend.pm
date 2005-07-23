@@ -1,4 +1,4 @@
-# $Id: Depend.pm,v 1.8 2005/04/23 12:26:53 joern Exp $
+# $Id: Depend.pm,v 1.9 2005/07/23 08:14:15 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -22,6 +22,7 @@ my $ORDER = 0;
 my %TOOLS = (
     transcode => {
     	order		=> ++$ORDER,
+        command         => "transcode",
     	comment 	=> __"dvd::rip is nothing without transcode",
 	optional	=> 0,
 	get_version 	=> sub {
@@ -30,7 +31,7 @@ my %TOOLS = (
 		return $1;
 	},
 	convert 	=> 'default',
-	min 		=> "0.6.2",
+	min 		=> "0.6.14",
 	suggested 	=> "0.6.14",
 	installed	=> undef,	# set by ->new
 	installed_num	=> undef,	# set by ->new
@@ -40,6 +41,7 @@ my %TOOLS = (
     },
     ImageMagick => {
     	order		=> ++$ORDER,
+        command         => "convert",
     	comment		=> __"Needed for preview image processing",
 	optional	=> 0,
 	get_version 	=> sub {
@@ -49,10 +51,11 @@ my %TOOLS = (
 	},
 	convert 	=> 'default',
 	min 		=> "4.0.0",
-	suggested 	=> "5.5.3",
+	suggested 	=> "6.2.3",
     },
     xvid4conf => {
     	order		=> ++$ORDER,
+        command         => "xvid4conf",
     	comment		=> __"xvid4 configuration tool",
 	optional	=> 1,
 	get_version 	=> sub {
@@ -62,10 +65,11 @@ my %TOOLS = (
 	},
 	convert 	=> 'default',
 	min 		=> "1.6",
-	suggested 	=> "1.6",
+	suggested 	=> "1.12",
     },
     subtitle2pgm => {
      	order		=> ++$ORDER,
+        command         => "subtitle2pgm",
    	comment		=> __"Needed for subtitles",
 	optional	=> 1,
 	get_version 	=> sub {
@@ -79,6 +83,7 @@ my %TOOLS = (
     },
     rar => {
      	order		=> ++$ORDER,
+        command         => Video::DVDRip::Depend->config('rar_command'),
    	comment		=> __"Needed for compressed subtitles",
 	optional	=> 1,
 	get_version 	=> sub {
@@ -95,6 +100,7 @@ my %TOOLS = (
     },
     mplayer => {
      	order		=> ++$ORDER,
+        command         => "mplayer",
    	comment		=> __"Needed for subtitle vobsub viewing",
 	optional	=> 1,
 	get_version 	=> sub {
@@ -109,10 +115,11 @@ my %TOOLS = (
 	},
 	convert 	=> 'default',
 	min 		=> "0.90",
-	suggested 	=> "0.90",
+	suggested 	=> "1.00",
     },
     ogmtools => {
     	order		=> ++$ORDER,
+        command         => "ogmmerge",
     	comment		=> __"Needed for OGG/Vorbis",
 	optional	=> 1,
 	get_version 	=> sub {
@@ -122,10 +129,11 @@ my %TOOLS = (
 	},
 	convert 	=> 'default',
 	min 		=> "1.0.0",
-	suggested 	=> "1.0.0",
+	suggested 	=> "1.5",
     },
     dvdxchap => {
     	order		=> ++$ORDER,
+        command         => "dvdxchap",
     	comment		=> __"For chapter progress bar (ogmtools)",
 	optional	=> 1,
 	get_version 	=> sub {
@@ -135,10 +143,11 @@ my %TOOLS = (
 	},
 	convert 	=> 'default',
 	min 		=> "1.0.0",
-	suggested 	=> "1.0.0",
+	suggested 	=> "1.5",
     },
     mjpegtools => {
     	order		=> ++$ORDER,
+        command         => "mplex",
     	comment		=> __"Needed for (S)VCD encoding",
 	optional	=> 1,
 	get_version 	=> sub {
@@ -148,10 +157,11 @@ my %TOOLS = (
 	},
 	convert 	=> 'default',
 	min 		=> "1.6.0",
-	suggested 	=> "1.6.0",
+	suggested 	=> "1.6.2",
     },
     cdrdao => {
     	order		=> ++$ORDER,
+        command         => "cdrdao",
     	comment		=> __"Needed for (S)VCD burning",
 	optional	=> 1,
 	get_version 	=> sub {
@@ -161,10 +171,11 @@ my %TOOLS = (
 	},
 	convert 	=> 'default',
 	min 		=> "1.1.7",
-	suggested 	=> "1.1.7",
+	suggested 	=> "1.1.9",
     },
     vcdimager => { 
     	order		=> ++$ORDER,
+        command         => "vcdimager",
     	comment		=> __"Needed for (S)VCD burning",
 	optional	=> 1,
 	get_version 	=> sub {
@@ -174,10 +185,11 @@ my %TOOLS = (
 	},
 	convert 	=> 'default',
 	min 		=> "0.7.12",
-	suggested 	=> "0.7.12",
+	suggested 	=> "0.7.21",
     },
     mkisofs => {
     	order		=> ++$ORDER,
+        command         => "mkisofs",
     	comment		=> __"Needed for AVI/OGG burning",
 	optional	=> 1,
 	get_version 	=> sub {
@@ -191,6 +203,7 @@ my %TOOLS = (
     },
     cdrecord => {
     	order		=> ++$ORDER,
+        command         => "cdrecord",
     	comment		=> __"Needed for AVI/OGG burning on CD",
 	optional	=> 1,
 	get_version 	=> sub {
@@ -200,10 +213,11 @@ my %TOOLS = (
 	},
 	convert 	=> 'default',
 	min 		=> "0.7.12",
-	suggested 	=> "2.0",
+	suggested 	=> "2.6.11",
     },
     dvdrecord => {
     	order		=> ++$ORDER,
+        command         => "dvdrecord",
     	comment		=> __"Needed for AVI/OGG burning on DVD",
 	optional	=> 1,
 	get_version 	=> sub {
@@ -217,6 +231,7 @@ my %TOOLS = (
     },
     xine => {
     	order		=> ++$ORDER,
+        command         => "xine",
     	comment		=> __"Can be used to view DVD's/files",
 	optional	=> 1,
 	get_version 	=> sub {
@@ -230,6 +245,7 @@ my %TOOLS = (
     },
     fping => {
     	order		=> ++$ORDER,
+        command         => "/usr/sbin/fping",
     	comment		=> __"Only for cluster mode master",
 	optional	=> 1,
 	get_version 	=> sub {
@@ -265,6 +281,8 @@ sub new {
 	
 	my $OBJECT = bless {}, $class;
 	
+	$OBJECT->load_tool_version_cache;
+	
 	my $dependencies_ok = 1;
 	
 	my ($tool, $def);
@@ -279,7 +297,8 @@ sub new {
 		
 		$DEBUG && print "[depend] $tool => ";
 
-		my $version = &$get_version($OBJECT);
+		my $version = $OBJECT->get_cached_version($def) ||
+			      &$get_version($OBJECT);
 
 		if ( $version ne '' ) {
 			$DEBUG && print "$version ";
@@ -302,8 +321,97 @@ sub new {
 	}
 	
 	$OBJECT->{ok} = $dependencies_ok;
-	
+
+	$OBJECT->update_tool_version_cache;
+
 	return $OBJECT;
+}
+
+sub load_tool_version_cache {
+	my $self = shift;
+
+	my $dir      = "$ENV{HOME}/.dvdrip";
+	my $filename = "$dir/tool_version_cache";
+
+	return unless -f $filename;
+	
+	open (IN, $filename) or die "can't read $filename";
+	while (<IN>) {
+		chomp;
+		my ($tool, $path, $mtime, $size, $version) = split(/\t/, $_);
+		my $def = $self->tools->{$tool};
+		$def->{path}  = $path;
+		$def->{mtime} = $mtime;
+		$def->{size}  = $size;
+		$def->{cached_version} = $version;
+	}
+	close IN;
+	
+	1;
+}
+
+sub update_tool_version_cache {
+	my $self = shift;
+
+	my $dir      = "$ENV{HOME}/.dvdrip";
+	my $filename = "$dir/tool_version_cache";
+	
+	mkdir $dir, 0755 or die "can't create $dir" if not -d $dir;
+
+	open (OUT, ">$filename") or die "can't write $filename";
+	while ( my ($tool, $def) = each %{$self->tools} ) {
+		print OUT $tool."\t".
+			  $def->{path}."\t".
+			  $def->{mtime}."\t".
+			  $def->{size}."\t".
+			  $def->{installed}."\n";
+	}
+	close OUT;
+	
+	1;
+}
+
+sub get_cached_version {
+	my $self = shift;
+	my ($tool_def) = @_;
+	
+	my $version = $tool_def->{cached_version};
+	
+	my $path = $self->get_full_path($tool_def->{command});
+	if ( $path ne $tool_def->{path} ) {
+		$tool_def->{path} = $path;
+		$version = undef;
+	}
+	
+	my $size = -s $path;
+	if ( $size != $tool_def->{size} ) {
+		$tool_def->{size} = $size;
+		$version = undef;
+	}
+
+	my $mtime = (stat $path)[9];
+	if ( $mtime != $tool_def->{mtime} ) {
+		$tool_def->{mtime} = $mtime;
+		$version = undef;
+	}
+
+	return $version;
+}
+
+sub get_full_path {
+	my $self = shift,
+	my ($file) = @_;
+
+	return $file if $file =~ m!^/!;
+
+	if ( not -x $file ) {
+		foreach my $p ( split (/:/, $ENV{PATH}) ) {
+			$file = "$p/$file",last if -x "$p/$file";
+		}
+	}
+
+	return $file if -x $file;
+	return;
 }
 
 sub ok				{ shift->{ok}				}
@@ -358,6 +466,27 @@ __EOF
 	}
 	
 	print "</table>\n";
+}
+
+sub installed_tools_as_text {
+	my $self = shift;
+
+	my $tools = \%TOOLS;
+
+	my $format = "  %-20s %-10s\n";
+	my $text   = "\n".sprintf($format, __"Program", __"Version");
+
+	$text .= "  ".("-" x 31)."\n";
+	
+	foreach my $tool ( sort { $tools->{$a}->{order} <=> $tools->{$b}->{order} }
+			   keys %{$tools} ) {
+		my $def = $tools->{$tool};
+		$text .= sprintf($format, $tool, $def->{installed});
+	}
+	
+	$text .= "  ".("-" x 31)."\n";
+
+	return $text;
 }
 
 1;

@@ -1,4 +1,4 @@
-# $Id: Preview.pm,v 1.11 2005/05/06 12:20:04 joern Exp $
+# $Id: Preview.pm,v 1.12 2005/07/23 08:14:15 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -17,6 +17,7 @@ use strict;
 @Video::DVDRip::GUI::Preview::ISA = qw ( Video::DVDRip::GUI::Base );
 
 use Video::DVDRip::TranscodeRC;
+use Gtk2::Helper;
 
 sub transcode_remote		{ shift->{transcode_remote}		}
 sub transcode_pipe		{ shift->{transcode_pipe}		}
@@ -41,10 +42,11 @@ sub set_gdk_input		{ shift->{gdk_input}		= $_[1]	}
 sub new {
 	my $class = shift;
 	my %par = @_;
-	my  ($closed_cb, $selection_cb, $eof_cb) =
-	@par{'closed_cb','selection_cb','eof_cb'};
+	my  ($form_factory, $closed_cb, $selection_cb, $eof_cb) =
+	@par{'form_factory','closed_cb','selection_cb','eof_cb'};
 
 	my $self = {
+		form_factory	=> $form_factory,
 		closed_cb	=> $closed_cb,
 		selection_cb	=> $selection_cb,
 		eof_cb		=> $eof_cb,
@@ -64,7 +66,7 @@ sub open {
 	
 	# start transcode
 	
-	my $title = $self->comp('project')->selected_title;
+	my $title = $self->selected_title;
 	
 	my ($orig_start, $orig_end) = (
 		$title->tc_start_frame,
@@ -113,17 +115,17 @@ sub open {
 	my $start_time = time();
 	
 	my $timer;
-	$timer = Gtk->timeout_add ( 200, sub {
+	$timer = Glib::Timeout->add ( 200, sub {
 		if ( not -e $socket_file ) {
 			if ( time - $start_time >= 10 ) {
 				$self->stop;
-				Gtk->timeout_remove($timer);
+				Glib::Source->remove($timer);
 				croak "msg:Couldn't start transcode.";
 			}
 			return 1;
 		}
 
-		Gtk->timeout_remove($timer);
+		Glib::Source->remove($timer);
 
 		# start remote control
 		my $transcode_remote = Video::DVDRip::TranscodeRC->new (
@@ -143,9 +145,9 @@ sub open {
 
 		my $socket_fileno = $transcode_remote->socket->fileno;
 
-		my $gdk_input = Gtk::Gdk->input_add (
+		my $gdk_input = Gtk2::Helper->add_watch (
 			$socket_fileno,
-			'read', sub {
+			'in', sub {
 				my $rc = $transcode_remote->receive;
 				if ( defined $rc ) {
 					$self->process_transcode_remote_output (
@@ -171,7 +173,7 @@ sub open {
 sub apply_filter_settings {
 	my $self = shift;
 
-	my $title = $self->comp('project')->selected_title;
+	my $title = $self->selected_title;
 
 	my $config_strings =
 		$title->tc_filter_settings
@@ -215,10 +217,10 @@ sub stop {
 	if ( $self->transcode_remote and $self->transcode_remote->paused ) {
 		$self->pause;
 		$self->transcode_remote->quit;
-		Gtk->timeout_add (500, sub {
+		Glib::Timeout->add (500, sub {
 			$self->transcode_remote->disconnect;
 			$self->transcode_pipe->cancel;
-			Gtk::Gdk->input_remove( $self->gdk_input );
+			Gtk2::Helper->remove_watch($self->gdk_input);
 			$self->close;
 			return 0;
 
@@ -228,7 +230,7 @@ sub stop {
 			if $self->transcode_remote;
 		$self->transcode_pipe->cancel
 			if $self->transcode_pipe;
-		Gtk::Gdk->input_remove( $self->gdk_input );
+		Gtk2::Helper->remove_watch($self->gdk_input);
 		$self->close;
 	}
 	
@@ -267,7 +269,7 @@ sub process_transcode_remote_output {
 		&$closed_cb() if $closed_cb;
 		if ( $self->transcode_pipe ) {
 			$self->transcode_pipe->cancel;
-			Gtk::Gdk->input_remove( $self->gdk_input );
+			Gtk2::Helper->remove_watch($self->gdk_input);
 			$self->close;
 		}
 	}

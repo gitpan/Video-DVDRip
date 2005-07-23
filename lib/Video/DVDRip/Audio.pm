@@ -1,4 +1,4 @@
-# $Id: Audio.pm,v 1.14 2005/02/13 21:22:51 joern Exp $
+# $Id: Audio.pm,v 1.15 2005/07/23 08:14:15 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -15,6 +15,10 @@ use base Video::DVDRip::Base;
 
 use Carp;
 use strict;
+
+# Title this track belongs to
+sub title			{ shift->{title}			}
+sub set_title			{ shift->{title}		= $_[1]	}
 
 # Attributes of the audio channel on DVD
 
@@ -61,26 +65,74 @@ sub tc_mp2_bitrate		{ shift->{tc_mp2_bitrate}		}
 sub tc_mp2_samplerate		{ shift->{tc_mp2_samplerate}		}
 sub tc_pcm_bitrate		{ shift->{tc_pcm_bitrate}		}
 
-sub set_tc_audio_codec		{ shift->{tc_audio_codec}	= $_[1]	}
-sub set_tc_mp3_bitrate		{ shift->{tc_mp3_bitrate}	= $_[1]	}
+#sub set_tc_audio_codec		{ shift->{tc_audio_codec}	= $_[1]	}
+#sub set_tc_mp3_bitrate		{ shift->{tc_mp3_bitrate}	= $_[1]	}
 sub set_tc_mp3_samplerate	{ shift->{tc_mp3_samplerate}	= $_[1]	}
 sub set_tc_mp3_quality		{ shift->{tc_mp3_quality}	= $_[1]	}
 sub set_tc_ac3_bitrate		{ shift->{tc_ac3_bitrate}	= $_[1]	}
-sub set_tc_vorbis_bitrate	{ shift->{tc_vorbis_bitrate}	= $_[1]	}
+#sub set_tc_vorbis_bitrate	{ shift->{tc_vorbis_bitrate}	= $_[1]	}
 sub set_tc_vorbis_samplerate	{ shift->{tc_vorbis_samplerate}	= $_[1]	}
-sub set_tc_vorbis_quality	{ shift->{tc_vorbis_quality}	= $_[1]	}
-sub set_tc_vorbis_quality_enable{ shift->{tc_vorbis_quality_enable}=$_[1]}
-sub set_tc_mp2_bitrate		{ shift->{tc_mp2_bitrate}	= $_[1]	}
+#sub set_tc_vorbis_quality	{ shift->{tc_vorbis_quality}	= $_[1]	}
+#sub set_tc_vorbis_quality_enable{ shift->{tc_vorbis_quality_enable}=$_[1]}
+#sub set_tc_mp2_bitrate		{ shift->{tc_mp2_bitrate}	= $_[1]	}
 sub set_tc_mp2_samplerate	{ shift->{tc_mp2_samplerate}	= $_[1]	}
 sub set_tc_pcm_bitrate		{ shift->{tc_pcm_bitrate}	= $_[1]	}
+
+sub set_tc_audio_codec	{
+	my $self = shift;
+	my ($value) = @_;
+	$self->{tc_audio_codec} = $value;
+	$self->title->calc_video_bitrate;
+	return $value;
+}
+
+sub set_tc_mp3_bitrate	{
+	my $self = shift;
+	my ($value) = @_;
+	$self->{tc_mp3_bitrate} = $value;
+	$self->title->calc_video_bitrate;
+	return $value;
+}
+
+sub set_tc_mp2_bitrate	{
+	my $self = shift;
+	my ($value) = @_;
+	$self->{tc_mp2_bitrate} = $value;
+	$self->title->calc_video_bitrate;
+	return $value;
+}
+
+sub set_tc_vorbis_bitrate {
+	my $self = shift;
+	my ($value) = @_;
+	$self->{tc_vorbis_bitrate} = $value;
+	$self->title->calc_video_bitrate;
+	return $value;
+}
+
+sub set_tc_vorbis_quality {
+	my $self = shift;
+	my ($value) = @_;
+	$self->{tc_vorbis_quality} = $value;
+	$self->title->calc_video_bitrate;
+	return $value;
+}
+
+sub set_tc_vorbis_quality_enable {
+	my $self = shift;
+	my ($value) = @_;
+	$self->{tc_vorbis_quality_enable} = $value;
+	$self->title->calc_video_bitrate;
+	return $value;
+}
 
 sub new {
 	my $class = shift;
 	my %par = @_;
 	my  ($type, $lang, $channels, $bitrate, $volume_rescale) =
 	@par{'type','lang','channels','bitrate','volume_rescale'};
-	my  ($sample_rate, $scan_output) =
-	@par{'sample_rate','scan_output'};
+	my  ($title, $sample_rate, $scan_output) =
+	@par{'title','sample_rate','scan_output'};
 	my  ($tc_target_track, $tc_audio_codec, $tc_bitrate) =
 	@par{'tc_target_track','tc_audio_codec','tc_bitrate'};
 	my  ($tc_ac3_passthrough, $tc_mp3_quality, $tc_audio_filter) =
@@ -100,6 +152,7 @@ sub new {
 	$tc_volume_rescale	||= 0;
 
 	my $self = {
+		title			=> $title,
 		type			=> $type,
 		lang			=> $lang,
 		channels		=> $channels,
@@ -122,7 +175,6 @@ sub new {
 		tc_volume_rescale	=> $tc_volume_rescale,
 		tc_vorbis_quality	=> 3.00,
 		tc_vorbis_quality_enable=> 0,
-
     	};
 	
 	return bless $self, $class;
@@ -170,6 +222,28 @@ sub is_passthrough {
 	my $self = shift;
 	return $self->tc_audio_codec eq 'ac3' ||
 	       $self->tc_audio_codec eq 'pcm';
+}
+
+sub info {
+	my $self = shift;
+	my %par = @_;
+	my ($with_target) = @par{'with_target'};
+
+	my $sample_rate = $self->sample_rate;
+	$sample_rate = "48kHz"   if $sample_rate == 48000;
+	$sample_rate = "41.1kHz" if $sample_rate == 44100;
+
+	my $target;
+	if ( $with_target ) {
+		if ( $self->tc_target_track < 0 ) {
+			$target = " => ".__"Discard";
+		} else {
+			$target = " => ".($self->tc_target_track+1)
+		}
+	}
+
+	return $self->lang." ".$self->type." ".
+	       "$sample_rate ".$self->channels."Ch$target";
 }
 
 1;
