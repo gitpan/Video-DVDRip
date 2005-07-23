@@ -1,8 +1,12 @@
-$Id: TODO,v 1.121 2005/04/23 14:40:37 joern Exp $
+$Id: TODO,v 1.123 2005/07/23 07:56:49 joern Exp $
 
 KNOWN BUGS:
 ===========
 
+- realtime subtitle preview resp. subtitling in general doesn't
+  work in RGB colorspace. dvd::rip should warn about this, when
+  clip&zoom parameters has odd values which force RGB colorspace,
+  but user still tries to render subtitles.
 - xvid4.conf is ignored in cluster mode. Reported by
   Ron <ron AT ron-kitten.net>
 - shutting down dvd::rip on the logging tab is slow. Reported
@@ -33,6 +37,12 @@ may be implemented soon, some eventually never... ;)
 
 TODO:
 =====
+- Do "ls /dvdmountpoint" instead of mounting it if an automounter
+  is in action. Probably need to be configured in the Preferences
+  dialog. Suggested by Sunny <sloncho AT gmail.com>.
+- scan all audio tracks during ripping, suggested by Ole Tange.
+- subtitle preview: interactive subtitle positioning feature, suggested
+  by Benjamin Van Laere <B.VanLaere AT unpeu.com>
 - allow mono audio
 - make transcode's -H option configurable to solve A/V sync
   problems with some material. Suggested by Wayne Hogue

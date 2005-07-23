@@ -1,4 +1,4 @@
-# $Id: Message.pm,v 1.5 2004/04/11 23:36:20 joern Exp $
+# $Id: Message.pm,v 1.6 2005/06/19 13:41:53 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -21,7 +21,7 @@ sub pack {
 	my $class = shift;
 	my ($ref) = @_;
 
-	my $packed = Storable::freeze ($ref);
+	my $packed = Storable::nfreeze ($ref);
 
 	$packed =~ s/\\/\\\\/g;
 	$packed =~ s/\n/\\n/g;

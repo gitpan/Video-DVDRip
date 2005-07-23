@@ -1,4 +1,4 @@
-# $Id: TranscodeTab.pm,v 1.91 2005/05/07 12:06:16 joern Exp $
+# $Id: TranscodeTab.pm,v 1.92 2005/06/19 13:42:52 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -1627,27 +1627,23 @@ sub transcode {
 	}
 
 	if ( $split ) {
-		$last_job->set_cb_finished ( sub {
-			$self->create_splitted_vobsub (
-				exec     => $exec,
-				last_job => $last_job
-			);
-			1;
-		} );
+		$self->create_splitted_vobsub (
+			exec     => $exec,
+			last_job => $last_job
+		);
 	} else {
-		$last_job->set_cb_finished ( sub {
-			$self->create_non_splitted_vobsub (
-				exec     => $exec,
-				last_job => $last_job
-			);
-			1;
-		} );
+		$self->create_non_splitted_vobsub (
+			exec     => $exec,
+			last_job => $last_job
+		);
 	}
 
 	$exec->set_cb_finished (sub {
 		return 1 if $exec->cancelled or $exec->errors_occured;
 		return 1 if $subtitle_test;
 		if ( $title->tc_execute_afterwards =~ /\S/ ) {
+			$self->log(__x("Execute command after transcoding: {command}",
+				   command => $title->tc_execute_afterwards));
 			system ("(".$title->tc_execute_afterwards.") &");
 		}
 		if ( $title->tc_exit_afterwards ) {
@@ -1780,27 +1776,23 @@ sub transcode_multipass_with_vbr_audio {
 		$job->set_depends_on_jobs ( [ $last_job ] );
 		$last_job = $exec->add_job ( job => $job );
 
-		$last_job->set_cb_finished ( sub {
-			$self->create_splitted_vobsub (
-				exec     => $exec,
-				last_job => $last_job
-			);
-			1;
-		} );
+		$self->create_splitted_vobsub (
+			exec     => $exec,
+			last_job => $last_job
+		);
 	} else {
-		$last_job->set_cb_finished ( sub {
-			$self->create_non_splitted_vobsub (
-				exec     => $exec,
-				last_job => $last_job
-			);
-			1;
-		} );
+		$self->create_non_splitted_vobsub (
+			exec     => $exec,
+			last_job => $last_job
+		);
 	}
 
 	# 6. execute afterwards stuff
 	$exec->set_cb_finished (sub {
 		return 1 if $exec->cancelled or $exec->errors_occured;
 		if ( $title->tc_execute_afterwards =~ /\S/ ) {
+			$self->log(__x("Execute command after transcoding: {command}",
+				   command => $title->tc_execute_afterwards));
 			system ("(".$title->tc_execute_afterwards.") &");
 		}
 		if ( $title->tc_exit_afterwards ) {
@@ -1850,13 +1842,10 @@ sub avisplit {
 
 	$last_job = $exec->add_job ( job => $job );
 
-	$last_job->set_cb_finished ( sub {
-		$self->create_splitted_vobsub (
-			exec     => $exec,
-			last_job => $last_job
-		);
-		1;
-	} );
+	$self->create_splitted_vobsub (
+		exec     => $exec,
+		last_job => $last_job
+	);
 
 	$exec->execute_jobs;
 

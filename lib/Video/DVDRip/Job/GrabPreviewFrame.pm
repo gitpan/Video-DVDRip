@@ -1,4 +1,4 @@
-# $Id: GrabPreviewFrame.pm,v 1.4 2004/04/11 23:36:20 joern Exp $
+# $Id: GrabPreviewFrame.pm,v 1.5 2005/06/19 13:58:01 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -42,7 +42,8 @@ sub init {
 	my $title = $self->title;
 	
 	if ( $title->project->rip_mode eq 'rip' and
-	     $title->has_vob_nav_file ) {
+	     $title->has_vob_nav_file and
+	     !$title->tc_force_slow_grabbing ) {
 		$self->set_progress_show_fps ( 0 );
 		$self->set_progress_max ( 5 );
 		$self->set_progress_cnt ( 5 );
@@ -78,7 +79,8 @@ sub parse_output {
 			$self->set_operation_successful (1);
 		} else {
 			$self->set_error_message (
-				__"transcode can't find this frame."
+				__"transcode can't find this frame. ".
+				  "Try forcing slow frame grabbing."
 			);
 			$self->abort_job;
 		}

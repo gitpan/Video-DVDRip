@@ -1,4 +1,4 @@
-# $Id: Title.pm,v 1.153 2005/05/16 08:07:26 joern Exp $
+# $Id: Title.pm,v 1.154 2005/06/19 13:58:01 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -140,6 +140,7 @@ sub tc_video_framerate		{ shift->{tc_video_framerate}      	}
 sub tc_fast_bisection		{ shift->{tc_fast_bisection}      	}
 sub tc_psu_core			{ shift->{tc_psu_core}      		}
 sub tc_keyframe_interval	{ shift->{tc_keyframe_interval}	|| 250	}
+sub tc_force_slow_grabbing	{ shift->{tc_force_slow_grabbing}	}
 
 sub tc_target_size		{ shift->{tc_target_size}		}
 sub tc_disc_cnt 	    	{ shift->{tc_disc_cnt}			}
@@ -182,6 +183,7 @@ sub set_tc_video_framerate	{ shift->{tc_video_framerate} 	= $_[1]	}
 sub set_tc_fast_bisection	{ shift->{tc_fast_bisection} 	= $_[1]	}
 sub set_tc_psu_core		{ shift->{tc_psu_core} 		= $_[1]	}
 sub set_tc_keyframe_interval	{ shift->{tc_keyframe_interval}	= $_[1]	}
+sub set_tc_force_slow_grabbing	{ shift->{tc_force_slow_grabbing}= $_[1]}
 
 sub set_tc_target_size		{ shift->{tc_target_size}    	= $_[1]	}
 sub set_tc_disc_cnt		{ shift->{tc_disc_cnt}    	= $_[1]	}
@@ -2381,12 +2383,15 @@ sub get_frame_grab_options {
 	my %par = @_;
 	my ($frame) = @par{'frame'};
 
-	if ( $self->project->rip_mode ne 'rip' or not $self->has_vob_nav_file ) {
+	if ( $self->project->rip_mode ne 'rip' or not $self->has_vob_nav_file or
+	     $self->tc_force_slow_grabbing ) {
 		$self->log (__"Fast VOB navigation only available for ripped DVD's, ".
                              "falling back to slow method.")
 			if $self->project->rip_mode ne 'rip';
 		$self->log (__"VOB navigation file is missing. Slow navigation method used.")
 			if $self->project->rip_mode eq 'rip' and not $self->has_vob_nav_file;
+		$self->log (__"Using slow preview grabbing as adviced by user")
+			if $self->tc_force_slow_grabbing;
 		return {
 			c => $frame."-".($frame+1),
 		};

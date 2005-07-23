@@ -1,4 +1,4 @@
-# $Id: SubtitleTab.pm,v 1.17 2005/05/06 11:35:00 joern Exp $
+# $Id: SubtitleTab.pm,v 1.18 2005/06/19 13:42:52 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -1366,6 +1366,8 @@ sub create_splitted_vobsub {
 	my %par = @_;
 	my ($exec, $last_job) = @par{'exec','last_job'};
 
+	my $has_exec = $exec ? 1 : 0;
+
 	my $title = $self->selected_title;
 	return 1 if not $title;
 	return 1 if not $title->has_vobsub_subtitles;
@@ -1436,7 +1438,7 @@ sub create_splitted_vobsub {
 		}
 	}
 
-	$exec->execute_jobs;
+	$exec->execute_jobs unless $has_exec;
 
 	1;
 }
@@ -1445,6 +1447,8 @@ sub create_non_splitted_vobsub {
 	my $self = shift;
 	my %par = @_;
 	my ($exec, $last_job) = @par{'exec','last_job'};
+
+	my $has_exec = $exec ? 1 : 0;
 
 	my $title = $self->selected_title;
 	return 1 if not $title;
@@ -1487,7 +1491,7 @@ sub create_non_splitted_vobsub {
 		$last_job = $exec->add_job ( job => $job );
 	}
 
-	$exec->execute_jobs;
+	$exec->execute_jobs unless $has_exec;
 
 	1;
 }

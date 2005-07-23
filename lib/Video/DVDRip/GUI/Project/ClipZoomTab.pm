@@ -1,4 +1,4 @@
-# $Id: ClipZoomTab.pm,v 1.43 2005/04/23 14:33:32 joern Exp $
+# $Id: ClipZoomTab.pm,v 1.44 2005/06/19 13:58:01 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -84,6 +84,19 @@ sub create_adjust_tab {
 	$button->signal_connect ("clicked", sub { $self->preview_video } );
 	$hbox->pack_start($button, 0, 1, 0);
 	$self->adjust_widgets->{show_video_from_here_button} = $button;
+
+	my $checkbox = Gtk::CheckButton->new(__"Force slow frame grabbing");
+	$checkbox->show;
+	$hbox->pack_start($checkbox, 0, 1, 0);
+
+	$self->adjust_widgets->{force_slow_grabbing} = $checkbox;
+
+	$checkbox->signal_connect("clicked" => sub {
+		my $title = $self->selected_title;
+		return 1 if not $title;
+		$title->set_tc_force_slow_grabbing($_[0]->get_active);
+		1;
+	} );
 
 	# images
 
@@ -647,6 +660,8 @@ sub init_adjust_values {
 
 	$widgets->{tc_fast_resize_yes}->set_active($fast_resize);
 	$widgets->{tc_fast_resize_no}->set_active(!$fast_resize);
+
+	$widgets->{force_slow_grabbing}->set_active($title->tc_force_slow_grabbing);
 
 	$self->update_fast_resize_info;
 

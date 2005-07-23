@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: dvdrip\n"
 "Report-Msgid-Bugs-To: dvd::rip Translation Team <dvdrip-lang AT exit1.org>\n"
-"POT-Creation-Date: 2005-05-16 13:22+0200\n"
+"POT-Creation-Date: 2005-07-23 10:01+0200\n"
 "PO-Revision-Date: 2004-05-15 22:24-0500\n"
 "Last-Translator: Ales Tosovsky <tosovsky@wo.cz>\n"
 "Language-Team: Czech <tosovsky@wo.cz>\n"
@@ -129,14 +129,14 @@ msgstr "Potvrzení"
 msgid "Cancel"
 msgstr "Zrušit"
 
-#: ../lib/Video/DVDRip/GUI/Base.pm:155 ../lib/Video/DVDRip/GUI/Base.pm:335
+#: ../lib/Video/DVDRip/GUI/Base.pm:155 ../lib/Video/DVDRip/GUI/Base.pm:368
 msgid "dvd::rip Message"
 msgstr "dvd::rip Zpráva"
 
-#: ../lib/Video/DVDRip/GUI/Base.pm:257 ../lib/Video/DVDRip/GUI/Main.pm:606
+#: ../lib/Video/DVDRip/GUI/Base.pm:263 ../lib/Video/DVDRip/GUI/Main.pm:606
 #: ../lib/Video/DVDRip/GUI/Project/BurnTab.pm:756
-#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:446
-#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:464
+#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:459
+#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:477
 #: ../lib/Video/DVDRip/GUI/Project/TitleTab.pm:660
 #: ../lib/Video/DVDRip/GUI/Project/TranscodeTab.pm:445
 #: ../lib/Video/DVDRip/GUI/Project/TranscodeTab.pm:965
@@ -146,9 +146,9 @@ msgstr "dvd::rip Zpráva"
 msgid "Yes"
 msgstr "Ano"
 
-#: ../lib/Video/DVDRip/GUI/Base.pm:260 ../lib/Video/DVDRip/GUI/Main.pm:607
-#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:449
-#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:467
+#: ../lib/Video/DVDRip/GUI/Base.pm:266 ../lib/Video/DVDRip/GUI/Main.pm:607
+#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:462
+#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:480
 #: ../lib/Video/DVDRip/GUI/Project/TitleTab.pm:201
 #: ../lib/Video/DVDRip/GUI/Project/TranscodeTab.pm:448
 #: ../lib/Video/DVDRip/GUI/Project/TranscodeTab.pm:968
@@ -530,104 +530,109 @@ msgstr "Provést"
 msgid "Show video from here"
 msgstr "Přehrát video z této pozice"
 
-#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:124
+#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:88
+#, fuzzy
+msgid "Force slow frame grabbing"
+msgstr "Zarovnání výsledného snímku"
+
+#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:137
 msgid "After 1st clipping"
 msgstr "Po prvním oříznutí"
 
-#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:161
+#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:174
 msgid "After zoom"
 msgstr "Po změně velikosti"
 
-#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:198
+#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:211
 msgid "After 2nd clipping"
 msgstr "Po druhém oříznutí"
 
-#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:208
+#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:221
 msgid "Adjust clip and zoom parameters"
 msgstr "Nastavení parametrů oříznutí a změny velikosti"
 
-#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:228
+#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:241
 msgid "Presets"
 msgstr "Předvolby"
 
-#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:262
+#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:275
 msgid "Apply preset values"
 msgstr "Použít přednastavené hodnoty"
 
-#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:272
+#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:285
 #, perl-brace-format
 msgid "Applied preset '{preset}'."
 msgstr "Použité předvolby '{preset}'."
 
-#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:283
+#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:296
 msgid "1st clipping"
 msgstr "První oříznutí"
 
-#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:292
-#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:496
+#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:305
+#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:509
 msgid "Top"
 msgstr "Nahoře"
 
-#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:308
-#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:512
+#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:321
+#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:525
 msgid "Bottom"
 msgstr "Dole"
 
-#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:324
-#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:528
+#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:337
+#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:541
 msgid "Left"
 msgstr "Vlevo"
 
-#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:340
-#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:544
+#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:353
+#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:557
 msgid "Right"
 msgstr "Vpravo"
 
-#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:356
+#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:369
 msgid "Generate preview images"
 msgstr "Vygenerovat zkušební snímky"
 
-#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:369
+#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:382
 msgid "Zoom"
 msgstr "Změna velikosti"
 
-#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:378
+#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:391
 msgid "Width"
 msgstr "Šířka"
 
-#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:394
+#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:407
 msgid "Height"
 msgstr "Výška"
 
-#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:421
+#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:434
 msgid "Calc height"
 msgstr "Spočítat výšku"
 
-#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:428
+#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:441
 msgid "Calc width"
 msgstr "Spočítat šířku"
 
-#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:439
+#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:452
 msgid "Use fast resizing"
 msgstr "Použít rychlou změnu velikosti"
 
-#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:460
+#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:473
 msgid "Fast frame bisection"
 msgstr "Rychlé dělení snímků"
 
-#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:475
+#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:488
 msgid "Open zoom calculator"
 msgstr "Otevřít kalkulátor velikosti"
 
-#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:487
+#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:500
 msgid "2nd clipping"
 msgstr "Druhé oříznutí"
 
-#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:560
+#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:573
 msgid "Move 2nd clipping to 1st"
 msgstr "Přenést druhé oříznutí na první"
 
-#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:782
+#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:797
 #, fuzzy, perl-format
 msgid ""
 "Size: %d%sx%d%s\n"
@@ -636,37 +641,37 @@ msgstr ""
 "Velikost: %d%sx%d%s\n"
 "Eff. poměr: %s, fyz. poměr: %s"
 
-#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:814
-#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:866
-#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:1009
-#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:1113
-#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:1137
+#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:829
+#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:881
+#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:1024
+#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:1128
+#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:1152
 #: ../lib/Video/DVDRip/GUI/Project/TranscodeTab.pm:1447
-#: ../lib/Video/DVDRip/GUI/Project/TranscodeTab.pm:1890
-#: ../lib/Video/DVDRip/GUI/Project/TranscodeTab.pm:1964
+#: ../lib/Video/DVDRip/GUI/Project/TranscodeTab.pm:1879
+#: ../lib/Video/DVDRip/GUI/Project/TranscodeTab.pm:1953
 msgid "You first have to rip this title."
 msgstr "Nejdřív musíte tento titul uložit na disk (ripnout)."
 
-#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:873
+#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:888
 #, fuzzy
 msgid "This function is only available for ripped DVD's."
 msgstr "Tato funkce je dostupná jen u uložených (ripnutých) DVD."
 
-#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:880
+#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:895
 msgid "Illegal frame number. Maximum is "
 msgstr "Nepřípustné číslo snímku. Maximum je"
 
-#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:890
+#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:905
 #, perl-brace-format
 msgid "Executing command for video preview: {command}"
 msgstr "Příkaz pro náhled videa: {command}"
 
-#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:933
+#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:948
 #, perl-brace-format
 msgid "Adjust {type}"
 msgstr "Upravit {type}"
 
-#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:1016
+#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:1031
 msgid ""
 "This is not possible because\n"
 "fast resizing is enabled."
@@ -674,7 +679,7 @@ msgstr ""
 "Toto nelze udělat, protože\n"
 "je povolena rychlá změna velikosti."
 
-#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:1029
+#: ../lib/Video/DVDRip/GUI/Project/ClipZoomTab.pm:1044
 msgid ""
 "2nd clipping parameters can only be\n"
 "moved to 1st clipping parameters, if\n"
@@ -912,8 +917,8 @@ msgid "You need to transcode the subtitles first."
 msgstr "Nejdřív musíte překódovat titulky."
 
 #: ../lib/Video/DVDRip/GUI/Project/SubtitleTab.pm:1294
-#: ../lib/Video/DVDRip/GUI/Project/SubtitleTab.pm:1389
-#: ../lib/Video/DVDRip/GUI/Project/SubtitleTab.pm:1458
+#: ../lib/Video/DVDRip/GUI/Project/SubtitleTab.pm:1391
+#: ../lib/Video/DVDRip/GUI/Project/SubtitleTab.pm:1462
 msgid ""
 "Need IFO files in place.\n"
 "You must re-read TOC from DVD."
@@ -933,7 +938,7 @@ msgstr "Tato funkce je podporována jen u uložených filmů."
 msgid "What about creating the vobsub file first?"
 msgstr "Co takhle vyrobit nejdřív vobsub soubor?"
 
-#: ../lib/Video/DVDRip/GUI/Project/SubtitleTab.pm:1378
+#: ../lib/Video/DVDRip/GUI/Project/SubtitleTab.pm:1380
 msgid ""
 "No splitted target files available.\n"
 "First transcode and split the movie."
@@ -1367,17 +1372,23 @@ msgstr ""
 "Vynechává se první průchod na základě požadavku znovupoužití extistujícího "
 "logu."
 
-#: ../lib/Video/DVDRip/GUI/Project/TranscodeTab.pm:1673
+#: ../lib/Video/DVDRip/GUI/Project/TranscodeTab.pm:1645
+#: ../lib/Video/DVDRip/GUI/Project/TranscodeTab.pm:1794
+#, fuzzy, perl-brace-format
+msgid "Execute command after transcoding: {command}"
+msgstr "Prování se příkaz: {command}"
+
+#: ../lib/Video/DVDRip/GUI/Project/TranscodeTab.pm:1669
 msgid "This title is transcoded with vbr audio and video bitrate optimization."
 msgstr ""
 "Tento titul je kódován s vbr zvukem a optimalizací obrazového datového toku."
 
-#: ../lib/Video/DVDRip/GUI/Project/TranscodeTab.pm:1727
+#: ../lib/Video/DVDRip/GUI/Project/TranscodeTab.pm:1723
 #, perl-brace-format
 msgid "Adjusted video bitrate to {video_bitrate} after vbr audio transcoding"
 msgstr ""
 
-#: ../lib/Video/DVDRip/GUI/Project/TranscodeTab.pm:1830
+#: ../lib/Video/DVDRip/GUI/Project/TranscodeTab.pm:1822
 msgid ""
 "Splitting an AVI file in\n"
 "Chapter Mode makes no sense."
@@ -1385,20 +1396,20 @@ msgstr ""
 "V režimu jednotlivých kapitol nemá\n"
 "dělení AVI souboru smysl."
 
-#: ../lib/Video/DVDRip/GUI/Project/TranscodeTab.pm:1838
-#: ../lib/Video/DVDRip/Title.pm:2804
+#: ../lib/Video/DVDRip/GUI/Project/TranscodeTab.pm:1830
+#: ../lib/Video/DVDRip/Title.pm:2809
 msgid "You first have to transcode this title."
 msgstr "Tento titul musíte nejdříve překódovat. "
 
-#: ../lib/Video/DVDRip/GUI/Project/TranscodeTab.pm:1942
+#: ../lib/Video/DVDRip/GUI/Project/TranscodeTab.pm:1931
 msgid "Titles in chapter mode are not supported"
 msgstr "V režimu jednotlivých kapitol nejsou tituly podporovány"
 
-#: ../lib/Video/DVDRip/GUI/Project/TranscodeTab.pm:1949
+#: ../lib/Video/DVDRip/GUI/Project/TranscodeTab.pm:1938
 msgid "PSU core mode currently not supported"
 msgstr "Režim PSU jádra nyní není podporován"
 
-#: ../lib/Video/DVDRip/GUI/Project/TranscodeTab.pm:1956
+#: ../lib/Video/DVDRip/GUI/Project/TranscodeTab.pm:1945
 msgid ""
 "Cluster mode is only supported\n"
 "for ripped DVD's."
@@ -1406,15 +1417,15 @@ msgstr ""
 "Clusterový režim je podporován\n"
 "jen u uložených (ripnutých) DVD."
 
-#: ../lib/Video/DVDRip/GUI/Project/TranscodeTab.pm:1971
+#: ../lib/Video/DVDRip/GUI/Project/TranscodeTab.pm:1960
 msgid "You have no target audio track selected."
 msgstr "Není zvolena žádná zvuková stopa."
 
-#: ../lib/Video/DVDRip/GUI/Project/TranscodeTab.pm:1978
+#: ../lib/Video/DVDRip/GUI/Project/TranscodeTab.pm:1967
 msgid "MPEG processing is not supported for cluster mode."
 msgstr "V clusterovém režimu není MPEG processing podporován."
 
-#: ../lib/Video/DVDRip/GUI/Project/TranscodeTab.pm:1987
+#: ../lib/Video/DVDRip/GUI/Project/TranscodeTab.pm:1976
 msgid ""
 "WARNING: your frame range setting\n"
 "is ignored in cluster mode"
@@ -2136,8 +2147,9 @@ msgstr "Získává se náhled"
 msgid "frame #{frame}"
 msgstr "snímek #{frame}"
 
-#: ../lib/Video/DVDRip/Job/GrabPreviewFrame.pm:81
-msgid "transcode can't find this frame."
+#: ../lib/Video/DVDRip/Job/GrabPreviewFrame.pm:82
+#, fuzzy
+msgid "transcode can't find this frame. Try forcing slow frame grabbing."
 msgstr "transcode tento snímek nemůže najít."
 
 #: ../lib/Video/DVDRip/Job/GrabSubtitleImages.pm:29
@@ -2403,166 +2415,170 @@ msgstr "Preferovaný jazyk"
 msgid "Workaround transcode NPTL bugs"
 msgstr ""
 
-#: ../lib/Video/DVDRip/Config.pm:314
+#: ../lib/Video/DVDRip/Config.pm:312
+msgid "Set LD_ASSUME_KERNEL to"
+msgstr ""
+
+#: ../lib/Video/DVDRip/Config.pm:320
 msgid "Filesystem"
 msgstr "Souborový systém"
 
-#: ../lib/Video/DVDRip/Config.pm:319
+#: ../lib/Video/DVDRip/Config.pm:325
 msgid "Commands"
 msgstr "Příkazy"
 
-#: ../lib/Video/DVDRip/Config.pm:323
+#: ../lib/Video/DVDRip/Config.pm:329
 msgid "CD burning"
 msgstr "Vypalování CD"
 
-#: ../lib/Video/DVDRip/Config.pm:330
+#: ../lib/Video/DVDRip/Config.pm:336
 msgid "cdrdao options"
 msgstr "Volby cdrdao"
 
-#: ../lib/Video/DVDRip/Config.pm:334
+#: ../lib/Video/DVDRip/Config.pm:340
 msgid "Cluster options"
 msgstr "Volby pro cluster"
 
-#: ../lib/Video/DVDRip/Config.pm:338
+#: ../lib/Video/DVDRip/Config.pm:344
 msgid "Miscellaneous options"
 msgstr "Ostatní možnosti"
 
-#: ../lib/Video/DVDRip/Config.pm:357
+#: ../lib/Video/DVDRip/Config.pm:363
 msgid "- No Modifications -"
 msgstr "- Žádné změny -"
 
-#: ../lib/Video/DVDRip/Config.pm:373
+#: ../lib/Video/DVDRip/Config.pm:379
 msgid "Autoadjust, Big Frame Size, HQ Resize"
 msgstr "Auto-nastavení, Velký snímek, Kvalitní změna velikosti"
 
-#: ../lib/Video/DVDRip/Config.pm:380
+#: ../lib/Video/DVDRip/Config.pm:386
 msgid "Autoadjust, Medium Frame Size, HQ Resize"
 msgstr "Auto-nastavení, Středně velký snímek, Kvalitní změna velikosti"
 
-#: ../lib/Video/DVDRip/Config.pm:387
+#: ../lib/Video/DVDRip/Config.pm:393
 msgid "Autoadjust, Small Frame Size, HQ Resize"
 msgstr "Auto-nastavení, Malý snímek, Kvalitní změna velikosti"
 
-#: ../lib/Video/DVDRip/Config.pm:394
+#: ../lib/Video/DVDRip/Config.pm:400
 msgid "Autoadjust, Big Frame Size, Fast Resize"
 msgstr "Auto-nastavení, Velký snímek, Rychlá změna velikosti"
 
-#: ../lib/Video/DVDRip/Config.pm:401
+#: ../lib/Video/DVDRip/Config.pm:407
 msgid "Autoadjust, Medium Frame Size, Fast Resize"
 msgstr "Auto-nastavení, Středně velký snímek, Rychlá změna velikosti"
 
-#: ../lib/Video/DVDRip/Config.pm:408
+#: ../lib/Video/DVDRip/Config.pm:414
 msgid "Autoadjust, Small Frame Size, Fast Resize"
 msgstr "Auto-nastavení, Malý snímek, Rychlá změna velikosti"
 
-#: ../lib/Video/DVDRip/Config.pm:415
+#: ../lib/Video/DVDRip/Config.pm:421
 msgid "VCD 4:3, PAL"
 msgstr "VCD 4:3, PAL"
 
-#: ../lib/Video/DVDRip/Config.pm:431
+#: ../lib/Video/DVDRip/Config.pm:437
 msgid "VCD 16:9, PAL"
 msgstr "VCD 16:9, PAL"
 
-#: ../lib/Video/DVDRip/Config.pm:447
+#: ../lib/Video/DVDRip/Config.pm:453
 msgid "SVCD 16:9 -> 4:3 letterbox, PAL"
 msgstr "SVCD 16:9 -> 4:3 letterbox, PAL"
 
-#: ../lib/Video/DVDRip/Config.pm:463
+#: ../lib/Video/DVDRip/Config.pm:469
 msgid "SVCD anamorph, PAL"
 msgstr "SVCD anamorph, PAL"
 
-#: ../lib/Video/DVDRip/Config.pm:479
+#: ../lib/Video/DVDRip/Config.pm:485
 msgid "XSVCD anamorph, PAL"
 msgstr "XSVCD anamorph, PAL"
 
-#: ../lib/Video/DVDRip/Config.pm:495
+#: ../lib/Video/DVDRip/Config.pm:501
 msgid "CVD anamorph, PAL"
 msgstr "CVD anamorph, PAL"
 
-#: ../lib/Video/DVDRip/Config.pm:511
+#: ../lib/Video/DVDRip/Config.pm:517
 msgid "VCD 4:3, NTSC"
 msgstr "VCD 4:3, NTSC"
 
-#: ../lib/Video/DVDRip/Config.pm:527
+#: ../lib/Video/DVDRip/Config.pm:533
 msgid "VCD 16:9, NTSC"
 msgstr "VCD 16:9, NTSC"
 
-#: ../lib/Video/DVDRip/Config.pm:543
+#: ../lib/Video/DVDRip/Config.pm:549
 msgid "SVCD 16:9 -> 4:3 letterbox, NTSC"
 msgstr "SVCD 16:9 -> 4:3 letterbox, NTSC"
 
-#: ../lib/Video/DVDRip/Config.pm:559
+#: ../lib/Video/DVDRip/Config.pm:565
 msgid "SVCD anamorph, NTSC"
 msgstr "SVCD anamorph, NTSC"
 
-#: ../lib/Video/DVDRip/Config.pm:575
+#: ../lib/Video/DVDRip/Config.pm:581
 msgid "XSVCD anamorph, NTSC"
 msgstr "XSVCD anamorph, NTSC"
 
-#: ../lib/Video/DVDRip/Config.pm:591
+#: ../lib/Video/DVDRip/Config.pm:597
 msgid "CVD anamorph, NTSC"
 msgstr "CVD anamorph, NTSC"
 
-#: ../lib/Video/DVDRip/Config.pm:817
+#: ../lib/Video/DVDRip/Config.pm:823
 #, perl-brace-format
 msgid "{file} executable : Ok"
 msgstr "{file} spustitelný : Ok"
 
-#: ../lib/Video/DVDRip/Config.pm:819 ../lib/Video/DVDRip/Config.pm:833
+#: ../lib/Video/DVDRip/Config.pm:825 ../lib/Video/DVDRip/Config.pm:839
 #, perl-brace-format
 msgid "{file} not found : NOT Ok"
 msgstr "{file} nenalezen : NEVYHOVUJE"
 
-#: ../lib/Video/DVDRip/Config.pm:820
+#: ../lib/Video/DVDRip/Config.pm:826
 #, perl-brace-format
 msgid "{file} not executable : NOT Ok"
 msgstr "{file} není spustitelný : NEVYHOVUJE"
 
-#: ../lib/Video/DVDRip/Config.pm:834
+#: ../lib/Video/DVDRip/Config.pm:840
 #, perl-brace-format
 msgid "{file} not writable : NOT Ok"
 msgstr "do {file} nelze zapisovat : NEVYHOVUJE"
 
-#: ../lib/Video/DVDRip/Config.pm:836
+#: ../lib/Video/DVDRip/Config.pm:842
 #, perl-brace-format
 msgid "{file} writable : Ok"
 msgstr "{file} umožňuje zápis : Ok"
 
-#: ../lib/Video/DVDRip/Config.pm:847
+#: ../lib/Video/DVDRip/Config.pm:853
 #, perl-brace-format
 msgid "{value} is numeric : Ok"
 msgstr "{value} je číslo : Ok"
 
-#: ../lib/Video/DVDRip/Config.pm:849
+#: ../lib/Video/DVDRip/Config.pm:855
 #, perl-brace-format
 msgid "{value} isn't numeric : NOT Ok"
 msgstr "{value} není číslo : NEVYHOVUJE"
 
-#: ../lib/Video/DVDRip/Config.pm:859
+#: ../lib/Video/DVDRip/Config.pm:865
 msgid "is empty : Ok"
 msgstr "je prázdný : Ok"
 
-#: ../lib/Video/DVDRip/Config.pm:872 ../lib/Video/DVDRip/Config.pm:885
+#: ../lib/Video/DVDRip/Config.pm:878 ../lib/Video/DVDRip/Config.pm:891
 #, perl-brace-format
 msgid "{value} exists : Ok"
 msgstr "{value} existuje : Ok"
 
-#: ../lib/Video/DVDRip/Config.pm:874
+#: ../lib/Video/DVDRip/Config.pm:880
 #, perl-brace-format
 msgid "{value} has not format n,n,n and is no file : NOT Ok"
 msgstr "{value} nemá formát n,n,n ani není souborem : NEVYHOVUJE"
 
-#: ../lib/Video/DVDRip/Config.pm:887
+#: ../lib/Video/DVDRip/Config.pm:893
 #, perl-brace-format
 msgid "{value} doesn't exist : NOT Ok"
 msgstr "{value} neexistuje : NEVYHOVUJE"
 
-#: ../lib/Video/DVDRip/Config.pm:898
+#: ../lib/Video/DVDRip/Config.pm:904
 #, perl-brace-format
 msgid "'{value}' is known : Ok"
 msgstr "'{value}' je známo : Ok"
 
-#: ../lib/Video/DVDRip/Config.pm:901
+#: ../lib/Video/DVDRip/Config.pm:907
 #, perl-brace-format
 msgid "'{value}' unknown: NOT Ok"
 msgstr "'{value}' není známo: NEVYHOVUJE"
@@ -2748,90 +2764,90 @@ msgstr "uplynulo {time}"
 msgid "{percent} percent done."
 msgstr "{percent} procent hotovo."
 
-#: ../lib/Video/DVDRip/Title.pm:354
+#: ../lib/Video/DVDRip/Title.pm:356
 #, perl-brace-format
 msgid "Set container format to '{container}'"
 msgstr "Formát kontaineru se nastavuje na '{container}'"
 
-#: ../lib/Video/DVDRip/Title.pm:367
+#: ../lib/Video/DVDRip/Title.pm:369
 #, perl-brace-format
 msgid "Set codec of audio track #{nr} to 'mp3', 'vorbis' not supported by AVI"
 msgstr ""
 "Zvukový kodek stopy  #{nr} nastaven na 'mp3', 'vorbis' není v AVI podporován"
 
-#: ../lib/Video/DVDRip/Title.pm:372
+#: ../lib/Video/DVDRip/Title.pm:374
 #, perl-brace-format
 msgid "Set codec of audio track #{nr} to 'mp3', 'mp2' not supported by AVI"
 msgstr ""
 "Nastavit kodek zvukové stopy #{nr} na 'mp3', 'mp2' není v AVI podporován"
 
-#: ../lib/Video/DVDRip/Title.pm:381
+#: ../lib/Video/DVDRip/Title.pm:383
 msgid "Set video codec to 'xvid', '"
 msgstr "Nastavit video kodek na 'xvid', '"
 
-#: ../lib/Video/DVDRip/Title.pm:383 ../lib/Video/DVDRip/Title.pm:406
+#: ../lib/Video/DVDRip/Title.pm:385 ../lib/Video/DVDRip/Title.pm:408
 msgid "' not supported by AVI"
 msgstr "' není v AVI formátu podporováno"
 
-#: ../lib/Video/DVDRip/Title.pm:393
+#: ../lib/Video/DVDRip/Title.pm:395
 #, perl-brace-format
 msgid "Set codec of audio track #{nr} to 'mp2', '"
 msgstr "Nastavit kodek zvukové stopy #{nr} na 'mp2', '"
 
-#: ../lib/Video/DVDRip/Title.pm:396
+#: ../lib/Video/DVDRip/Title.pm:398
 msgid "' not supported by (S)VCD/CVD"
 msgstr "' není v (S)VCD/CVD podporováno"
 
-#: ../lib/Video/DVDRip/Title.pm:404
+#: ../lib/Video/DVDRip/Title.pm:406
 msgid "Set video codec to 'SVCD', '"
 msgstr "Nastavit video kodek na 'SVCD', '"
 
-#: ../lib/Video/DVDRip/Title.pm:417
+#: ../lib/Video/DVDRip/Title.pm:419
 #, perl-brace-format
 msgid "Set codec of audio track #{nr} to 'vorbis', '"
 msgstr "Nastavit kodek zvukové stopy #{nr} na 'vorbis', '"
 
-#: ../lib/Video/DVDRip/Title.pm:420
+#: ../lib/Video/DVDRip/Title.pm:422
 msgid "' not supported by OGG"
 msgstr "' není v OGGu podporováno"
 
-#: ../lib/Video/DVDRip/Title.pm:429
+#: ../lib/Video/DVDRip/Title.pm:431
 msgid "Set video codec to 'xvid', (S)VCD/CVD not supported by OGG"
 msgstr "Nastavit vide kodek na 'xvid', (S)VCD/CVD není OGGem podporováno"
 
-#: ../lib/Video/DVDRip/Title.pm:563 ../lib/Video/DVDRip/Title.pm:646
+#: ../lib/Video/DVDRip/Title.pm:565 ../lib/Video/DVDRip/Title.pm:648
 #, perl-brace-format
 msgid "Can't mkpath directory '{dir}'"
 msgstr "Nelze založit adresář '{dir}'"
 
-#: ../lib/Video/DVDRip/Title.pm:810
+#: ../lib/Video/DVDRip/Title.pm:812
 #, perl-brace-format
 msgid "Can't read VOB navigation file '{filename}'"
 msgstr "Nelze načíst navigační soubor VOBu '{filename}'"
 
-#: ../lib/Video/DVDRip/Title.pm:840
+#: ../lib/Video/DVDRip/Title.pm:842
 msgid "Program stream units calculated"
 msgstr ""
 
-#: ../lib/Video/DVDRip/Title.pm:882
+#: ../lib/Video/DVDRip/Title.pm:884
 #, perl-brace-format
 msgid "invalid parameter for frame_size ('{frame_size}')"
 msgstr "nesprávný parametr pro velikost_snímku ('{frame_size}')"
 
-#: ../lib/Video/DVDRip/Title.pm:1286 ../lib/Video/DVDRip/Title.pm:2407
+#: ../lib/Video/DVDRip/Title.pm:1288 ../lib/Video/DVDRip/Title.pm:2412
 #, perl-brace-format
 msgid "Can't read VOB navigation file '{vob_nav_file}'"
 msgstr "Nelze načíst navigační soubor VOBu '{vob_nav_file}'"
 
-#: ../lib/Video/DVDRip/Title.pm:1522
+#: ../lib/Video/DVDRip/Title.pm:1524
 msgid "Enabled PSU core. Movie is NTSC and has more than one PSU."
 msgstr "Zapnuto PSU jádro. Film je NTSC a obsahuje více než jeden PSU."
 
-#: ../lib/Video/DVDRip/Title.pm:1525
+#: ../lib/Video/DVDRip/Title.pm:1527
 msgid "Not enabling PSU core, because this movie has only one PSU."
 msgstr "PSU jádro ne nespouští, protože film má jen jedno PSU."
 
-#: ../lib/Video/DVDRip/Title.pm:1904
+#: ../lib/Video/DVDRip/Title.pm:1906
 #, perl-brace-format
 msgid ""
 "When using fast resize: Clip1 and Zoom size must be divisible by "
@@ -2840,13 +2856,13 @@ msgstr ""
 "Pokud se používá rychlá změna velikosti, musí být ořez1 a změna velikosti "
 "dělitelná {multiple_of}."
 
-#: ../lib/Video/DVDRip/Title.pm:1908
+#: ../lib/Video/DVDRip/Title.pm:1910
 msgid "When using fast resize: Width and height must both shrink or expand"
 msgstr ""
 "Pokud se používá rychlá změna velikosti musí být jak šířka tak výška buď "
 "zmenšeny, nebo zvětšeny."
 
-#: ../lib/Video/DVDRip/Title.pm:2385
+#: ../lib/Video/DVDRip/Title.pm:2388
 msgid ""
 "Fast VOB navigation only available for ripped DVD's, falling back to slow "
 "method."
@@ -2854,16 +2870,20 @@ msgstr ""
 "Rychlá navigace ve VOBu je přístupná jen u uložených DVD. Přepíná se zpět na "
 "pomalou metodu."
 
-#: ../lib/Video/DVDRip/Title.pm:2388
+#: ../lib/Video/DVDRip/Title.pm:2391
 msgid "VOB navigation file is missing. Slow navigation method used."
 msgstr "Soubor pro VOB navigaci chybí. Používá se pomalá navigační metoda."
 
-#: ../lib/Video/DVDRip/Title.pm:2417
+#: ../lib/Video/DVDRip/Title.pm:2393
+msgid "Using slow preview grabbing as adviced by user"
+msgstr ""
+
+#: ../lib/Video/DVDRip/Title.pm:2422
 #, perl-brace-format
 msgid "VOB navigation file '{vob_nav_file}' is corrupted."
 msgstr "Navigační soubor VOBu '{vob_nav_file}' je poškozen."
 
-#: ../lib/Video/DVDRip/Title.pm:2430
+#: ../lib/Video/DVDRip/Title.pm:2435
 #, perl-brace-format
 msgid ""
 "Can't find frame {frame} in VOB navigation file '{vob_nav_file}' (which has "
@@ -2872,36 +2892,36 @@ msgstr ""
 "V navigačním souboru VOBu '{vob_nav_file}' (který obsahuje jen  {frames} "
 "snímků) nelze najít snímek {frame}. "
 
-#: ../lib/Video/DVDRip/Title.pm:2968
+#: ../lib/Video/DVDRip/Title.pm:2973
 msgid "No files for image creation selected."
 msgstr "Nejsou zvoleny žádné soubory pro vytvoření obrazu."
 
-#: ../lib/Video/DVDRip/Title.pm:2977 ../lib/Video/DVDRip/Title.pm:3045
+#: ../lib/Video/DVDRip/Title.pm:2982 ../lib/Video/DVDRip/Title.pm:3050
 msgid "No burn files selected."
 msgstr "Nejsou zvoleny žádné soubory k vypálení."
 
-#: ../lib/Video/DVDRip/Title.pm:2978
+#: ../lib/Video/DVDRip/Title.pm:2983
 msgid "File is already an CD image."
 msgstr "Soubor už je obrazem CD."
 
-#: ../lib/Video/DVDRip/Title.pm:2983
+#: ../lib/Video/DVDRip/Title.pm:2988
 msgid "Can't burn (S)VCD on the fly"
 msgstr "(S)VCD nelze vypalovat přímo (on the fly)"
 
-#: ../lib/Video/DVDRip/Title.pm:3034
+#: ../lib/Video/DVDRip/Title.pm:3039
 msgid "No files for burning selected."
 msgstr "Nejsou zvoleny žádné soubory k vypálení."
 
-#: ../lib/Video/DVDRip/Title.pm:3248 ../lib/Video/DVDRip/Title.pm:3360
-#: ../lib/Video/DVDRip/Title.pm:3379 ../lib/Video/DVDRip/Title.pm:3413
+#: ../lib/Video/DVDRip/Title.pm:3253 ../lib/Video/DVDRip/Title.pm:3365
+#: ../lib/Video/DVDRip/Title.pm:3384 ../lib/Video/DVDRip/Title.pm:3418
 msgid "No subtitle selected"
 msgstr "Nejsou zvoleny žádné titulky."
 
-#: ../lib/Video/DVDRip/Title.pm:3250 ../lib/Video/DVDRip/Title.pm:3362
+#: ../lib/Video/DVDRip/Title.pm:3255 ../lib/Video/DVDRip/Title.pm:3367
 msgid "You must grab preview images first"
 msgstr "Nejdříve musíte získat zkušební obrázek"
 
-#: ../lib/Video/DVDRip/Title.pm:3666
+#: ../lib/Video/DVDRip/Title.pm:3671
 #, perl-brace-format
 msgid ""
 "Your frame size isn't conform to the standard,\n"

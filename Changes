@@ -1,6 +1,41 @@
-$Id: Changes,v 1.157 2005/05/16 12:48:20 joern Exp $
+$Id: Changes,v 1.162.2.2 2005/07/23 09:06:42 joern Exp $
 
 Revision history and release notes for dvd::rip.
+
+0.52.6 [stable branch] Sat Jul 23 2005, joern
+	Notes:
+	- Using transcode newer than version 0.6.14 is *not*
+	  recommended. At least subtitling is broken for
+	  these versions, and it seems there are still
+	  several NPTL related issues making problems.
+
+	Features:
+	- Added LD_ASSUME_KERNEL version number entry to the
+	  Preferences dialog extending the NPTL workaround
+	  feature introduced in 0.52.4. Initially set to
+	  version 2.4.30, since this number seems to be more
+	  appropriate, while the prior 2.2.5 made problems
+	  at least on Gentoo. Thanks for figuring that out to
+	  <robert AT firehead.org>.
+	- Added a "Force slow grabbing" checkbox to the Clip&Zoom
+	  page to workaround fast nav seeking problems with
+	  some DVD's. Suggested by Ivan Villanueva.
+	- Updated italian translation by Fabio Russo.
+
+	Bugfixes:
+	- Cluster mode: client/server communication didn't work
+	  if the corresponding machines had different endianess
+	  (e.g. i686 vs. amd64). Thanks for the report to
+	  Benjamin Van Laere <B.VanLaere AT unpeu.com>.
+	- Cluster mode: ogg/vorbis projects didn't work since
+	  0.52.5. Thanks for the reports to Sören Brunk
+	  <soerenbrunk AT gmx.de>, Alexander Skwar <listen AT
+	  alexander.skwar.name> and Knic Knic <oneeyedelf1 AT
+	  hotmail.com>.
+	- Deferred vobsub creation didn't work if dvd::rip was
+	  configured to exit after transcoding. Thanks to
+	  Ivan Villanueva <dvdrip AT artificialidea.com> for
+	  the report.
 
 0.52.5 [stable branch] Mon May 16 2005, joern
 	Features:
@@ -9,7 +44,7 @@ Revision history and release notes for dvd::rip.
 	
 	Bugfixes:
 	- Cluster mode: merging PSU chunks for a OGG/Vorbis title
-	  failed due to a dump typo.
+	  failed due to a dumb typo.
 
 0.52.4 [stable branch] Mon May 16 2005, joern
 	Features:

@@ -160,11 +160,15 @@ deb ftp://ftp.nerim.net/debian-marillat unstable main
    You can download dvd::rip sources from this server or all stable
    releases from any CPAN mirror.
 
-   Local download of the latest stable release: (currently no unstable
-   release available)
+   Local download of the latest stable release:
 
-     Video-DVDRip-0.52.5.tar.gz
-     Video-DVDRip-0.52.5.tar.gz.asc (GnuPG signature, get key)
+     Video-DVDRip-0.52.6.tar.gz
+     Video-DVDRip-0.52.6.tar.gz.asc (GnuPG signature, get key)
+
+   Local download of the latest unstable release:
+
+     Video-DVDRip-0.52.6.tar.gz
+     Video-DVDRip-0.52.6.tar.gz.asc (GnuPG signature, get key)
 
    CPAN download directory: (list of mirrors)
 
@@ -493,7 +497,7 @@ chmod u+s /usr/sbin/fping
    generate the Makefile and execute make:
 
 # as a normal user
-tar xfz Video-DVDRip-0.52.5.tar.gz
+tar xfz Video-DVDRip-0.52.6.tar.gz
 cd Video-DVDRip-x.xx
 perl Makefile.PL
 make
@@ -547,7 +551,7 @@ make install
    otherwise some dvd::rip helper binaries may be taken from another
    place.
 
-tar xvfz Video-DVDRip-0.52.5.tar.gz
+tar xvfz Video-DVDRip-0.52.6.tar.gz
 cd Video-DVDRip-x.xx
 perl Makefile.PL && make
 export PATH=.:$PATH
@@ -777,16 +781,33 @@ URL References
   15. http://wwwkeys.de.pgp.net:11371/pks/lookup?op=get&search=0x285CF473
 
 VI. CHANGES
-   $Id: Changes,v 1.157 2005/05/16 12:48:20 joern Exp $
+   $Id: Changes,v 1.162.2.2 2005/07/23 09:06:42 joern Exp $
 
    Revision history and release notes for dvd::rip.
 
-   0.52.5 [stable branch] Mon May 16 2005, joern
-	Features:
-	- Updated italian translation from Fabio Russo, which was
-	  *one* minute too late for the 0.52.4 release ;)
-	
-	Bugfixes:
-	- Cluster mode: merging PSU chunks for a OGG/Vorbis title
-	  failed due to a dump typo.
+   0.52.6 [stable branch] Sat Jul 23 2005, joern
+	Notes:
+	- Using transcode newer than version 0.6.14 is *not*
+	  recommended. At least subtitling is broken for
+	  these versions, and it seems there are still
+	  several NPTL related issues making problems.
 
+	Features:
+	- Added LD_ASSUME_KERNEL version number entry to the
+	  Preferences dialog extending the NPTL workaround
+	  feature introduced in 0.52.4. Initially set to
+	  version 2.4.30, since this number seems to be more
+	  appropriate, while the prior 2.2.5 made problems
+	  at least on Gentoo. Thanks for figuring that out to
+	  <robert AT firehead.org>.
+	- Added a "Force slow grabbing" checkbox to the Clip&Zoom
+	  page to workaround fast nav seeking problems with
+	  some DVD's. Suggested by Ivan Villanueva.
+	- Updated italian translation by Fabio Russo.
+
+	Bugfixes:
+	- Cluster mode: client/server communication didn't work
+	  if the corresponding machines had different endianess
+	  (e.g. i686 vs. amd64). Thanks for the report to
+	  Benjamin Van Laere <B.VanLaere AT unpeu.com>.
+	- Cluster mode: ogg/vorbis projects didn't work since

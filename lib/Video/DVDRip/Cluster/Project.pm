@@ -1,4 +1,4 @@
-# $Id: Project.pm,v 1.31 2004/04/11 23:36:19 joern Exp $
+# $Id: Project.pm,v 1.32 2005/07/12 11:50:26 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -201,7 +201,7 @@ sub create_job_plan {
 	my ($bc, $bc_job);
 
 	if ( $title->has_vbr_audio ) {
-		$bc = Video::DVDRip::BitrateCalc->new;
+		$bc = Video::DVDRip::BitrateCalc->new ( title => $title );
 		$job = Video::DVDRip::Cluster::Job::BitrateCalc->new ( nr => $nr++ );
 		push @jobs, $job;
 		$job->set_project ($self);

@@ -1,4 +1,4 @@
-# $Id: Node.pm,v 1.29 2005/05/16 08:04:03 joern Exp $
+# $Id: Node.pm,v 1.30 2005/06/19 13:37:56 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -312,7 +312,6 @@ sub run_tests {
 			$output .= $_[0]."\n";
 		},
 		cb_finished => sub {
-			$self->parse_test_output;
 			$self->set_test_result (
 				$self->parse_test_output (
 					output => $output

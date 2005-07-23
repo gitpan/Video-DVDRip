@@ -1,4 +1,4 @@
-# $Id: Base.pm,v 1.25 2005/05/06 11:27:56 joern Exp $
+# $Id: Base.pm,v 1.26 2005/06/19 13:41:07 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -232,14 +232,20 @@ sub create_dialog {
 	my $table = Gtk::Table->new ( scalar(@fields), 2, 0 );
 	$table->show;
 
-	my ($i, @widgets);
+	my ($chain_master_widget, $chain_widget);
+
+	my ($i, @widgets, $last_widget_hbox, $label, $hbox);
 	foreach my $field ( @fields ) {
-		my $label = Gtk::Label->new ($field->{label});
-		$label->show;
-		my $hbox = Gtk::HBox->new;
-		$hbox->show;
-		$hbox->pack_start($label, 0, 1, 0);
-		$table->attach_defaults ($hbox, 0, 1, $i, $i+1);
+		if ( $field->{chained} ) {
+			--$i;
+		} else {
+			$label = Gtk::Label->new ($field->{label});
+			$label->show;
+			$hbox = Gtk::HBox->new;
+			$hbox->show;
+			$hbox->pack_start($label, 0, 1, 0);
+			$table->attach_defaults ($hbox, 0, 1, $i, $i+1);
+		}
 		
 		if ( $field->{readonly} and $field->{type} eq 'switch' ) {
 			$label = Gtk::Label->new ( $field->{value} ? 'Yes' : 'No' );
@@ -262,6 +268,7 @@ sub create_dialog {
 			$hbox->pack_start($radio_no, 0, 1, 0);
 
 			$table->attach_defaults ($hbox, 1, 2, $i, $i+1);
+			$last_widget_hbox = $hbox;
 
 			if ( $field->{onchange} ) {
 				my $cb = $field->{onchange};
@@ -270,6 +277,16 @@ sub create_dialog {
 				);
 				$radio_no->signal_connect (
 					"clicked", sub { &$cb(0) }
+				);
+			}
+
+			if ( $fields[$i+1] && $fields[$i+1]->{chained} ) {
+				$chain_master_widget = $radio_yes;
+				$radio_yes->signal_connect (
+					"clicked", sub { $chain_widget->set_sensitive(1) if $chain_widget }
+				);
+				$radio_no->signal_connect (
+					"clicked", sub { $chain_widget->set_sensitive(0) if $chain_widget }
 				);
 			}
 
@@ -303,17 +320,33 @@ sub create_dialog {
 			$entry = Gtk::Entry->new;
 			$entry->set_visibility (0) if $field->{type} eq 'password'; 
 			$entry->set_text ($field->{value});
-			$entry->set_usize(($field->{width}||300),undef);
+			$entry->set_usize(($field->{width}||300),undef) unless $field->{chained};
 			$entry->show;
 			if ( $field->{onchange} ) {
 				$entry->signal_connect (
 					"changed", $field->{onchange}
 				);
 			}
-			push @widgets, $entry;
-			$table->attach_defaults ($entry, 1, 2, $i, $i+1);
+			
+			if ( $field->{chained} && $last_widget_hbox ) {
+				$chain_widget = Gtk::HBox->new;
+				$chain_widget->show;
+				$label = Gtk::Label->new ($field->{label});
+				$label->show;
+				$chain_widget->pack_start($label, 0, 1, 0);
+				$chain_widget->pack_start($entry, 0, 1, 0);
+				$last_widget_hbox->pack_start($chain_widget, 0, 1, 0);
+				if ( $chain_master_widget->get_active ) {
+					$chain_widget->set_sensitive(1);
+				} else {
+					$chain_widget->set_sensitive(0);
+				}
+			} else {
+				$table->attach_defaults ($entry, 1, 2, $i, $i+1);
+			}
 
 			$self->create_tooltip( text => $field->{tooltip}, widget => $entry );
+			push @widgets, $entry;
 		}
 			
 		++$i;
