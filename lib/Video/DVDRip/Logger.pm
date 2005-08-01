@@ -1,4 +1,4 @@
-# $Id: Logger.pm,v 1.1 2005/07/23 08:14:15 joern Exp $
+# $Id: Logger.pm,v 1.2 2005/08/01 19:19:53 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -37,7 +37,7 @@ sub new {
 sub insert_project_logfile {
 	my $self = shift;
 	
-	my $project       = $self->project         or return;
+	my $project       = $self->project       or return;
 	my $gtk_text_view = $self->gtk_text_view or return;
 
 	$gtk_text_view->get("buffer")->set_text("") if $self->gtk_text_view;

@@ -9,7 +9,7 @@
 package Video::DVDRip;
 use Locale::TextDomain qw (video.dvdrip);
 
-$VERSION = "0.97.1";
+$VERSION = "0.97.2";
 
 use base Video::DVDRip::Base;
 

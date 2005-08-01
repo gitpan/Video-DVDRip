@@ -162,13 +162,13 @@ deb ftp://ftp.nerim.net/debian-marillat unstable main
 
    Local download of the latest stable release:
 
-     Video-DVDRip-0.97.1.tar.gz
-     Video-DVDRip-0.97.1.tar.gz.asc (GnuPG signature, get key)
+     Video-DVDRip-0.97.2.tar.gz
+     Video-DVDRip-0.97.2.tar.gz.asc (GnuPG signature, get key)
 
    Local download of the latest unstable release:
 
-     Video-DVDRip-0.97.1.tar.gz
-     Video-DVDRip-0.97.1.tar.gz.asc (GnuPG signature, get key)
+     Video-DVDRip-0.97.2.tar.gz
+     Video-DVDRip-0.97.2.tar.gz.asc (GnuPG signature, get key)
 
    CPAN download directory: (list of mirrors)
 
@@ -497,7 +497,7 @@ chmod u+s /usr/sbin/fping
    generate the Makefile and execute make:
 
 # as a normal user
-tar xfz Video-DVDRip-0.97.1.tar.gz
+tar xfz Video-DVDRip-0.97.2.tar.gz
 cd Video-DVDRip-x.xx
 perl Makefile.PL
 make
@@ -551,7 +551,7 @@ make install
    otherwise some dvd::rip helper binaries may be taken from another
    place.
 
-tar xvfz Video-DVDRip-0.97.1.tar.gz
+tar xvfz Video-DVDRip-0.97.2.tar.gz
 cd Video-DVDRip-x.xx
 perl Makefile.PL && make
 export PATH=.:$PATH
@@ -781,49 +781,47 @@ URL References
   15. http://wwwkeys.de.pgp.net:11371/pks/lookup?op=get&search=0x285CF473
 
 VI. CHANGES
-   $Id: Changes.unstable,v 1.44 2005/07/23 11:05:53 joern Exp $
+   $Id: Changes.unstable,v 1.47 2005/08/01 19:50:15 joern Exp $
 
    Revision history and release notes for dvd::rip.
 
-   0.97.1 [unstable branch] Sat Jul 23 2005, joern
-	Features:
-	- Extensive GUI redesign. dvd::rip now uses Gtk2 and
-	  Gtk2::Ex::FormFactory, so we have new dependencies
-	  here.
-	  
-	  The Perl Gtk2 binding should be part of every modern
-	  Linux distribution, e.g. Debian has a libgtk2-perl package.
-	  Otherwise grab it from CPAN (see URL below). I personally
-	  use version 1.082, but lower versions may work as well.
-	  
-	  Gtk2::Ex::FormFactory is rather new and not yet packaged
-	  for any Linux distro, at least I'm not aware of. Installation
-	  is straight forward (perl Makefile.PL && make test && make install).
-	  Version 0.56 is required.
-
-	  You can grab both Gtk2 and Gtk2::Ex::FormFactory from here:
-
-	  http://www.cpan.org/modules/by-module/Gtk2/
-
-	- A bunch of smaller features / changes, in particular making
-	  the GUI more comfortable. Too many to list them all, just
-	  poke around to find them ;)
-
+   0.97.2 [unstable branch] Mon Aug 1 2005, joern
 	Notes:
-	- This is an ALPHA release, so please use with care, but *please*
-	  use it and report any bugs to the dvdrip-users list.
-	- The project file format didn't change significantly. Files
-	  from older dvd::rip versions will just work. Even opening
-	  files created with 0.97.1 should work in older versions.
-	  As usual you should make backups nevertheless.
-	- The redesign is not yet fully completed. The cluster,
-	  transcode filter & preview and burning stuff is currently missing.
-	  Cluster stuff will be added soon, filter stuff a bit later
-	  and burning stuff probably never: depends on user feedback ;)
-	- Only the German translation is complete, other languages
-	  will follow.
-	- The online web documentation still covers the old Gtk1
-	  based version. This will change with the 0.98 stable release
-	  based on this 0.97 branch. Since the main functionality didn't
-	  change much this should be no problem at all.
+	- You need at least Gtk2::Ex::FormFactory 0.57. Download from
+	  here because it may not reached all CPAN sites yet:
+	
+	  http://www.exit1.org/Gtk2-Ex-FormFactory/
+
+	Features:
+	- Ported cluster mode GUI to Gtk2, including a slightly internal
+	  code redesign of dvdrip-master, which introduces another Perl
+	  module dependency: Event::RPC 0.84. Download the module from
+	  CPAN or from the project's homepage:
+
+	  http://www.cpan.org/modules/by-module/Event/
+	  http://www.exit1.org/Event-RPC
+
+          I think I fixed a bunch of smaller bugs in the cluster
+	  mode during the code review and redesign as well... ;)
+
+	- New button "Create project" on Storage page. So we have
+	  a definitive point when the project was created, after
+	  that the name may not change again and the data directory
+	  structure, logfile etc. is created.
+
+	Bugfixes:
+	- Preferences: changing DVD mount point and setting a directory
+	  as the DVD device didn't work. Thanks for the report to
+	  Christian Marillat.
+	- When creating a new project: changing the project name
+	  was impossible once the name matched an existing project
+	  name in the dvd::rip data directory.
+	- Delete volume rescale when a audio filter is set.
+	- Fixed wrong viewing angle mplayer DVD command preset.
+	  Thanks for the report to Brian J. Murrell <brian AT 
+	  interlinx.bc.ca>
+	- Missed log file creation for new projects.
+	- Subtitle preview window was broken
+	- Bitrate calculation stuff wasn't initialized correctly
+	  if a default BBP was set in the Preferences
 

@@ -1,4 +1,4 @@
-# $Id: ClipZoom.pm,v 1.1 2005/07/23 08:14:15 joern Exp $
+# $Id: ClipZoom.pm,v 1.2 2005/08/01 19:17:03 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -47,10 +47,13 @@ sub build_factory {
 	my $context = $self->get_context;
 
 	return Gtk2::Ex::FormFactory::VBox->new (
-	    title 	=> __"Clip & Zoom",
-	    object	=> "project",
-	    no_frame    => 1,
-	    content 	=> [
+	    title 	     => __"Clip & Zoom",
+	    object           => "project",
+	    active_cond      => sub { $self->project &&
+	    			      $self->project->created },
+	    active_depends   => "project.created",
+	    no_frame         => 1,
+	    content 	     => [
 	        Video::DVDRip::GUI::Main->build_selected_title_factory,
 		$self->build_preview_images,
 		$self->build_adjust_form,
@@ -537,52 +540,6 @@ sub open_preview {
 	1;
 }
 
-sub update_fast_resize_info {
-	my $self = shift; $self->trace_in;
-
-	my $title = $self->selected_title;
-	return 1 if not $title;
-	return 1 if not $self->adjust_widgets->{preview_frame_nr};
-
-	my $info = "";
-	my $style = $self->text_norm_style;
-	if ( $title->tc_fast_resize ) {
-		my ($width_n, $height_n, $err_div32, $err_shrink_expand) =
-			$title->get_fast_resize_options;
-
-		if ( $err_div32 or $err_shrink_expand ) {
-			my $multiple_of = 8;
-			$info .= "$multiple_of boundary! " if $err_div32;
-			$info .= "shrink-expand!" if $err_shrink_expand;
-			$info =~ s! $!!;
-			$info =~ s! s! / s!;
-			$info = "Err: $info";
-			if ( $err_shrink_expand ) {
-				$self->adjust_widgets->{"zoom_info_label"}->set_style ($self->text_warn_style);
-				$self->adjust_widgets->{"clip1_info_label"}->set_style ($self->text_warn_style);
-			}
-			$self->adjust_widgets->{"zoom_info_label"}->set_style ($self->text_warn_style)
-				if $title->tc_zoom_width % 8 or $title->tc_zoom_height % 8;
-			$self->adjust_widgets->{"clip1_info_label"}->set_style ($self->text_warn_style)
-				if $title->tc_clip1_left % 8 or $title->tc_clip1_right % 8 or
-				   $title->tc_clip1_top % 8 or $title->tc_clip1_bottom;
-
-			$style = $self->text_warn_style;
-		} else {
-			$info = "Fast resize: Ok";
-			$self->adjust_widgets->{"zoom_info_label"}->set_style ($self->text_norm_style);
-			$self->adjust_widgets->{"clip1_info_label"}->set_style ($self->text_norm_style);
-		}
-	} else {
-		$self->adjust_widgets->{"clip1_info_label"}->set_style ($self->text_norm_style);
-	}
-
-	$self->adjust_widgets->{tc_zoom_info}->set_text  ($info);
-	$self->adjust_widgets->{tc_zoom_info}->set_style ($style);
-
-	1;
-}
-
 sub show_preview_images {
 	my $self = shift; $self->trace_in;
 	my %par = @_;
@@ -615,64 +572,6 @@ sub generate_preview_images {
 	$self->make_previews;
 	$self->show_preview_images;
 
-	1;
-}
-
-sub show_preview_labels {
-	my $self = shift; $self->trace_in;
-	my %par = @_;
-	my ($type) = @par{'type'};
-
-	my $title = $self->selected_title;
-	return 1 if not $title;
-	
-	my ($image, @types, $filename);
-
-	if ( $type ) {
-		push @types, $type;
-	} else {
-		@types = qw ( clip1 zoom clip2 );
-	}
-
-	my ($width, $height, $warn_width, $warn_height, $text, $ratio, $phys_ratio);
-	foreach $type ( @types ) {
-		($width, $height, $ratio) = $title->get_effective_ratio ( type => $type );
-		$ratio   = "4:3"  if $ratio >= 1.32 and $ratio <= 1.34;
-		$ratio   = "16:9" if $ratio >= 1.76 and $ratio <= 1.78;
-		($ratio) = $ratio =~ /(\d+\.\d{1,2})/ if $ratio !~ /:/;
-		$phys_ratio = $width/$height;
-		($phys_ratio) = $phys_ratio =~ /(\d+\.\d{1,2})/;
-		$warn_width  = ($type eq 'clip2' and $width  % 16) ? "!":"";
-		$warn_height = ($type eq 'clip2' and $height % 16) ? "!":"";
-		$warn_width  ||= ($width  % 2) ? "!":"";
-		$warn_height ||= ($height % 2) ? "!":"";
-		if ( $type eq 'clip1' ) {
-			$warn_height  ||= "!" if $title->tc_clip1_top %2 or
-						 $title->tc_clip1_bottom %2;
-			$warn_width   ||= "!" if $title->tc_clip1_left %2 or
-						 $title->tc_clip1_right %2;
-		}
-		if ( $type eq 'clip2' ) {
-			$warn_height  ||= "!" if $title->tc_clip2_top %2 or
-						 $title->tc_clip2_bottom %2;
-			$warn_width   ||= "!" if $title->tc_clip2_left %2 or
-						 $title->tc_clip2_right %2;
-		}
-		$text = sprintf (__"Size: %d%sx%d%s\nEff. ratio: %s, phys. ratio: %s",
-			$width, $warn_width, $height, $warn_height,
-			$ratio, $phys_ratio
-		);
-
-		$self->adjust_widgets->{$type."_info_label"}->set_text($text);
-		if ( $warn_width or $warn_height ) {
-			$self->adjust_widgets->{$type."_info_label"}->set_style ($self->text_warn_style);
-		} else {
-			$self->adjust_widgets->{$type."_info_label"}->set_style ($self->text_norm_style);
-		}
-	}
-
-	$self->update_fast_resize_info;
-	
 	1;
 }
 

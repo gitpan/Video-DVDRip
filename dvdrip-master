@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# $Id: dvdrip-master,v 1.22 2004/04/11 23:36:19 joern Exp $
+# $Id: dvdrip-master,v 1.24 2005/08/01 19:38:06 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -30,7 +30,7 @@ BEGIN {
 	$Video::DVDRip::JobClass = "Video::DVDRip::Cluster::Job";
 
 	my @missing_modules;
-	foreach my $module ( qw ( Event Storable ) ) {
+	foreach my $module ( qw ( Event Storable Event::RPC ) ) {
 		eval "use $module";
 		push @missing_modules, $module if $@;
 	}
@@ -47,7 +47,10 @@ BEGIN {
 }
 
 use Video::DVDRip;
-use Video::DVDRip::RPC::Server;
+
+use Event::RPC 0.84;
+use Event::RPC::Server;
+use Event::RPC::Logger;
 
 my $USAGE = <<__EOU;
 Usage: dvdrip-master [-w [-W port] ] [loglevel]
@@ -73,28 +76,38 @@ main: {
 	my $start_webserver = $opt{w};
 	my $webserver_port  = $opt{W} || 8888;
 
+	my $logger = Event::RPC::Logger->new (
+	    fh_lref => [ \*STDOUT ],
+	);
+	$logger->set_min_level($log_level);
+
 	# setup master RPC Server with class interface declaration
-	my $server = Video::DVDRip::RPC::Server->new (
+	my $server = Event::RPC::Server->new (
 		name    => "dvd::rip cluster control daemon",
 		port    => 28646,
+		logger  => $logger,
+		start_log_listener => 1,
 		classes => {
 			'Video::DVDRip::Cluster::Master' => {
 				get_master		=> '_constructor',
 				hello			=> 1,
 				save            	=> 1,
-				add_project		=> 'Video::DVDRip::Cluster::Project',
-				add_node		=> 'Video::DVDRip::Cluster::Node',
-				projects		=> 'Video::DVDRip::Cluster::Project',
-				nodes			=> 'Video::DVDRip::Cluster::Node',
+				add_project		=> 1,
+				add_node		=> 1,
 				move_up_project 	=> 1,
 				move_down_project	=> 1,
 				remove_node		=> 1,
 				schedule_project	=> 1,
 				remove_project		=> 1,
 				shutdown		=> 1,
-				get_projects_lref	=> 1,
-				get_jobs_lref		=> 1,
-				get_nodes_lref		=> 1,
+				projects_list		=> 1,
+				nodes_list		=> 1,
+				projects		=> '_object',
+				nodes			=> '_object',
+				get_node_by_name	=> '_object',
+				get_project_by_id	=> '_object',
+				node_test		=> 1,
+				get_master_node		=> '_object',
 			},
 
 			'Video::DVDRip::Cluster::Project' => {
@@ -105,9 +118,13 @@ main: {
 				state			=> 1,
 				progress		=> 1,
 				create_job_plan		=> 1,
-				title			=> 'Video::DVDRip::Cluster::Title',
+				title			=> '_object',
 				reset_job		=> 1,
+				jobs_list		=> 1,
+				get_job_by_id		=> 1,
+				save			=> 1,
 			},
+
 
 			'Video::DVDRip::Cluster::Node' => {
 				new			=> '_constructor',
@@ -139,11 +156,11 @@ main: {
 				parse_test_output	=> 1,
 				test_finished		=> 1,
 				test_result		=> 1,
-				clone			=> 'Video::DVDRip::Cluster::Node',
+				clone			=> '_object',
 			},
 			'Video::DVDRip::Cluster::Title' => {
-				project			=> 'Video::DVDRip::Cluster::Project',
-				program_stream_units    => 'Video::DVDRip::Cluster::PSU',
+				project			=> '_object',
+				program_stream_units    => '_object',
 				save			=> 1,
 				calc_chunk_cnt		=> 1,
 				chunk_cnt_sum		=> 1,
@@ -155,6 +172,7 @@ main: {
 				set_with_vob_remove	=> 1,
 				frames_per_chunk	=> 1,
 				set_frames_per_chunk	=> 1,
+				info			=> 1,
 			},
 			'Video::DVDRip::Cluster::PSU' => {
 				nr			=> 1,
@@ -167,16 +185,16 @@ main: {
 
 	$Video::DVDRip::DEBUG = 2 if $log_level > 3;
 
-	# set log level
-	$server->set_log_level ( $log_level );
+	# start master
+	$server->load_class("Video::DVDRip::Cluster::Master");
 
-	# start master thread
-	my $master = $server->load_class (
-		class => 'Video::DVDRip::Cluster::Master'
+	Video::DVDRip::Cluster::Master->check_prerequisites;
+
+	my $master = Video::DVDRip::Cluster::Master->new (
+		logger     => $logger,
+		rpc_server => $server,
 	);
-
-	$master->check_prerequisites;
-	$master->get_master ( logger => $server )->job_control;
+	$master->job_control;
 
 	if ( $start_webserver ) {
 		# start webserver

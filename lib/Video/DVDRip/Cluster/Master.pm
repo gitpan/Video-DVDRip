@@ -1,4 +1,4 @@
-# $Id: Master.pm,v 1.33 2005/05/16 08:03:45 joern Exp $
+# $Id: Master.pm,v 1.34 2005/08/01 19:07:44 joern Exp $
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
 # All Rights Reserved. See file COPYRIGHT for details.
@@ -36,6 +36,7 @@ sub job_id			{ shift->{job_id}			}
 sub project_id			{ shift->{project_id}			}
 sub in_job_control		{ shift->{in_job_control}		}
 sub node_check_watcher		{ shift->{node_check_watcher}		}
+sub rpc_server			{ shift->{rpc_server}			}
 
 sub set_config_filename		{ shift->{config_filename}	= $_[1] }
 sub set_data_dir		{ shift->{data_dir}		= $_[1] }
@@ -47,62 +48,58 @@ sub set_job_id			{ shift->{job_id}		= $_[1] }
 sub set_project_id		{ shift->{project_id}		= $_[1] }
 sub set_in_job_control		{ shift->{in_job_control}	= $_[1] }
 sub set_node_check_watcher	{ shift->{node_check_watcher}	= $_[1] }
+sub set_rpc_server		{ shift->{rpc_server}		= $_[1]	}
 
-{
-	my $MASTER_OBJECT;
+my $MASTER_OBJECT;
+sub get_master { $MASTER_OBJECT }
+
+sub new {
+	my $class = shift;
+	my %par = @_;
+	my ($logger, $rpc_server) = @par{'logger','rpc_server'};
+
+	my $self = bless {
+		data_dir	   => $ENV{HOME}."/.dvdrip-master",
+		node_dir	   => $ENV{HOME}."/.dvdrip-master/nodes",
+		project_dir	   => $ENV{HOME}."/.dvdrip-master/projects",
+		config_filename	   => $ENV{HOME}."/.dvdrip-master/master.conf",
+		nodes		   => [],
+		projects           => [],
+		job_id		   => 0,
+		logger		   => $logger,
+		rpc_server	   => $rpc_server,
+	}, $class;
+
+	$MASTER_OBJECT = $self;
+
+	$self->set_logger($logger);
 	
-	sub get_master {
-		my $class = shift;
-		# only one master object per process, so return the object
-		# directly if already created.
-		return $MASTER_OBJECT if $MASTER_OBJECT;
+	if ( not -d $self->data_dir ) {
+		mkdir ($self->data_dir, 0755) or
+			croak "can't create directory '".$self->data_dir."'";
 
-		my %par = @_;
-		my ($logger) = @par{'logger'};
-
-		my $self = {
-			data_dir	  => $ENV{HOME}."/.dvdrip-master",
-			node_dir	  => $ENV{HOME}."/.dvdrip-master/nodes",
-			project_dir	  => $ENV{HOME}."/.dvdrip-master/projects",
-			config_filename	  => $ENV{HOME}."/.dvdrip-master/master.conf",
-			nodes		  => [],
-			projects          => [],
-			job_id		  => 0,
-			logger		  => $logger,
-		};
-
-		bless $self, $class;
-
-		if ( not -d $self->data_dir ) {
-			mkdir ($self->data_dir, 0755) or
-				croak "can't create directory '".$self->data_dir."'";
-
-		}
-
-		if ( not -d $self->node_dir ) {
-			mkdir ($self->node_dir, 0755) or
-				croak "can't create directory '".$self->node_dir."'";
-
-		}
-
-		if ( not -d $self->project_dir ) {
-			mkdir ($self->project_dir, 0755) or
-				croak "can't create directory '".$self->project_dir."'";
-
-		}
-
-		$self->log (__"Master daemon activated");
-
-		$self->load;
-
-		$MASTER_OBJECT = $self;
-
-		$self->enable_node_check
-			if not $self->node_check_unnecessary;
-
-		return $self;
 	}
 
+	if ( not -d $self->node_dir ) {
+		mkdir ($self->node_dir, 0755) or
+			croak "can't create directory '".$self->node_dir."'";
+
+	}
+
+	if ( not -d $self->project_dir ) {
+		mkdir ($self->project_dir, 0755) or
+			croak "can't create directory '".$self->project_dir."'";
+
+	}
+
+	$self->log (__"Master daemon activated");
+
+	$self->load;
+
+	$self->enable_node_check
+		unless $self->node_check_unnecessary;
+
+	return $self;
 }
 
 sub check_prerequisites {
@@ -126,7 +123,7 @@ sub check_prerequisites {
 sub node_check_unnecessary {
 	my $self = shift; $self->trace_in;
 
-	return if Video::DVDRip::RPC::Server->instance->clients_connected;
+	return if $self->rpc_server->get_clients_connected;
 	return if @{$self->job_get_unfinished_projects};
 	return 1;
 }
@@ -352,6 +349,22 @@ sub load_projects {
 	1;
 }
 
+sub emit_event {
+	my $self = shift;
+	my ($event, @args) = @_;
+
+	my $rpc_server  = $self->rpc_server;
+	my $log_clients = $rpc_server->get_logging_clients;
+
+	my $sock;
+	foreach my $client ( values %{$log_clients} ) {
+		$sock = $client->get_sock;
+		print $sock "EVENT\t$event\t".join("\t", @args)."\n";
+	}
+
+	1;
+}
+
 sub add_node {
 	my $self = shift; $self->trace_in;
 	my %par = @_;
@@ -392,6 +405,8 @@ sub remove_node {
 	unlink $node->filename;
 
 	splice @{$self->nodes}, $i, 1;
+	
+	$self->emit_event("NODE_DELETED", $node->name);
 
 	1;
 }
@@ -454,6 +469,8 @@ sub add_project {
 	# save new state
 	$self->save;
 
+	$self->emit_event("PROJECT_UPDATE", $project->id);
+
 	1;
 }
 
@@ -474,6 +491,8 @@ sub move_up_project {
 	# save new state
 	$self->save;
 
+	$self->emit_event("PROJECT_LIST_UPDATE");
+
 	1;
 }
 
@@ -493,6 +512,8 @@ sub move_down_project {
 	
 	# save new state
 	$self->save;
+
+	$self->emit_event("PROJECT_LIST_UPDATE");
 
 	1;
 }
@@ -541,48 +562,51 @@ sub remove_project {
 
 	$self->log (__x("Project {project} removed", project => $project->label));
 
+	$self->emit_event("PROJECT_DELETED", $project->id);
+
 	1;
 }
 
-sub get_projects_lref {
+sub projects_list {
 	my $self = shift; $self->trace_in;
 	
 	my $nr;
 	my @projects;
 	foreach my $project ( @{$self->projects} ) {
 		push @projects, [
-			$nr++,
 			$project->id,
+			++$nr,
 			$project->label,
-			scalar(@{$project->jobs}),
 			$project->state,
+			$project->progress,
 		];
 	}
 	
 	return \@projects;
 }
 
-sub get_jobs_lref {
+sub jobs_list {
 	my $self = shift; $self->trace_in;
 	my %par = @_;
 	my ($project_id) = @par{'project_id'};
 	
 	my $project = $self->project_by_id ( id => $project_id );
 	
-	return $project->get_jobs_lref;
+	return $project->jobs_list;
 }
 
-sub get_nodes_lref {
+sub nodes_list {
 	my $self = shift; $self->trace_in;
 	
 	my $nr;
 	my @nodes;
 	foreach my $node ( @{$self->nodes} ) {
 		push @nodes, [
-			$nr++,
 			$node->name,
-			($node->assigned_job ? $node->assigned_job->id : undef),
-			($node->assigned_job ? $node->assigned_job->progress : undef),
+			++$nr,
+			$node->name,
+			($node->assigned_job ? $node->assigned_job->node_label : undef),
+			($node->assigned_job ? $node->assigned_job->progress : $node->state),
 		];
 	}
 	
@@ -795,6 +819,61 @@ sub get_online_nodes_cnt {
 	return $cnt;
 }
 
+sub get_node_by_name {
+	my $self = shift;
+	my ($name) = @_;
+	foreach my $node ( @{$self->nodes} ) {
+		return $node if $node->name eq $name;
+	}
+	return;
+}
 
+sub get_project_by_id {
+	my $self = shift;
+	my ($id) = @_;
+	foreach my $project ( @{$self->projects} ) {
+		return $project if $project->id eq $id;
+	}
+	return;
+}
+
+sub get_master_node {
+	my $self = shift;
+
+	foreach my $node ( @{$self->nodes} ) {
+		return $node if $node->is_master;
+	}
+
+	return;
+}
+
+
+sub node_test {
+	my $self = shift;
+	my %par = @_;
+	my ($node) = @par{'node'};
+
+	my $master_node = $self->get_master_node;
+	
+	if ( !$master_node ) {
+		$self->emit_event("NO_MASTER_NODE_FOUND");
+		return;
+	}
+	
+	$master_node->run_tests (
+	    cb_finished => sub {
+		$node->run_tests (
+		    cb_finished => sub {
+		        $self->emit_event(
+			    "NODE_TEST_FINISHED",
+			    $node->name
+			);
+		    },
+		);
+	    },
+	);
+	
+	1;
+}
 
 1;

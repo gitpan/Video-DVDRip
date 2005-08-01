@@ -1,4 +1,4 @@
-# $Id: Base.pm,v 1.27 2005/07/23 08:14:15 joern Exp $
+# $Id: Base.pm,v 1.28 2005/08/01 19:12:28 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -21,19 +21,24 @@ use Cwd;
 
 my %COMPONENTS;
 
+sub get_context			{ shift->{context}			}
+sub set_context			{ shift->{context}		= $_[1]	}
+
 sub get_form_factory		{ shift->{form_factory}			}
 sub set_form_factory		{ shift->{form_factory}		= $_[1]	}
 
-sub get_context			{ shift->{form_factory}->get_context	}
-sub get_context_object		{ $_[0]->get_context->get_object($_[1]) }
+sub get_context_object		{ $_[0]->{context}->get_object($_[1]) 	}
 
 sub new {
 	my $class = shift;
 	my %par = @_;
-	my ($form_factory) = @par{'form_factory'};
+	my ($form_factory, $context) = @par{'form_factory','context'};
+
+	$context ||= $form_factory->get_context if $form_factory;
 
 	my $self = bless {
 		form_factory	=> $form_factory,
+		context		=> $context,
 	}, $class;
 	
 	return $self;
@@ -94,12 +99,16 @@ sub show_file_dialog {
 	my $cwd = cwd;
 	chdir ( $dir );
 	
+	my $form_factory = $self->get_form_factory;
+	my $gtk_window   = $form_factory ?
+		$form_factory->get_form_factory_gtk_window :
+		undef;
+
+
 	# Create a new file selection widget
 	my $dialog = Gtk2::FileChooserDialog->new (
 	   $title,
-	   $self->get_context->get_object("main")
-	   	->get_form_factory
-		->get_form_factory_gtk_window,
+	   $gtk_window,
 	   "save",
 	   'gtk-cancel' => 'cancel',
            'gtk-ok'     => 'ok'
@@ -136,9 +145,13 @@ sub message_window {
 	my %par = @_;
 	my ($message) = @par{'message'};
 
+	my $form_factory = $self->get_form_factory;
+	my $gtk_window   = $form_factory ?
+		$form_factory->get_form_factory_gtk_window :
+		undef;
+
 	my $dialog = Gtk2::MessageDialog->new_with_markup (
-		$self->get_form_factory
-		     ->get_form_factory_gtk_window,
+		$gtk_window,
 		["destroy-with-parent"],
 		"info",
 		"none",
@@ -165,9 +178,13 @@ sub error_window {
 	my %par = @_;
 	my ($message) = @par{'message'};
 
+	my $form_factory = $self->get_form_factory;
+	my $gtk_window   = $form_factory ?
+		$form_factory->get_form_factory_gtk_window :
+		undef;
+
 	my $dialog = Gtk2::MessageDialog->new_with_markup (
-		$self->get_form_factory
-		     ->get_form_factory_gtk_window,
+		$gtk_window,
 		["modal","destroy-with-parent"],
 		"error",
 		"none",
@@ -264,8 +281,7 @@ sub confirm_window {
 	my  ($message, $yes_callback, $no_callback, $position, $with_cancel) =
 	@par{'message','yes_callback','no_callback','position','with_cancel'};
 
-	$self->get_context->get_object("main")
-	     ->get_form_factory->open_confirm_window (
+	$self->get_form_factory->open_confirm_window (
 		message      => $message,
 		yes_callback => $yes_callback,
 		no_callback  => $no_callback,

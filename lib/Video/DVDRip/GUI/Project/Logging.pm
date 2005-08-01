@@ -1,4 +1,4 @@
-# $Id: Logging.pm,v 1.2 2005/07/23 10:05:25 joern Exp $
+# $Id: Logging.pm,v 1.3 2005/08/01 19:17:21 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -23,10 +23,13 @@ sub build_factory {
 	my $context = $self->get_context;
 
 	return Gtk2::Ex::FormFactory::VBox->new (
-	    title 	=> __"Logging",
-	    object	=> "project",
-	    no_frame    => 1,
-	    content 	=> [
+	    title 	     => __"Logging",
+	    object           => "project",
+	    active_cond      => sub { $self->project &&
+	    			      $self->project->created },
+	    active_depends   => "project.created",
+	    no_frame         => 1,
+	    content 	     => [
 	        Gtk2::Ex::FormFactory::Table->new (
 		    title   => __"Log messages",
 		    expand  => 1,

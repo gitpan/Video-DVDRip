@@ -1,4 +1,4 @@
-# $Id: Preview.pm,v 1.12 2005/07/23 08:14:15 joern Exp $
+# $Id: Preview.pm,v 1.13 2005/08/01 19:16:27 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -42,17 +42,16 @@ sub set_gdk_input		{ shift->{gdk_input}		= $_[1]	}
 sub new {
 	my $class = shift;
 	my %par = @_;
-	my  ($form_factory, $closed_cb, $selection_cb, $eof_cb) =
-	@par{'form_factory','closed_cb','selection_cb','eof_cb'};
+	my  ($closed_cb, $selection_cb, $eof_cb) =
+	@par{'closed_cb','selection_cb','eof_cb'};
 
-	my $self = {
-		form_factory	=> $form_factory,
-		closed_cb	=> $closed_cb,
-		selection_cb	=> $selection_cb,
-		eof_cb		=> $eof_cb,
-	};
+	my $self = $class->SUPER::new(@_);
 	
-	return bless $self, $class;
+	$self->set_closed_cb($closed_cb);
+	$self->set_selection_cb($selection_cb);
+	$self->set_eof_cb($eof_cb);
+
+	return $self;
 }
 
 sub closed { not defined shift->transcode_pipe }
@@ -60,7 +59,7 @@ sub closed { not defined shift->transcode_pipe }
 sub open {
 	my $self = shift;
 
-	croak "Preview already open" if $self->set_transcode_pipe;
+	return if $self->set_transcode_pipe;
 	
 	my $socket_file = "/tmp/tc.$$.".time.(int(rand(100000))).".sock";
 	

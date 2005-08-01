@@ -1,4 +1,4 @@
-# $Id: Transcode.pm,v 1.3 2005/07/23 10:05:25 joern Exp $
+# $Id: Transcode.pm,v 1.4 2005/08/01 19:18:38 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -33,10 +33,13 @@ sub build_factory {
 	my $context = $self->get_context;
 
 	return Gtk2::Ex::FormFactory::VBox->new (
-	    title 	=> __"Transcode",
-	    object	=> "title",
-	    no_frame    => 1,
-	    content 	=> [
+	    title 	     => __"Transcode",
+	    object	     => "title",
+	    active_cond      => sub { $self->project &&
+	    			      $self->project->created },
+	    active_depends   => "project.created",
+	    no_frame         => 1,
+	    content 	     => [
 	        Video::DVDRip::GUI::Main->build_selected_title_factory,
 		Gtk2::Ex::FormFactory::Table->new (
 		    expand => 1,
@@ -1059,10 +1062,10 @@ sub transcode_multipass_with_vbr_audio {
 	$last_job->set_cb_finished (sub {
 		$bc->calculate;
 		$title->set_tc_video_bitrate ( $bc->video_bitrate );
+		$self->get_context->update_object_attr_widgets("title.tc_video_bitrate");
 		$self->log (__x("Adjusted video bitrate to {video_bitrate} ".
 			       "after vbr audio transcoding",
 			       video_bitrate => $bc->video_bitrate) );
-		$self->init_transcode_values;
 		1;
 	});
 	
@@ -1264,11 +1267,6 @@ sub scan_rescale_volume {
 sub add_to_cluster {
 	my $self = shift;
 	
-	$self->error_window (
-		message => __"Not implemented yet",
-	);
-	return 1;
-
 	my $title = $self->selected_title;
 	return 1 if not $title;
 
@@ -1331,12 +1329,12 @@ sub add_to_cluster {
 
 	$self->get_context_object("main")->cluster_control;
 	
-	my $cluster = eval { $self->get_context_object('cluster') };
-	return if not $cluster;
+	my $cluster_gui = eval { $self->get_context_object('cluster_gui') };
+	return if not $cluster_gui;
 
-	$cluster->add_project (
+	$cluster_gui->add_project (
 		project  => $self->project,
-		title_nr => $title->nr,
+		title    => $title,
 	);
 	
 	1;

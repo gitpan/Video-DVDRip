@@ -1,4 +1,4 @@
-# $Id: Project.pm,v 1.32 2005/07/12 11:50:26 joern Exp $
+# $Id: Project.pm,v 1.33 2005/08/01 19:09:38 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -63,7 +63,10 @@ sub set_state {
 		);
 		$self->set_runtime($runtime);
 	}
-	
+
+	Video::DVDRip::Cluster::Master->get_master
+				      ->emit_event("PROJECT_UPDATE", $self->id);
+
 	$new_state;
 }
 
@@ -84,10 +87,21 @@ sub load {
 	1;
 }
 
+sub save {
+	my $self = shift;
+	
+	$self->SUPER::save(@_);
+	
+	Video::DVDRip::Cluster::Master->get_master
+				      ->emit_event("PROJECT_UPDATE", $self->id);
+
+	1;
+}
+
 sub vob_dir {
 	my $self = shift; $self->trace_in;
 	
-	my $job = $self->assigned_job or croak "No job assigned";
+	my $job = $self->assigned_job or die "No job assigned";
 
 	return $job->node->data_base_dir."/".
 	       $self->name."/vob";
@@ -96,7 +110,7 @@ sub vob_dir {
 sub avi_dir {
 	my $self = shift; $self->trace_in;
 	
-	my $job  = $self->assigned_job or croak "No job assigned";
+	my $job  = $self->assigned_job or die "No job assigned";
 	my $node = $job->node;
 
 	return $node->data_base_dir."/".
@@ -107,7 +121,7 @@ sub avi_dir {
 sub final_avi_dir {
 	my $self = shift; $self->trace_in;
 	
-	my $job  = $self->assigned_job or croak "No job assigned";
+	my $job  = $self->assigned_job or die "No job assigned";
 	my $node = $job->node;
 
 	return $node->data_base_dir."/".
@@ -116,8 +130,9 @@ sub final_avi_dir {
 
 sub snap_dir {
 	my $self = shift; $self->trace_in;
-	
-	my $job = $self->assigned_job or croak "No job assigned";
+
+	my $job = $self->assigned_job;
+	return $self->SUPER::snap_dir() if ! $job;
 	my $node = $job->node;
 
 	return $node->data_base_dir."/".
@@ -126,14 +141,15 @@ sub snap_dir {
 
 sub label {
 	my $self = shift; $self->trace_in;
-	return $self->name." (#".$self->selected_title_nr.")";
+	return $self->name." (#".$self->title->nr.")";
 }
 
 sub new {
 	my $class = shift;
 	my %par = @_;
 	my ($project, $title_nr) = @par{'project','title_nr'};
-	
+
+print "title_nr=$title_nr\n";
 	# bless instance with this class
 	bless $project, $class;
 	
@@ -378,6 +394,9 @@ sub create_job_plan {
 	# store job plan
 	$self->set_jobs ( \@jobs );
 
+	Video::DVDRip::Cluster::Master->get_master
+				      ->emit_event("JOB_PLAN_UPDATE", $self->id);
+
 	1;
 }
 
@@ -428,7 +447,7 @@ sub progress {
 	return "Jobs: run=$running wait=$waiting fin=$finished sum=$sum";
 }
 
-sub get_jobs_lref {
+sub jobs_list {
 	my $self = shift; $self->trace_in;
 	
 	my @jobs;
@@ -482,9 +501,8 @@ sub reset_jobs {
 
 sub get_job_by_id {
 	my $self = shift; $self->trace_in;
-	my %par = @_;
-	my ($job_id) = @par{'job_id'};
-	
+	my ($job_id) = @_;
+
 	foreach my $job ( @{$self->jobs} ) {
 		return $job if $job->id == $job_id;
 	}
@@ -523,7 +541,7 @@ sub reset_job {
 	my %par = @_;
 	my ($job_id) = @par{'job_id'};
 	
-	my $job = $self->get_job_by_id ( job_id => $job_id );
+	my $job = $self->get_job_by_id ($job_id);
 	return if $job->state ne 'finished' and
 		  $job->state ne 'aborted';
 	

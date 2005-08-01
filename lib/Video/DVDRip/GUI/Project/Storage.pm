@@ -1,4 +1,4 @@
-# $Id: Storage.pm,v 1.2 2005/07/23 11:49:47 joern Exp $
+# $Id: Storage.pm,v 1.3 2005/08/01 19:17:47 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -52,11 +52,27 @@ sub build_factory {
 			    label	=> __"Temporary directory",
 			    tip		=> __"For temporary files",
 			),
+	    		Gtk2::Ex::FormFactory::Button->new (
+			    label	   => __"Create project",
+			    stock          => "gtk-add",
+			    expand         => 0,
+			    tip		   => __"This asks for a project filename and creates the ".
+			    		        "neccessary filesystem structure",
+			    clicked_hook   => sub { $self->get_context_object("main")->save_project },
+			    inactive       => "invisible",
+			    active_cond    => sub { return 1 unless $self->project;
+			    			    return !$self->project->created },
+			    active_depends => "project",
+			),
 		    ]
 		),
 	    	Gtk2::Ex::FormFactory::VBox->new (
-		    title 	=> __"Data source mode selection",
-		    content 	=> [
+		    title 	     => __"Data source mode selection",
+		    object           => "project",
+		    active_cond      => sub { $self->project &&
+	    				      $self->project->created },
+		    active_depends   => "project.created",
+		    content 	     => [
 	    		Gtk2::Ex::FormFactory::RadioButton->new (
 			    attr	 => "project.rip_mode",
 			    value	 => "rip",

@@ -1,4 +1,4 @@
-# $Id: Subtitle.pm,v 1.2 2005/07/23 10:05:25 joern Exp $
+# $Id: Subtitle.pm,v 1.3 2005/08/01 19:18:04 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -33,10 +33,13 @@ sub build_factory {
 	my $context = $self->get_context;
 
 	return Gtk2::Ex::FormFactory::VBox->new (
-	    title 	=> __"Subtitles",
-	    object	=> "title",
-	    no_frame    => 1,
-	    content 	=> [
+	    title 	     => __"Subtitles",
+	    object	     => "title",
+	    active_cond      => sub { $self->project &&
+	    			      $self->project->created },
+	    active_depends   => "project.created",
+	    no_frame         => 1,
+	    content 	     => [
 	        Video::DVDRip::GUI::Main->build_selected_title_factory,
 		Gtk2::Ex::FormFactory::VBox->new (
 		    object   => "subtitle",
@@ -105,7 +108,7 @@ sub build_preview_box {
 			),
 		        Gtk2::Ex::FormFactory::Combo->new (
 			    attr    => "subtitle.tc_preview_img_cnt",
-			    presets => [ 1, 3, 5, 10 ],
+			    presets => [ 1, 3, 5, 10, 20, 30, 50, 100 ],
 			    width   => 60,
 			    rules   => "positive-integer",
 			),

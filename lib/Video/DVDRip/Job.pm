@@ -1,4 +1,4 @@
-# $Id: Job.pm,v 1.15 2005/07/23 08:14:15 joern Exp $
+# $Id: Job.pm,v 1.16 2005/08/01 19:19:43 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -159,28 +159,34 @@ sub start_job {
 	$self->set_state ("running");
 	$self->set_progress_start_time ( time );
 
-	my $pipe_class         = $self->pipe_class;
-	my $cb_update_progress = $self->cb_update_progress;
+	my $pipe_class = $self->pipe_class;
 
 	my $last_progress_update;
 	my $pipe = $self->pipe_class->new (
 		command      => $self->get_job_command,
 		timeout      => $self->timeout,
 		need_output  => $self->need_output,
-		cb_line_read => sub {
-			$self->parse_output ($_[0]);
-			return 1 if $last_progress_update == time();
-			$last_progress_update = time();
-			&$cb_update_progress( job => $self )
-				if $cb_update_progress
-		},
-		cb_finished  => sub { $self->finish_job           },
+		cb_line_read => sub { $self->line_read($_[0],
+				      \$last_progress_update ) },
+		cb_finished  => sub { $self->finish_job       },
 	);
 
 	$self->set_pipe ( $pipe );
 
 	$pipe->open;
 
+	1;
+}
+
+sub line_read {
+	my $self = shift;
+	my ($line, $last_progress_update_ref) = @_;
+	$self->parse_output ($line);
+	my $cb_update_progress = $self->cb_update_progress;
+	return unless $cb_update_progress;
+	return 1 if $$last_progress_update_ref == time();
+	$$last_progress_update_ref = time();
+	&$cb_update_progress( job => $self );
 	1;
 }
 

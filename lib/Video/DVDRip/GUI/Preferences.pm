@@ -1,4 +1,4 @@
-# $Id: Preferences.pm,v 1.1 2005/07/23 08:14:15 joern Exp $
+# $Id: Preferences.pm,v 1.2 2005/08/01 19:31:34 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -131,7 +131,7 @@ sub build_config_notebook {
 			$ff_params{label_group}  = "pref_labels";
 			$ff_params{rules}        = $item_def->{rules};
 			$ff_params{attr}         = "config.$item_name";
-			$ff_params{changed_hook} = $changed_hook;
+			$ff_params{changed_hook_after} = $changed_hook;
 			
 			if ( $item_def->{type} eq 'string' ) {
 				if ( $item_def->{presets} ) {

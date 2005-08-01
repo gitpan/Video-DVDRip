@@ -1,4 +1,4 @@
-# $Id: Context.pm,v 1.2 2005/07/23 11:49:39 joern Exp $
+# $Id: Context.pm,v 1.3 2005/08/01 19:12:56 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -162,7 +162,8 @@ sub create {
 
 	#-- Once the project directory is created, the project
 	#-- name and directories must kept unchanged.
-	my $project_dirs_locked = sub { not -d $_[0]->snap_dir };
+	my $project_dirs_unlocked = sub { $_[0]->name eq 'unnamed' ||
+					  ! -d $_[0]->snap_dir };
 	
 	#-- Add !project object to Context (set to 1 if no project
 	#-- is open, splash screen is associated with it)
@@ -183,10 +184,10 @@ sub create {
 			dvd_image_dir => "project.rip_mode",
 		},
 		attr_activity_href => {
-			name     => $project_dirs_locked,
-			vob_dir  => $project_dirs_locked,
-			avi_dir  => $project_dirs_locked,
-			snap_dir => $project_dirs_locked,
+			name     => $project_dirs_unlocked,
+			vob_dir  => $project_dirs_unlocked,
+			avi_dir  => $project_dirs_unlocked,
+			snap_dir => $project_dirs_unlocked,
 			dvd_image_dir => sub {
 			    shift->rip_mode eq 'dvd_image'
 			},
@@ -210,7 +211,8 @@ sub create {
 			foreach my $nr ( sort { $a <=> $b } keys %{$self->titles} ) {
 			    $t = $self->titles->{$nr};
 			    push @slist_data,
-			    	[ $nr, $class->format_time( time => $t->runtime ),
+			    	[ $nr - 1,
+				  $nr, $class->format_time( time => $t->runtime ),
 				  uc($t->video_mode), $t->chapters,
 				  scalar(@{$t->audio_tracks}),
 				  $t->frame_rate, $t->aspect_ratio, $t->frames,
@@ -645,6 +647,7 @@ sub create {
 			audio_codec_pcm_form    => [ "title.tc_container" ],
 			tc_vorbis_bitrate	=> [ "audio_track.tc_vorbis_quality_enable" ],
 			tc_vorbis_quality	=> [ "audio_track.tc_vorbis_quality_enable" ],
+			tc_volume_rescale	=> [ "audio_track.tc_audio_filter" ],
 		},
 	);
 
@@ -725,6 +728,57 @@ sub create {
 		    tc_assign_color_b	=> [ "tc_render", "tc_color_manip" ],
 		    tc_test_image_cnt	=> "tc_render",
 		},
+	);
+
+	#-- Add cluster control daemon object to Context
+	$context->add_object (
+		name	=> "cluster",
+		object	=> undef,
+	);
+
+	#-- Add cluster control GUI object to Context
+	$context->add_object (
+		name	=> "cluster_gui",
+		object	=> undef,
+		attr_depends_href => {
+		    selected_node    => "selected_node_name",
+		    selected_project => "selected_project_id",
+		    selected_job     => "selected_job_id",
+		    jobs_list        => "selected_project_id",
+		},
+	);
+
+	#-- Add cluster node object to Context
+	$context->add_object (
+		name	      => "cluster_node",
+		aggregated_by => "cluster_gui.selected_node",
+	);
+
+	#-- Add cluster node object to Context
+	$context->add_object (
+		name	      => "cluster_project",
+		aggregated_by => "cluster_gui.selected_project",
+	);
+
+	#-- Add cluster node object to Context
+	$context->add_object (
+		name	      => "cluster_job",
+		aggregated_by => "cluster_gui.selected_job",
+	);
+
+	#-- Add currently edited cluster node object to Context
+	$context->add_object (
+		name	      => "cluster_node_edited",
+	);
+
+	#-- Add currently cluster node GUI object to Context
+	$context->add_object (
+		name	      => "cluster_node_gui",
+	);
+
+	#-- Add currently edited cluster title object to Context
+	$context->add_object (
+		name	      => "cluster_title_edited",
 	);
 
 	return $context;

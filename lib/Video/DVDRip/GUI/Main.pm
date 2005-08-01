@@ -1,4 +1,4 @@
-# $Id: Main.pm,v 1.68 2005/07/23 10:05:25 joern Exp $
+# $Id: Main.pm,v 1.70 2005/08/01 19:37:30 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -16,7 +16,7 @@ use base qw(Video::DVDRip::GUI::Base);
 use Locale::TextDomain qw (video.dvdrip);
 
 use Gtk2;
-use Gtk2::Ex::FormFactory 0.56;
+use Gtk2::Ex::FormFactory 0.57;
 use Data::Dumper;
 use File::Basename;
 
@@ -34,9 +34,6 @@ use Video::DVDRip::GUI::Progress;
 
 use Video::DVDRip::GUI::ExecuteJobs;
 
-sub get_context			{ shift->{context}			}
-sub set_context			{ shift->{context}		= $_[1]	}
-
 sub get_form_factory		{ shift->{form_factory}			}
 sub set_form_factory		{ shift->{form_factory}		= $_[1]	}
 
@@ -51,7 +48,7 @@ sub window_name			{
 
 	if ( $project ) {
 		return $self->config('program_name')." - ".
-		       basename($project->filename);
+		       $project->name;
 	} else {
 		return $self->config('program_name')." - <no project>";
 	}
@@ -90,8 +87,7 @@ sub start {
 
 	Glib->install_exception_handler (sub {
 		my ($msg) = @_;
-
-		if ( $msg =~ /^msg:\s*(.*)\s+at.*?line\s+\d+/s ) {
+		if ( $msg =~ /^msg:\s*(.*?)\s+at.*?line\s+\d+/s ) {
 			$self->error_window (
 				message => $1,
 			);
@@ -628,13 +624,15 @@ sub open_project_file {
 
 sub save_project {
 	my $self = shift;
-	
-	my $project = $self->get_context->get_object ("project");
+
+	my $context = $self->get_context;
+	my $project = $context->get_object ("project");
+	my $created = $project->created;
 	
 	if ( $project->filename ) {
 		$project->save;
 		# greys out "Project name" widget
-		$self->get_context->update_object_attr_widgets("project.name");
+		$context->update_object_attr_widgets("project.name");
 		return 1;
 
 	} else {
@@ -647,6 +645,12 @@ sub save_project {
 			cb       => sub {
 				$project->set_filename($_[0]);
 				$self->save_project;
+				unless ($created) {
+					$context->update_object_widgets("project");
+					$self->logger->set_project($project);
+					$self->log(__x"Project {name} created",
+						   $project->name);
+				}
 			},
 		);
 		return 0;
@@ -656,7 +660,9 @@ sub save_project {
 sub save_project_as {
 	my $self = shift;
 	
-	my $project = $self->get_context->get_object ("project");
+	my $context = $self->get_context;
+	my $project = $context->get_object ("project");
+	my $created = $project->created;
 	
 	$self->show_file_dialog (
 		dir      => $self->config('dvdrip_files_dir'),
@@ -666,6 +672,12 @@ sub save_project_as {
 			$project->set_filename($_[0]);
 			$project->save;
 			$self->update_window_title;
+			unless ($created) {
+				$context->update_object_widgets("project");
+				$self->logger->set_project($project);
+				$self->log(__x"Project {name} created",
+					   $project->name);
+			}
 		},
 	);
 
@@ -750,11 +762,6 @@ sub cluster_control {
 	my %par = @_;
 	my ($exit_on_close) = @par{'exit_on_close'};
 
-	$self->error_window (
-		message => __"Not implemented yet",
-	);
-	return 1;
-
 	return if not $self->dependencies_ok;
 
 	require Video::DVDRip::GUI::Cluster::Control;
@@ -763,7 +770,9 @@ sub cluster_control {
 	      $self->config('cluster_master_server')) and
 	      $self->config('cluster_master_port') ) {
 
-		my $cluster = Video::DVDRip::GUI::Cluster::Control->new;
+		my $cluster = Video::DVDRip::GUI::Cluster::Control->new (
+			context => $self->get_context,
+		);
 		$cluster->set_exit_on_close ($exit_on_close);
 		$cluster->open_window;
 

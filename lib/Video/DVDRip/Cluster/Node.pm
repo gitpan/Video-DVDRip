@@ -1,4 +1,4 @@
-# $Id: Node.pm,v 1.30 2005/06/19 13:37:56 joern Exp $
+# $Id: Node.pm,v 1.31 2005/08/01 19:08:01 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -167,24 +167,30 @@ sub load {
 
 sub save {
 	my $self = shift; $self->trace_in;
-	
+
 	my $filename = $self->filename;
 	confess "not filename set" if not $filename;
 	
 	my $assigned_job = $self->assigned_job;
+	my $test_result  = $self->test_result;
 	$self->set_assigned_job( undef );
-	
+	$self->set_test_result( undef );
+
 	my $dd = Data::Dumper->new ( [$self], ['data'] );
 	$dd->Indent(1);
 	my $data = $dd->Dump;
 
 	$self->set_assigned_job ( $assigned_job );
+	$self->set_test_result( $test_result );
 
 	my $fh = FileHandle->new;
 
 	open ($fh, "> $filename") or confess "can't write $filename";
 	print $fh $data;
 	close $fh;
+	
+	Video::DVDRip::Cluster::Master->get_master
+				      ->emit_event("NODE_UPDATE", $self->name);
 	
 	1;
 }
@@ -205,7 +211,9 @@ sub get_popen_code {
 
 	my $username = $self->username;
 	my $name     = $self->hostname;
-	my $ssh_cmd  = $self->ssh_cmd  || 'ssh -x';
+	my $ssh_cmd  = $self->ssh_cmd  || 'ssh';
+
+	$ssh_cmd .= " -o PreferredAuthentications=publickey";
 
 	$command =~ s/dr_exec//g;
 	$command =~ s/"/\\"/g;
@@ -287,37 +295,33 @@ sub job_info {
 
 sub run_tests {
 	my $self = shift;
+	my %par = @_;
+	my ($cb_finished) = @par{'cb_finished'};
 	
 	# First reset the finished flag
 	$self->set_test_finished(0);
 
-	if ( $self->state eq 'offline' ) {
-		$self->set_test_finished(1);
-		$self->set_test_result (
-			__"Node is offline. Can't test its configuration."
-		);
-		return;
-	}
-
 	# get test command for this node
 	my $command = $self->get_test_command;
 
-	my $popen_command = $self->get_popen_code ( command => $command );
+	my $popen_command = $self->get_popen_code ( command => "($command) 2>&1" );
 
 	my $output = "";
 	Video::DVDRip::Cluster::Pipe->new (
 		command      => $popen_command,
 		timeout	     => 5,
-		cb_line_read => sub {
-			$output .= $_[0]."\n";
-		},
+		cb_line_read => sub { $output .= $_[0]."\n" },
 		cb_finished => sub {
+			$self->log(
+			    __x("Node {name} finished tests", name => $self->name)
+			);
 			$self->set_test_result (
 				$self->parse_test_output (
 					output => $output
 				)
 			);
 			$self->set_test_finished (1);
+			&$cb_finished() if $cb_finished;
 		}
 	)->open;
 
@@ -326,32 +330,36 @@ sub run_tests {
 
 sub get_test_command {
 	my $self = shift;
-	my %par = @_;
-	my ($data_base_dir) = @par{'data_base_dir'};
+
+	my $data_base_dir = $self->data_base_dir;
 	
 	my $command = "sh -c '";
-	
+	my $create_test_file =
+		$self->is_master ?
+			"touch $data_base_dir/00DVDRIP-CLUSTER; " :
+			"";
+
 	# 1. confirm ssh connection
-	$command .= "echo --ssh_connect-- 2>&1; ".
-		    "echo Ok 2>&1; ".
-		    "echo --ssh_connect-- 2>&1;";
+	$command .= "echo --ssh_connect--; ".
+		    "echo Ok; ".
+		    "echo --ssh_connect--;";
 	
 	# 2. get content of data_base_dir
-	$data_base_dir ||= $self->data_base_dir;
-	$command .= "echo --data_base_dir_content-- 2>&1; ".
-		    "cd $data_base_dir 2>&1; echo * 2>&1 | perl -pe \"s/ /chr(10)/eg\" 2>&1 | sort 2>&1;".
-		    "echo --data_base_dir_content-- 2>&1; ";
+	$command .= "echo --data_base_dir_content--; ".
+		    $create_test_file.
+		    "cd $data_base_dir; echo * | perl -pe \"s/ /chr(10)/eg\" | sort;".
+		    "echo --data_base_dir_content--; ";
 	
 	# 3. try writing in the data_base_dir
 	my $test_file = "$data_base_dir/".$self->name."-file-write-test";
-	$command .= "echo --write_test-- 2>&1; ".
-		    "echo node write test > $test_file 2>&1 && echo SUCCESS; ".
-		    "rm -f $test_file 2>&1; ".
-		    "echo --write_test-- 2>&1; ";
+	$command .= "echo --write_test--; ".
+		    "echo node write test > $test_file && echo SUCCESS; ".
+		    "rm -f $test_file; ".
+		    "echo --write_test--; ";
 
 	# 4. get transcode version
 	$command .= "echo --transcode_version--; ".
-		    "transcode -v 2>&1; ".
+		    "transcode -v; ".
 		    "echo --transcode_version--; ";
 
 	$command .= "'";

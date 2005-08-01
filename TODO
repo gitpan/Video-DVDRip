@@ -1,4 +1,4 @@
-$Id: TODO,v 1.124 2005/07/23 08:14:15 joern Exp $
+$Id: TODO,v 1.125 2005/08/01 19:38:34 joern Exp $
 
 KNOWN BUGS:
 ===========
@@ -39,6 +39,7 @@ may be implemented soon, some eventually never... ;)
 
 TODO:
 =====
+- preview window: button to find black bars
 - mplayer command: placeholder for the configured DVD device
   (mplayer option -dvd-device). Suggested by Sunny <sloncho AT gmail.com>.
 - add preference "default clip&zoom preset", suggested by

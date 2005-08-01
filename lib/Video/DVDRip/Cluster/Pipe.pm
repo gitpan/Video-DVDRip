@@ -1,4 +1,4 @@
-# $Id: Pipe.pm,v 1.13 2005/05/16 08:04:24 joern Exp $
+# $Id: Pipe.pm,v 1.14 2005/08/01 19:08:43 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -166,32 +166,16 @@ sub input {
 	my ($abort) = @_;
 
 	my $fh = $self->fh;
+	my $line_buffer;
 
 	# eof or abort?
-	if ( $abort or eof ($fh) ) {
+	if ( $abort or !sysread($fh, $line_buffer, 4096) ) {
 		$self->close;
-		my $cb_finished = $self->cb_finished;
-		&$cb_finished ();
 		return;
 	}
 
 	# read next line
-	my ($rc, $last_was_eol, $got_empty_line);
-	my $line_buffer = $self->line_buffer;
-
-	while ( not eof($fh) and defined ($rc = getc($fh)) ) {
-		last if $last_was_eol and $rc ne "\n" and $rc ne "\r";
-		if ( $rc ne "\n" and $rc ne "\r" ) {
-			$line_buffer .= $rc;
-		} elsif ( $last_was_eol ) {
-			$got_empty_line = 1;
-			$rc = '';
-			last;
-		} else {
-			$last_was_eol = 1;
-		}
-		last if $line_buffer =~ /password: $/;
-	}
+	my ($rc,  $got_empty_line);
 
 	# get job's PID
 	my ($pid) = ( $line_buffer =~ /DVDRIP_JOB_PID=(\d+)/ );
@@ -204,14 +188,11 @@ sub input {
 	}
 
 	# append line to lifo
-	$self->add_lifo_line ( $line_buffer."\n" );
+	$self->add_lifo_line ( $line_buffer );
 
 	# call the line_read callback, if we have one
 	my $cb_line_read = $self->cb_line_read;
 	&$cb_line_read($line_buffer) if $cb_line_read;
-	&$cb_line_read('')           if $got_empty_line and $cb_line_read;
-
-	$self->set_line_buffer ($rc);
 
 	1;
 }
@@ -226,6 +207,9 @@ sub close {
 
 	close $fh;
 	waitpid $self->pid, 0;
+
+	my $cb_finished = $self->cb_finished;
+	&$cb_finished() if $cb_finished;
 
 	$self->log (5, "command finished: ".$self->command)
 		unless $self->no_log;

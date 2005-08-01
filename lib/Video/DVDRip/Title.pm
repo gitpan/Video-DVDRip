@@ -1,4 +1,4 @@
-# $Id: Title.pm,v 1.155 2005/07/23 08:14:15 joern Exp $
+# $Id: Title.pm,v 1.156 2005/08/01 19:21:14 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -1773,15 +1773,11 @@ sub suggest_transcode_options {
 
 	my $rip_mode = $self->project->rip_mode;
 
+	$self->set_skip_video_bitrate_calc(1);
+
 	$self->set_tc_viewing_angle ( 1 );
 	$self->set_tc_multipass ( 1 );
-	$self->set_tc_target_size ( 1400 );
-	$self->set_tc_disc_size ( 700 );
-	$self->set_tc_disc_cnt ( 2 );
 	$self->set_tc_keyframe_interval ( 50 );
-	$self->set_tc_video_bitrate_mode ("size");
-	$self->set_tc_video_bitrate_manual (1800);
-	$self->set_tc_video_bpp_manual (0.5);
 
 	my $container = $self->config('default_container');
 	# Internal value for MPEG/X*S*VCD/CVD container is 'vcd',
@@ -1833,7 +1829,8 @@ sub suggest_transcode_options {
 				last;
 			}
 		}
-		foreach my $subtitle ( values %{$self->subtitles} ) {
+		foreach my $sid ( sort { $a <=> $b } keys %{$self->subtitles} ) {
+			my $subtitle = $self->subtitles->{$sid};
 			if ( $subtitle->lang eq $pref_lang ) {
 				$self->set_selected_subtitle_id ( $subtitle->id );
 				last;
@@ -1841,18 +1838,31 @@ sub suggest_transcode_options {
 		}
 	}
 
+	$self->set_tc_video_bitrate_mode ("size");
+	$self->set_tc_target_size ( 1400 );
+	$self->set_tc_disc_size ( 700 );
+	$self->set_tc_disc_cnt ( 2 );
+	$self->set_tc_video_bitrate_manual (1800);
+
 	if ( $self->config('default_bpp') ne '<none>' ) {
 		$self->set_tc_video_bitrate_mode('bpp');
-		$self->set_tc_video_bpp($self->config('default_bpp'));
+		$self->set_tc_video_bpp_manual($self->config('default_bpp'));
 	}
+
+	$self->set_skip_video_bitrate_calc(0);
+
+	$self->calc_video_bitrate;
 
 	1;
 }
 
+sub skip_video_bitrate_calc	{ shift->{skip_video_bitrate_calc}	}
+sub set_skip_video_bitrate_calc	{ shift->{skip_video_bitrate_calc}= $_[1]	}
+
 sub calc_video_bitrate {
 	my $self = shift;
 
-	my $video_codec = $self->tc_video_codec;
+	return if $self->skip_video_bitrate_calc;
 
 	my $bc = Video::DVDRip::BitrateCalc->new (
 		title      => $self,

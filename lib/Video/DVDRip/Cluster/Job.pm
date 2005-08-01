@@ -1,4 +1,4 @@
-# $Id: Job.pm,v 1.17 2004/04/11 23:36:19 joern Exp $
+# $Id: Job.pm,v 1.18 2005/08/01 19:07:20 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -93,6 +93,7 @@ sub commit_job {
 
 	$self->node->set_state ('idle');
 	$self->node->set_assigned_job (undef);
+	$self->node->save;
 	$self->set_node(undef);
 
 	$self->project->save;
@@ -123,6 +124,9 @@ sub abort_job {
 	}
 
 	$self->node->set_assigned_job (undef);
+	$self->node->set_state ('idle')
+		unless $self->node->state eq 'stopped';
+	$self->node->save;
 	$self->set_node(undef);
 
 	$self->project->determine_state;
@@ -131,6 +135,25 @@ sub abort_job {
 	Video::DVDRip::Cluster::Master->get_master->job_control;
 
 	1;
+}
+
+sub line_read {
+	my $self = shift;
+	my ($line, $last_progress_update_ref) = @_;
+	$self->parse_output ($line);
+	return 1 if $$last_progress_update_ref == time();
+	$$last_progress_update_ref = time();
+	my $progress = $self->progress;
+	my $project  = $self->project;
+	my $master   = Video::DVDRip::Cluster::Master->get_master;
+	$master->emit_event ("JOB_PROGRESS_UPDATE",  $project->id, $self->nr, $self->state, $progress);
+	$master->emit_event ("NODE_PROGRESS_UPDATE", $self->node->name, $self->node_label, $progress);
+	1;
+}
+
+sub node_label {
+	my $self = shift;
+	return $self->project->label.": ".$self->info;
 }
 
 1;

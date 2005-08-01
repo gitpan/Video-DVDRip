@@ -1,4 +1,4 @@
-# $Id: Audio.pm,v 1.15 2005/07/23 08:14:15 joern Exp $
+# $Id: Audio.pm,v 1.16 2005/08/01 19:04:02 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -48,7 +48,7 @@ sub tc_volume_rescale		{ shift->{tc_volume_rescale}		}
 
 sub set_tc_nr			{ shift->{tc_nr}		= $_[1]	}
 sub set_tc_target_track		{ shift->{tc_target_track}	= $_[1]	}
-sub set_tc_audio_filter		{ shift->{tc_audio_filter}	= $_[1]	}
+#sub set_tc_audio_filter	{ shift->{tc_audio_filter}	= $_[1]	}
 sub set_tc_option_n		{ shift->{tc_option_n}		= $_[1]	}
 sub set_tc_volume_rescale	{ shift->{tc_volume_rescale}	= $_[1]	}
 
@@ -77,6 +77,18 @@ sub set_tc_vorbis_samplerate	{ shift->{tc_vorbis_samplerate}	= $_[1]	}
 #sub set_tc_mp2_bitrate		{ shift->{tc_mp2_bitrate}	= $_[1]	}
 sub set_tc_mp2_samplerate	{ shift->{tc_mp2_samplerate}	= $_[1]	}
 sub set_tc_pcm_bitrate		{ shift->{tc_pcm_bitrate}	= $_[1]	}
+
+sub set_tc_audio_filter	{
+	my $self = shift;
+	my ($value) = @_;
+	$self->{tc_audio_filter} = $value;
+	if ( $value eq 'rescale' ) {
+		$self->set_tc_volume_rescale($self->volume_rescale);
+	} else {
+		$self->set_tc_volume_rescale("");
+	}
+	return $value;
+}
 
 sub set_tc_audio_codec	{
 	my $self = shift;

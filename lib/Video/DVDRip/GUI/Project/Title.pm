@@ -1,4 +1,4 @@
-# $Id: Title.pm,v 1.1 2005/07/23 08:14:15 joern Exp $
+# $Id: Title.pm,v 1.2 2005/08/01 19:18:22 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -25,10 +25,13 @@ sub build_factory {
 	my $context = $self->get_context;
 
 	return Gtk2::Ex::FormFactory::VBox->new (
-	    title 	=> __"RIP Title",
-	    object	=> "project",
-	    no_frame    => 1,
-	    content 	=> [
+	    title 	     => __"RIP Title",
+	    object           => "project",
+	    active_cond      => sub { $self->project &&
+	    			      $self->project->created },
+	    active_depends   => "project.created",
+	    no_frame         => 1,
+	    content 	     => [
 	    	Gtk2::Ex::FormFactory::HBox->new (
 		    name        => "dvd_toc_buttons",
 		    title 	=> __"Read content",
@@ -69,16 +72,23 @@ sub build_factory {
 				      name           => "content_list",
 				      attr           => "content.titles",
 				      attr_select    => "content.selected_titles",
+				      attr_select_column => 0,
 				      tip            => "Select title for further operation",
 				      expand         => 1,
 				      scrollbars     => [ "never", "automatic" ],
 				      columns        => [
+				          "idx",
 				      	  __"Title", __"Runtime", __"Norm",
 			      		  __"Chp", __"Audio",
 					  __"Framerate", __"Aspect", 
 					  __"Frames", __"Resolution"
 				      ],
 				      selection_mode   => "multiple",
+				      customize_hook => sub {
+	        			  my ($gtk_simple_list) = @_;
+					  ($gtk_simple_list->get_columns)[0]->set ( visible => 0 );
+					  1;
+				      },
 				),
 				$self->build_audio_viewing_chapter_factory,
 			    ]
@@ -288,6 +298,7 @@ sub append_content_list {
 	my $list = $self->get_form_factory->get_widget("content_list");
 
 	push @{$list->get_gtk_widget->{data}}, [
+		($title->nr-1),
 		$title->nr, $self->format_time( time => $title->runtime ),
 		uc($title->video_mode), $title->chapters,
 		scalar(@{$title->audio_tracks}),

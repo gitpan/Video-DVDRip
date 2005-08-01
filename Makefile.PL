@@ -1,4 +1,4 @@
-# $Id: Makefile.PL,v 1.23 2005/07/23 11:38:18 joern Exp $
+# $Id: Makefile.PL,v 1.25 2005/08/01 19:38:34 joern Exp $
 
 use strict;
 
@@ -14,8 +14,8 @@ WriteMakefile(
     'EXE_FILES' => [ 'dvdrip', 'dvdrip-master', 'dr_exec',
     		     'dr_splitpipe', 'dr_progress' ],
     'PREREQ_PM' => {
-        'Gtk2'                  => 1.082,
-	'Gtk2::Ex::FormFactory' => 0.56,
+        'Gtk2'                  => 1.081,
+	'Gtk2::Ex::FormFactory' => 0.57,
 	'Locale::TextDomain'    => 0,
     },
     'clean' => { FILES => 'dr_splitpipe src/dr_splitpipe dr_progress src/dr_progress l10n/.mo.installed' },
