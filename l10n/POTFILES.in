@@ -1,5 +1,10 @@
-../dvdrip
-../dvdrip-master
+../bin/dvdrip
+../bin/dvdrip-exec
+../bin/dvdrip-master
+../bin/dvdrip-multitee
+../bin/dvdrip-replex
+../bin/dvdrip-subpng
+../bin/dvdrip-tet
 ../lib/Video/DVDRip/RPC/Message.pm
 ../lib/Video/DVDRip/RPC/Client.pm
 ../lib/Video/DVDRip/RPC/Server.pm
@@ -27,7 +32,6 @@
 ../lib/Video/DVDRip/Preset.pm
 ../lib/Video/DVDRip/Depend.pm
 ../lib/Video/DVDRip/BitrateCalc.pm
-../lib/Video/DVDRip/splash.png
 ../lib/Video/DVDRip/Logger.pm
 ../lib/Video/DVDRip/Base.pm
 ../lib/Video/DVDRip/Subtitle.pm
@@ -49,6 +53,7 @@
 ../lib/Video/DVDRip/Job/Probe.pm
 ../lib/Video/DVDRip/Job/GrabPreviewFrame.pm
 ../lib/Video/DVDRip/Job/CreateCDImage.pm
+../lib/Video/DVDRip/Job/ReadDVDToc.pm
 ../lib/Video/DVDRip/Job/Rip.pm
 ../lib/Video/DVDRip/Job.pm
 ../lib/Video/DVDRip/PSU.pm
@@ -82,5 +87,15 @@
 ../lib/Video/DVDRip/GUI/FormFactory/ClipImage.pm
 ../lib/Video/DVDRip/GUI/FormFactory/SubtitlePreviews.pm
 ../lib/Video/DVDRip/GUI/Filters.pm
+../lib/Video/DVDRip/SrtxFile.pm
+../lib/Video/DVDRip/Task.pm
+../lib/Video/DVDRip/Task/CreateVobsub.pm
+../lib/Video/DVDRip/Task/CreateWav.pm
+../lib/Video/DVDRip/Task/GrabPreviewFrame.pm
+../lib/Video/DVDRip/Task/GrabSubtitlePreviews.pm
+../lib/Video/DVDRip/Task/ReadTOC.pm
+../lib/Video/DVDRip/Task/Rip.pm
+../lib/Video/DVDRip/Task/ScanVolume.pm
+../lib/Video/DVDRip/Task/Transcode.pm
 ../lib/Video/DVDRip/Content.pm
 ../lib/Video/DVDRip.pm

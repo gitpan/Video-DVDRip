@@ -1,4 +1,4 @@
-# $Id: TranscodeRC.pm,v 1.9 2004/04/11 23:36:19 joern Exp $
+# $Id: TranscodeRC.pm,v 1.10 2005/10/30 12:42:33 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -157,7 +157,7 @@ sub receive {
 	}
 
 	if ( not $self->sent and @{$self->command_queue} != 0 ) {
-		Gtk->timeout_add (200, sub {
+		Glib::Timeout->add (200, sub {
 			$self->send ( line => shift @{$self->command_queue} );
 			return 0;
 		});

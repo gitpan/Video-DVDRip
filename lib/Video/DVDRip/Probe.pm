@@ -1,4 +1,4 @@
-# $Id: Probe.pm,v 1.24 2005/07/23 08:14:15 joern Exp $
+# $Id: Probe.pm,v 1.26 2005/10/30 12:39:55 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -119,8 +119,6 @@ sub analyze {
 		++$i;
 	}
 
-	$title->set_audio_channel(@audio_tracks? 0 : -1);
-
 	# Subtitles
 
 	my %subtitles;
@@ -132,13 +130,6 @@ sub analyze {
 			lang  => $2,
 			title => $title,
 		);
-	}
-	
-	$title->set_subtitles (\%subtitles);
-
-	if ( defined $sid ) {
-		# we have subtitles
-		$title->set_selected_subtitle_id (0);
 	}
 
 	# Chapter frame counter
@@ -168,6 +159,10 @@ sub analyze {
 	$title->set_chapters		( $chapters		);
 	$title->set_viewing_angles	( $angles		);	
 	$title->set_dvd_probe_output	( $probe_output		);
+	$title->set_audio_channel	( @audio_tracks? 0 : -1 );
+
+	$title->set_subtitles (\%subtitles);
+	$title->set_selected_subtitle_id (0) if defined $sid;
 
 	1;
 }
@@ -217,6 +212,86 @@ sub analyze_scan {
 		$audio->set_scan_output       ( $scan_output    );
 		$audio->set_volume_rescale    ( $volume_rescale );
 		$audio->set_tc_volume_rescale ( $volume_rescale );
+	}
+
+	1;
+}
+
+sub analyze_lsdvd {
+	my $class = shift;
+	my %par = @_;
+	my  ($probe_output, $project, $cb_title_probed) =
+	@par{'probe_output','project','cb_title_probed'};
+
+	$probe_output =~ s/DVDRIP_SUCCESS//;
+	$probe_output =~ s/^our//;
+
+	my %lsdvd;
+	eval $probe_output;
+	die "Error compiling lsdvd output: $@" if $@;
+
+	my %titles;
+	$project->content->set_titles(\%titles);
+
+	foreach my $track ( @{$lsdvd{track}} ) {
+		my $title = $titles{$track->{ix}} = Video::DVDRip::Title->new (
+			nr      => $track->{ix},
+			project => $project,
+		);
+		
+		my @audio_tracks;
+		foreach my $audio ( @{$track->{audio}} ) {
+			push @audio_tracks, Video::DVDRip::Audio->new (
+				title		=> $title,
+				type		=> $audio->{format},
+				lang		=> $audio->{langcode},
+				channels	=> $audio->{channels},
+				sample_rate	=> $audio->{frequency},
+				tc_nr 		=> $audio->{ix}-1,
+				tc_target_track	=> ($audio->{ix}==1 ? 0 : -1),
+				tc_audio_codec	=> "mp3",
+				tc_bitrate	=> 128,
+				tc_mp3_quality	=> 0,
+				tc_samplerate   => $audio->{frequency},
+			);
+		}
+
+		my %subtitles;
+		foreach my $sub ( @{$track->{subp}} ) {
+			my $sid = hex($sub->{streamid})-32;
+			$subtitles{$sid} = Video::DVDRip::Subtitle->new (
+				id    => $sid,
+				lang  => $sub->{langcode},
+				title => $title,
+			);
+		}
+
+		my %chapter_frames;
+		foreach my $chap ( @{$track->{chapter}} ) {
+			$chapter_frames{$chap->{ix}} = int($chap->{length}*$track->{fps});
+		}
+
+		$track->{aspect} =~ s!/!:!;
+		$title->set_width($track->{width});
+		$title->set_height($track->{height});
+		$title->set_aspect_ratio($track->{aspect});
+		$title->set_video_mode(lc($track->{format}));
+		$title->set_letterboxed($track->{df} eq 'Letterbox');
+		$title->set_frames(int($track->{length} * $track->{fps}));
+		$title->set_runtime(int($track->{length}+0.5));
+		$title->set_frame_rate($track->{fps});
+		$title->set_chapters(scalar(@{$track->{chapter}}));
+		$title->set_viewing_angles($track->{angles});
+		$title->set_audio_channel ( @audio_tracks? 0 : -1 );
+
+		$title->set_audio_tracks(\@audio_tracks);
+		$title->set_subtitles(\%subtitles);
+		$title->set_chapter_frames(\%chapter_frames);
+		$title->set_selected_subtitle_id (0) if @{$track->{subp}};
+		
+		$title->suggest_transcode_options;
+		
+		&$cb_title_probed($title) if $cb_title_probed;
 	}
 
 	1;

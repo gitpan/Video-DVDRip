@@ -1,4 +1,4 @@
-# $Id: Progress.pm,v 1.29 2005/07/23 08:14:15 joern Exp $
+# $Id: Progress.pm,v 1.30 2005/10/09 11:47:53 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -101,14 +101,11 @@ sub update {
 	my %par = @_;
 	my ($value, $label) = @par{'value','label'};
 
-	my $max_value = $self->max_value;
-	my $fraction  = $max_value ? $value / $max_value : 0;
-
-	$fraction = 0 if $fraction < 0;
-	$fraction = 1 if $fraction > 1;
+	$value = 0 if $value  < 0;
+	$value = 1 if $value  > 1;
 
 	$self->gtk_progress->set_text ($label);
-	$self->gtk_progress->set_fraction ($fraction);
+	$self->gtk_progress->set_fraction ($value);
 
 	1;
 }

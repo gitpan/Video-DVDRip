@@ -1,4 +1,4 @@
-# $Id: InfoFile.pm,v 1.10 2004/04/11 23:36:19 joern Exp $
+# $Id: InfoFile.pm,v 1.11 2005/10/09 11:58:32 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -163,7 +163,6 @@ sub write {
 		$self->add_head ( name => "Audio ".($audio->tc_target_track+1) );
 
 		my $codec = $audio->tc_audio_codec;
-		my $probe = $title->audio_tracks->[$audio->tc_nr];
 
 		$self->add_field (
 			name  => "DVD audio track id",
@@ -171,7 +170,7 @@ sub write {
 		);
 		$self->add_field (
 			name  => "Language",
-			value => $probe->lang,
+			value => $audio->lang,
 		);
 		$self->add_field (
 			name  => "Audio codec",
@@ -183,11 +182,11 @@ sub write {
 		) if $codec eq "mp3";
 		$self->add_field (
 			name  => "Channels",
-			value => $codec eq "ac3" ? $probe->channels : 2,
+			value => $codec eq "ac3" ? $audio->channels : 2,
 		);
 		$self->add_field (
 			name  => "Sample rate",
-			value => $probe->sample_rate,
+			value => $audio->sample_rate,
 		);
 		my $bitrate_method = "tc_${codec}_bitrate";
 		$self->add_field (

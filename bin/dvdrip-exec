@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# $Id: dr_exec,v 1.2 2004/04/10 14:31:53 joern Exp $
+# $Id: dvdrip-exec,v 1.2 2005/10/21 20:32:41 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -19,5 +19,5 @@ main: {
 
 	print STDERR "DVDRIP_JOB_PID=$$\n";
 
-	exec @ARGV;
+	exec "nice", "-n", 19, @ARGV;
 }

@@ -1,4 +1,4 @@
-# $Id: ClipZoom.pm,v 1.2 2005/08/01 19:17:03 joern Exp $
+# $Id: ClipZoom.pm,v 1.3 2005/10/09 11:48:14 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -80,6 +80,10 @@ sub build_preview_images {
 			    rules => "integer",
 			    width => 80,
 			    rules => [ "positive-integer", "or-empty" ],
+			),
+		        Gtk2::Ex::FormFactory::CheckButton->new (
+			    attr   => "title.tc_force_slow_grabbing",
+			    label  => __"Force slow grabbing",
 			),
 		        Gtk2::Ex::FormFactory::Button->new (
 			    object => "title",

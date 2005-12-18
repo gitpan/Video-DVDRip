@@ -1,4 +1,4 @@
-# $Id: Node.pm,v 1.13 2005/08/01 19:12:43 joern Exp $
+# $Id: Node.pm,v 1.14 2005/10/09 09:28:58 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -91,11 +91,16 @@ sub new {
 sub open_window {
 	my $self = shift; $self->trace_in;
 
+	my $cluster_gui = $self->cluster_ff
+			       ->get_form_factory
+			       ->get_context
+			       ->get_object("cluster_gui");
+
 	my $node_ff;
 	$node_ff = Gtk2::Ex::FormFactory->new (
 	    parent_ff => $self->cluster_ff,
 	    context   => $self->cluster_ff->get_context,
-	    sync      => 0,
+	    sync      => 1,
 	    content   => [
 	        Gtk2::Ex::FormFactory::Window->new (
 		    title   => __"dvd::rip - Edit cluster node",
@@ -110,7 +115,7 @@ sub open_window {
 		    closed_hook => sub {
 		        $node_ff->close if $node_ff;
 			$node_ff = undef;
-			$self->cluster_ff->set_node_gui(undef);
+			$cluster_gui->set_node_gui(undef);
 			$self->cluster_ff->get_form_factory->get_context->set_object (
 				cluster_node_gui => undef,
 			);
@@ -171,18 +176,18 @@ sub build_node_form {
 			       "two processor machine",
 		),
 	        Gtk2::Ex::FormFactory::YesNo->new (
-		    attr  => "cluster_node_edited.is_master",
-		    label => __"Node runs Cluster Control Daemon?",
-		    tip   => __"Specify whether on this node runs the cluster ".
-			       "control daemon. In that case no ssh remote command ".
-			       "execution is neccessary",
-		),
-	        Gtk2::Ex::FormFactory::YesNo->new (
 		    attr  => "cluster_node_edited.data_is_local",
 		    label => __"Node has dvd::rip data harddrive?",
 		    tip   => __"If this node has the dvd::rip data hardrive locally ".
 			       "connected, I/O intensive jobs are executed on this node ".
 			       "with higher priority",
+		),
+	        Gtk2::Ex::FormFactory::YesNo->new (
+		    attr  => "cluster_node_edited.is_master",
+		    label => __"Node runs Cluster Control Daemon?",
+		    tip   => __"Specify whether on this node runs the cluster ".
+			       "control daemon. In that case no ssh remote command ".
+			       "execution is neccessary",
 		),
 	        Gtk2::Ex::FormFactory::Entry->new (
 		    attr  => "cluster_node_edited.username",
@@ -361,7 +366,11 @@ sub build_buttons {
 		    	node => $self->node
 		    ) if $self->just_added;
 		    $self->node->save;
+		    return 1;
 		}
+		
+		#-- return TRUE to activate Cancel
+		#-- Button Default Handler
 		1;
 	    },
 	);
@@ -386,7 +395,7 @@ sub node_test {
 
 	my $gtk_progress = $self->node_ff
 				->get_widget("node_test_progress")
-				->get_gtk_widget;;
+				->get_gtk_widget;
 
 	my $timeout = Glib::Timeout->add (
 		25,

@@ -1,4 +1,4 @@
-# $Id: Title.pm,v 1.156 2005/08/01 19:21:14 joern Exp $
+# $Id: Title.pm,v 1.159 2005/10/30 12:42:00 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -109,6 +109,7 @@ sub set_bbox_min_x		{ shift->{bbox_min_x}		= $_[1]	}
 sub set_bbox_min_y		{ shift->{bbox_min_y}		= $_[1]	}
 sub set_bbox_max_x		{ shift->{bbox_max_x}		= $_[1]	}
 sub set_bbox_max_y		{ shift->{bbox_max_y}		= $_[1]	}
+sub set_chapter_frames		{ shift->{chapter_frames}	= $_[1]	}
 
 #------------------------------------------------------------------------
 # These attributes must be specified by the user and are
@@ -240,13 +241,16 @@ sub set_burn_files_selected	{ shift->{burn_files_selected}	= $_[1]	}
 #-- Attributes for subtitles --------------------------------------------
 
 sub subtitles			{ shift->{subtitles}			}
-sub set_subtitles		{ shift->{subtitles}		= $_[1]	}
-
 sub selected_subtitle_id	{ shift->{selected_subtitle_id}		}
-sub set_selected_subtitle_id	{ shift->{selected_subtitle_id}	= $_[1]	}
-
 sub subtitle_test		{ shift->{subtitle_test}		}
+sub tc_rip_subtitle_mode	{ shift->{tc_rip_subtitle_mode}		}
+sub tc_rip_subtitle_lang	{ shift->{tc_rip_subtitle_lang}		}
+
+sub set_subtitles		{ shift->{subtitles}		= $_[1]	}
+sub set_selected_subtitle_id	{ shift->{selected_subtitle_id}	= $_[1]	}
 sub set_subtitle_test		{ shift->{subtitle_test}	= $_[1]	}
+sub set_tc_rip_subtitle_mode	{ shift->{tc_rip_subtitle_mode}	= $_[1]	}
+sub set_tc_rip_subtitle_lang	{ shift->{tc_rip_subtitle_lang}	= $_[1]	}
 
 #-- Filter Settings -----------------------------------------------------
 
@@ -325,12 +329,13 @@ sub new {
 		tc_clip2_bottom	     => 0,
 		tc_clip2_left	     => 0,
 		tc_clip2_right	     => 0,
+                tc_rip_subtitle_mode => 'all',
 		tc_selected_chapters => [],
 		program_stream_units => [],
 		chapter_frames       => {},
 		tc_filter_settings   => Video::DVDRip::FilterSettings->new,
 	};
-	
+
 	return bless $self, $class;
 }
 
@@ -347,14 +352,14 @@ sub set_tc_video_codec {
 		$self->audio_track->set_tc_bitrate ( 224 );
 		$self->audio_track->set_tc_audio_codec ( 'mp2' );
 		$self->set_tc_multipass ( 0 );
+		$self->set_tc_video_bitrate_manual (1152);
+		$self->set_tc_video_bitrate_mode ("manual");
+
 
 	} elsif ( $value =~ /^(X?S?VCD|CVD)$/ ) {
 		$self->audio_track->set_tc_audio_codec ( 'mp2' );
 		$self->set_tc_multipass ( 0 );
 	}
-
-	$self->set_tc_video_bitrate_manual (0)
-		if $value eq 'VCD';
 
 	if ( $value =~ /^X?S?VCD$/ ) {
 		foreach my $audio ( @{$self->audio_tracks} ) {
@@ -370,6 +375,7 @@ sub set_tc_video_codec {
 sub audio_track {
 	my $self = shift;
 	if ( $self->audio_channel == -1 ) {
+		return;
 		# no audio track selected. create a dummy object.
 		# (probably this title has no audio at all)
 		return Video::DVDRip::Audio->new ( title => $self );
@@ -397,12 +403,12 @@ sub set_tc_container {
 			if ( $audio->tc_audio_codec eq 'vorbis' ) {
 				push @messages,
 					__x("Set codec of audio track #{nr} to 'mp3', ".
-                                           "'vorbis' not supported by AVI", nr => $audio->tc_nr);
+                                           "'vorbis' not supported by AVI container", nr => $audio->tc_nr);
 				$audio->set_tc_audio_codec ('mp3');
 			} elsif ( $audio->tc_audio_codec eq 'mp2' ) {
 				push @messages,
 					__x("Set codec of audio track #{nr} to 'mp3', ".
-                                           "'mp2' not supported by AVI", nr => $audio->tc_nr);
+                                           "'mp2' not supported by AVI container", nr => $audio->tc_nr);
 				$audio->set_tc_audio_codec ('mp3');
 			}
 		}
@@ -412,7 +418,7 @@ sub set_tc_container {
 			push @messages,
 				__"Set video codec to 'xvid', '".
 				$self->tc_video_codec.
-				__"' not supported by AVI";
+				__"' not supported by AVI container";
 			$self->set_tc_video_codec ("xvid");
 		}
 
@@ -425,7 +431,7 @@ sub set_tc_container {
 					__x("Set codec of audio track #{nr} to 'mp2', '",
                                            nr => $audio->tc_nr).
 					$audio->tc_audio_codec.
-					__"' not supported by (S)VCD/CVD";
+					__"' not supported by MPEG container";
 				$audio->set_tc_audio_codec ('mp2');
 			}
 		}
@@ -435,7 +441,7 @@ sub set_tc_container {
 			push @messages,
 				__"Set video codec to 'SVCD', '".
 				$self->tc_video_codec.
-				__"' not supported by AVI";
+				__"' not supported by MPEG container";
 			$self->set_tc_video_codec ("SVCD");
 		}
 		
@@ -449,7 +455,7 @@ sub set_tc_container {
 					__x("Set codec of audio track #{nr} to 'vorbis', '",
                                            nr => $audio->tc_nr).
 					$audio->tc_audio_codec.
-					__"' not supported by OGG";
+					__"' not supported by OGG container";
 				$audio->set_tc_audio_codec ('vorbis');
 			}
 		}
@@ -458,7 +464,7 @@ sub set_tc_container {
 		if ( $self->tc_video_codec =~ /^(X?S?VCD|CVD)$/ ) {
 			$self->set_tc_video_codec ("xvid");
 			push @messages,
-				__"Set video codec to 'xvid', (S)VCD/CVD not supported by OGG";
+				__"Set video codec to 'xvid', MPEG not supported by OGG container";
 		}
 	}
 	
@@ -1548,10 +1554,16 @@ sub get_rip_command {
 
 	my $angle = $self->tc_viewing_angle || 1;
 
-	my $command = "rm -f $vob_dir/$name-???.vob && ".
-	           "dr_exec tccat -t dvd -T $nr,$chapter,$angle -i $dvd_device ".
-	           "| dr_splitpipe -f $vob_nav_file 1024 ".
-		   "  $vob_dir/$name vob >/dev/null && echo DVDRIP_SUCCESS";
+	my ($setup_subtitle_grabbing, $subtitle_grabbing_pipe)
+		= $self->get_subtitle_rip_commands;
+
+	my $command =
+		$setup_subtitle_grabbing.
+		"rm -f $vob_dir/$name-???.vob && ".
+		"dvdrip-exec tccat -t dvd -T $nr,$chapter,$angle -i $dvd_device ".
+		$subtitle_grabbing_pipe.
+		"| dvdrip-splitpipe -f $vob_nav_file 1024 ".
+		"  $vob_dir/$name vob >/dev/null && echo DVDRIP_SUCCESS";
 
 	return $command;
 }
@@ -1587,7 +1599,7 @@ sub get_tc_scan_command_pipe {
 	my $tcdecode       = $codec eq 'ac3' ? "| tcdecode -x ac3 " : "";
 
 	my $command .=
-	       "dr_exec tcextract -a $audio_channel -x $codec -t vob ".
+	       "dvdrip-exec tcextract -a $audio_channel -x $codec -t vob ".
 	       $tcdecode.
 	       "| tcscan -x pcm";
 
@@ -1610,22 +1622,101 @@ sub get_scan_command {
 	
 	if ( $rip_mode eq 'rip' ) {
 		my $vob_size = $self->get_vob_size;
-		$command = "dr_exec cat $vob_dir/* | dr_progress -m $vob_size -i 5 | tccat -t vob";
+		$command = "dvdrip-exec cat $vob_dir/* | dvdrip-progress -m $vob_size -i 5 | tccat -t vob";
 
 	} else  {
-		$command = "dr_exec tccat ";
+		$command = "dvdrip-exec tccat ";
 		delete $source_options->{x};
 		$command .= " -".$_." ".$source_options->{$_} for keys %{$source_options};
-		$command .= "| dr_splitpipe -f /dev/null 0 - -";
+		$command .= "| dvdrip-splitpipe -f /dev/null 0 - -";
 	}
 
 	my $scan_command = $self->get_tc_scan_command_pipe;
-	$scan_command =~ s/dr_exec\s+//;
+	$scan_command =~ s/dvdrip-exec\s+//;
 
 	$command .= " | $scan_command";
 	$command .= " && echo DVDRIP_SUCCESS";
 
 	return $command;
+}
+
+sub get_subtitle_languages {
+	my $self = shift;
+
+	my %lang_list;
+	foreach my $subtitle ( values %{$self->subtitles} ) {
+	    $lang_list{$subtitle->lang} = 1;
+	}
+	
+	return \%lang_list;
+}
+
+sub get_subtitle_rip_commands_spuunmux {
+	my $self = shift;
+	
+	return if $self->version("spuunmux") < 611;
+	
+	my $mode = $self->tc_rip_subtitle_mode;
+	return if !$mode;
+
+	my $setup_subtitle_grabbing;
+	my $subtitle_grabbing =
+		" | dvdrip-multitee 1 ";
+
+	my $lang = $self->tc_rip_subtitle_lang || [];
+	my %lang;
+	@lang{@{$lang}} = (1) x @{$lang};
+
+	my $lang_match;
+	foreach my $subtitle ( sort { $a->id <=> $b->id }
+			       values %{$self->subtitles} ) {
+		next if $mode eq 'lang' && !$lang{$subtitle->lang};
+		$lang_match = 1;
+		my $sub_dir = $self->get_subtitle_preview_dir ($subtitle->id);
+		my $sid = $subtitle->id;
+		$setup_subtitle_grabbing .=
+			"rm -rf $sub_dir; mkdir -p $sub_dir; ".
+			"touch $sub_dir/.ripped; ";
+		$subtitle_grabbing .=
+			"'spuunmux -s $sid -o $sub_dir/pic -' ";
+	}
+
+	return unless $lang_match;
+	return ($setup_subtitle_grabbing, $subtitle_grabbing);
+}
+
+sub get_subtitle_rip_commands {
+	my $self = shift;
+	
+	my $mode = $self->tc_rip_subtitle_mode;
+	return if !$mode;
+
+	my $setup_subtitle_grabbing;
+	my $subtitle_grabbing =
+		" | dvdrip-multitee 1 ";
+
+	my $lang = $self->tc_rip_subtitle_lang || [];
+	my %lang;
+	@lang{@{$lang}} = (1) x @{$lang};
+
+	my $lang_match;
+	foreach my $subtitle ( sort { $a->id <=> $b->id }
+			       values %{$self->subtitles} ) {
+		next if $mode eq 'lang' && !$lang{$subtitle->lang};
+		$lang_match = 1;
+		my $sub_dir = $self->get_subtitle_preview_dir ($subtitle->id);
+		my $sid = sprintf("0x%x",32+$subtitle->id);
+		$setup_subtitle_grabbing .=
+			"rm -rf $sub_dir; mkdir -p $sub_dir; ".
+			"touch $sub_dir/.ripped; ";
+		$subtitle_grabbing .=
+			"'tcextract -x ps1 -t vob -a $sid |".
+			" subtitle2pgm -P -C 0 -o $sub_dir/pic -e 00:00:00,50000 2>&1 |".
+			" dvdrip-subpng' ";
+	}
+
+	return unless $lang_match;
+	return ($setup_subtitle_grabbing, $subtitle_grabbing);
 }
 
 #---------------------------------------------------------------------
@@ -1649,14 +1740,19 @@ sub get_rip_and_scan_command {
 
 	my $angle = $self->tc_viewing_angle || 1;
 
+	my ($setup_subtitle_grabbing, $subtitle_grabbing_pipe)
+		= $self->get_subtitle_rip_commands;
+
 	my $command =
+		$setup_subtitle_grabbing.
 		"rm -f $vob_dir/$name-???.vob && ".
-		"dr_exec tccat -t dvd -T $nr,$chapter,$angle -i $dvd_device ".
-		"| dr_splitpipe -f $vob_nav_file 1024 $vob_dir/$name vob ";
+		"dvdrip-exec tccat -t dvd -T $nr,$chapter,$angle -i $dvd_device ".
+		$subtitle_grabbing_pipe.
+		"| dvdrip-splitpipe -f $vob_nav_file 1024 $vob_dir/$name vob ";
 
 	if ( $audio_channel != -1 ) {
 		my $scan_command = $self->get_tc_scan_command_pipe;
-		$scan_command =~ s/dr_exec\s+//;
+		$scan_command =~ s/dvdrip-exec\s+//;
 		$command .= " | $scan_command && echo DVDRIP_SUCCESS";
 
 	} else {
@@ -1695,9 +1791,9 @@ sub get_probe_command {
 	my $data_source   = $self->project->rip_data_source;
 
 	my $command =
-		"dr_exec tcprobe -H 10 -i $data_source -T $nr && ".
+		"dvdrip-exec tcprobe -H 10 -i $data_source -T $nr && ".
 		"echo DVDRIP_SUCCESS; ".
-		"dr_exec dvdxchap -t $nr $data_source 2>/dev/null";
+		"dvdrip-exec dvdxchap -t $nr $data_source 2>/dev/null";
 
 	return $command;
 }
@@ -1732,7 +1828,7 @@ sub get_probe_audio_command {
 
 	my $h_option = $probe_mb <= 0 ? "" : "-H $probe_mb";
 
-	return "dr_exec tcprobe $h_option -i $vob_dir && echo DVDRIP_SUCCESS";
+	return "dvdrip-exec tcprobe $h_option -i $vob_dir && echo DVDRIP_SUCCESS";
 }
 
 sub probe_audio {
@@ -1829,13 +1925,28 @@ sub suggest_transcode_options {
 				last;
 			}
 		}
+		#-- select the subtitle stream of the preferred language
+		#-- with the minumum number of images, because it's likely
+		#-- that this is a forced subtitle.
+		my $min_image_cnt = 1_000_000;
+		my $min_image_subtitle_id;
 		foreach my $sid ( sort { $a <=> $b } keys %{$self->subtitles} ) {
 			my $subtitle = $self->subtitles->{$sid};
 			if ( $subtitle->lang eq $pref_lang ) {
-				$self->set_selected_subtitle_id ( $subtitle->id );
-				last;
+				if ( $subtitle->ripped_images_cnt < $min_image_cnt ) {
+					$min_image_subtitle_id = $subtitle->id;
+					$min_image_cnt = $subtitle->ripped_images_cnt;
+				}
 			}
 		}
+		if ( defined $min_image_subtitle_id ) {
+			$self->set_selected_subtitle_id ( $min_image_subtitle_id );
+		}
+	}
+
+	my $subtitle_langs = $self->get_subtitle_languages;
+	if ( $subtitle_langs->{$pref_lang} ) {
+		$self->set_tc_rip_subtitle_lang( [ $pref_lang ] );
 	}
 
 	$self->set_tc_video_bitrate_mode ("size");
@@ -1973,7 +2084,7 @@ sub get_transcode_command {
 	$mpeg = "svcd" if $self->tc_video_codec =~ /^(X?SVCD|CVD)$/;
 	$mpeg = "vcd"  if $self->tc_video_codec =~ /^X?VCD$/;
 
-	my $command = $nice."dr_exec transcode -H 10";
+	my $command = $nice."dvdrip-exec transcode -H 10";
 
 	$command .= " -a $audio_channel" if $audio_channel != -1;
 
@@ -2336,7 +2447,7 @@ sub get_transcode_audio_command {
 
 	my $command =
 		"mkdir -p $dir && ".
-		"${nice}dr_exec transcode ".
+		"${nice}dvdrip-exec transcode ".
 		" -H 10".
 		" -g 0x0 -u 50".
 		" -a $vob_nr".
@@ -2479,7 +2590,7 @@ sub get_merge_audio_command {
 
 	if ( $self->is_ogg ) {
 		$command .=
-			"dr_exec ogmmerge -o $avi_file.merged ".
+			"dvdrip-exec ogmmerge -o $avi_file.merged ".
 			" $avi_file".
 			" $audio_file &&".
 			" mv $avi_file.merged $avi_file &&".
@@ -2491,11 +2602,11 @@ sub get_merge_audio_command {
 			if not $audio_file;
 
 		$command .=
-			"dr_exec avimerge".
-			" -i $avi_file".
+			"dvdrip-exec avimerge".
 			" -p $audio_file".
 			" -a $target_nr".
-			" -o $avi_file.merged &&".
+			" -o $avi_file.merged".
+			" -i $avi_file &&".
 			" mv $avi_file.merged $avi_file &&".
 			" rm $audio_file &&".
 			" echo DVDRIP_SUCCESS";
@@ -2597,7 +2708,7 @@ sub get_mplex_command {
 		if $self->tc_nice =~ /\S/;
 
 	my $command =
-		"${nice}dr_exec mplex -f $mplex_f $opt_r $mplex_v ".
+		"${nice}dvdrip-exec mplex -f $mplex_f $opt_r $mplex_v ".
 		"-o $target_file $avi_file.$vext $avi_file.mpa ".
 		"$add_audio_tracks && echo DVDRIP_SUCCESS";
 	
@@ -2641,13 +2752,13 @@ sub get_split_command {
 		$split_mask .= $self->config('ogg_file_ext');
 
 		$command .=
-			"cd $avi_dir && ".
-			"${nice}dr_exec ogmsplit -s $size $avi_file && ".
+			"cd $avi_dir && ls -l && ".
+			"${nice}dvdrip-exec ogmsplit -s $size $avi_file && ".
 			"echo DVDRIP_SUCCESS";
 	} else {
 		$command .=
 			"cd $avi_dir && ".
-			"${nice}dr_exec avisplit -s $size -i $avi_file -o $split_mask && ".
+			"${nice}dvdrip-exec avisplit -s $size -i $avi_file -o $split_mask && ".
 			"echo DVDRIP_SUCCESS";
 	}
 	
@@ -2755,7 +2866,7 @@ sub get_take_snapshot_command {
 	my $command =
 	       "mkdir -m 0775 $tmp_dir; ".
 	       "cd $tmp_dir; ".
-	       "dr_exec transcode ".
+	       "dvdrip-exec transcode ".
 	       " -H 10".
 	       ($self->version ("transcode") < 613 ? "-z -k" : "").
 	       " -o snapshot".
@@ -2768,10 +2879,10 @@ sub get_take_snapshot_command {
 	$command .= " -".$_." ".$grab_options->{$_} for keys %{$grab_options};
 
 	$command .= " && ".
-		"dr_exec convert".
+		"dvdrip-exec convert".
 		" -size ".$self->width."x".$self->height.
 		" $tmp_dir/snapshot*.ppm $filename && ".
-		"dr_exec convert".
+		"dvdrip-exec convert".
 		" -size ".$self->width."x".$self->height.
 		" $tmp_dir/snapshot*.ppm gray:$raw_filename &&".
 		" rm -r $tmp_dir && ".
@@ -2890,10 +3001,10 @@ sub make_preview_clip {
 	my $target_file = $self->preview_filename( type => $type );
 	
 	my $catch = $self->system (
-		command => "identify -ping $source_file"
+		command => "identify $source_file"
 	);
 	my ($width, $height);
-	($width, $height) = ( $catch =~ /(\d+)x(\d+)/ );
+	($width, $height) = ( $catch =~ /\s+(\d+)x(\d+)\s+/ );
 	
 	my ($top, $bottom, $left, $right);
 	if ( $type eq 'clip1' ) {
@@ -2941,10 +3052,10 @@ sub make_preview_zoom {
 	}
 	
 	my $catch = $self->system (
-		command => "identify -ping $source_file"
+		command => "identify $source_file"
 	);
 	my ($width, $height);
-	($width, $height) = ( $catch =~ /(\d+)x(\d+)/ );
+	($width, $height) = ( $catch =~ /\s+(\d+)x(\d+)\s+/ );
 	
 	$self->system (
 		command => "convert $source_file -geometry ".
@@ -3106,7 +3217,7 @@ sub get_view_vob_image_command {
 	my $angle         = $self->tc_viewing_angle;
 
 	my $command =
-		"dr_exec tccat -i ".$self->project->dvd_device.
+		"dvdrip-exec tccat -i ".$self->project->dvd_device.
 		" -a $audio_channel -L ".
 		" -T $nr,1,$angle | $command_tmpl";
 
@@ -3244,7 +3355,7 @@ sub get_create_image_command {
 				" -abstract '".$self->burn_abstract." ".$self->burn_number."'".
 				" ".join(" ", @files );
 			$command .= ") && ";
-			$command .= "dr_exec ".$self->config('burn_mkisofs_cmd');
+			$command .= "dvdrip-exec ".$self->config('burn_mkisofs_cmd');
 			$command .= " -quiet";
 			$command .=
 				" -r -J -jcharset default -l -D -L".
@@ -3252,7 +3363,7 @@ sub get_create_image_command {
 				" -abstract '".$self->burn_abstract." ".$self->burn_number."'".
 				" ".join(" ", @files );
 		} else {
-			$command = "dr_exec ".$self->config('burn_mkisofs_cmd');
+			$command = "dvdrip-exec ".$self->config('burn_mkisofs_cmd');
 			$command .= " -quiet" if $on_the_fly;
 			$command .= " -o $image_file" if not $on_the_fly;
 			$command .=
@@ -3262,7 +3373,7 @@ sub get_create_image_command {
 				" ".join(" ", @files );
 		}
 	} else {
-		$command = "dr_exec ".$self->config('burn_vcdimager_cmd').
+		$command = "dvdrip-exec ".$self->config('burn_vcdimager_cmd').
 			($cd_type eq 'svcd' ? ' --type=svcd' : ' --type=vcd2').
 			" --iso-volume-label='".uc($self->burn_label)."'".
 			" --info-album-id='".uc($self->burn_abstract." ".$self->burn_number)."'".
@@ -3300,7 +3411,7 @@ sub get_burn_command {
 			);
 			$command .= " | ".$self->config('burn_cdrecord_cmd');
 		} else {
-			$command = "dr_exec ".$self->config('burn_cdrecord_cmd');
+			$command = "dvdrip-exec ".$self->config('burn_cdrecord_cmd');
 		}
 
 		my $gracetime =
@@ -3325,7 +3436,7 @@ sub get_burn_command {
 	} else {
 		$command = "rm -f $files[0].bin; ln -s $files[0] $files[0].bin && ";
 
-		$command .= "dr_exec ".$self->config('burn_cdrdao_cmd');
+		$command .= "dvdrip-exec ".$self->config('burn_cdrdao_cmd');
 		
 		if ( $command !~ /\bwrite\b/ ) {
 			$command .= " write";
@@ -3393,11 +3504,11 @@ sub get_cat_vob_command {
 		$cat = "cat ".$self->vob_dir."/*";
 
 	} elsif ( $rip_mode eq 'dvd' ) {
-		$cat =	"dr_exec tccat -i ".$self->config('dvd_device').
+		$cat =	"dvdrip-exec tccat -i ".$self->config('dvd_device').
 			" -T ".$self->tc_title_nr;
 
 	} else {
-		$cat =	"dr_exec tccat -i ".$self->project->dvd_image_dir.
+		$cat =	"dvdrip-exec tccat -i ".$self->project->dvd_image_dir.
 			" -T ".$self->tc_title_nr;
 	}
 
@@ -3431,21 +3542,16 @@ sub get_subtitle_grab_images_command {
 		"mkdir -p $sub_dir && rm -f $sub_dir/*.{pgm,srtx} && ".
 		" $cat | tcextract -x ps1 -t vob -a $sid |".
 		" subtitle2pgm -P -C 0 -o $sub_dir/pic -v -e $timecode,$cnt".
-		" && echo DVDRIP_SUCCESS";
+		" 2>&1 | dvdrip-subpng && echo DVDRIP_SUCCESS";
 
 	return $command;
 }
 
-sub get_frame_of_time {
+sub get_frame_of_sec {
 	my $self = shift;
-	my %par = @_;
-	my ($time, $add) = @par{'time','add'};
+        my ($sec) = @_;
 
-	my @t = split (/:/, $time);
-	
-	my $seconds = $t[0]*3600 + $t[1]*60 + $t[2] + $add;
-
-	my $frame = int ( $seconds * $self->frame_rate );
+	my $frame = int ( $sec * $self->frame_rate );
 	
 	$frame = 0 if $frame < 0;
 	$frame = $self->frames - 1 if $frame >= $self->frames;
@@ -3456,65 +3562,21 @@ sub get_frame_of_time {
 sub get_subtitle_test_frame_range {
 	my $self = shift;
 
-	my $subtitle = $self->selected_subtitle;
-	
+	my $subtitle       = $self->selected_subtitle;
 	my $image_cnt      = $subtitle->tc_test_image_cnt;
-	my $time_code_from = $subtitle->preview_images->[0]->time;
-	my $time_code_to   = $subtitle->preview_images->[$image_cnt-1]->time;
+        my $first_entry    = $subtitle->get_first_entry;
+        my $nth_entry      = $subtitle->get_nth_entry($image_cnt);
 
-	my $frame_from = $self->get_frame_of_time (
-		time => $time_code_from,
-		add  => -15,
-	 );
-	my $frame_to   = $self->get_frame_of_time (
-		time => $time_code_to,
-		add  => 15,
-	);
+	my $time_sec_from = $first_entry->get_time_sec;
+	my $time_sec_to   = $nth_entry->get_time_sec;
+
+	my $frame_from = $self->get_frame_of_sec ( $time_sec_from - 15 );
+        my $frame_to   = $self->get_frame_of_sec ( $time_sec_to   + 15 );
 
 	$frame_to = $frame_from if $frame_to < $frame_from;
 	
 	return ($frame_from, $frame_to);
 
-}
-
-sub get_subtitle_test_transcode_command {
-	my $self = shift;
-	
-	my $subtitle = $self->selected_subtitle;
-
-	croak "msg:".__"No subtitle selected"
-		if not $subtitle;
-	croak "msg:".__"You must grab preview images first"
-		if not @{$subtitle->preview_images};
-
-	# Safe attribues which will be modified for preview
-	# transcode command.
-	my @save_attr = qw ( tc_start_frame tc_end_frame tc_multipass tc_psu_core );
-	my %old_val;
-	foreach my $attr ( @save_attr ) {
-		$old_val{$attr} = $self->$attr();
-	}
-
-	my ($frame_from, $frame_to) = $self->get_subtitle_test_frame_range;
-
-	$self->set_tc_start_frame ( $frame_from );
-	$self->set_tc_end_frame   ( $frame_to   );
-	$self->set_tc_multipass   ( 0 );
-	$self->set_tc_psu_core    ( 0 );
-
-	$self->set_subtitle_test ( 1 );
-	my $command = $self->get_transcode_command;
-	$self->set_subtitle_test ( undef );
-
-	# Restored attribues which were modified for preview
-	# transcode command.
-	my $set;
-	foreach my $attr ( @save_attr ) {
-		$set = "set_$attr";
-		$old_val{$attr} = $self->$set($old_val{$attr});
-	}
-
-	return $command;
 }
 
 sub get_subtitle_transcode_options {
@@ -3544,13 +3606,27 @@ sub get_subtitle_transcode_options {
 
 sub get_subtitle_preview_dir {
 	my $self = shift;
+	my ($subtitle_id) = @_;
 
-	return sprintf(
-		"%s/subtitles/%03d/%02d",
-		$self->project->snap_dir,
-		$self->nr,
-		$self->selected_subtitle_id
-	);
+	$subtitle_id = $self->selected_subtitle_id if !defined $subtitle_id;
+
+	if ( $self->tc_use_chapter_mode ) {
+		return sprintf(
+			"%s/subtitles/%03d-C%03d/%02d",
+			$self->project->snap_dir,
+			$self->nr,
+			($self->actual_chapter ||
+			 $self->get_first_chapter || 1),
+			$subtitle_id
+		);
+	} else {
+		return sprintf(
+			"%s/subtitles/%03d/%02d",
+			$self->project->snap_dir,
+			$self->nr,
+			$subtitle_id
+		);
+	}
 }
 
 sub get_render_subtitle {
@@ -3586,25 +3662,6 @@ sub get_transcoded_video_width_height {
 	$height -= $self->tc_clip2_top  + $self->tc_clip2_bottom;
 	
 	return ($width, $height);
-}
-
-sub get_subtitle_height {
-	my $self = shift;
-	
-	my $subtitle = $self->get_render_subtitle;
-	return 1 if not $subtitle;
-
-	croak "msg:".__"No subtitle selected"
-		if not $subtitle;
-	croak "msg:".__"You must grab preview images first"
-		if not @{$subtitle->preview_images};
-
-	my $height;
-	foreach my $image ( @{$subtitle->preview_images} ) {
-		$height = $image->height if $height < $image->height;
-	}
-	
-	return $height;
 }
 
 sub suggest_subtitle_on_black_bars {
@@ -3680,7 +3737,7 @@ sub get_extract_ps1_stream_command {
 
 	my $command =
 		"$cat | ".
-		"dr_progress -m $vob_size -i 5 | ".
+		"dvdrip-progress -m $vob_size -i 5 | ".
 		"tcextract -x ps1 -t vob -a $sid > $vobsub_ps1_file && ".
 		"echo DVDRIP_SUCCESS";
 	
@@ -3717,8 +3774,8 @@ sub get_create_vobsub_command {
 		"cp $ifo_file $avi_dir/$vobsub_ifo_file && ".
 		"cd $avi_dir && ".
 		"chmod 644 $vobsub_ifo_file && ".
-		"dr_exec cat $vobsub_ps1_file | ".
-		"dr_progress -m $ps1_size -i 1 | ".
+		"dvdrip-exec cat $vobsub_ps1_file | ".
+		"dvdrip-progress -m $ps1_size -i 1 | ".
 		"subtitle2vobsub $range".
 		" -i $vobsub_ifo_file ".
 		" -o $vobsub_prefix &&".
@@ -3820,7 +3877,7 @@ sub get_create_wav_command {
 
 	my $command =
 		"mkdir -p $dir &&".
-		" dr_exec transcode -a $audio_nr ".
+		" dvdrip-exec transcode -a $audio_nr ".
 		" -y null,wav -u 100 -o $audio_wav_file";
 
 	$command .= " -$_ $source_options->{$_}" for keys %{$source_options};

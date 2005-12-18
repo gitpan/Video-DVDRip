@@ -1,4 +1,4 @@
-# $Id: Preferences.pm,v 1.2 2005/08/01 19:31:34 joern Exp $
+# $Id: Preferences.pm,v 1.3 2005/10/09 11:51:05 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -32,6 +32,11 @@ sub open_window {
 	
 	return if $config_ff;
 	
+	my $config = $self->config_object;
+	my $clone  = $config->clone;
+
+	$self->get_context->set_object ( config => $clone );
+	
 	$self->build;
 	
 	1;
@@ -61,6 +66,7 @@ sub build {
 			modal => 1,
 		    },
 		    closed_hook => sub {
+			$self->get_context->set_object(config=>undef);
 		        $config_ff->close if $config_ff;
 			$config_ff = undef;
 			1;
@@ -194,11 +200,23 @@ sub build_config_buttons {
 		    },
 		),
 	        Gtk2::Ex::FormFactory::Button->new (
+		    label => __"Cancel",
+		    stock => "gtk-cancel",
+		    clicked_hook => sub {
+			$self->get_context->set_object(config=>undef);
+		        $config_ff->close;
+			$config_ff = undef;
+			1;
+		    },
+		),
+	        Gtk2::Ex::FormFactory::Button->new (
 		    label => __"Ok",
 		    stock => "gtk-ok",
 		    clicked_hook => sub {
 		    	my $config_object = $self->config_object;
+			$config_object->copy_values_from($self->get_context_object("config"));
 			$config_object->save;
+			$self->get_context->set_object(config=>undef);
 		        $config_ff->close;
 			$config_ff = undef;
 			my $project = $self->get_context->get_object("project");
@@ -263,8 +281,8 @@ sub check_params {
 	}
 
 	my $buffer        = $self->gtk_text_buffer;
-	my $config_object = $self->config_object;
-	
+	my $config_object = $self->get_context_object("config");
+
 	$buffer->set_text("");
 
 	my $iter = $buffer->get_start_iter;

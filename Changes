@@ -1,88 +1,177 @@
-$Id: Changes.unstable,v 1.47 2005/08/01 19:50:15 joern Exp $
+$Id: Changes.unstable,v 1.50 2005/10/30 12:44:27 joern Exp $
 
 Revision history and release notes for dvd::rip.
 
+0.97.4 [unstable branch] Sun Oct 30 2005, joern
+    Bugfixes:
+    - Various critical cluster mode fixes (in particular some
+      endless loop conditions)
+    - Subtitle preview didn't work due to conflicts with
+      latest internal API changes.
+    - dvd::rip rejected negative vertical subtitle offsets,
+      which are absolutely valid. Thanks for the report to
+      elerran <elerran AT freemail.gr>.
+    - Fixed bug with wrong audio track assignment with
+      old tcprobe based TOC reading (new lsdvd mode was not
+      affected). Thanks for the report to Markus Frisch
+      <markus AT frisch.com>
+    - Volume scanning progress bar didn't work; scanned value
+      didn't appear in GUI. Thanks for the report to
+      Triffid Hunter.
+    - dvdrip-tet crashed if a confirmation request should
+      pop up. For know dvdrip-tet just assumes "Yes" to
+      the question and continues.
+
+0.97.3 [unstable branch] Sun Oct 9 2005, joern
+    Notes:
+    - This version requires Gtk2::Ex::FormFactory 0.58.
+    - New optional dependency: with lsdvd dvd::rip reads
+      DVD TOC much faster.
+    - Source directory layout changed slightly. All scripts
+      and binaries moved into the bin/ subdirectory. All
+      additional program files now have a "dvdrip-" prefix,
+      the old "dr_" prefix for some binaries was dropped.
+
+    Features:
+    - Subtitle preview images may be grabbed while ripping
+      which makes finding the correct subtitles much easier
+      since no long-winded preview grabbing has to be done
+      later. You can chosse to rip no subs, all of them or
+      by language. Aware: your CPU will glow a bit more while
+      ripping if you use this feature ;)
+    - dvd::rip now has a command line frontend for pure
+      transcoding without any GUI: dvdrip-tet (task execution
+      terminal). Just execute "dvdrip-tet" to get some help
+      about the the command line options.
+    - With dvdrip-replex an experimental command line
+      application is shipped which does DVD shrinking based
+      on a ripped DVD and the corresponding dvd::rip project
+      file. Just a prove-of-concept. The functionality will
+      be added to the GUI sometimes...
+    - Added a simple 'configure' script to fulfill GNU Source
+      Installer requirements. Thanks for the suggestion to
+      Claudio Fontana <sick_soul AT yahoo.it>.
+    - Ported "force slow frame grabbing" feature from 0.52 to
+      0.97 branch.
+    - Preferences dialog now has a "Cancel" button.
+    - Added an "dvd::rip" entry to the dependency table which
+      checks whether all dvd::rip command files are found
+      in the PATH.
+
+    Bugfixes:
+    - Cluster control web service was broken.
+    - Applied a patch from Ulrich Spoerlein <q AT galgenberg.net>
+      removing the -ping option from the ImageMagick "identify"
+      calls, since recent ImageMagick versions don't have this
+      option anymore.
+    - Applied minor patches from Ulrich Spoerlein to improve
+      FreeBSD compatability.
+    - Parsing output of the ImageMagick identify command was
+      broken with specific filenames. Thanks for the report
+      to Colin Wheat <cwheat AT ami.com.au>.
+    - Dropped "identify -ping" option, since not any longer
+      supported with newer versions. Thanks for the report
+      to Avinash Chopde <avinash AT acm.org>.
+    - X(S)VCD processing with manual bitrate setting didn't
+      work. Thanks for the report to Ed Doolittle <ed.doolittle
+      AT utoronto.ca>
+    - dvd::rip dependency check was broken if tools didn't run
+      due to NPTL issues. Switching NPTL workaround on/off
+      didn't help anymore because the results were cached even
+      on that case. Thanks for figuring that out to
+      Joe Zbiciak <intvnut AT gmail.com>.
+    - Sightly cluster mode node editor GUI improvements
+
 0.97.2 [unstable branch] Mon Aug 1 2005, joern
-	Notes:
-	- You need at least Gtk2::Ex::FormFactory 0.57. Download from
-	  here because it may not reached all CPAN sites yet:
-	
-	  http://www.exit1.org/Gtk2-Ex-FormFactory/
+    Notes:
+    - You need at least Gtk2::Ex::FormFactory 0.57. Download from
+      here because it may not reached all CPAN sites yet:
 
-	Features:
-	- Ported cluster mode GUI to Gtk2, including a slightly internal
-	  code redesign of dvdrip-master, which introduces another Perl
-	  module dependency: Event::RPC 0.84. Download the module from
-	  CPAN or from the project's homepage:
+      http://www.exit1.org/Gtk2-Ex-FormFactory/
 
-	  http://www.cpan.org/modules/by-module/Event/
-	  http://www.exit1.org/Event-RPC
+    Features:
+    - Ported cluster mode GUI to Gtk2, including a slightly internal
+      code redesign of dvdrip-master, which introduces another Perl
+      module dependency: Event::RPC 0.84. Download the module from
+      CPAN or from the project's homepage:
 
-          I think I fixed a bunch of smaller bugs in the cluster
-	  mode during the code review and redesign as well... ;)
+      http://www.cpan.org/modules/by-module/Event/
+      http://www.exit1.org/Event-RPC
 
-	- New button "Create project" on Storage page. So we have
-	  a definitive point when the project was created, after
-	  that the name may not change again and the data directory
-	  structure, logfile etc. is created.
+      I think I fixed a bunch of smaller bugs in the cluster
+      mode during the code review and redesign as well... ;)
 
-	Bugfixes:
-	- Preferences: changing DVD mount point and setting a directory
-	  as the DVD device didn't work. Thanks for the report to
-	  Christian Marillat.
-	- When creating a new project: changing the project name
-	  was impossible once the name matched an existing project
-	  name in the dvd::rip data directory.
-	- Delete volume rescale when a audio filter is set.
-	- Fixed wrong viewing angle mplayer DVD command preset.
-	  Thanks for the report to Brian J. Murrell <brian AT 
-	  interlinx.bc.ca>
-	- Missed log file creation for new projects.
-	- Subtitle preview window was broken
-	- Bitrate calculation stuff wasn't initialized correctly
-	  if a default BBP was set in the Preferences
+    - New button "Create project" on Storage page. So we have
+      a definitive point when the project was created, after
+      that the name may not change again and the data directory
+      structure, logfile etc. is created.
+
+    Bugfixes:
+    - Preferences: changing DVD mount point and setting a directory
+      as the DVD device didn't work. Thanks for the report to
+      Christian Marillat.
+    - When creating a new project: changing the project name
+      was impossible once the name matched an existing project
+      name in the dvd::rip data directory.
+    - Delete volume rescale when a audio filter is set.
+    - Fixed wrong viewing angle mplayer DVD command preset.
+      Thanks for the report to Brian J. Murrell <brian AT 
+      interlinx.bc.ca>
+    - Missed log file creation for new projects.
+    - Subtitle preview window was broken
+    - Bitrate calculation stuff wasn't initialized correctly
+      if a default BBP was set in the Preferences
 
 0.97.1 [unstable branch] Sat Jul 23 2005, joern
-	Features:
-	- Extensive GUI redesign. dvd::rip now uses Gtk2 and
-	  Gtk2::Ex::FormFactory, so we have new dependencies
-	  here.
-	  
-	  The Perl Gtk2 binding should be part of every modern
-	  Linux distribution, e.g. Debian has a libgtk2-perl package.
-	  Otherwise grab it from CPAN (see URL below). I personally
-	  use version 1.082, but lower versions may work as well.
-	  
-	  Gtk2::Ex::FormFactory is rather new and not yet packaged
-	  for any Linux distro, at least I'm not aware of. Installation
-	  is straight forward (perl Makefile.PL && make test && make install).
-	  Version 0.56 is required.
+    Features:
+    - Extensive GUI redesign. dvd::rip now uses Gtk2 and
+      Gtk2::Ex::FormFactory, so we have new dependencies
+      here.
 
-	  You can grab both Gtk2 and Gtk2::Ex::FormFactory from here:
+      The Perl Gtk2 binding should be part of every modern
+      Linux distribution, e.g. Debian has a libgtk2-perl package.
+      Otherwise grab it from CPAN (see URL below). I personally
+      use version 1.082, but lower versions may work as well.
 
-	  http://www.cpan.org/modules/by-module/Gtk2/
+      Gtk2::Ex::FormFactory is rather new and not yet packaged
+      for any Linux distro, at least I'm not aware of. Installation
+      is straight forward (perl Makefile.PL && make test && make install).
+      Version 0.56 is required.
 
-	- A bunch of smaller features / changes, in particular making
-	  the GUI more comfortable. Too many to list them all, just
-	  poke around to find them ;)
+      You can grab both Gtk2 and Gtk2::Ex::FormFactory from here:
 
-	Notes:
-	- This is an ALPHA release, so please use with care, but *please*
-	  use it and report any bugs to the dvdrip-users list.
-	- The project file format didn't change significantly. Files
-	  from older dvd::rip versions will just work. Even opening
-	  files created with 0.97.1 should work in older versions.
-	  As usual you should make backups nevertheless.
-	- The redesign is not yet fully completed. The cluster,
-	  transcode filter & preview and burning stuff is currently missing.
-	  Cluster stuff will be added soon, filter stuff a bit later
-	  and burning stuff probably never: depends on user feedback ;)
-	- Only the German translation is complete, other languages
-	  will follow.
-	- The online web documentation still covers the old Gtk1
-	  based version. This will change with the 0.98 stable release
-	  based on this 0.97 branch. Since the main functionality didn't
-	  change much this should be no problem at all.
+      http://www.cpan.org/modules/by-module/Gtk2/
+
+    - A bunch of smaller features / changes, in particular making
+      the GUI more comfortable. Too many to list them all, just
+      poke around to find them ;)
+
+    Notes:
+    - This is an ALPHA release, so please use with care, but *please*
+      use it and report any bugs to the dvdrip-users list.
+    - The project file format didn't change significantly. Files
+      from older dvd::rip versions will just work. Even opening
+      files created with 0.97.1 should work in older versions.
+      As usual you should make backups nevertheless.
+    - The redesign is not yet fully completed. The cluster,
+      transcode filter & preview and burning stuff is currently missing.
+      Cluster stuff will be added soon, filter stuff a bit later
+      and burning stuff probably never: depends on user feedback ;)
+    - Only the German translation is complete, other languages
+      will follow.
+    - The online web documentation still covers the old Gtk1
+      based version. This will change with the 0.98 stable release
+      based on this 0.97 branch. Since the main functionality didn't
+      change much this should be no problem at all.
+
+0.52.7
+	Bugfixes:
+	- Applied a patch from Ulrich Spoerlein <q AT galgenberg.net>
+	  removing the -ping option from the ImageMagick "identify"
+	  calls, since recent ImageMagick versions don't have this
+	  option anymore.
+	- Applied minor patches from Ulrich Spoerlein to improve
+	  FreeBSD compatability.
 
 0.52.6 [stable branch] Sat Jul 23 2005, joern
 	Notes:

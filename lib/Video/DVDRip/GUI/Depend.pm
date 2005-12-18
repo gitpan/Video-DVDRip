@@ -1,4 +1,4 @@
-# $Id: Depend.pm,v 1.4 2005/07/23 08:14:15 joern Exp $
+# $Id: Depend.pm,v 1.5 2005/10/09 11:42:21 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -44,7 +44,7 @@ sub build {
 			my ($gtk_window) = @_;
 			$_[0]->parent->set(
 		          default_width  => 640,
-		          default_height => 440,
+		          default_height => 480,
 			);
 			1;
 		    },

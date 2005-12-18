@@ -1,4 +1,4 @@
-/* $Id: dr_progress.c,v 1.1 2002/09/01 13:59:06 joern Exp $
+/* $Id: dvdrip-progress.c,v 1.2 2005/10/30 12:42:58 joern Exp $
  *
  * Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
  * 
@@ -7,6 +7,7 @@
  *
  */
 
+#include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/types.h>
@@ -21,7 +22,7 @@ void	progress ( int max_size, int interval_size );
 
 /* print usage */
 void usage ( void ) {
-	printf ("usage: dr_progress -m max-size-mbytes -i report-interval-mbytes\n");
+	printf ("usage: dvdrip-progress -m max-size-mbytes -i report-interval-mbytes\n");
 	printf ("       -m   expected maximum size in mbytes\n");
 	printf ("       -i   interval for reporting progress in mbytes\n");
 	exit(1);
@@ -84,7 +85,7 @@ void progress ( int max_size, int interval_size ) {
 			}
 		
 			if ( 0 == mbytes_sum % interval_size )
-				fprintf (stderr, "dr_progress: %d/%d\n", mbytes_sum, max_size);
+				fprintf (stderr, "dvdrip-progress: %d/%d\n", mbytes_sum, max_size);
 		}
 	}
 

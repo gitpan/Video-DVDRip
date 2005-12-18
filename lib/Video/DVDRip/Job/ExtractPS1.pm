@@ -1,4 +1,4 @@
-# $Id: ExtractPS1.pm,v 1.6 2005/07/23 08:14:15 joern Exp $
+# $Id: ExtractPS1.pm,v 1.7 2005/10/09 12:00:01 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -74,7 +74,7 @@ sub parse_output {
 	my $self = shift;
 	my ($line) = @_;
 
-	if ( $line =~ m!dr_progress:\s*(\d+)/(\d+)! ) {
+	if ( $line =~ m!dvdrip-progress:\s*(\d+)/(\d+)! ) {
 		$self->set_progress_cnt (10000*$1/$2);
 	}
 

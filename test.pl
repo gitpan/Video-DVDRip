@@ -13,34 +13,37 @@ my $test = 1;
 my $max;
 
 BEGIN {
-	open (IN,$0) or die "can't read $0";
-	while (<IN>) {
-		++$max if /^ok/;
-	}
-	close IN;
-	$| = 1;
-	print "1..$max\n";
+    open( IN, $0 ) or die "can't read $0";
+    while (<IN>) {
+        ++$max if /^ok/;
+    }
+    close IN;
+    $| = 1;
+    print "1..$max\n";
 }
 
 END {
-	print "not ok 1\n" if not $loaded;
+    print "not ok 1\n" if not $loaded;
 }
 
-BEGIN { $Video::DVDRip::PREFERENCE_FILE = "$ENV{HOME}/.dvdriprc" }
+BEGIN {
+    $Video::DVDRip::PREFERENCE_FILE = "$ENV{HOME}/.dvdriprc";
+    $Video::DVDRip::MAKE_TEST       = 1;
+}
 
 use Video::DVDRip::GUI::Main;
 
 $loaded = 1;
 
-ok ($loaded, "load dvd::rip");
+ok( $loaded, "load dvd::rip" );
 
 sub ok {
-	my ($cond, $comment) = @_;
-	print ($cond ? "ok " : "not ok ");
-	print $test++;
-	print " - $comment" if $comment;
-	print "\n";
-	1;
+    my ( $cond, $comment ) = @_;
+    print( $cond ? "ok " : "not ok " );
+    print $test++;
+    print " - $comment" if $comment;
+    print "\n";
+    1;
 }
 
 ######################### End of black magic.

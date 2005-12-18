@@ -1,4 +1,4 @@
-$Id: TODO,v 1.125 2005/08/01 19:38:34 joern Exp $
+$Id: TODO,v 1.126 2005/10/09 12:30:26 joern Exp $
 
 KNOWN BUGS:
 ===========
@@ -15,6 +15,8 @@ KNOWN BUGS:
   by Christoph Lampert.
 - vobsub creation fails on vfat partitions. Reported by
   Christoph Lampert.
+- VDC imaging/burning doesn't work on VFAT filesystem due to
+  the symbolic link used. Use mv instead.
 - creating vobsub after transcoding doesn't work for (S)VCD
   (it's useless anyway, but dvd::rip should warn about this).
   Thanks to Kai Bartels <kaba AT picturesafe.de>.
@@ -39,6 +41,9 @@ may be implemented soon, some eventually never... ;)
 
 TODO:
 =====
+- make fping path configurable
+- Cluster mode: retry a job a few times to neutralize temporary
+  network failures.
 - preview window: button to find black bars
 - mplayer command: placeholder for the configured DVD device
   (mplayer option -dvd-device). Suggested by Sunny <sloncho AT gmail.com>.

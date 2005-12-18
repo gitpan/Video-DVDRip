@@ -1,4 +1,4 @@
-# $Id: Depend.pm,v 1.9 2005/07/23 08:14:15 joern Exp $
+# $Id: Depend.pm,v 1.12 2005/10/30 12:30:47 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -18,8 +18,50 @@ my $DEBUG = 0;
 use Carp;
 use strict;
 
+my @DVDRIP_BIN_FILES = qw (
+    dvdrip              dvdrip-exec
+    dvdrip-master       dvdrip-multitee
+    dvdrip-progress     dvdrip-tet
+    dvdrip-splitpipe    dvdrip-subpng
+);
+
 my $ORDER = 0;
 my %TOOLS = (
+    "dvd::rip" => {
+    	order		=> ++$ORDER,
+        command         => "dvdrip",
+    	comment 	=> __"All internal command files",
+	optional	=> 0,
+        dont_cache      => 1,
+	get_version 	=> sub {
+            my $missing_file_cnt = 0;
+            foreach my $dvdrip_file ( @DVDRIP_BIN_FILES ) {
+                if ( !__PACKAGE__->get_full_path ($dvdrip_file) ) {
+                    ++$missing_file_cnt;
+                    print STDERR __x(
+                        "ERROR: '{file}' not found in PATH\n",
+                        file => $dvdrip_file
+                    ) unless $Video::DVDRip::MAKE_TEST;
+                }
+            }
+            return $missing_file_cnt == @DVDRIP_BIN_FILES ? ""  :
+                   $missing_file_cnt == 0                 ? $Video::DVDRip::VERSION :
+                   "incomplete";
+	},
+        convert         => 'default',
+	__convert 	=> sub {
+            my ($version) = @_;
+            return $version eq ''           ? 0 :
+                   $version eq 'incomplete' ? 0 : $Video::DVDRip::VERSION;
+        },
+	min 		=> $Video::DVDRip::VERSION,
+	suggested 	=> $Video::DVDRip::VERSION,
+	installed	=> undef,	# set by ->new
+	installed_num	=> undef,	# set by ->new
+	min_num		=> undef,	# set by ->new
+	suggested_num	=> undef,	# set by ->new
+	installed_ok	=> undef,	# set by ->new
+    },
     transcode => {
     	order		=> ++$ORDER,
         command         => "transcode",
@@ -81,10 +123,24 @@ my %TOOLS = (
 	min 		=> "0.3",
 	suggested 	=> "0.3",
     },
+    lsdvd => {
+     	order		=> ++$ORDER,
+        command         => "lsdvd",
+   	comment		=> __"Needed for faster DVD TOC reading",
+	optional	=> 1,
+	get_version 	=> sub {
+		qx[lsdvd -V  2>&1] =~ /lsdvd\s+(\d+\.\d+(\.\d+)?)/i;
+		wait;	# saw zombies on a Slackware system without it.
+		return $1;
+	},
+	convert 	=> 'default',
+	min 		=> "0.15",
+	suggested 	=> "0.15",
+    },
     rar => {
      	order		=> ++$ORDER,
         command         => Video::DVDRip::Depend->config('rar_command'),
-   	comment		=> __"Needed for compressed subtitles",
+   	comment		=> __"Needed for compressed vobsub subtitles",
 	optional	=> 1,
 	get_version 	=> sub {
 		my $self = shift;
@@ -307,7 +363,7 @@ sub new {
 			$DEBUG && print "=> $def->{installed_num}\n";
 		} else {
 			$DEBUG && print "NOT INSTALLED\n";
-			$def->{installed} = "missing";
+			$def->{installed} = __"not installed";
 		}
 
 		$def->{max_num}       = &$convert($def->{max}) if defined $def->{max};
@@ -375,6 +431,8 @@ sub get_cached_version {
 	my $self = shift;
 	my ($tool_def) = @_;
 	
+        return if $tool_def->{dont_cache};
+
 	my $version = $tool_def->{cached_version};
 	
 	my $path = $self->get_full_path($tool_def->{command});
@@ -394,6 +452,14 @@ sub get_cached_version {
 		$tool_def->{mtime} = $mtime;
 		$version = undef;
 	}
+
+	#-- Don't cache the version number if the tool
+	#-- is found on the harddrive but cached as
+	#-- missing, otherwise dvd::rip doesn't check
+	#-- tools that crashed due to NPTL issues in
+	#-- the last run but the NPTL settings may have
+	#-- changed in the meantime.
+	$version = undef if -x $path && $version eq 'missing';
 
 	return $version;
 }

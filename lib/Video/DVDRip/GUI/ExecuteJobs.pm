@@ -1,4 +1,4 @@
-# $Id: ExecuteJobs.pm,v 1.17 2005/07/23 08:14:15 joern Exp $
+# $Id: ExecuteJobs.pm,v 1.18 2005/10/09 11:43:10 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -263,8 +263,12 @@ sub update_progress {
 
 	return 1 if $self->cancelled;
 	
+	my $cnt = $job->progress_cnt;
+	my $max = $job->progress_max;
+	$max ||= 1;
+
 	$self->progress->update (
-		value => $job->progress_cnt,
+		value => $cnt/$max,
 		label => $job->progress,
 	);
 	

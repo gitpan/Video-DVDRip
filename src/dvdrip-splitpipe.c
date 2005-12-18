@@ -1,4 +1,4 @@
-/* $Id: dr_splitpipe.c,v 1.1 2002/09/01 13:58:10 joern Exp $
+/* $Id: dvdrip-splitpipe.c,v 1.1 2005/10/09 11:26:45 joern Exp $
  *
  * Copyright (C) 2001-2002 Jörn Reder <joern@zyn.de> All Rights Reserved
  * 
@@ -7,6 +7,7 @@
  *
  */
 
+#include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/types.h>

@@ -1,4 +1,4 @@
-# $Id: Subtitle.pm,v 1.3 2005/08/01 19:18:04 joern Exp $
+# $Id: Subtitle.pm,v 1.5 2005/10/30 12:35:29 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -31,6 +31,8 @@ sub build_factory {
 	my $self = shift;
 
 	my $context = $self->get_context;
+
+	$context->set_object( subtitle_gui => $self );
 
 	return Gtk2::Ex::FormFactory::VBox->new (
 	    title 	     => __"Subtitles",
@@ -100,11 +102,15 @@ sub build_preview_box {
 	        Gtk2::Ex::FormFactory::HBox->new (
 		    content => [
 		        Gtk2::Ex::FormFactory::Button->new (
-			    label => __"Grab",
-			    stock => "gtk-redo",
-			    clicked_hook => sub {
+			    object	   => "subtitle",
+			    label          => __"Grab",
+			    stock          => "gtk-copy",
+			    clicked_hook   => sub {
 			    	$self->grab_subtitle_preview_images;
 			    },
+			    inactive       => "invisible",
+			    active_cond    => sub { $_[0] ? !$_[0]->is_ripped : 0 },
+			    active_depends => [ "subtitle.is_ripped" ],
 			),
 		        Gtk2::Ex::FormFactory::Combo->new (
 			    attr    => "subtitle.tc_preview_img_cnt",
@@ -137,8 +143,10 @@ sub build_preview_box {
 		    ],
 		),
 		Video::DVDRip::GUI::FormFactory::SubtitlePreviews->new (
-		    attr   => "subtitle.preview_images",
-		    expand => 1,
+		    attr   		=> "subtitle.preview_dir",
+		    attr_image_cnt	=> "subtitle.tc_preview_img_cnt",
+		    attr_start_time	=> "subtitle.tc_preview_timecode",
+		    expand 		=> 1,
 		),
 	    ],
 	);
@@ -203,7 +211,7 @@ sub build_render_box {
 	        Gtk2::Ex::FormFactory::Entry->new (
 		    attr  => "subtitle.tc_vertical_offset",
 		    width => 50,
-		    rules => "positive-zero-integer",
+		    rules => "integer",
 		),
 	        Gtk2::Ex::FormFactory::Label->new (
 		    label => __"rows",
@@ -399,35 +407,16 @@ sub create_vobsub_now {
 	my $subtitle = $title->selected_subtitle;	
 	return 1 if not $subtitle;
 
-	if ( not -f $subtitle->ifo_file ) {
-		$self->message_window (
-			message => __"Need IFO files in place.\n".
-                                     "You must re-read TOC from DVD."
-		);
-		return 1;
-	}
+	require Video::DVDRip::Task::CreateVobsub;
 
-	my $nr;
-	my $last_job;
-	my $exec = $self->new_job_executor;
-	my $job  = Video::DVDRip::Job::ExtractPS1->new (
-		nr    => ++$nr,
-		title => $title,
+	my $task = Video::DVDRip::Task::CreateVobsub->new (
+		ui	 => $self,
+		project	 => $self->project,
+		subtitle => $subtitle,
 	);
-	$job->set_subtitle ( $subtitle );
 	
-	$last_job = $exec->add_job ( job => $job );
-
-	$job  = Video::DVDRip::Job::CreateVobsub->new (
-		nr    => ++$nr,
-		title => $title,
-	);
-	$job->set_subtitle ( $subtitle );
-	$job->set_depends_on_jobs ( [ $last_job ] );
-
-	$last_job = $exec->add_job ( job => $job );
-	
-	$exec->execute_jobs;
+	$task->configure;
+	$task->start;
 
 	1;
 }
@@ -465,6 +454,8 @@ sub view_vobsub {
 	my $command = $title->get_view_vobsub_command (
 		subtitle => $subtitle
 	);
+	
+	$self->log(__"Executing command: ".$command);
 	
 	system ("$command &");
 
@@ -510,7 +501,8 @@ sub grab_subtitle_preview_images {
 	my $title = $self->selected_title;
 	return 1 if not $title;
 	return 1 if $self->progress_is_active;
-	return 1 if not $title->selected_subtitle;
+	my $selected_subtitle = $title->selected_subtitle;
+	return 1 if not $selected_subtitle;
 
 	if ( not $title->is_ripped ) {
 		$self->message_window (
@@ -527,7 +519,7 @@ sub grab_subtitle_preview_images {
 	}
 
 	my $preview_widget = $self->get_form_factory
-				  ->get_widget("subtitle.preview_images");
+				  ->get_widget("subtitle.preview_dir");
 	$preview_widget->empty_widget;
 
 	my $nr;
@@ -536,20 +528,15 @@ sub grab_subtitle_preview_images {
 	my $job  = Video::DVDRip::Job::GrabSubtitleImages->new (
 		nr    => ++$nr,
 		title => $title,
-		show_image_cb => sub {
-		    my ($filename) = @_;
-		    $preview_widget->add_image(
-		    	filename => $filename
-		    );
-		    1;
-		},
 	);
 
 	$last_job = $exec->add_job ( job => $job );
 
 	$exec->set_cb_finished (sub{
 		$self->get_context
-		     ->update_object_attr_widgets("subtitle.preview_images");
+		     ->update_object_attr_widgets("title.selected_subtitle_id");
+		$self->get_context
+		     ->update_object_attr_widgets("subtitle.preview_dir");
 	});
 
 	$exec->execute_jobs;

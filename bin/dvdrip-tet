@@ -1,0 +1,106 @@
+#!/usr/bin/perl
+
+# $Id: dvdrip-tet,v 1.1 2005/10/09 11:34:01 joern Exp $
+
+#-----------------------------------------------------------------------
+# Copyright (C) 2001-2003 Jörn Reder <joern@zyn.de> All Rights Reserved
+# 
+# This program is part of Video::DVDRip, which is free software; you can
+# redistribute it and/or modify it under the same terms as Perl itself.
+#-----------------------------------------------------------------------
+
+package Video::DVDRip;
+
+use strict;
+use lib 'lib';
+
+use Getopt::Std;
+
+use Locale::TextDomain ("video.dvdrip");
+
+# That's Perl! The job classes derive from this class,
+# which is decided at *runtime* - this way standard and
+# cluster mode can share the same job execution system
+# by inserting the cluster logic dynamically into the
+# inheritence line... great stuff!
+
+my $has_dvdrip_rc;
+
+BEGIN {
+	$Video::DVDRip::JobClass = "Video::DVDRip::Job";
+	$has_dvdrip_rc = -f "$ENV{HOME}/.dvdriprc";
+}
+
+my $USAGE = __"
+Usage: dvdrip-tet [-p file] [-d level] [-l] [-t task] file[:title] ...
+
+       -p preferences filename (Default: ~/.dvdriprc)
+          A new file is created, if it doesn't exist.
+
+       -d set debugging level
+
+       -l log output instead of fullscreen output
+       
+       -q be quiet, no progress or log output at all
+       
+       -t task to be executed
+          * Transcode (Default)
+";
+
+$| = 1;
+
+main: {
+	if ( $ARGV[0] =~ /^-(v|-?version)$/ ) {
+		$Video::DVDRip::PREFERENCE_FILE = "$ENV{HOME}/.dvdriprc";
+		require Video::DVDRip;
+		print $Video::DVDRip::VERSION,"\n";
+		exit 0;
+	}
+
+	if ( $ARGV[0] =~ /^-(h|-?help)$/ ) {
+		usage();
+	}
+
+	# get options
+	my %opt;
+	my $opt_ok = getopts ('qlp:d:t:', \%opt);
+	usage() if not $opt_ok or !@ARGV;
+
+	my $prefs    = $opt{p};
+	my $log      = $opt{l};
+	my $quiet    = $opt{q};
+	my $task     = $opt{t} || "Transcode";
+
+	$Video::DVDRip::PREFERENCE_FILE = $prefs || "$ENV{HOME}/.dvdriprc";
+
+	require Video::DVDRip;
+	require Video::DVDRip::Term::Main;
+
+	# set requested debugging level
+	Video::DVDRip::Term::Main->set_debug_level( $opt{d} || 0 );
+
+	my $ui = Video::DVDRip::Term::Main->new (
+		fullscreen	=> !$log,
+		quiet		=> $quiet,
+	);
+
+	$ui->clear_screen;
+
+	foreach my $filename ( @ARGV ) {
+		my ($file, $title) = split(":", $filename, 2);
+		$ui->set_filename($file);
+		$ui->set_select_title($title);
+		$ui->open_project;
+		$ui->exec_tasks ( [ $task ] );
+	}
+
+	$ui->print_screen("[ Tasks finished ]\n\n");
+
+}
+
+sub usage {
+	print $USAGE;
+	exit 1;
+}
+
+__END__

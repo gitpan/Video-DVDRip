@@ -1,4 +1,4 @@
-# $Id: Title.pm,v 1.2 2005/08/01 19:18:22 joern Exp $
+# $Id: Title.pm,v 1.3 2005/10/09 11:55:47 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -133,16 +133,66 @@ sub build_audio_viewing_chapter_factory {
 		    tip   => __"All audio tracks are ripped, but this ".
 			       "track is also scanned for volume while ".
 			       "ripping",
+		    active_cond => sub { $self->get_context_object("title") &&
+		    			 $self->get_context_object("title")
+		    			      ->audio_channel != -1 },
+		    active_depends => [ "title.audio_channel" ],
 		),
 		Gtk2::Ex::FormFactory::Popup->new (
 		    attr  => "title.tc_viewing_angle",
-		    label => __"Select viewing angle",
+		    label => "\n".__"Select viewing angle",
 		    tip   => __"This selection affects ripping, so you ".
 			       "must rip again if you change this later",
+		    active_cond => sub { $self->get_context_object("title") &&
+		    			 $self->get_context_object("title")
+		    			      ->viewing_angles > 1 },
+		    active_depends => [ "title.viewing_angles" ],
+		),
+		Gtk2::Ex::FormFactory::HBox->new (
+		    object  => "subtitle",
+		    label   => "\n".__"Grab subtitle preview images",
+		    content => [
+		        Gtk2::Ex::FormFactory::RadioButton->new (
+			    attr  => "title.tc_rip_subtitle_mode",
+			    value => "0",
+			    label => __"No",
+			    tip   => __"No subitle images are created while ripping ".
+			    	       "but can be grabbed later on demand",
+			),
+		        Gtk2::Ex::FormFactory::RadioButton->new (
+			    attr  => "title.tc_rip_subtitle_mode",
+			    value => "all",
+			    label => __"All",
+			    tip   => __"Images of all subtitle streams are created ".
+			    	       "while ripping and available for preview ".
+				       "immediately",
+			),
+		        Gtk2::Ex::FormFactory::RadioButton->new (
+			    attr  => "title.tc_rip_subtitle_mode",
+			    value => "lang",
+			    label => __"By language",
+			    tip   => __"Grab subtitle images of specific languages only",
+			),
+		    ],
+#		    active_cond => sub { $self->version("spuunmux") >= 611 },
+#		    inactive    => "invisible",
+		),
+		Gtk2::Ex::FormFactory::List->new (
+		    name	   => "sub_lang_selection",
+		    attr           => "title.subtitle_languages",
+		    attr_select    => "title.tc_rip_subtitle_lang",
+		    attr_select_column => 0,
+		    expand	   => 0,
+		    height         => 75,
+		    scrollbars     => [ "never", "always" ],
+		    tip            => __"Select one or more languages",
+		    columns        => [ __"Language selection" ],
+		    selection_mode => "multiple",
+		    inactive       => "invisible",
 		),
 		Gtk2::Ex::FormFactory::HBox->new (
 		    object  => "title",
-		    label   => __"Specify chapter mode",
+		    label   => "\n".__"Specify chapter mode",
 		    content => [
 		        Gtk2::Ex::FormFactory::RadioButton->new (
 			    attr  => "title.tc_use_chapter_mode",
@@ -177,7 +227,7 @@ sub build_audio_viewing_chapter_factory {
 		    expand	   => 1,
 		    scrollbars     => [ "never", "always" ],
 		    tip            => __"Select one or more chapters",
-		    columns        => [ __"Chapter Selection" ],
+		    columns        => [ __"Chapter selection" ],
 		    selection_mode => "multiple",
 		    inactive       => "invisible",
 		),
@@ -210,68 +260,21 @@ sub read_dvd_toc {
 
 	return if $self->progress_is_active;
 
-	# good time creating the tmp dir (for the logfile);
-	mkpath ( [ $self->project->snap_dir ], 0, 0755);
-
-	my $project = $self->project;
-	my $content = $project->content;
-
 	$self->clear_content_list;
-
 	$self->get_context->set_object("title", undef);
 
-	my $nr;
-	my $job;
-	my $exec = $self->new_job_executor (
-		reuse_progress => 1
+	require Video::DVDRip::Task::ReadTOC;
+
+	my $task = Video::DVDRip::Task::ReadTOC->new (
+	    ui		    => $self,
+	    project         => $self->project,
+	    cb_title_probed => sub {
+	        $self->append_content_list ( title => $_[0] );
+	    },
 	);
-
-	$job  = Video::DVDRip::Job::ProbeTitleCount->new (
-		nr    => ++$nr,
-	);
-	$job->set_content ($content);
-
-	$job->set_cb_finished ( sub {
-		my $titles = $content->get_titles_by_nr;
-		foreach my $title ( @{$titles} ) {
-			$job  = Video::DVDRip::Job::Probe->new (
-				nr    => ++$nr,
-				title => $title,
-			);
-
-			$job->set_progress_max(scalar(@{$titles})+0.001);
-
-			$job->set_cb_finished (sub {
-				$self->append_content_list ( title => $title );
-			});
-
-			$exec->add_job ( job => $job );
-		}
-	});
 	
-	$exec->set_cb_finished (sub{
-		return if $exec->cancelled;
-
-		eval { $self->project->copy_ifo_files };
-
-		if ( $@ ) {
-			$self->long_message_window (
-				message =>
-					__"Failed to copy the IFO files. vobsub creation won't work properly.\n".
-                                         "(Did you specify the mount point of your DVD drive in the Preferences?)\n".
-                                         "The error message is:\n".
-					$self->stripped_exception
-					
-			);
-		}
-		$self->project->backup_copy;
-
-		1;
-	});
-
-	
-	$exec->add_job ( job => $job );
-	$exec->execute_jobs;
+	$task->configure;
+	$task->start;
 
 	1;
 }
@@ -313,32 +316,29 @@ sub rip_title_selection_sensitive {
 	my $self = shift;
 	my ($active) = @_;
 
-	my $state = $active ? "active" : "inactive";
-
 	my $context      = $self->get_context;
 	my $form_factory = $self->get_form_factory;
+	my $toc_buttons  = $form_factory->get_widget ("dvd_toc_buttons");
 
-	my $toc_buttons = $form_factory->get_widget ("dvd_toc_buttons");
-	my $chapter_sel = $form_factory->get_widget ("chapter_selection");
-
-	#-- All widgets of the 'title' and 'content' objects
-	$context->update_object_widgets_activity ("title", $state);
-	$context->update_object_widgets_activity ("content", $state);
-
-	#-- Chapter needs to be updated separatly, since they depend
-	#-- on the title (chapter mode active) but FormFactory's
-	#-- automatism doesn't work here, since update_object_widgets_activity()
-	#-- overrides it with the given $state.
-	$chapter_sel->update() if $state eq 'active';
-
-	#-- And finally the TOC buttons
-	$toc_buttons->update_widget_activity($state);
+	if ( $active ) {
+		$context->update_object_widgets("content");
+		$context->update_object_widgets("title");
+		$context->update_object_widgets("subtitle");
+		$toc_buttons->update_widget_activity("active");
+		return;
+	} else {
+		$context->update_object_widgets_activity ("title", "inactive");
+		$context->update_object_widgets_activity ("content", "inactive");
+		$toc_buttons->update_widget_activity("inactive");
+	}
 
 	1;
 }
 
 sub rip_title {
 	my $self = shift; $self->trace_in;
+
+	return if $self->progress_is_active;
 
 	$self->rip_title_selection_sensitive(0);
 
@@ -380,7 +380,6 @@ sub rip_title {
 				if $exec->cancelled_job;
 
 		} elsif ( ! $exec->errors_occured ) {
-			$context->update_object_widgets("audio_track");
 			$self->get_context_object("clip_zoom")
 			     ->grab_preview_frame;
 			$self->project->backup_copy;

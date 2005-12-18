@@ -1,4 +1,4 @@
-# $Id: Content.pm,v 1.19 2005/07/23 08:14:15 joern Exp $
+# $Id: Content.pm,v 1.20 2005/10/09 11:37:42 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -67,7 +67,7 @@ sub get_probe_title_cnt_command {
 	
 	my $data_source = $self->project->rip_data_source;
 
-	return "dr_exec tcprobe -H 10 -i $data_source && echo DVDRIP_SUCCESS";
+	return "dvdrip-exec tcprobe -H 10 -i $data_source && echo DVDRIP_SUCCESS";
 }
 
 sub get_titles_by_nr {

@@ -1,4 +1,4 @@
-# $Id: Base.pm,v 1.36 2005/07/23 08:38:20 joern Exp $
+# $Id: Base.pm,v 1.38 2005/10/09 11:36:43 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -279,15 +279,9 @@ sub log {
 
 sub clone {
 	my $self = shift;
-	my %par = @_;
-	my ($deep) = @par{'deep'};
 
-	if ( not $deep ) {
-		my %object = %{$self};
-		return bless \%object, ref $self;
-	} else {
-		croak "deep cloning currently not supported";
-	}
+	require Storable;
+	return Storable::dclone($self);
 }
 
 sub combine_command_options {
@@ -300,7 +294,7 @@ sub combine_command_options {
 	$cmd_line =~ s/\s+$//;
 	$cmd_line .= ";" if $cmd_line !~ /;$/;
 	my @parts = grep !/^$/, (
-		$cmd_line =~ m!(.*?)\s*(\(|\)|;|&&|\|\||\`which nice\`\s+-n\s+[\d-]+|dr_exec\s+)\s*!g
+		$cmd_line =~ m!(.*?)\s*(\(|\)|;|&&|\|\||\`which nice\`\s+-n\s+[\d-]+|dvdrip-exec\s+)\s*!g
 	);
 
 	# walk through and process requested command

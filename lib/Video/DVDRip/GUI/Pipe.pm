@@ -1,4 +1,4 @@
-# $Id: Pipe.pm,v 1.11 2005/07/23 08:14:15 joern Exp $
+# $Id: Pipe.pm,v 1.13 2005/10/09 11:47:23 joern Exp $
 
 package Video::DVDRip::GUI::Pipe;
 
@@ -65,15 +65,14 @@ sub open {
 	my $pid = open($fh, "-|");
 	croak "can't fork child process" if not defined $pid;
 
-	$fh->blocking(0);
-
 	if ( not $pid ) {
 		# we are the child. Copy STDERR to STDOUT
 		close STDERR;
 		open (STDERR, ">&STDOUT")
 			or croak "can't dup STDOUT to STDERR";
 		my $command = $self->command;
-		exec ("dr_exec ".$self->command, @{$self->args})
+		my $dvdrip_exec = $command =~ /dvdrip-exec/ ? "" : "dvdrip-exec ";
+		exec ($dvdrip_exec.$command, @{$self->args})
 			or croak "can't exec program: $!";
 	}
 
@@ -103,7 +102,7 @@ sub close {
 		if $self->fh;
 
 	$self->set_watcher_tag(undef);
-	$self->set_fh ( undef );
+	$self->set_fh (undef);
 
 	1;
 }
@@ -128,48 +127,55 @@ sub progress {
 
 	my $fh = $self->fh;
 
-	# read all date from the pipe
-	my ($tmp, $tmp_buffer);
-	while ( $fh->read ($tmp, 8192) ) {
-		$tmp_buffer .= $tmp;
+	# read a chunk from the filehandle
+	# (no Perl I/O here, instead low level sysread, since
+	#  Gtk watches the low level filehandle, not the
+	#  buffered Perl handle, otherwise evil deadlocking
+	#  is promised)
+	my $buffer;
+	if ( !sysread($fh, $buffer, 4096) ) {
+		my $cb_finished  = $self->cb_finished;
+		&$cb_finished() if $cb_finished;
+		return 1;
 	}
-	my $finished = $! != EAGAIN;
 
 	# store output
 	if ( $self->need_output ) {
-		$self->{output} .= $tmp_buffer;
+		$self->{output} .= $buffer;
 	} else {
-		$self->{output} = substr($self->{output}.$tmp_buffer,-16384);
+		$self->{output} = substr($self->{output}.$buffer,-16384);
 	}
 
 	# get job's PID
-	my ($pid) = ( $tmp_buffer =~ /DVDRIP_JOB_PID=(\d+)/ );
+	my ($pid) = ( $buffer =~ /DVDRIP_JOB_PID=(\d+)/ );
 	if ( defined $pid ) {
 		$self->set_pid ( $pid );
 		$self->log ("Job has PID $pid");
-		$tmp_buffer =~ s/DVDRIP_JOB_PID=(\d+)\n//;
+		$buffer =~ s/DVDRIP_JOB_PID=(\d+)\n//;
 	}
 
-	# prepend data from previous run
-	my $buffer = $self->{buffer}.$tmp_buffer;
+	# prepend rest data from previous run
+	my $buffer = $self->{buffer}.$buffer;
 
-	# our callbacks
-	my $cb_finished  = $self->cb_finished;
+	# line callback
 	my $cb_line_read = $self->cb_line_read;
 
 	# process by line
+	my $has_line_breaks;
 	while ( $buffer =~ s/(.*)\n// ) {
+		$has_line_breaks = 1;
 		&$cb_line_read ( $1 ) if $cb_line_read;
+	}
+	
+	# process buffer as-is if there is no line break
+	# in command's output
+	if ( !$has_line_breaks ) {
+		&$cb_line_read ( $buffer ) if $cb_line_read;
+		$buffer = "";
 	}
 
 	# save rest of buffer
 	$self->{buffer} = $buffer;
-
-	# are we finished?
-	if ( $finished ) {
-		&$cb_finished ();
-		return 1;
-	}
 
 	1;
 }

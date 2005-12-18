@@ -1,4 +1,4 @@
-# $Id: Preview.pm,v 1.13 2005/08/01 19:16:27 joern Exp $
+# $Id: Preview.pm,v 1.14 2005/10/30 12:35:11 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -254,6 +254,11 @@ sub pause {
 		command => "pause",
 	);
 
+	return $self->transcode_remote->paused;
+}
+
+sub paused {
+	my $self = shift;
 	return $self->transcode_remote->paused;
 }
 

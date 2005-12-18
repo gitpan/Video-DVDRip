@@ -1,4 +1,4 @@
-# $Id: Webserver.pm,v 1.3 2004/04/11 23:36:19 joern Exp $
+# $Id: Webserver.pm,v 1.4 2005/08/13 07:41:00 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -183,17 +183,11 @@ sub read_http_request {
 	$self->set_event($e);
 	
 	my $fd = $self->get_fd;
-	
-	if ( eof($fd) ) {
+	my $request;
+
+	if ( !sysread($fd, $request, 4096) ) {
 		$self->close_connection;
 		return 1;
-	}
-
-	my $request;
-	while ( not eof($fd) ) {
-		my $line = <$fd>;
-		last if $line =~ /^\s*$/;
-		$request .= $line;
 	}
 
 	$self->set_request ( $request );
@@ -325,10 +319,10 @@ sub send_state {
 
 	#-- Projects
 
-	my $projects   = $self->webserver->master->get_projects_lref;
+	my $projects   = $self->webserver->master->projects_list;
 	my $project_id = $self->state->{project};
 
-	$project_id = $projects->[0]->[1]
+	$project_id = $projects->[0]->[0]
 		if $projects->[0] and
 		   not defined $project_id;
 
@@ -352,9 +346,9 @@ __EOF
 		my $row_class;
 		foreach my $p ( @{$projects} ) {
 			++$nr;
-			$row_class = $p->[1] == $project_id ?
+			$row_class = $p->[0] == $project_id ?
 				"row_selected" : "row";
-			my $url = $self->get_url ( project => $p->[1] );
+			my $url = $self->get_url ( project => $p->[0] );
 			print $fd <<__EOF;
 <tr>
   <td class="$row_class">$nr</td>
@@ -372,11 +366,11 @@ __EOF
 	
 	my $jobs;
 	eval {
-		$jobs = $self->webserver->master->get_jobs_lref (
+		$jobs = $self->webserver->master->jobs_list (
 			project_id => $project_id,
 		);
 	};
-
+print $@ if $@;
 	if ( $jobs ) {
 	
 		print $fd <<__EOF;
@@ -426,21 +420,17 @@ __EOF
 </tr>
 __EOF
 
-	my $nodes = $self->webserver->master->nodes;
+	my $nodes = $self->webserver->master->nodes_list;
 
 	my $nr = 0;
 	my ($name, $job_info, $progress);
 	foreach my $n ( @{$nodes} ) {
-		++$nr;
-		$name = $n->name;
-		$job_info = $n->job_info;
-		$progress = $n->progress;
 		print $fd <<__EOF;
 <tr>
-  <td class="row">$nr</td>
-  <td class="row">$name</td>
-  <td class="row">$job_info</td>
-  <td class="row">$progress</td>
+  <td class="row">$n->[1]</td>
+  <td class="row">$n->[2]</td>
+  <td class="row">$n->[3]</td>
+  <td class="row">$n->[4]</td>
 </tr>
 __EOF
 	}
@@ -454,11 +444,15 @@ sub send_html_footer {
 
 	my $fd = $self->get_fd;
 
-	print $fd <<'__EOF';
+	my $year = (localtime(time))[5]+1900;
+
+	print $fd <<__EOF;
 <p class="page_footer">
 dvd::rip cluster control daemon -
-&copy; 2003 Jörn Reder, All Rights Reserverd -
-$Id: Webserver.pm,v 1.3 2004/04/11 23:36:19 joern Exp $
+&copy; 2003-$year Jörn Reder, All Rights Reserverd -
+__EOF
+	print $fd <<'__EOF';
+$Id: Webserver.pm,v 1.4 2005/08/13 07:41:00 joern Exp $
 </p>
 </body></html>
 __EOF

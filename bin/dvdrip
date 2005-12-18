@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# $Id: dvdrip,v 1.23 2005/07/23 10:44:40 joern Exp $
+# $Id: dvdrip,v 1.1 2005/10/09 11:27:25 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -27,14 +27,6 @@ use Locale::TextDomain ("video.dvdrip");
 my $has_dvdrip_rc;
 
 BEGIN {
-	# check for Perl 5.8.0 and no PERLIO set.
-	# set it and re-exec the program.
-	if ( $] >= 5.008 and $ENV{PERLIO} ne 'stdio' ) {
-		$ENV{PERLIO} = "stdio";
-		require Config;
-		exec $Config::Config{perlpath}, $0, @ARGV;
-	}
-
 	$Video::DVDRip::JobClass = "Video::DVDRip::Job";
 	$has_dvdrip_rc = -f "$ENV{HOME}/.dvdriprc";
 }

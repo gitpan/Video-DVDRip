@@ -1,4 +1,4 @@
-# $Id: Main.pm,v 1.70 2005/08/01 19:37:30 joern Exp $
+# $Id: Main.pm,v 1.71 2005/10/09 11:47:11 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -16,7 +16,7 @@ use base qw(Video::DVDRip::GUI::Base);
 use Locale::TextDomain qw (video.dvdrip);
 
 use Gtk2;
-use Gtk2::Ex::FormFactory 0.57;
+use Gtk2::Ex::FormFactory 0.58;
 use Data::Dumper;
 use File::Basename;
 
@@ -337,17 +337,11 @@ sub build_menu_factory {
                         "sep_vobsub"	=> {
                             item_type	=> '<Separator>',
 			},
-                    	__"Create splitted _vobsub(s)" => {
+                    	__"Create vobsub" => {
 			    callback    => sub {
-				$context->get_object("transcode")->create_splitted_vobsub;
+				$context->get_object("subtitle_gui")->create_vobsub_now;
                             },
-			    object    => 'title',
-                        },
-                    	__"Create non-splitted _vobsub(s)" => {
-			    callback    => sub {
-				$context->get_object("transcode")->create_non_splitted_vobsub;
-                            },
-			    object    => 'title',
+			    object    => 'subtitle',
                         },
                         "sep_info"	=> {
                             item_type	=> '<Separator>',

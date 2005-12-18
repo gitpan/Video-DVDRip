@@ -1,12 +1,12 @@
-# $Id: Makefile,v 1.11 2004/12/12 23:52:56 joern Exp $
+# $Id: Makefile,v 1.12 2005/10/09 11:26:10 joern Exp $
 
-all:	dr_splitpipe dr_progress
+all:	../bin/dvdrip-splitpipe ../bin/dvdrip-progress
 
-dr_splitpipe:	dr_splitpipe.c
-	$(CC) $(CFLAGS) -o dr_splitpipe dr_splitpipe.c && mv dr_splitpipe ..
+../bin/dvdrip-splitpipe:	dvdrip-splitpipe.c
+	$(CC) $(CFLAGS) -o dvdrip-splitpipe dvdrip-splitpipe.c && mv dvdrip-splitpipe ../bin
 
-dr_progress:	dr_progress.c
-	$(CC) $(CFLAGS) -o dr_progress dr_progress.c && mv dr_progress ..
+../bin/dvdrip-progress:	dvdrip-progress.c
+	$(CC) $(CFLAGS) -o dvdrip-progress dvdrip-progress.c && mv dvdrip-progress ../bin
 
 clean:
-	rm -f dr_splitpipe ../dr_splitpipe dr_progress ../dr_progress
+	rm -f dvdrip-splitpipe ../bin/dvdrip-splitpipe dvdrip-progress ../bin/dvdrip-progress

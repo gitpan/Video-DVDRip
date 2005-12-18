@@ -1,4 +1,4 @@
-# $Id: GrabSubtitleImages.pm,v 1.5 2005/07/23 08:14:15 joern Exp $
+# $Id: GrabSubtitleImages.pm,v 1.6 2005/10/09 12:00:40 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -15,21 +15,6 @@ use base Video::DVDRip::Job;
 
 use Carp;
 use strict;
-
-sub show_image_cb		{ shift->{show_image_cb}		}
-sub set_show_image_cb		{ shift->{show_image_cb}	= $_[1]	}
-
-sub new {
-	my $class = shift;
-	my %par = @_;
-	my ($show_image_cb) = @par{'show_image_cb'};
-	
-	my $self = $class->SUPER::new(@_);
-	
-	$self->set_show_image_cb($show_image_cb);
-	
-	return $self;
-}
 
 sub type {
 	return "grab subtitle images";
@@ -70,28 +55,14 @@ sub parse_output {
 	my $self = shift;
 	my ($buffer) = @_;
 
-	if ( $buffer =~ /Generating\s+image:\s+(.*pic(\d+)\.pgm)/ ) {
-		$self->set_progress_cnt ($2*10);
-		my $subtitle = $self->title->selected_subtitle;
-		my $preview_image = $subtitle->add_preview_image (
-			filename => $1,
-		);
-		my $show_image_cb = $self->show_image_cb;
-		&$show_image_cb ($1) if $show_image_cb;
+	if ( $buffer =~ /pic(\d+)/ ) {
+		$self->set_progress_cnt ($1*10);
 	}
 
 	$self->set_operation_successful (1)
 		if $buffer =~ /DVDRIP_SUCCESS/;
 
 	1;	
-}
-
-sub commit {
-	my $self = shift;
-	
-	$self->title->selected_subtitle->init_preview_images;
-	
-	1;
 }
 
 1;

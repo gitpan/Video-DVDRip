@@ -1,4 +1,4 @@
-# $Id: Logger.pm,v 1.2 2005/08/01 19:19:53 joern Exp $
+# $Id: Logger.pm,v 1.3 2005/10/09 12:01:33 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -16,21 +16,24 @@ use strict;
 
 sub gtk_text_view		{ shift->{gtk_text_view}		}
 sub project			{ shift->{project}			}
+sub fh				{ shift->{fh}				}
 
 sub set_gtk_text_view		{ shift->{gtk_text_view}	= $_[1]	}
 sub set_project			{ shift->{project}		= $_[1]	}
+sub set_fh			{ shift->{fh}			= $_[1]	}
 
 sub new {
 	my $class = shift;
 	my %par = @_;
-	my  ($gtk_text_view, $project) =
-	@par{'gtk_text_view','project'};
+	my  ($gtk_text_view, $project, $fh) =
+	@par{'gtk_text_view','project','fh'};
 	
 	my $self = bless {
 		gtk_text_view	=> $gtk_text_view,
+		fh		=> $fh,
 		project		=> $project,
 	}, $class;
-	
+
 	return bless $self, $class;
 }
 
@@ -86,8 +89,9 @@ sub log {
 	$line =~ s/\s*$/\n/;
 
 	my $gtk_text_view = $self->gtk_text_view;
+	my $fh            = $self->fh;
 	my $project       = $self->project;
-	
+
 	if ( $gtk_text_view ) {
 		my $buffer = $gtk_text_view->get("buffer");
 		my $iter = $buffer->get_end_iter;
@@ -99,6 +103,10 @@ sub log {
 			$gtk_text_view->scroll_to_iter($iter,0.0, 0, 0.0, 0.0);
 			0;
 		});
+	}
+
+	if ( $fh ) {
+		print "$date:   $line";
 	}
 
 	if ( $project ) {
