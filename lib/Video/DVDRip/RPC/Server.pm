@@ -1,4 +1,4 @@
-# $Id: Server.pm,v 1.15 2004/04/13 20:47:01 joern Exp $
+# $Id: Server.pm,v 1.16 2005/12/26 13:57:47 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -10,6 +10,7 @@
 
 package Video::DVDRip::RPC::Server;
 use Locale::TextDomain qw (video.dvdrip);
+use Video::DVDRip::FixLocaleTextDomainUTF8;
 
 use base Video::DVDRip::Base;
 
@@ -233,6 +234,7 @@ sub log {
 
 package Video::DVDRip::RPC::Server::Client;
 use Locale::TextDomain qw (video.dvdrip);
+use Video::DVDRip::FixLocaleTextDomainUTF8;
 
 @Video::DVDRip::RPC::Server::Client::ISA = qw ( Video::DVDRip::Base );
 
@@ -691,6 +693,7 @@ sub resolve_object_params {
 
 package Video::DVDRip::RPC::Server::LogClient;
 use Locale::TextDomain qw (video.dvdrip);
+use Video::DVDRip::FixLocaleTextDomainUTF8;
 
 use Carp;
 use Socket;

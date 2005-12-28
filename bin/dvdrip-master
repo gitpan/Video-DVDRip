@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# $Id: dvdrip-master,v 1.1 2005/10/09 11:27:25 joern Exp $
+# $Id: dvdrip-master,v 1.2 2005/12/26 13:58:22 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern@zyn.de> All Rights Reserved
@@ -19,6 +19,7 @@ use Getopt::Std;
 use POSIX qw(setlocale);
 use Locale::Messages qw (LC_MESSAGES);
 use Locale::TextDomain ("video.dvdrip");
+use Video::DVDRip::FixLocaleTextDomainUTF8;
 setlocale(LC_MESSAGES,"");
 
 BEGIN {

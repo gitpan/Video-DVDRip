@@ -1,4 +1,4 @@
-# $Id: Audio.pm,v 1.16 2005/08/01 19:04:02 joern Exp $
+# $Id: Audio.pm,v 1.18 2005/12/26 13:57:46 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -10,6 +10,7 @@
 
 package Video::DVDRip::Audio;
 use Locale::TextDomain qw (video.dvdrip);
+use Video::DVDRip::FixLocaleTextDomainUTF8;
 
 use base Video::DVDRip::Base;
 
@@ -158,7 +159,7 @@ sub new {
 	$tc_audio_codec		  = "ac3" if $tc_ac3_passthrough;
 	$tc_audio_codec		||= "mp3";
 	$tc_bitrate		||= 128;
-	$tc_mp3_quality		||= 0;
+	$tc_mp3_quality		||= 2;
 	$tc_audio_filter	||= 'rescale';
 	$tc_option_n		||= '';
 	$tc_volume_rescale	||= 0;

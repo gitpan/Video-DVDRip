@@ -1,4 +1,4 @@
-# $Id: Main.pm,v 1.71 2005/10/09 11:47:11 joern Exp $
+# $Id: Main.pm,v 1.72 2005/12/26 13:57:47 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -14,6 +14,7 @@ use strict;
 
 use base qw(Video::DVDRip::GUI::Base);
 use Locale::TextDomain qw (video.dvdrip);
+use Video::DVDRip::FixLocaleTextDomainUTF8;
 
 use Gtk2;
 use Gtk2::Ex::FormFactory 0.58;

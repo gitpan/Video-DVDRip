@@ -1,4 +1,4 @@
-# $Id: Project.pm,v 1.34 2005/10/30 12:28:56 joern Exp $
+# $Id: Project.pm,v 1.35 2005/12/26 13:57:47 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -10,6 +10,7 @@
 
 package Video::DVDRip::Cluster::Project;
 use Locale::TextDomain qw (video.dvdrip);
+use Video::DVDRip::FixLocaleTextDomainUTF8;
 
 use base Video::DVDRip::Project;
 

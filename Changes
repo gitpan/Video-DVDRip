@@ -1,6 +1,36 @@
-$Id: Changes.unstable,v 1.50 2005/10/30 12:44:27 joern Exp $
+$Id: Changes.unstable,v 1.57 2005/12/28 11:10:19 joern Exp $
 
 Revision history and release notes for dvd::rip.
+
+0.97.5 [unstable branch] Wed Dec 28 2005, joern
+    Notes:
+    - This version requires Gtk2::Ex::FormFactory 0.59.
+
+    Features:
+    - Set default lame/MP3 quality level to 2 instead of 0,
+      which is very slow but without an appropriate quality
+      gain. Thanks for the hint to Fridtjof Busse.
+
+    Bugfixes:
+    - When ripping a title again the Clip & Zoom was reset
+      to 'auto_medium_fast' even if it was changed in the
+      meantime.
+    - When ripping multiple titles preview images were generated
+      only for the first selected title. Thanks for the report
+      to Fridtjof Busse.
+    - MANIFEST lacked files for dvdrip-tet. Thanks for the
+      report to Jacob Joseph <jmjoseph AT andrew.cmu.edu>.
+    - dvdrip-tet: fixed a typo in "exit afterwards" function.
+      Thanks for the report to Fridtjof Busse (again ;)
+    - Store LD_ASSUME_KERNEL in tool_version_cache file and
+      discard cache if LD_ASSUME_KERNEL changed in the meantime;
+      fixes nptl_workaround deadlock problem on Gentoo. Thanks
+      to Triffid Hunter for the detailed report.
+    - Workaround Locale::TextDomain utf-8 bug, which destroyed
+      8 bit characters in the GUI if an utf-8 locale was in effect.
+    - Since 0.97.4 all subprocesses were executed with nice
+      level 19, the GUI setting was ignored. Thanks for the report
+      to Alex <gaaf AT gmx.net>,
 
 0.97.4 [unstable branch] Sun Oct 30 2005, joern
     Bugfixes:

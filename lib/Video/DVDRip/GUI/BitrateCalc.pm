@@ -1,4 +1,4 @@
-# $Id: BitrateCalc.pm,v 1.8 2005/07/23 08:14:15 joern Exp $
+# $Id: BitrateCalc.pm,v 1.9 2005/12/26 13:57:47 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -10,6 +10,7 @@
 
 package Video::DVDRip::GUI::BitrateCalc;
 use Locale::TextDomain qw (video.dvdrip);
+use Video::DVDRip::FixLocaleTextDomainUTF8;
 
 use base qw(Video::DVDRip::GUI::Base);
 

@@ -109,7 +109,11 @@ lib/Video/DVDRip/Task/ReadTOC.pm
 lib/Video/DVDRip/Task/Rip.pm
 lib/Video/DVDRip/Task/ScanVolume.pm
 lib/Video/DVDRip/Task/Transcode.pm
+lib/Video/DVDRip/Term/ExitTask.pm
+lib/Video/DVDRip/Term/Main.pm
+lib/Video/DVDRip/Term/Progress.pm
 lib/Video/DVDRip/Content.pm
+lib/Video/DVDRip/FixLocaleTextDomainUTF8.pm
 lib/Video/DVDRip.pm
 lib/LocaleData/cs/LC_MESSAGES/video.dvdrip.mo
 lib/LocaleData/de/LC_MESSAGES/video.dvdrip.mo

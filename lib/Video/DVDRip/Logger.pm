@@ -1,4 +1,4 @@
-# $Id: Logger.pm,v 1.3 2005/10/09 12:01:33 joern Exp $
+# $Id: Logger.pm,v 1.4 2005/12/26 13:57:46 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -10,6 +10,7 @@
 
 package Video::DVDRip::Logger;
 use Locale::TextDomain qw (video.dvdrip);
+use Video::DVDRip::FixLocaleTextDomainUTF8;
 
 use Carp;
 use strict;

@@ -1,4 +1,4 @@
-# $Id: Job.pm,v 1.18 2005/10/30 12:36:46 joern Exp $
+# $Id: Job.pm,v 1.19 2005/12/26 13:57:46 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -10,6 +10,7 @@
 
 package Video::DVDRip::Job;
 use Locale::TextDomain qw (video.dvdrip);
+use Video::DVDRip::FixLocaleTextDomainUTF8;
 
 use base Video::DVDRip::Base;
 

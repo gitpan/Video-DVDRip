@@ -95,9 +95,9 @@ III. DOCUMENTATION
    install the packages if you add one of the following entries
    (depending on your distribution) to your /etc/apt/sources.list file:
 
-deb ftp://ftp.nerim.net/debian-marillat stable main
-deb ftp://ftp.nerim.net/debian-marillat testing main
-deb ftp://ftp.nerim.net/debian-marillat unstable main
+deb ftp://ftp.nerim.net/debian-marillat sarge main
+deb ftp://ftp.nerim.net/debian-marillat etch main
+deb ftp://ftp.nerim.net/debian-marillat sid main
 
    You will find all packages to compile transcode on your own (if you
    need always the very latest versions), or can get binaries of
@@ -162,13 +162,13 @@ deb ftp://ftp.nerim.net/debian-marillat unstable main
 
    Local download of the latest stable release:
 
-     Video-DVDRip-0.97.4.tar.gz
-     Video-DVDRip-0.97.4.tar.gz.asc (GnuPG signature, get key)
+     Video-DVDRip-0.97.5.tar.gz
+     Video-DVDRip-0.97.5.tar.gz.asc (GnuPG signature, get key)
 
    Local download of the latest unstable release:
 
-     Video-DVDRip-0.97.4.tar.gz
-     Video-DVDRip-0.97.4.tar.gz.asc (GnuPG signature, get key)
+     Video-DVDRip-0.97.5.tar.gz
+     Video-DVDRip-0.97.5.tar.gz.asc (GnuPG signature, get key)
 
    CPAN download directory: (list of mirrors)
 
@@ -251,19 +251,21 @@ cd dvdrip; cvs -z3 update
    chapter in the documentation for details.
 
    Tool Comment Mandatory Suggested Minimum Maximum
-   transcode dvd::rip is nothing without transcode Yes 0.6.14 0.6.2 -
-   ImageMagick Needed for preview image processing Yes 5.5.3 4.0.0 -
-   xvid4conf xvid4 configuration tool No 1.6 1.6 -
+   dvd::rip All internal command files Yes -
+   transcode dvd::rip is nothing without transcode Yes 0.6.14 0.6.14 -
+   ImageMagick Needed for preview image processing Yes 6.2.3 4.0.0 -
+   xvid4conf xvid4 configuration tool No 1.12 1.6 -
    subtitle2pgm Needed for subtitles No 0.3 0.3 -
-   rar Needed for compressed subtitles No 2.71 2.71 2.99
-   mplayer Needed for subtitle vobsub viewing No 0.90 0.90 -
-   ogmtools Needed for OGG/Vorbis No 1.0.0 1.0.0 -
-   dvdxchap For chapter progress bar (ogmtools) No 1.0.0 1.0.0 -
-   mjpegtools Needed for (S)VCD encoding No 1.6.0 1.6.0 -
-   cdrdao Needed for (S)VCD burning No 1.1.7 1.1.7 -
-   vcdimager Needed for (S)VCD burning No 0.7.12 0.7.12 -
+   lsdvd Needed for faster DVD TOC reading No 0.15 0.15 -
+   rar Needed for compressed vobsub subtitles No 2.71 2.71 2.99
+   mplayer Needed for subtitle vobsub viewing No 1.00 0.90 -
+   ogmtools Needed for OGG/Vorbis No 1.5 1.0.0 -
+   dvdxchap For chapter progress bar (ogmtools) No 1.5 1.0.0 -
+   mjpegtools Needed for (S)VCD encoding No 1.6.2 1.6.0 -
+   cdrdao Needed for (S)VCD burning No 1.1.9 1.1.7 -
+   vcdimager Needed for (S)VCD burning No 0.7.21 0.7.12 -
    mkisofs Needed for AVI/OGG burning No 2.0 1.15 -
-   cdrecord Needed for AVI/OGG burning on CD No 2.0 0.7.12 -
+   cdrecord Needed for AVI/OGG burning on CD No 2.6.11 0.7.12 -
    dvdrecord Needed for AVI/OGG burning on DVD No 0.2.1 0.2.0 -
    xine Can be used to view DVD's/files No 0.9.15 0.9.13 -
    fping Only for cluster mode master No 2.4 2.2 -
@@ -497,7 +499,7 @@ chmod u+s /usr/sbin/fping
    generate the Makefile and execute make:
 
 # as a normal user
-tar xfz Video-DVDRip-0.97.4.tar.gz
+tar xfz Video-DVDRip-0.97.5.tar.gz
 cd Video-DVDRip-x.xx
 perl Makefile.PL
 make
@@ -551,7 +553,7 @@ make install
    otherwise some dvd::rip helper binaries may be taken from another
    place.
 
-tar xvfz Video-DVDRip-0.97.4.tar.gz
+tar xvfz Video-DVDRip-0.97.5.tar.gz
 cd Video-DVDRip-x.xx
 perl Makefile.PL && make
 export PATH=.:$PATH
@@ -781,27 +783,37 @@ URL References
   15. http://wwwkeys.de.pgp.net:11371/pks/lookup?op=get&search=0x285CF473
 
 VI. CHANGES
-   $Id: Changes.unstable,v 1.50 2005/10/30 12:44:27 joern Exp $
+   $Id: Changes.unstable,v 1.57 2005/12/28 11:10:19 joern Exp $
 
    Revision history and release notes for dvd::rip.
 
-   0.97.4 [unstable branch] Sun Oct 30 2005, joern
+   0.97.5 [unstable branch] Wed Dec 28 2005, joern
+    Notes:
+    - This version requires Gtk2::Ex::FormFactory 0.59.
+
+    Features:
+    - Set default lame/MP3 quality level to 2 instead of 0,
+      which is very slow but without an appropriate quality
+      gain. Thanks for the hint to Fridtjof Busse.
+
     Bugfixes:
-    - Various critical cluster mode fixes (in particular some
-      endless loop conditions)
-    - Subtitle preview didn't work due to conflicts with
-      latest internal API changes.
-    - dvd::rip rejected negative vertical subtitle offsets,
-      which are absolutely valid. Thanks for the report to
-      elerran <elerran AT freemail.gr>.
-    - Fixed bug with wrong audio track assignment with
-      old tcprobe based TOC reading (new lsdvd mode was not
-      affected). Thanks for the report to Markus Frisch
-      <markus AT frisch.com>
-    - Volume scanning progress bar didn't work; scanned value
-      didn't appear in GUI. Thanks for the report to
-      Triffid Hunter.
-    - dvdrip-tet crashed if a confirmation request should
-      pop up. For know dvdrip-tet just assumes "Yes" to
-      the question and continues.
+    - When ripping a title again the Clip & Zoom was reset
+      to 'auto_medium_fast' even if it was changed in the
+      meantime.
+    - When ripping multiple titles preview images were generated
+      only for the first selected title. Thanks for the report
+      to Fridtjof Busse.
+    - MANIFEST lacked files for dvdrip-tet. Thanks for the
+      report to Jacob Joseph <jmjoseph AT andrew.cmu.edu>.
+    - dvdrip-tet: fixed a typo in "exit afterwards" function.
+      Thanks for the report to Fridtjof Busse (again ;)
+    - Store LD_ASSUME_KERNEL in tool_version_cache file and
+      discard cache if LD_ASSUME_KERNEL changed in the meantime;
+      fixes nptl_workaround deadlock problem on Gentoo. Thanks
+      to Triffid Hunter for the detailed report.
+    - Workaround Locale::TextDomain utf-8 bug, which destroyed
+      8 bit characters in the GUI if an utf-8 locale was in effect.
+    - Since 0.97.4 all subprocesses were executed with nice
+      level 19, the GUI setting was ignored. Thanks for the report
+      to Alex <gaaf AT gmx.net>,
 

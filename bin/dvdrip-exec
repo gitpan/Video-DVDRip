@@ -1,23 +1,35 @@
 #!/usr/bin/perl
 
-# $Id: dvdrip-exec,v 1.2 2005/10/21 20:32:41 joern Exp $
+# $Id: dvdrip-exec,v 1.4 2005/12/26 14:39:55 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern@zyn.de> All Rights Reserved
-# 
+#
 # This program is part of Video::DVDRip, which is free software; you can
 # redistribute it and/or modify it under the same terms as Perl itself.
 #-----------------------------------------------------------------------
 
 use strict;
+use Getopt::Std;
+
+my $USAGE = <<__EOU;
+Usage: dvdrip-exec [-n nice] command options ...
+__EOU
 
 main: {
-	if ( not @ARGV ) {
-		print "usage: dr_exec program args ...\n";
-		exit 1;
-	}
+    my %opt;
+    my $opt_ok = getopts ('n:', \%opt);
+    usage() if not $opt_ok or !@ARGV;
 
-	print STDERR "DVDRIP_JOB_PID=$$\n";
+    my $nice = $opt{n};
 
-	exec "nice", "-n", 19, @ARGV;
+    print STDERR "DVDRIP_JOB_PID=$$\n";
+
+    exec "nice", "-n", $nice, @ARGV if $nice;
+    exec @ARGV;
+}
+
+sub usage {
+    print $USAGE;
+    exit 1;
 }

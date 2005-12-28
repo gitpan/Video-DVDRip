@@ -1,4 +1,4 @@
-# $Id: ClipZoom.pm,v 1.3 2005/10/09 11:48:14 joern Exp $
+# $Id: ClipZoom.pm,v 1.5 2005/12/26 13:57:47 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -13,6 +13,7 @@ package Video::DVDRip::GUI::Project::ClipZoom;
 use base qw( Video::DVDRip::GUI::Base );
 
 use Locale::TextDomain qw (video.dvdrip);
+use Video::DVDRip::FixLocaleTextDomainUTF8;
 
 use Carp;
 use strict;
@@ -619,7 +620,6 @@ sub grab_preview_frame {
 				);
 				$self->get_context->update_object_widgets("title");
 			}
-			$self->make_previews;
 			$self->show_preview_images;
 			
 			1;

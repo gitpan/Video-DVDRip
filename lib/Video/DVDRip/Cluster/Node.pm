@@ -1,4 +1,4 @@
-# $Id: Node.pm,v 1.33 2005/10/30 12:27:14 joern Exp $
+# $Id: Node.pm,v 1.34 2005/12/26 13:57:47 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -10,6 +10,7 @@
 
 package Video::DVDRip::Cluster::Node;
 use Locale::TextDomain qw (video.dvdrip);
+use Video::DVDRip::FixLocaleTextDomainUTF8;
 
 use base Video::DVDRip::Base;
 

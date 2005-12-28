@@ -1,4 +1,4 @@
-# $Id: Title.pm,v 1.159 2005/10/30 12:42:00 joern Exp $
+# $Id: Title.pm,v 1.162 2005/12/26 14:37:53 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -10,6 +10,7 @@
 
 package Video::DVDRip::Title;
 use Locale::TextDomain qw (video.dvdrip);
+use Video::DVDRip::FixLocaleTextDomainUTF8;
 
 use base Video::DVDRip::Base;
 
@@ -1557,10 +1558,12 @@ sub get_rip_command {
 	my ($setup_subtitle_grabbing, $subtitle_grabbing_pipe)
 		= $self->get_subtitle_rip_commands;
 
+        my $tc_nice = $self->tc_nice || 0;
+
 	my $command =
 		$setup_subtitle_grabbing.
 		"rm -f $vob_dir/$name-???.vob && ".
-		"dvdrip-exec tccat -t dvd -T $nr,$chapter,$angle -i $dvd_device ".
+		"dvdrip-exec -n $tc_nice tccat -t dvd -T $nr,$chapter,$angle -i $dvd_device ".
 		$subtitle_grabbing_pipe.
 		"| dvdrip-splitpipe -f $vob_nav_file 1024 ".
 		"  $vob_dir/$name vob >/dev/null && echo DVDRIP_SUCCESS";
@@ -1593,13 +1596,15 @@ sub set_chapter_length {
 
 sub get_tc_scan_command_pipe {
 	my $self = shift; $self->trace_in;
-	
+
 	my $audio_channel  = $self->audio_channel;
 	my $codec          = $self->audio_track->type =~ /pcm/ ? 'pcm' : 'ac3';
 	my $tcdecode       = $codec eq 'ac3' ? "| tcdecode -x ac3 " : "";
 
+        my $tc_nice = $self->tc_nice || 0;
+
 	my $command .=
-	       "dvdrip-exec tcextract -a $audio_channel -x $codec -t vob ".
+	       "tcextract -a $audio_channel -x $codec -t vob ".
 	       $tcdecode.
 	       "| tcscan -x pcm";
 
@@ -1615,6 +1620,7 @@ sub get_scan_command {
 	my $vob_dir    	   = $self->vob_dir;
 	my $source_options = $self->data_source_options;
 	my $rip_mode       = $self->project->rip_mode;
+        my $tc_nice        = $self->tc_nice || 0;
 
 	$self->create_vob_dir;
 
@@ -1622,17 +1628,16 @@ sub get_scan_command {
 	
 	if ( $rip_mode eq 'rip' ) {
 		my $vob_size = $self->get_vob_size;
-		$command = "dvdrip-exec cat $vob_dir/* | dvdrip-progress -m $vob_size -i 5 | tccat -t vob";
+		$command = "dvdrip-exec -n $tc_nice cat $vob_dir/* | dvdrip-progress -m $vob_size -i 5 | tccat -t vob";
 
 	} else  {
-		$command = "dvdrip-exec tccat ";
+		$command = "dvdrip-exec -n $tc_nice tccat ";
 		delete $source_options->{x};
 		$command .= " -".$_." ".$source_options->{$_} for keys %{$source_options};
 		$command .= "| dvdrip-splitpipe -f /dev/null 0 - -";
 	}
 
 	my $scan_command = $self->get_tc_scan_command_pipe;
-	$scan_command =~ s/dvdrip-exec\s+//;
 
 	$command .= " | $scan_command";
 	$command .= " && echo DVDRIP_SUCCESS";
@@ -1732,6 +1737,7 @@ sub get_rip_and_scan_command {
 	my $dvd_device    = $self->project->dvd_device;
 	my $vob_dir    	  = $self->vob_dir;
 	my $vob_nav_file  = $self->vob_nav_file;
+        my $tc_nice       = $self->tc_nice || 0;
 
 	$self->create_vob_dir;
 
@@ -1746,13 +1752,12 @@ sub get_rip_and_scan_command {
 	my $command =
 		$setup_subtitle_grabbing.
 		"rm -f $vob_dir/$name-???.vob && ".
-		"dvdrip-exec tccat -t dvd -T $nr,$chapter,$angle -i $dvd_device ".
+		"dvdrip-exec -n $tc_nice tccat -t dvd -T $nr,$chapter,$angle -i $dvd_device ".
 		$subtitle_grabbing_pipe.
 		"| dvdrip-splitpipe -f $vob_nav_file 1024 $vob_dir/$name vob ";
 
 	if ( $audio_channel != -1 ) {
 		my $scan_command = $self->get_tc_scan_command_pipe;
-		$scan_command =~ s/dvdrip-exec\s+//;
 		$command .= " | $scan_command && echo DVDRIP_SUCCESS";
 
 	} else {
@@ -1901,7 +1906,8 @@ sub suggest_transcode_options {
 		$self->log (__"Not enabling PSU core, because this movie has only one PSU.");
 	}
 
-	$self->set_preset ( "auto_medium_fast" );
+	$self->set_preset ( "auto_medium_fast" )
+            unless $self->last_applied_preset;
 
 	if ( $rip_mode eq 'rip' ) {
 		if ( $self->tc_use_chapter_mode ) {
@@ -2076,15 +2082,12 @@ sub get_transcode_command {
 		$audio_info = $self->audio_tracks->[$audio_channel];
 	}
 
-	my $nice;
-	$nice = "`which nice` -n ".$self->tc_nice." "
-		if $self->tc_nice =~ /\S/;
-
 	my $mpeg = 0;
 	$mpeg = "svcd" if $self->tc_video_codec =~ /^(X?SVCD|CVD)$/;
 	$mpeg = "vcd"  if $self->tc_video_codec =~ /^X?VCD$/;
 
-	my $command = $nice."dvdrip-exec transcode -H 10";
+        my $tc_nice = $self->tc_nice || 0;
+	my $command = "dvdrip-exec -n $tc_nice transcode -H 10";
 
 	$command .= " -a $audio_channel" if $audio_channel != -1;
 
@@ -2441,13 +2444,11 @@ sub get_transcode_audio_command {
 
 	my $dir = dirname ($audio_file);
 
-	my $nice;
-	$nice = "`which nice` -n ".$self->tc_nice." "
-		if $self->tc_nice =~ /\S/;
+        my $tc_nice = $self->tc_nice || 0;
 
 	my $command =
 		"mkdir -p $dir && ".
-		"${nice}dvdrip-exec transcode ".
+		"dvdrip-exec -n $tc_nice transcode ".
 		" -H 10".
 		" -g 0x0 -u 50".
 		" -a $vob_nr".
@@ -2582,15 +2583,11 @@ sub get_merge_audio_command {
 
 	my $command;
 
-	my $nice;
-	$nice = "`which nice` -n ".$self->tc_nice." "
-		if $self->tc_nice =~ /\S/;
-
-	$command = $nice;
+        my $tc_nice = $self->tc_nice || 0;
 
 	if ( $self->is_ogg ) {
 		$command .=
-			"dvdrip-exec ogmmerge -o $avi_file.merged ".
+			"dvdrip-exec -n $tc_nice ogmmerge -o $avi_file.merged ".
 			" $avi_file".
 			" $audio_file &&".
 			" mv $avi_file.merged $avi_file &&".
@@ -2602,7 +2599,7 @@ sub get_merge_audio_command {
 			if not $audio_file;
 
 		$command .=
-			"dvdrip-exec avimerge".
+			"dvdrip-exec -n $tc_nice avimerge".
 			" -p $audio_file".
 			" -a $target_nr".
 			" -o $avi_file.merged".
@@ -2703,12 +2700,10 @@ sub get_mplex_command {
 		$opt_r = "-r $bitrate";
 	}
 
-	my $nice;
-	$nice = "`which nice` -n ".$self->tc_nice." "
-		if $self->tc_nice =~ /\S/;
+        my $tc_nice = $self->tc_nice || 0;
 
 	my $command =
-		"${nice}dvdrip-exec mplex -f $mplex_f $opt_r $mplex_v ".
+		"dvdrip-exec -n $tc_nice mplex -f $mplex_f $opt_r $mplex_v ".
 		"-o $target_file $avi_file.$vext $avi_file.mpa ".
 		"$add_audio_tracks && echo DVDRIP_SUCCESS";
 	
@@ -2744,21 +2739,19 @@ sub get_split_command {
 		return $command;
 	}
 
-	my $nice;
-	$nice = "`which nice` -n ".$self->tc_nice." "
-		if $self->tc_nice =~ /\S/;
+        my $tc_nice = $self->tc_nice || 0;
 
 	if ( $self->is_ogg ) {
 		$split_mask .= $self->config('ogg_file_ext');
 
 		$command .=
 			"cd $avi_dir && ls -l && ".
-			"${nice}dvdrip-exec ogmsplit -s $size $avi_file && ".
+			"dvdrip-exec -n $tc_nice ogmsplit -s $size $avi_file && ".
 			"echo DVDRIP_SUCCESS";
 	} else {
 		$command .=
 			"cd $avi_dir && ".
-			"${nice}dvdrip-exec avisplit -s $size -i $avi_file -o $split_mask && ".
+			"dvdrip-exec -n $tc_nice avisplit -s $size -i $avi_file -o $split_mask && ".
 			"echo DVDRIP_SUCCESS";
 	}
 	
@@ -3875,9 +3868,11 @@ sub get_create_wav_command {
 	my $source_options = $self->data_source_options;
 	$source_options->{x} = "null";
 
+        my $tc_nice = $self->tc_nice || 0;
+
 	my $command =
 		"mkdir -p $dir &&".
-		" dvdrip-exec transcode -a $audio_nr ".
+		" dvdrip-exec -n $tc_nice transcode -a $audio_nr ".
 		" -y null,wav -u 100 -o $audio_wav_file";
 
 	$command .= " -$_ $source_options->{$_}" for keys %{$source_options};

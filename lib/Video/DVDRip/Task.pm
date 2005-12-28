@@ -1,4 +1,4 @@
-# $Id: Task.pm,v 1.1 2005/10/09 12:04:25 joern Exp $
+# $Id: Task.pm,v 1.2 2005/12/26 13:57:46 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -13,6 +13,7 @@ package Video::DVDRip::Task;
 use base qw( Video::DVDRip::Base );
 
 use Locale::TextDomain qw (video.dvdrip);
+use Video::DVDRip::FixLocaleTextDomainUTF8;
 
 use Carp;
 use strict;

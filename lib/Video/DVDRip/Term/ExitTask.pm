@@ -1,4 +1,4 @@
-# $Id: Message.pm,v 1.8 2005/12/26 13:57:47 joern Exp $
+# $Id: ExitTask.pm,v 1.2 2005/12/26 13:57:47 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -8,38 +8,17 @@
 # redistribute it and/or modify it under the same terms as Perl itself.
 #-----------------------------------------------------------------------
 
-package Video::DVDRip::RPC::Message;
+package Video::DVDRip::Term::ExitTask;
+
+use base qw( Video::DVDRip::Task );
+
 use Locale::TextDomain qw (video.dvdrip);
 use Video::DVDRip::FixLocaleTextDomainUTF8;
 
-use base Video::DVDRip::Base;
-
 use Carp;
 use strict;
-use Storable;
 
-sub pack {
-	my $class = shift;
-	my ($ref) = @_;
-
-	my $packed = Storable::nfreeze ($ref);
-
-	$packed =~ s/\\/\\\\/g;
-	$packed =~ s/\n/\\n/g;
-	$packed =~ s/\r/\\r/g;
-	
-	return $packed;
-}
-
-sub unpack {
-	my $class = shift;
-	my ($packed) = @_;
-	
-	$packed =~ s/\\r/\r/g;
-	$packed =~ s/\\n/\n/g;
-	$packed =~ s/\\\\/\\/g;
-
-	return Storable::thaw($packed);
-}
+sub configure 	{ 1 }
+sub start 	{ shift->ui->glib_main_loop->quit }
 
 1;

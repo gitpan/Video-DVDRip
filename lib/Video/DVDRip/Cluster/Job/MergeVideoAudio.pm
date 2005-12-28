@@ -1,4 +1,4 @@
-# $Id: MergeVideoAudio.pm,v 1.6 2004/04/11 23:36:20 joern Exp $
+# $Id: MergeVideoAudio.pm,v 1.7 2005/12/26 13:57:47 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -10,6 +10,7 @@
 
 package Video::DVDRip::Cluster::Job::MergeVideoAudio;
 use Locale::TextDomain qw (video.dvdrip);
+use Video::DVDRip::FixLocaleTextDomainUTF8;
 
 use base Video::DVDRip::Job::MergeAudio;
 

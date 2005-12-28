@@ -1,4 +1,4 @@
-# $Id: Filters.pm,v 1.12 2005/10/30 12:34:54 joern Exp $
+# $Id: Filters.pm,v 1.13 2005/12/26 13:57:47 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -10,6 +10,7 @@
 
 package Video::DVDRip::GUI::Filters;
 use Locale::TextDomain qw (video.dvdrip);
+use Video::DVDRip::FixLocaleTextDomainUTF8;
 
 use base qw(Video::DVDRip::GUI::Base);
 

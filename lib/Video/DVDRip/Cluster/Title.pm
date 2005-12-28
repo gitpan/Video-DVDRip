@@ -1,4 +1,4 @@
-# $Id: Title.pm,v 1.48 2005/10/09 11:37:31 joern Exp $
+# $Id: Title.pm,v 1.49 2005/12/26 13:57:47 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -10,6 +10,7 @@
 
 package Video::DVDRip::Cluster::Title;
 use Locale::TextDomain qw (video.dvdrip);
+use Video::DVDRip::FixLocaleTextDomainUTF8;
 
 use base Video::DVDRip::Title;
 

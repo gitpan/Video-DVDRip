@@ -1,4 +1,4 @@
-# $Id: Probe.pm,v 1.26 2005/10/30 12:39:55 joern Exp $
+# $Id: Probe.pm,v 1.27 2005/12/26 13:57:46 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -10,6 +10,7 @@
 
 package Video::DVDRip::Probe;
 use Locale::TextDomain qw (video.dvdrip);
+use Video::DVDRip::FixLocaleTextDomainUTF8;
 
 use base Video::DVDRip::Base;
 

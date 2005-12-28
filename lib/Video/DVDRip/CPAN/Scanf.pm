@@ -1,5 +1,6 @@
 package Video::DVDRip::CPAN::Scanf;
 use Locale::TextDomain qw (video.dvdrip);
+use Video::DVDRip::FixLocaleTextDomainUTF8;
 
 # This is the unmodified String::Scanf module from Jarkko Hietaniemi
 # which is just included into this distribution to keep the dependencies

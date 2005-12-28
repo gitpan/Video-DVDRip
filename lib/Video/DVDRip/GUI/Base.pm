@@ -1,4 +1,4 @@
-# $Id: Base.pm,v 1.28 2005/08/01 19:12:28 joern Exp $
+# $Id: Base.pm,v 1.29 2005/12/26 13:57:47 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -10,6 +10,7 @@
 
 package Video::DVDRip::GUI::Base;
 use Locale::TextDomain qw (video.dvdrip);
+use Video::DVDRip::FixLocaleTextDomainUTF8;
 
 use base Video::DVDRip::Base;
 use Video::DVDRip::GUI::ExecuteJobs;

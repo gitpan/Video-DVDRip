@@ -1,4 +1,4 @@
-# $Id: Depend.pm,v 1.5 2005/10/09 11:42:21 joern Exp $
+# $Id: Depend.pm,v 1.6 2005/12/26 13:57:47 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -10,6 +10,7 @@
 
 package Video::DVDRip::GUI::Depend;
 use Locale::TextDomain qw (video.dvdrip);
+use Video::DVDRip::FixLocaleTextDomainUTF8;
 
 use base qw(Video::DVDRip::GUI::Base);
 

@@ -1,4 +1,4 @@
-# $Id: TranscodeVideo.pm,v 1.13 2005/04/24 12:30:39 joern Exp $
+# $Id: TranscodeVideo.pm,v 1.14 2005/12/26 13:57:47 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -10,6 +10,7 @@
 
 package Video::DVDRip::Job::TranscodeVideo;
 use Locale::TextDomain qw (video.dvdrip);
+use Video::DVDRip::FixLocaleTextDomainUTF8;
 
 # That's Perl! The job classes inherit from this class,
 # which is decided at *runtime* - this way standard and

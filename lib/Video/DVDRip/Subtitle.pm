@@ -1,4 +1,4 @@
-# $Id: Subtitle.pm,v 1.9 2005/10/15 08:00:07 joern Exp $
+# $Id: Subtitle.pm,v 1.10 2005/12/26 13:57:46 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -11,6 +11,7 @@
 package Video::DVDRip::Subtitle;
 
 use Locale::TextDomain qw (video.dvdrip);
+use Video::DVDRip::FixLocaleTextDomainUTF8;
 
 use base Video::DVDRip::Base;
 
@@ -240,6 +241,7 @@ sub get_nth_entry {
 
 package Video::DVDRip::Subtitle::PreviewImage;
 use Locale::TextDomain qw (video.dvdrip);
+use Video::DVDRip::FixLocaleTextDomainUTF8;
 
 sub nr       { shift->{nr} }
 sub filename { shift->{filename} }
