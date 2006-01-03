@@ -162,13 +162,13 @@ deb ftp://ftp.nerim.net/debian-marillat sid main
 
    Local download of the latest stable release:
 
-     Video-DVDRip-0.97.5.tar.gz
-     Video-DVDRip-0.97.5.tar.gz.asc (GnuPG signature, get key)
+     Video-DVDRip-0.97.6.tar.gz
+     Video-DVDRip-0.97.6.tar.gz.asc (GnuPG signature, get key)
 
    Local download of the latest unstable release:
 
-     Video-DVDRip-0.97.5.tar.gz
-     Video-DVDRip-0.97.5.tar.gz.asc (GnuPG signature, get key)
+     Video-DVDRip-0.97.6.tar.gz
+     Video-DVDRip-0.97.6.tar.gz.asc (GnuPG signature, get key)
 
    CPAN download directory: (list of mirrors)
 
@@ -499,7 +499,7 @@ chmod u+s /usr/sbin/fping
    generate the Makefile and execute make:
 
 # as a normal user
-tar xfz Video-DVDRip-0.97.5.tar.gz
+tar xfz Video-DVDRip-0.97.6.tar.gz
 cd Video-DVDRip-x.xx
 perl Makefile.PL
 make
@@ -553,7 +553,7 @@ make install
    otherwise some dvd::rip helper binaries may be taken from another
    place.
 
-tar xvfz Video-DVDRip-0.97.5.tar.gz
+tar xvfz Video-DVDRip-0.97.6.tar.gz
 cd Video-DVDRip-x.xx
 perl Makefile.PL && make
 export PATH=.:$PATH
@@ -783,37 +783,16 @@ URL References
   15. http://wwwkeys.de.pgp.net:11371/pks/lookup?op=get&search=0x285CF473
 
 VI. CHANGES
-   $Id: Changes.unstable,v 1.57 2005/12/28 11:10:19 joern Exp $
+   $Id: Changes.unstable,v 1.58 2006/01/03 19:38:02 joern Exp $
 
    Revision history and release notes for dvd::rip.
 
-   0.97.5 [unstable branch] Wed Dec 28 2005, joern
-    Notes:
-    - This version requires Gtk2::Ex::FormFactory 0.59.
-
-    Features:
-    - Set default lame/MP3 quality level to 2 instead of 0,
-      which is very slow but without an appropriate quality
-      gain. Thanks for the hint to Fridtjof Busse.
-
+   0.97.6 [unstable branch] Tue Jan 3 2005, joern
     Bugfixes:
-    - When ripping a title again the Clip & Zoom was reset
-      to 'auto_medium_fast' even if it was changed in the
-      meantime.
-    - When ripping multiple titles preview images were generated
-      only for the first selected title. Thanks for the report
-      to Fridtjof Busse.
-    - MANIFEST lacked files for dvdrip-tet. Thanks for the
-      report to Jacob Joseph <jmjoseph AT andrew.cmu.edu>.
-    - dvdrip-tet: fixed a typo in "exit afterwards" function.
-      Thanks for the report to Fridtjof Busse (again ;)
-    - Store LD_ASSUME_KERNEL in tool_version_cache file and
-      discard cache if LD_ASSUME_KERNEL changed in the meantime;
-      fixes nptl_workaround deadlock problem on Gentoo. Thanks
-      to Triffid Hunter for the detailed report.
-    - Workaround Locale::TextDomain utf-8 bug, which destroyed
-      8 bit characters in the GUI if an utf-8 locale was in effect.
-    - Since 0.97.4 all subprocesses were executed with nice
-      level 19, the GUI setting was ignored. Thanks for the report
-      to Alex <gaaf AT gmx.net>,
+    - Fixed off by one bugs in viewing angle and chapter
+      selection. Thanks for the report to Chandler Carruth
+      <chandlerc AT gmail.com>.
+    - Deactivate multipass GUI elements for MPEG encodings.
+    - Fixed cluster mode 'dvdrip-exec' bug introduced in 0.97.5.
+      Thanks for the report to Karl Kashofer <karl AT kashofer.org>.
 

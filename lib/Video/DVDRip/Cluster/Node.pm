@@ -1,4 +1,4 @@
-# $Id: Node.pm,v 1.34 2005/12/26 13:57:47 joern Exp $
+# $Id: Node.pm,v 1.35 2006/01/02 19:59:36 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -228,7 +228,7 @@ sub get_popen_code {
 
     $ssh_cmd .= " -o PreferredAuthentications=publickey";
 
-    $command =~ s/dvdrip-exec//g;
+    $command =~ s/dvdrip-exec(?:\s*-n\s*\d+\s*)?//g;
     $command =~ s/"/\\"/g;
     $command = qq{dvdrip-exec $ssh_cmd $username\@$name "$command"};
 

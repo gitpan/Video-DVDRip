@@ -1,4 +1,4 @@
-# $Id: Title.pm,v 1.162 2005/12/26 14:37:53 joern Exp $
+# $Id: Title.pm,v 1.163 2006/01/03 20:10:10 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -626,6 +626,11 @@ sub set_tc_clip2_right	{
 sub is_ogg {
 	my $self = shift;
 	return $self->tc_container eq 'ogg';
+}
+
+sub is_mpeg {
+	my $self = shift;
+	return $self->tc_container eq 'vcd';
 }
 
 sub has_vbr_audio {

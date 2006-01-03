@@ -1,6 +1,15 @@
-$Id: Changes.unstable,v 1.57 2005/12/28 11:10:19 joern Exp $
+$Id: Changes.unstable,v 1.58 2006/01/03 19:38:02 joern Exp $
 
 Revision history and release notes for dvd::rip.
+
+0.97.6 [unstable branch] Tue Jan 3 2005, joern
+    Bugfixes:
+    - Fixed off by one bugs in viewing angle and chapter
+      selection. Thanks for the report to Chandler Carruth
+      <chandlerc AT gmail.com>.
+    - Deactivate multipass GUI elements for MPEG encodings.
+    - Fixed cluster mode 'dvdrip-exec' bug introduced in 0.97.5.
+      Thanks for the report to Karl Kashofer <karl AT kashofer.org>.
 
 0.97.5 [unstable branch] Wed Dec 28 2005, joern
     Notes:

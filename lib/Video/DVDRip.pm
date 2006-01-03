@@ -11,7 +11,7 @@ use Locale::TextDomain qw (video.dvdrip);
 use Video::DVDRip::FixLocaleTextDomainUTF8;
 
 BEGIN {
-    $VERSION = "0.97.5";
+    $VERSION = "0.97.6";
 }
 
 use base Video::DVDRip::Base;

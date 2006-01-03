@@ -1,4 +1,4 @@
-# $Id: Context.pm,v 1.6 2005/12/26 13:57:47 joern Exp $
+# $Id: Context.pm,v 1.7 2006/01/03 19:35:12 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -105,11 +105,27 @@ sub create {
         },
     );
 
+    #-- Add JobPlanner Objects to the Contect
+    $context->add_object(
+        name              => "job_planner",
+        object            => undef,
+    );
+    $context->add_object(
+        name              => "exec_flow_gui",
+        object            => undef,
+    );
+
     #-- Add main GUI object to the Context
     $context->add_object(
         name              => "main",
         object            => "undef",
         attr_depends_href => { window_name => "project.name", },
+    );
+
+    #-- Add TOC GUI object to the Context
+    $context->add_object(
+        name   => "toc_gui",
+        object => undef,
     );
 
     #-- Add progress GUI object to the Context
@@ -282,7 +298,7 @@ sub create {
                 my @viewing_angle_list;
                 foreach my $angle ( 1 .. $self->viewing_angles ) {
                     push @viewing_angle_list,
-                        __x( "Angle {angle}", angle => $angle );
+                        [$angle, __x( "Angle {angle}", angle => $angle )];
                 }
                 return \@viewing_angle_list;
             },
@@ -299,10 +315,11 @@ sub create {
                     );
                     push @chapters_list,
                         [
-                        __x("#{chapter} [{len}]",
-                            chapter => $i,
-                            len     => $len
-                        )
+                            $i, 
+                            __x("#{chapter} [{len}]",
+                                chapter => $i,
+                                len     => $len
+                            )
                         ];
                 }
                 return \@chapters_list;
@@ -535,8 +552,11 @@ sub create {
             preview_filename_zoom => sub { -f $_[0]->preview_filename_clip1 },
             preview_filename_clip2 => sub { -f $_[0]->preview_filename_zoom },
 
+            #-- multipass only with non MPEG files
+            tc_multipass => sub { ! $_[0]->is_mpeg },
+
             #-- reuse log active only with 2pass encoding
-            tc_multipass_reuse_log => sub { $_[0]->tc_multipass },
+            tc_multipass_reuse_log => sub { $_[0]->tc_multipass && ! $_[0]->is_mpeg },
 
             #-- fast resizing
             tc_fast_resize => sub { $_[0]->fast_resize_possible },
@@ -596,8 +616,11 @@ sub create {
             storage_total_size      => \@BITRATE_PARAMS,
             tc_video_bitrate_manual => "tc_video_codec",
 
+            #-- multipass depends on container
+            tc_multipass => "tc_container",
+            
             #-- reuse log active only with 2pass encoding
-            tc_multipass_reuse_log => "tc_multipass",
+            tc_multipass_reuse_log => [ "tc_container", "tc_multipass" ],
 
             #-- fast resizing depends on a bunch of parameters
             tc_fast_resize => [
@@ -723,6 +746,7 @@ sub create {
         },
         attr_depends_href => {
             sheet => [
+                "title",
                 "content.selected_title_nr", "content.selected_titles",
                 "content.selected_title",    "title.tc_container",
                 @BITRATE_PARAMS,

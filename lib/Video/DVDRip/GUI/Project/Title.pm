@@ -1,4 +1,4 @@
-# $Id: Title.pm,v 1.5 2005/12/26 13:57:47 joern Exp $
+# $Id: Title.pm,v 1.6 2006/01/03 20:09:56 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -242,15 +242,17 @@ sub build_audio_viewing_chapter_factory {
                 ],
             ),
             Gtk2::Ex::FormFactory::List->new(
-                name           => "chapter_selection",
-                attr           => "title.chapter_list",
-                attr_select    => "title.tc_selected_chapters",
-                expand         => 1,
-                scrollbars     => [ "never", "always" ],
-                tip            => __ "Select one or more chapters",
-                columns        => [ __ "Chapter selection" ],
-                selection_mode => "multiple",
-                inactive       => "invisible",
+                name               => "chapter_selection",
+                attr               => "title.chapter_list",
+                attr_select        => "title.tc_selected_chapters",
+                attr_select_column => 0,
+                expand             => 1,
+                scrollbars         => [ "never", "always" ],
+                tip                => __ "Select one or more chapters",
+                columns            => [ "nr", __ "Chapter selection" ],
+                visible            => [ 0, 1 ],
+                selection_mode     => "multiple",
+                inactive           => "invisible",
             ),
         ],
     );
