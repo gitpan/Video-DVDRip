@@ -1,4 +1,4 @@
-# $Id: Progress.pm,v 1.31 2005/12/26 13:57:47 joern Exp $
+# $Id: Progress.pm,v 1.28 2004/04/11 23:36:20 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -9,11 +9,9 @@
 #-----------------------------------------------------------------------
 
 package Video::DVDRip::GUI::Progress;
-
-use base qw( Video::DVDRip::GUI::Base );
-
 use Locale::TextDomain qw (video.dvdrip);
-use Video::DVDRip::FixLocaleTextDomainUTF8;
+
+use base Video::DVDRip::GUI::Component;
 
 use strict;
 use Carp;
@@ -22,52 +20,43 @@ use Cwd;
 
 use POSIX qw(:errno_h);
 
-sub cb_cancel			{ shift->{cb_cancel}			}
-sub is_active			{ shift->{is_active}			}
-sub progress_state		{ shift->{progress_state}		}
 sub gtk_progress		{ shift->{gtk_progress}			}
 sub gtk_cancel_button		{ shift->{gtk_cancel_button}		}
-sub max_value			{ shift->{max_value}			}
+sub cb_cancel			{ shift->{cb_cancel}			}
+sub is_active			{ shift->{is_active}			}
 
+sub set_gtk_cancel_button	{ shift->{gtk_cancel_button}	= $_[1] }
+sub set_gtk_progress		{ shift->{gtk_progress}		= $_[1] }
 sub set_cb_cancel		{ shift->{cb_cancel}		= $_[1]	}
 sub set_is_active		{ shift->{is_active}		= $_[1]	}
-sub set_progress_state		{ shift->{progress_state}	= $_[1]	}
-sub set_gtk_progress		{ shift->{gtk_progress}		= $_[1]	}
-sub set_gtk_cancel_button	{ shift->{gtk_cancel_button}	= $_[1]	}
-sub set_max_value		{ shift->{max_value}		= $_[1]	}
 
-sub build_factory {
-	my $self = shift;
-	
-	$self->get_context->set_object ( "progress" => $self );
+sub build {
+	my $self = shift; $self->trace_in;
 
-	my $progress = Gtk2::Ex::FormFactory::Form->new (
-	    title   => __"Status",
-	    object  => "project",
-	    content => [
-		Gtk2::Ex::FormFactory::HBox->new (
-		    content => [
-	        	Gtk2::Ex::FormFactory::ProgressBar->new (
-			    name   => "progress",
-			    attr   => "progress.progress_state",
-			    expand => 1,
-			),
-	        	Gtk2::Ex::FormFactory::Button->new (
-			    name     => "progress_cancel",
-			    active   => 0,
-			    label    => __"Cancel",
-			    clicked_hook => sub {
-			    	my $cb_cancel = $self->cb_cancel;
-				&$cb_cancel() if $cb_cancel;
-				1;
-			    },
-			),
-		    ],
-		),
-	    ],
-	);
+	my $hbox = Gtk::HBox->new;
+	$hbox->show;
 
-	return $progress;
+	my $progress = Gtk::ProgressBar->new;
+	$progress->show;
+	$progress->set_value(0);
+	$progress->set_format_string ("");
+	$progress->set_show_text (1);
+	$hbox->pack_start($progress, 1, 1, 0);
+
+	my $button = Gtk::Button->new_with_label (__"Cancel");
+	$button->signal_connect ("clicked", sub { $self->cancel } );
+
+	$hbox->pack_start($button, 0, 1, 0);
+
+	$self->set_widget ($hbox);
+	$self->set_gtk_progress ($progress);
+	$self->set_gtk_cancel_button ($button);
+	$self->set_comp ( progress => $self );
+
+	$self->set_is_active (0);
+	$self->set_idle_label;
+
+	return $hbox;
 }
 
 sub open {
@@ -76,23 +65,20 @@ sub open {
 	my  ($max_value, $label, $cb_cancel) =
 	@par{'max_value','label','cb_cancel'};
 
-	$self->set_gtk_progress (
-		$self->get_form_factory
-		     ->get_widget("progress")
-		     ->get_gtk_widget,
-	);
-
-	$self->set_gtk_cancel_button (
-		$self->get_form_factory
-		     ->get_widget("progress_cancel")
-		     ->get_gtk_widget,
-	);
-
 	$self->set_is_active ( 1 );
-	$self->set_max_value($max_value);
+	
+	my $adj = Gtk::Adjustment->new ( 0, 0, $max_value, 0, 0, 0); 
+
+	my $progress = $self->gtk_progress;
+	$progress->set_adjustment($adj);
+	$progress->set_format_string ($label);
+	$progress->set_show_text (1);
+	$progress->set_value(1);
+
 	$self->set_cb_cancel ( $cb_cancel );
 
-	$self->gtk_cancel_button->set_sensitive($cb_cancel?1:0);
+	$self->gtk_cancel_button->show if $cb_cancel;
+	$self->gtk_cancel_button->hide if not $cb_cancel;
 
 	1;
 }
@@ -102,11 +88,10 @@ sub update {
 	my %par = @_;
 	my ($value, $label) = @par{'value','label'};
 
-	$value = 0 if $value  < 0;
-	$value = 1 if $value  > 1;
+	$label =~ s/%/%%/g;
 
-	$self->gtk_progress->set_text ($label);
-	$self->gtk_progress->set_fraction ($value);
+	$self->gtk_progress->set_format_string ($label);
+	$self->gtk_progress->set_value($value) if $value > 0;
 
 	1;
 }
@@ -114,8 +99,8 @@ sub update {
 sub close {
 	my $self = shift; $self->trace_in;
 
-	$self->gtk_progress->set_fraction ( 0 );
-	$self->gtk_cancel_button->set_sensitive(0);
+	$self->gtk_progress->set_value ( 0 );
+	$self->gtk_cancel_button->hide;
 
 	$self->set_is_active( 0 );
 	$self->set_idle_label;
@@ -138,7 +123,9 @@ sub cancel {
 sub set_idle_label {
 	my $self = shift; $self->trace_in;
 	
-	my $project = eval {$self->project };
+	my $project;
+	my $project_comp = eval {$self->comp('project')};
+	$project = $project_comp->project if $project_comp;
 
 	my $label;
 	if ( $project ) {
@@ -148,7 +135,9 @@ sub set_idle_label {
 		$label = "";
 	}
 
-	$self->gtk_progress->set_text ($label);
+	$self->gtk_progress->set_format_string ($label);
+
+	$project_comp->init_storage_values if $project_comp;
 
 	1;
 }

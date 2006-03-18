@@ -1,12 +1,8 @@
-$Id: TODO,v 1.127 2005/12/28 11:10:19 joern Exp $
+$Id: TODO,v 1.123 2005/07/23 07:56:49 joern Exp $
 
 KNOWN BUGS:
 ===========
 
-- dvdrip-exec hardcoded nice 19, should be controlled by GUI again.
-  Reported by Alex <gaaf@gmx.net>.
-- Ripping multiple titles in a row: no preview grabbing for all
-  titles but the first. Reported by Uwe Dippel <udippel AT uniten.edu.my>.
 - realtime subtitle preview resp. subtitling in general doesn't
   work in RGB colorspace. dvd::rip should warn about this, when
   clip&zoom parameters has odd values which force RGB colorspace,
@@ -17,8 +13,6 @@ KNOWN BUGS:
   by Christoph Lampert.
 - vobsub creation fails on vfat partitions. Reported by
   Christoph Lampert.
-- VDC imaging/burning doesn't work on VFAT filesystem due to
-  the symbolic link used. Use mv instead.
 - creating vobsub after transcoding doesn't work for (S)VCD
   (it's useless anyway, but dvd::rip should warn about this).
   Thanks to Kai Bartels <kaba AT picturesafe.de>.
@@ -43,21 +37,6 @@ may be implemented soon, some eventually never... ;)
 
 TODO:
 =====
-- change aspect ratio output (dvdrip-users posting Tue 22.11.2005 16:12)
-- make fping path configurable
-- Cluster mode: retry a job a few times to neutralize temporary
-  network failures.
-- preview window: button to find black bars
-- mplayer command: placeholder for the configured DVD device
-  (mplayer option -dvd-device). Suggested by Sunny <sloncho AT gmail.com>.
-- add preference "default clip&zoom preset", suggested by
-  Uwe Dippel <udippel AT uniten.edu.my>.
-- pre-define user defaults for all clip & zoom and transcode parameters
-  in a special project .rip file located in the user's home directory.
-  The file can be loaded, all parameters changed, and saved. Future
-  projects will take their default parameters from this file.
-- print actual bits/pixel somewhere on the clip&zoom tab,
-  suggested by Florin Andrei
 - Do "ls /dvdmountpoint" instead of mounting it if an automounter
   is in action. Probably need to be configured in the Preferences
   dialog. Suggested by Sunny <sloncho AT gmail.com>.
@@ -160,8 +139,13 @@ TODO:
 - xvid properties window as a frontend for the xvid.cfg file,
   suggested by Edouard Gomez <ed.gomez AT wanadoo.fr>
 - add (S)VCD support to cluster mode
+- pre-define user defaults for all clip & zoom and transcode parameters
+  in a special project .rip file located in the user's home directory.
+  The file can be loaded, all parameters changed, and saved. Future
+  projects will take their default parameters from this file.
 - button for deletion of VOB's and temp files,
   suggested by Robert Nemkin <buci AT buci.hu>
+- add preference "default clip&zoom preset"
 - preference for standard additional transcode options,
   suggested by Uwe Ade <uwe.ade AT gmx.de>
 - lock project file to prevent multiple instances of the

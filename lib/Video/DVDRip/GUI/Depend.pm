@@ -1,4 +1,4 @@
-# $Id: Depend.pm,v 1.6 2005/12/26 13:57:47 joern Exp $
+# $Id: Depend.pm,v 1.3 2004/04/11 23:36:20 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -10,166 +10,157 @@
 
 package Video::DVDRip::GUI::Depend;
 use Locale::TextDomain qw (video.dvdrip);
-use Video::DVDRip::FixLocaleTextDomainUTF8;
 
-use base qw(Video::DVDRip::GUI::Base);
+use base Video::DVDRip::GUI::Window;
 
 use strict;
 use Carp;
 
-my $depend_ff;
+sub single_instance_window { 1 }
 
-sub open_window {
-	my $self = shift;
-	
-	return if $depend_ff;
-	
-	$self->build;
-	
-	1;
-}
+sub gtk_widgets			{ shift->{gtk_widgets}			}
+sub set_gtk_widgets		{ shift->{gtk_widgets}		= $_[1] }
+
+# GUI Stuff ----------------------------------------------------------
 
 sub build {
-	my $self = shift;
-	
-	my $context = $self->get_context;
-	
-	$depend_ff = Gtk2::Ex::FormFactory->new (
-	    context   => $context,
-	    parent_ff => $self->get_form_factory,
-            sync      => 0,
-            content   => [
-		Gtk2::Ex::FormFactory::Window->new (
-		    title => __"dvd::rip - Dependency check",
-		    customize_hook => sub {
-			my ($gtk_window) = @_;
-			$_[0]->parent->set(
-		          default_width  => 640,
-		          default_height => 480,
-			);
-			1;
-		    },
-		    closed_hook => sub {
-		        $depend_ff->close if $depend_ff;
-			$depend_ff = undef;
-			1;
-		    },
-		    content => [
-		        Gtk2::Ex::FormFactory::Table->new (
-			    title  => __"Required tools",
-			    expand => 1,
-			    layout => "
-                                +>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>+
-                                ^ Dependency list                 |
-                                |                                 |
-                                +---------------------------------+
-                                | Notes                           |
-                                +-----------------------+--------]+
-                                |                       | Buttons |
-                                +-----------------------+---------+
-			    ",
-			    content => [
-			        $self->build_depend_list,
-				$self->build_depend_notes,
-				Gtk2::Ex::FormFactory::HBox->new (
-				    content => [
-					Gtk2::Ex::FormFactory::Button->new (
-					    label => __" Text version ",
-					    stock => "gtk-justify-left",
-					    clicked_hook => sub {
-						$self->show_text_version;
-					    },
-					    tooltip => __"Text version, suitable for bug reports"
-					),
-					Gtk2::Ex::FormFactory::Button->new (
-					    label => __" Ok ",
-					    stock => "gtk-ok",
-					    clicked_hook => sub {
-						$depend_ff->close;
-						$depend_ff=undef;
-					    },
-					),
-				    ],
-				),
-			    ],
-			),
-		    ],
-                ),
-		
-            ],
-	);
-	
-	$depend_ff->build;
-	$depend_ff->update;
-	$depend_ff->show;
+	my $self = shift; $self->trace_in;
 
-	1;
+	$self->set_gtk_widgets ({});
+
+	# build window -----------------------------------------------
+	my $win = Gtk::Window->new ( -toplevel );
+	$win->set_title($self->config('program_name')." ".__"Dependency check");
+	$win->border_width(0);
+	$win->realize;
+	$win->set_default_size ( 700, 420 );
+
+	# Register component and window ------------------------------
+	$self->set_widget($win);
+	$self->set_gtk_window_widget($win);
+	$self->set_comp( 'depend' => $self );
+	$win->signal_connect ("destroy", sub { $self->set_comp( 'depend' => "" ); } );
+
+	# Build dialog -----------------------------------------------
+	my $dialog_vbox = Gtk::VBox->new;
+	$dialog_vbox->show;
+	$dialog_vbox->set_border_width(10);
+	$win->add($dialog_vbox);
+
+	my ($frame, $frame_hbox, $vbox, $hbox, $button, $clist, $sw, $item);
+	my ($row, $table, $label, $popup_menu, $popup, %popup_entries, $entry);
+
+	# Parameter Widgets ------------------------------------------
+	
+	$frame_hbox = Gtk::HBox->new;
+	$frame_hbox->show;
+	$dialog_vbox->pack_start($frame_hbox, 0, 1, 0);
+	
+	$frame = Gtk::Frame->new (__"Required tools");
+	$frame->show;
+	$dialog_vbox->pack_start($frame, 1, 1, 0);
+	$vbox = Gtk::VBox->new;
+	$vbox->set_border_width(5);
+	$vbox->show;
+	$frame->add ($vbox);
+	$sw = new Gtk::ScrolledWindow( undef, undef );
+	$vbox->pack_start ($sw, 1, 1, 0);
+	$sw->show;
+	$sw->set_policy( 'automatic', 'automatic' );
+
+	$clist = Gtk::CList->new_with_titles (
+		"Name",
+		__"Comment",
+		__"Mandatory",
+		__"Suggested",
+		"Minimum",
+		"Maximum",
+		__"Installed",
+		"Ok",
+	);
+	$clist->set_column_width( 0, 80 );
+	$clist->set_column_width( 1, 220 );
+	$clist->set_column_width( 2, 60 );
+	$clist->set_column_width( 3, 60 );
+	$clist->set_column_width( 4, 50 );
+	$clist->set_column_width( 5, 50 );
+	$clist->set_column_width( 6, 50 );
+	$clist->set_column_width( 7, 20 );
+	$clist->show,
+	$sw->add ($clist);
+	$clist->set_selection_mode( 'browse' ); 
+
+	$self->gtk_widgets->{depend_clist} = $clist;
+
+	$label = Gtk::Label->new (
+		__"- Mandatory tools must be present with the minimum version listed.\n- Non mandatory tools may be missing or too old - features are disabled then.\n- Suggested numbers are the versions the author works with, so they are well tested."
+	);
+	$label->set_justify ("left");
+	$label->show;
+	$hbox = Gtk::HBox->new;
+	$hbox->show;
+	$hbox->pack_start ($label, 0, 1, 0);
+	$vbox->pack_start ($hbox, 0, 1, 0);
+
+	$hbox = Gtk::HBox->new (1, 10);
+	$hbox->show;
+	my $align = Gtk::Alignment->new ( 1, 0, 0, 1);
+	$align->show;
+	$align->add ($hbox);
+	$vbox->pack_start ($align, 0, 1, 0);
+
+	$button = Gtk::Button->new_with_label ("Ok");
+	$button->set_usize (120,undef);
+	$button->show;
+	$button->signal_connect ("clicked", sub {
+		$win->destroy;
+	} );
+	$hbox->pack_start ($button, 0, 0, 0);
+
+	$self->init_depend_list;
+
+	$win->show;
+
+	return 1;
 }
 
-sub build_depend_list {
+sub init_depend_list {
 	my $self = shift;
 
-	Gtk2::SimpleList->add_column_type(
-		'depend_tool_text',
-		type	 => "Glib::Scalar",
-		renderer => "Gtk2::CellRendererText",
-		attr     => sub {
-		    my ($treecol, $cell, $model, $iter, $col_num) = @_;
-		    my $info = $model->get($iter, $col_num);
-		    my $ok   = $model->get($iter, 8);
-		    $cell->set ( text       => $info );
-		    $cell->set ( foreground => $ok ? "#000000" : "#ff0000" );
-		    $cell->set ( weight     => $col_num == 0 ? 700 : 500);
-		    1;
-		},
-	);
+	my $tools = $self->depend_object->tools;
+	my ($clist, $rows);
 
-	return Gtk2::Ex::FormFactory::List->new (
-	    attr           => "depend.tools",
-	    expand         => 1,
-	    scrollbars     => [ "never", "automatic" ],
-	    columns        => [
-		__"Name",      __"Comment", __"Mandatory",
-		__"Suggested", __"Minimum", __"Maximum",
-		__"Installed", __"Ok",
-		"color_control"
-	    ],
-	    types	   => [
-	    	("depend_tool_text") x 8, "int"
-	    ],
-	    selection_mode => "none",
-	    customize_hook => sub {
-	        my ($gtk_simple_list) = @_;
-		($gtk_simple_list->get_columns)[8]->set ( visible => 0 );
-		1;
-	    },
-	);
-}
+	$clist = $self->gtk_widgets->{depend_clist};
 
-sub build_depend_notes {
-	my $self = shift;
-	
-	return Gtk2::Ex::FormFactory::Label->new (
-	    label => __("- Mandatory tools must be present with the minimum version listed.\n".
-	    		"- Non mandatory tools may be missing or too old - features are disabled then.\n".
-			"- Suggested numbers are the versions the author works with, so they are well tested.")
+	$clist->freeze;
+	$clist->clear;
 
-	);
-}
+	my $highlighted = $clist->style->copy;
+	$highlighted->fg('normal',$self->gdk_color('ff0000'));
+	
+	my $i = 0;
+	foreach my $tool ( sort { $tools->{$a}->{order} <=> $tools->{$b}->{order} }
+			   keys %{$tools} ) {
+		my $def = $tools->{$tool};
+		$clist->append (
+			$tool,
+			$def->{comment},
+			($def->{optional} ? __"No" : __"Yes"),
+			$def->{suggested},
+			$def->{min},
+			($def->{max} || "-"),
+			$def->{installed},
+			($def->{installed_ok} ? __"Yes" : __"No"),
+		);
+		$clist->set_row_style($i, $highlighted) if not $def->{installed_ok};
+		++$i;
+	}
 
-sub show_text_version {
-	my $self = shift;
-	
-	my $message = $self->depend_object->installed_tools_as_text;
-	
-	$self->long_message_window (
-	    title   => __"Installed tools",
-	    message => $message,
-	    fixed   => 1,
-	);
-	
+	$clist->select_row ( 0, 0 );
+
+	$clist->thaw;
+
 	1;
 }
 
 1;
-

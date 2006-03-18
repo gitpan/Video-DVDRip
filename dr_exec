@@ -1,0 +1,23 @@
+#!/usr/bin/perl
+
+# $Id: dr_exec,v 1.2 2004/04/10 14:31:53 joern Exp $
+
+#-----------------------------------------------------------------------
+# Copyright (C) 2001-2003 Jörn Reder <joern@zyn.de> All Rights Reserved
+# 
+# This program is part of Video::DVDRip, which is free software; you can
+# redistribute it and/or modify it under the same terms as Perl itself.
+#-----------------------------------------------------------------------
+
+use strict;
+
+main: {
+	if ( not @ARGV ) {
+		print "usage: dr_exec program args ...\n";
+		exit 1;
+	}
+
+	print STDERR "DVDRIP_JOB_PID=$$\n";
+
+	exec @ARGV;
+}

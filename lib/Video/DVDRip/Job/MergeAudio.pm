@@ -1,4 +1,4 @@
-# $Id: MergeAudio.pm,v 1.13 2005/12/26 13:57:47 joern Exp $
+# $Id: MergeAudio.pm,v 1.12 2005/05/16 08:06:12 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -10,7 +10,6 @@
 
 package Video::DVDRip::Job::MergeAudio;
 use Locale::TextDomain qw (video.dvdrip);
-use Video::DVDRip::FixLocaleTextDomainUTF8;
 
 # That's Perl! The job classes inherit from this class,
 # which is decided at *runtime* - this way standard and

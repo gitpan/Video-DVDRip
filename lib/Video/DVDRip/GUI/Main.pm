@@ -1,4 +1,4 @@
-# $Id: Main.pm,v 1.72 2005/12/26 13:57:47 joern Exp $
+# $Id: Main.pm,v 1.64 2004/04/11 23:36:20 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -9,69 +9,36 @@
 #-----------------------------------------------------------------------
 
 package Video::DVDRip::GUI::Main;
+use Locale::TextDomain qw (video.dvdrip);
+
+use base Video::DVDRip::GUI::Component;
+
+use Video::DVDRip;
+use Video::DVDRip::Project;
+use Video::DVDRip::GUI::Project;
+use Video::DVDRip::GUI::Config;
+use Video::DVDRip::GUI::ImageClip;
+use Video::DVDRip::GUI::CheckedEntry;
+use Video::DVDRip::GUI::Setting::Text;
+use Video::DVDRip::GUI::Setting::Checkbox;
 
 use strict;
-
-use base qw(Video::DVDRip::GUI::Base);
-use Locale::TextDomain qw (video.dvdrip);
-use Video::DVDRip::FixLocaleTextDomainUTF8;
-
-use Gtk2;
-use Gtk2::Ex::FormFactory 0.58;
 use Data::Dumper;
+
+use Gtk;
+use Gtk::Keysyms;
+
 use File::Basename;
 
-use Video::DVDRip::Project;
-use Video::DVDRip::Logger;
+sub gtk_box			{ shift->{gtk_box}			}
+sub gtk_menubar			{ shift->{gtk_menubar}			}
+sub gtk_greetings		{ shift->{gtk_greetings}		}
+sub project_opened		{ shift->{project_opened}		}
 
-use Video::DVDRip::GUI::Context;
-use Video::DVDRip::GUI::Project::Storage;
-use Video::DVDRip::GUI::Project::Title;
-use Video::DVDRip::GUI::Project::ClipZoom;
-use Video::DVDRip::GUI::Project::Subtitle;
-use Video::DVDRip::GUI::Project::Transcode;
-use Video::DVDRip::GUI::Project::Logging;
-use Video::DVDRip::GUI::Progress;
-
-use Video::DVDRip::GUI::ExecuteJobs;
-
-sub get_form_factory		{ shift->{form_factory}			}
-sub set_form_factory		{ shift->{form_factory}		= $_[1]	}
-
-sub get_gtk_icon_factory	{ shift->{gtk_icon_factory}		}
-sub set_gtk_icon_factory	{ shift->{gtk_icon_factory}	= $_[1]	}
-
-sub window_name			{
-	my $self = shift;
-	
-	my $context = $self->get_context;
-	my $project = $context->get_object("project");
-
-	if ( $project ) {
-		return $self->config('program_name')." - ".
-		       $project->name;
-	} else {
-		return $self->config('program_name')." - <no project>";
-	}
-}
-
-sub splash_image		{ shift->{splash_image}			}
-sub set_splash_image		{ shift->{splash_image}		= $_[1]	}
-
-sub new {
-	my $class = shift;
-	
-	my $self = $class->SUPER::new(@_);
-	
-	my $logger = Video::DVDRip::Logger->new;
-	$self->set_logger($logger);
-
-	$self->set_splash_image($self->search_perl_inc (
-		rel_path => "Video/DVDRip/splash.png"
-	));
-
-	return $self;
-}
+sub set_gtk_box			{ shift->{gtk_box}		= $_[1] }
+sub set_gtk_menubar		{ shift->{gtk_menubar}		= $_[1] }
+sub set_gtk_greetings		{ shift->{gtk_greetings}	= $_[1] }
+sub set_project_opened		{ shift->{project_opened}	= $_[1] }
 
 sub start {
 	my $self = shift; $self->trace_in;
@@ -79,448 +46,354 @@ sub start {
 	my  ($filename, $open_cluster_control, $function, $select_title) =
 	@par{'filename','open_cluster_control','function','select_title'};
 
-	Gtk2->init;
+	Gtk->init;
 
-	my $context = Video::DVDRip::GUI::Context->create;
-	$self->set_context($context);
+	Gtk::Widget->set_default_colormap(Gtk::Gdk::Rgb->get_cmap());
+	Gtk::Widget->set_default_visual(Gtk::Gdk::Rgb->get_visual());
 
 	$self->build if not $open_cluster_control;
 
-	Glib->install_exception_handler (sub {
-		my ($msg) = @_;
-		if ( $msg =~ /^msg:\s*(.*?)\s+at.*?line\s+\d+/s ) {
-			$self->error_window (
-				message => $1,
-			);
-
-		} else {
-			my $error =
-				__x("An internal exception was thrown!\n".
-				   "The error message was:\n\n{msg}",
-				   msg => $msg );
-			$self->long_message_window (
-				message => $error
-			);
-		}
-		
-		my $progress = $self->progress;
-		$progress->cancel if $progress and $progress->is_active;
-
-		1;
-	});
-
-	my $project;
 	if ( $self->dependencies_ok ) {
-	    if ( $filename ) {
-		    $self->open_project_file (
-			    filename => $filename
-		    );
-		    $project = $self->get_context_object("project");
-	    }
+		my $project;
+		if ( $filename ) {
+			$self->open_project_file (
+				filename => $filename
+			);
+			eval { $project = $self->comp('project')->project };
+		}
 
-	    $self->log (
-		    __x("Detected transcode version: {version}",
-			version => $self->version ("transcode"))
-	    );
+		$self->log (
+			__x("Detected transcode version: {version}", version => $self->version ("transcode"))
+		);
 
-	    # Open Cluster Control window, if requested
-	    $self->cluster_control ( exit_on_close => 1 )
-		    if $open_cluster_control;
+		# Open Cluster Control window, if requested
+		$self->cluster_control ( exit_on_close => 1 )
+			if $open_cluster_control;
 
-	    # Error check
-	    if ( ($select_title or $function) and not $project
-		  and $function ne 'preferences' ) {
-		    $self->error_dialog (
-			message => __"Opening project file failed. Aborting."
-		    );
-		    return 0;
-	    }
+		# Error check
 
-	    $self->update_window_title;
+		if ( ($select_title or $function) and not $project
+		      and $function ne 'preferences' ) {
+			print STDERR __"Opening project file failed. Aborting.\n";
+			exit 1;
+		}
 
-	    Glib::Idle->add (sub {
 		# Select a title, if requested
 		if ( $select_title ) {
 			$self->log ("Selecting title $select_title");
-			$context->set_object_attr(
-				"content.selected_title_nr", $select_title
-			);
-			$project->content->set_selected_titles([$select_title]);
+			my $title = $project->content->titles->{$select_title};
+			if ( $title ) {
+				# unselect old title
+				$self->comp('project')
+				     ->rip_title_widgets
+				     ->{content_clist}
+				     ->unselect_row ($project->selected_title_nr-1, 1);
+				# select new title
+				$self->comp('project')
+				     ->rip_title_widgets
+				     ->{content_clist}
+				     ->select_row ($select_title-1, 1);
+			} else {
+				print STDERR __x("Can't select title {title}. Aborting.\n", title => $select_title);
+				exit 1;
+			}
 		}
 
 		# Execute a function, if requested
 		if ( $function eq 'preferences' ) {
 			$self->edit_preferences;
 		} elsif ( $function ) {
-			my $title = $self->selected_title;
+			my $title = $self->comp('project')->selected_title;
+			$self->comp('project')->gtk_notebook->set_page( 3 );
 			$title->set_tc_exit_afterwards('dont_save');
-			$title->set_tc_split(1) if $function eq 'transcode_split';
-			$self->get_context_object("transcode")->transcode;
+			if ( $function eq 'transcode' ) {
+				$self->comp('project')->transcode;
+			} elsif ( $function eq 'transcode_split' ) {
+				$self->comp('project')->transcode ( split => 1 );
+			}
 		}
-		return 0;
-	    });
 	}
 
-	Gtk2->main;
-
-	1;
+	while ( 1 ) {
+		$self->print_debug ("Entering Gtk->main loop");
+		eval { Gtk->main };
+		if ( $@ =~ /^msg:\s*(.*)\s+at.*?line\s+\d+/s ) {
+			$self->message_window (
+				message => $1,
+			);
+			next;
+		} elsif ( $@ ) {
+			my $error =
+				"An internal exception was thrown!\n".
+				"The error message was:\n\n$@";
+			$self->long_message_window (
+				message => $error
+			);
+			my $progress = eval { $self->comp('progress') };
+			$progress->cancel if $progress and $progress->is_active;
+			next;
+		} else {
+			last;
+		}
+	}
 }
 
 sub build {
 	my $self = shift; $self->trace_in;
 
-	$self->build_icon_factory;
+	# create GTK widgets for main application window
+	my $win       = $self->create_window;
+	my $box       = $self->create_window_box;
+	my $menubar   = $self->create_menubar;
+	my $greetings = $self->create_greetings;
 
-	my $context = $self->get_context;
+	$win->add ($box);
+	$box->pack_start ($menubar, 0, 1, 0);
+	$box->pack_start ($greetings, 1, 0, 0);
 
-	$context->set_object ( main => $self );
+	$self->set_gtk_greetings ($greetings);
 
-	my $window;
-	my $ff = Gtk2::Ex::FormFactory->new (
-	    context => $context,
-            sync    => 1,
-            content => [
-		$window = Gtk2::Ex::FormFactory::Window->new (
-		    attr    => "main.window_name",
-                    name    => "main_window",
-		    customize_hook => sub {
-		      my ($gtk_window) = @_;
-		      $_[0]->parent->set(
-		        default_width  => 600,
-		        default_height => 500,
-		      );
-		      1;
-		    },
-		    closed_hook => sub { $self->exit_program; 1 },
-                ),
-            ],
-	);
-        
-	#-- FormFactory need to be set into the object
-	#-- before building the other dependent factories
-	$self->set_form_factory($ff);
-	
-	$window->set_content ([
-		$self->build_menu_factory,
-		$self->build_splash_factory,
-		$self->build_project_factory
-	]);
+	# store component
+	$self->set_comp ( main => $self );
 
-        $ff->open;
-        $ff->update;
+	$self->set_widget($win);
 
-	$self->set_wm_icon;
+	$win->show;
 
 	return 1;
 }
 
-sub set_wm_icon {
+sub create_greetings {
 	my $self = shift;
 	
-	my $gtk_window = $self->get_form_factory->get_widget("main_window")->get_gtk_widget;
+	my $splash_file = $self->search_perl_inc (
+		rel_path => "Video/DVDRip/splash.png"
+	);
+
+	if ( not $splash_file ) {
+		my $text = <<__EOT;
+dvd::rip - A full featured DVD Ripper GUI for Linux
+
+Version $Video::DVDRip::VERSION
+
+Copyright (c) 2001-2002 Joern Reder, All Rights Reserved
+
+http://www.exit1.org/dvdrip/
+
+dvd::rip is free software; you can redistribute it
+and/or modify it under the same terms as Perl itself.
+
+__EOT
+		my $label = Gtk::Label->new ($text);
+		$label->show;
+
+		return $label;
+	}
+
+	my $image = Video::DVDRip::GUI::ImageClip->new (
+		gtk_window => $self->widget,
+		width      => 400,
+		height     => 300,
+		thumbnail  => 1,
+		no_clip    => 1,
+	);
+	$image->load_image (
+		filename => $splash_file
+	);
+	$image->draw;
+
+	my $hbox = Gtk::HBox->new (1, 0);
+	$hbox->show;
+	$hbox->pack_start ($image->widget, 1, 0, 0);
+
+	return $hbox;
+}
+
+sub create_window {
+	my $self = shift; $self->trace_in;
+	
+	my $win = Gtk::Window->new;
+	$win->set_title($self->config('program_name'));
+	$win->signal_connect("delete-event", sub { $self->exit_program (force => 0) } );
+	$win->border_width(0);
+	$win->set_uposition (10,10);
+	$win->set_default_size (
+		$self->config('main_window_width'),
+		$self->config('main_window_height'),
+	);
+	$win->realize;
+
+	$win->signal_connect("size-allocate",
+		sub {
+			$self->set_config('main_window_width', $_[1]->[2]);
+			$self->set_config('main_window_height', $_[1]->[3]);
+		}
+	);
+
+	# set window manager icon
 
 	my $icon_file = $self->search_perl_inc (
 		rel_path => "Video/DVDRip/icon.xpm"
 	);
 
 	if ( $icon_file ) {
-		my ($icon, $mask) = Gtk2::Gdk::Pixmap->create_from_xpm(
-			$gtk_window->window,
-			$gtk_window->style->white,
+		my ($icon, $mask) = Gtk::Gdk::Pixmap->create_from_xpm(
+			$win->window,
+			$win->style->white,
 			$icon_file
 		);
 		
-		$gtk_window->window->set_icon(undef, $icon, $mask);
-		$gtk_window->window->set_icon_name($self->config('program_name'));
+		$win->window->set_icon(undef, $icon, $mask);
+		$win->window->set_icon_name("dvd::rip");
 	}
 
-	1;
-}
+	$self->set_gtk_win ($win);
+	
+	return $win;
+}	
 
-sub build_menu_factory {
+sub create_window_box {
 	my $self = shift; $self->trace_in;
 	
-	my $context = $self->get_context;
+	my $box = new Gtk::VBox (0, 2);
+	$box->show;
 	
-        return Gtk2::Ex::FormFactory::Menu->new (
-            menu_tree => [
-                __"_File" => {
-                    item_type => '<Branch>',
-                    children => [
-                    	__"_New Project" => {
-			    item_type   => '<StockItem>',
-			    extra_data  => 'gtk-new',
-			    callback    => sub { $self->new_project },
-			    accelerator => '<ctrl>N',
-                        },
-                    	__"_Open Project..." => {
-			    item_type   => '<StockItem>',
-			    extra_data  => 'gtk-open',
-			    callback    => sub { $self->open_project },
-			    accelerator => '<ctrl>o',
-                        },
-                        __"_Save Project" => {
-			    item_type   => '<StockItem>',
-			    extra_data  => 'gtk-save',
-			    callback    => sub { $self->save_project },
-			    accelerator => '<ctrl>s',
-			    object      => 'project',
-                        },
-                        __"Save _Project as..." => {
-			    item_type   => '<StockItem>',
-			    extra_data  => 'gtk-save-as',
-			    callback    => sub { $self->save_project_as },
-			    accelerator => '<shift><ctrl>s',
-			    object      => 'project',
-                        },
-                        __"_Close Project" => {
-			    item_type   => '<StockItem>',
-			    extra_data  => 'gtk-close',
-			    callback    => sub { $self->close_project },
-			    accelerator => '<ctrl>w',
-			    object      => 'project',
-                        },
-                        "sep_quit"	=> {
-                            item_type	=> '<Separator>',
-			},
-                        __"_Exit"	=> {
-			    item_type   => '<StockItem>',
-			    extra_data  => 'gtk-quit',
-			    callback    => sub { $self->exit_program },
-			    accelerator => '<ctrl>q',
-                        },
-                    ],
-                },
-                __"_Edit" => {
-                    item_type => '<Branch>',
-                    children  => [
-                    	__"Edit _Preferences..." => {
-			    item_type   => '<StockItem>',
-			    extra_data  => 'gtk-preferences',
-			    callback    => sub { $self->edit_preferences },
-			    accelerator => '<ctrl>p',
-                        },
-                    ],
-                },
-                __"_Title" => {
-                    item_type => '<Branch>',
-                    children  => [
-                    	__"Transcode" => {
-			    item_type   => '<StockItem>',
-			    extra_data  => 'gtk-convert',
-			    callback    => sub {
-				$context->get_object("transcode")->transcode;
-                            },
-			    object    => 'title',
-                        },
-                    	__"Split target file" => {
-			    callback    => sub {
-				$context->get_object("transcode")->avisplit;
-                            },
-			    object    => 'title',
-                        },
-                    	__"View target file" => {
-			    item_type   => '<StockItem>',
-			    extra_data  => 'gtk-media-play',
-			    callback    => sub {
-				$context->get_object("transcode")->view_avi;
-                            },
-			    object    => 'title',
-                        },
-                    	__"Add project to cluster" => {
-			    item_type   => '<StockItem>',
-			    extra_data  => 'gtk-network',
-			    callback    => sub {
-				$context->get_object("transcode")->add_to_cluster;
-                            },
-			    object    => 'title',
-                        },
-                        "sep_vobsub"	=> {
-                            item_type	=> '<Separator>',
-			},
-                    	__"Create vobsub" => {
-			    callback    => sub {
-				$context->get_object("subtitle_gui")->create_vobsub_now;
-                            },
-			    object    => 'subtitle',
-                        },
-                        "sep_info"	=> {
-                            item_type	=> '<Separator>',
-			},
-                    	__"Create dvdrip-info file" => {
-			    callback    => sub {
-			        my $title = $context->get_object("title");
-			        return 1 if not $title;
-			        Video::DVDRip::InfoFile->new (
-				        title    => $title,
-				        filename => $title->info_file,
-			        )->write;
-			        1;
-                            },
-			    object    => 'title',
-                        },
-                        "sep_wav"	=> {
-                            item_type	=> '<Separator>',
-			},
-                    	__"Create WAV from selected audio track" => {
-			    callback    => sub {
-				$context->get_object("transcode")->create_wav;
-                            },
-			    object    => 'title',
-                        },
-                    ],
-                },
-                __"_Cluster" => {
-                    item_type => '<Branch>',
-                    children  => [
-                    	__"Contro_l..." => {
-			    item_type   => '<StockItem>',
-			    extra_data  => 'gtk-network',
-			    callback    => sub { $self->cluster_control },
-			    accelerator => '<ctrl>m',
-                        },
-                    ],
-                },
-                __"_Debug" => {
-                    item_type => '<Branch>',
-                    children  => [
-                    	__"Show _Transcode commands..." => {
-			    item_type   => '<Item>',
-			    callback    => sub { $self->show_transcode_commands },
-			    accelerator => '<ctrl>t',
-			    object    => 'title',
-                        },
-                    	__"Check _dependencies..." => {
-			    item_type   => '<Item>',
-			    callback    => sub { $self->show_dependencies },
-			    accelerator => '<ctrl>d',
-                        },
-                    ],
-                },
-	    ],
-	);
+	$self->set_gtk_box ($box);
+	
+	return $box;
 }
 
-sub build_splash_factory {
-	my $self = shift;
+sub create_menubar {
+	my $self = shift; $self->trace_in;
 	
-	return Gtk2::Ex::FormFactory::Table->new (
-	    object   => "!project",
-	    inactive => "invisible",
-	    expand   => 1,
-	    layout   => "
-                +>>>>>%>>>>>>+
-                ^            |
-                ~  Image     |
-                |            |
-                +------------+
-	    ",
-	    content  => [
-	        Gtk2::Ex::FormFactory::Image->new(
-		    attr  => "main.splash_image",
-		),
-	    ],
-	);
-}
-
-sub build_project_factory {
-	my $self = shift;
-        
-	my $context = $self->get_context;
+	my $win = $self->gtk_win;
 	
-	my $storage = Video::DVDRip::GUI::Project::Storage->new (
-		form_factory => $self->get_form_factory,
+	my @menu_items = (
+		{ path        => __"/_File",
+                  type        => '<Branch>' },
+
+                { path        => __"/File/_New Project",
+		  accelerator => '<control>n',
+                  callback    => sub { $self->new_project } },
+                { path        => __"/File/_Open Project...",
+		  accelerator => '<control>o',
+                  callback    => sub { $self->open_project } },
+                { path        => __"/File/_Save Project",
+		  accelerator => '<control>s',
+                  callback    => sub { $self->save_project } },
+                { path        => __"/File/Save Project As...",
+                  callback    => sub { $self->save_project_as } },
+                { path        => __"/File/_Close Project",
+		  accelerator => '<control>w',
+                  callback    => sub { $self->close_project } },
+
+		{ path	      => __"/File/sep_quit",
+		  type	      => '<Separator>' },
+                { path        => __"/File/_Exit",
+		  accelerator => '<control>Q',
+                  callback    => sub { $self->exit_program } },
+
+		{ path        => __"/_Edit",
+                  type        => '<Branch>' },
+
+                { path        => __"/_Edit/Edit _Preferences...",
+		  accelerator => '<control>p',
+                  callback    => sub { $self->edit_preferences } },
+
+		{ path        => __"/_Operate",
+                  type        => '<Branch>' },
+
+                { path        => __"/_Operate/Transcode and split",
+                  callback    => sub {
+		  	return 1 if not $self->project_opened;
+		  	$self->comp('project')->transcode ( split => 1 )
+		} },
+                { path        => __"/_Operate/Transcode",
+                  callback    => sub {
+		  	return 1 if not $self->project_opened;
+		  	$self->comp('project')->transcode
+		} },
+                { path        => __"/_Operate/Split target file",
+                  callback    => sub {
+		  	return 1 if not $self->project_opened;
+		  	$self->comp('project')->avisplit
+		} },
+                { path        => __"/_Operate/View target file",
+                  callback    => sub {
+		  	return 1 if not $self->project_opened;
+		  	$self->comp('project')->view_avi
+		} },
+                { path        => __"/_Operate/Add project to cluster",
+                  callback    => sub {
+		  	return 1 if not $self->project_opened;
+		  	$self->comp('project')->add_to_cluster
+		} },
+		{ path	      => __"/_Operate/sep_vobsub",
+		  type	      => '<Separator>' },
+                { path        => __"/_Operate/Create splitted _vobsub(s)",
+                  callback    => sub {
+		  	return 1 if not $self->project_opened;
+		  	$self->comp('project')->create_splitted_vobsub
+		} },
+                { path        => __"/_Operate/Create non-splitted _vobsub(s)",
+                  callback    => sub {
+		  	return 1 if not $self->project_opened;
+		  	$self->comp('project')->create_non_splitted_vobsub
+		} },
+		{ path	      => __"/_Operate/sep_info",
+		  type	      => '<Separator>' },
+                { path        => __"/_Operate/Create dvdrip-info file",
+                  callback    => sub {
+		  	return 1 if not $self->project_opened;
+			my $title = $self->comp('project')->selected_title;
+			return 1 if not $title;
+			Video::DVDRip::InfoFile->new (
+				title    => $title,
+				filename => $title->info_file,
+			)->write;
+			1;
+		} },
+		{ path	      => __"/_Operate/sep_wav",
+		  type	      => '<Separator>' },
+                { path        => __"/_Operate/Create WAV from selected audio track",
+                  callback    => sub {
+		  	return 1 if not $self->project_opened;
+		  	$self->comp('project')->create_wav;
+			1;
+		} },
+
+
+		{ path        => __"/_Cluster",
+                  type        => '<Branch>' },
+
+                { path        => __"/_Cluster/Contro_l...",
+		  accelerator => '<control>m',
+                  callback    => sub { $self->cluster_control } },
+
+		{ path        => __"/_Debug",
+                  type        => '<Branch>' },
+
+                { path        => __"/_Debug/Show _Transcode commands...",
+		  accelerator => '<control>t',
+                  callback    => sub { $self->show_transcode_commands } },
+
+                { path        => __"/_Debug/Check _dependencies...",
+		  accelerator => '<control>d',
+                  callback    => sub { $self->show_dependencies } },
 	);
 
-	my $title = Video::DVDRip::GUI::Project::Title->new (
-		form_factory => $self->get_form_factory,
+	my $accel_group = Gtk::AccelGroup->new;
+	my $item_factory = Gtk::ItemFactory->new (
+		'Gtk::MenuBar',
+		'<main>',
+		$accel_group
 	);
-	
-	my $clip_zoom = Video::DVDRip::GUI::Project::ClipZoom->new (
-		form_factory => $self->get_form_factory,
-	);
+	$item_factory->create_items ( @menu_items );
+	$win->add_accel_group ( $accel_group );
+	my $menubar = $self->set_gtk_menubar ( $item_factory->get_widget( '<main>' ) );
+	$menubar->show;
 
-	my $subtitle = Video::DVDRip::GUI::Project::Subtitle->new (
-		form_factory => $self->get_form_factory,
-	);
-
-	my $transcode = Video::DVDRip::GUI::Project::Transcode->new (
-		form_factory => $self->get_form_factory,
-	);
-
-	my $logging = Video::DVDRip::GUI::Project::Logging->new (
-		form_factory => $self->get_form_factory,
-	);
-
-	my $progress = Video::DVDRip::GUI::Progress->new (
-		form_factory => $self->get_form_factory,
-	);
-
-	return Gtk2::Ex::FormFactory::VBox->new (
-	    object  => "project",
-	    inactive => "invisible",
-	    expand => 1,
-	    content => [
-		Gtk2::Ex::FormFactory::Notebook->new (
-		    attr    => "project.last_selected_nb_page",
-	            expand  => 1,
-        	    content => [
-            		$storage->build_factory,
-			$title->build_factory,
-			$clip_zoom->build_factory,
-			$subtitle->build_factory,
-			$transcode->build_factory,
-			$logging->build_factory,
-        	    ],
-        	),
-		$progress->build_factory,
-	    ],
-	);
-}
-
-sub build_selected_title_factory {
-	my $self = shift;
-	
-	return Gtk2::Ex::FormFactory::HBox->new (
-	    object  => "title",
-	    title   => __"Selected DVD title",
-	    content => [
-	        Gtk2::Ex::FormFactory::Popup->new (
-		    attr => "content.selected_title_nr",
-		),
-	        Gtk2::Ex::FormFactory::Label->new (
-		    attr => "title.get_title_info",
-		),
-	    ],
-	);
-}
-
-sub build_icon_factory {
-	my $self = shift;
-
-	my $icon_factory = Gtk2::IconFactory->new;
-	$icon_factory->add_default;
-	$self->set_gtk_icon_factory($icon_factory);
-
-	my $icon_dir = $self->search_perl_inc (
-		rel_path => "Video/DVDRip/GUI/Icons"
-	);
-	
-	return if not -d $icon_dir;
-	
-	my ($pixbuf, $icon_set, $name);
-
-	foreach my $icon_file ( glob("$icon_dir/*.png") ) {
-		$pixbuf   = Gtk2::Gdk::Pixbuf->new_from_file($icon_file);
-		$icon_set = Gtk2::IconSet->new_from_pixbuf ($pixbuf);
-
-		$name = basename($icon_file);
-		$name =~ s/\.[^.]+$//;
-
-		$icon_factory->add ($name, $icon_set);
-	}
-	
-	1;
+	return $menubar;
 }
 
 sub new_project {
@@ -534,27 +407,57 @@ sub new_project {
 	
 	$self->close_project;
 
-	my $project = Video::DVDRip::Project->new;
+	my $project = Video::DVDRip::Project->new (
+		name => 'unnamed',
+	);
 
-	$self->get_context->set_object ( project    => $project );
-	$self->get_context->set_object ( "!project" => undef );
+	$project->set_vob_dir (
+		$self->config('base_project_dir')."/unnamed/vob",
+	);
+	$project->set_avi_dir (
+		$self->config('base_project_dir')."/unnamed/avi",
+	);
+	$project->set_snap_dir (
+		$self->config('base_project_dir')."/unnamed/tmp",
+	);
+	$project->set_dvd_device (
+		$self->config('dvd_device'),
+	);
 	
-	$self->update_window_title;
+	my $project_gui = Video::DVDRip::GUI::Project->new;
+	$project_gui->set_project ( $project );
+
+	$self->gtk_greetings->hide;
+	$self->gtk_box->pack_start ($project_gui->build, 1, 1, 1);
+
+	$project_gui->fill_with_values;
 	
-	my $gtk_entry = $self->get_form_factory
-			     ->get_widget("project_name")
-			     ->get_gtk_widget;
-	$gtk_entry->select_region(0,-1);
-	$gtk_entry->grab_focus;
+	$self->set_project_opened(1);
+	
+	$self->set_window_title;
 
 	1;
 }
 
-sub update_window_title {
+sub set_window_title {
 	my $self = shift;
 
-	$self->get_context->update_object_attr_widgets("main.window_name");
+	if ( not $self->project_opened ) {
+		$self->widget->set_title (
+			$self->config('program_name')
+		);
+		return 1;
+	}
 
+	my $filename = basename(
+		$self->comp('project')->project->filename ||
+		"<unnamed project>"
+	);
+
+	$self->widget->set_title (
+		$self->config('program_name')." - ".$filename
+	);
+	
 	1;
 }
 
@@ -597,15 +500,22 @@ sub open_project_file {
 		filename => $filename
 	);
 
-	my $context = $self->get_context;
+	my $project_gui = Video::DVDRip::GUI::Project->new;
+	$project_gui->set_project ( $project );
 
-	$context->set_object ( project    => $project );
-	$context->set_object ( "!project" => undef );
-	
-	$self->logger->set_project($project);
-	$self->logger->insert_project_logfile;
-	
-	$self->update_window_title;
+	$self->gtk_greetings->hide;
+	$self->gtk_box->pack_start ($project_gui->build, 1, 1, 1);
+
+	$self->set_project_opened(1);
+
+	$project_gui->show_preview_images;
+
+	$self->set_window_title;
+	$self->comp('progress')->set_idle_label;
+
+	$project->set_dvd_device (
+		$self->config('dvd_device')
+	);
 
 	if ( $project->convert_message ) {
 		$self->message_window (
@@ -614,38 +524,32 @@ sub open_project_file {
 		$project->set_convert_message("");
 	}
 
+	$project_gui->gtk_notebook->set_page ( $project->last_selected_nb_page );
+
 	1;
 }
 
 sub save_project {
 	my $self = shift;
-
-	my $context = $self->get_context;
-	my $project = $context->get_object ("project");
-	my $created = $project->created;
 	
-	if ( $project->filename ) {
-		$project->save;
-		# greys out "Project name" widget
-		$context->update_object_attr_widgets("project.name");
+	return if not $self->project_opened;
+
+	if ( $self->comp('project')->project->filename ) {
+		$self->comp('project')->project->set_last_selected_nb_page (
+			$self->comp('project')->gtk_notebook->get_current_page
+		);
+		$self->comp('project')->project->save;
+		$self->set_window_title;
 		return 1;
 
 	} else {
 		$self->show_file_dialog (
-			title    => __"Save project: choose filename",
-			type     => "save",
 			dir      => $self->config('dvdrip_files_dir'),
-			filename => $project->name.".rip",
+			filename => $self->comp('project')->project->name.".rip",
 			confirm  => 1,
 			cb       => sub {
-				$project->set_filename($_[0]);
+				$self->comp('project')->project->set_filename($_[0]);
 				$self->save_project;
-				unless ($created) {
-					$context->update_object_widgets("project");
-					$self->logger->set_project($project);
-					$self->log(__x"Project {name} created",
-						   $project->name);
-				}
 			},
 		);
 		return 0;
@@ -655,24 +559,16 @@ sub save_project {
 sub save_project_as {
 	my $self = shift;
 	
-	my $context = $self->get_context;
-	my $project = $context->get_object ("project");
-	my $created = $project->created;
-	
+	return if not $self->project_opened;
+
 	$self->show_file_dialog (
 		dir      => $self->config('dvdrip_files_dir'),
-		filename => $project->name.".rip",
+		filename => $self->comp('project')->project->name.".rip",
 		confirm  => 1,
 		cb       => sub {
-			$project->set_filename($_[0]);
-			$project->save;
-			$self->update_window_title;
-			unless ($created) {
-				$context->update_object_widgets("project");
-				$self->logger->set_project($project);
-				$self->log(__x"Project {name} created",
-					   $project->name);
-			}
+			$self->comp('project')->project->set_filename($_[0]);
+			$self->comp('project')->project->save;
+			$self->set_window_title;
 		},
 	);
 
@@ -683,12 +579,16 @@ sub close_project {
 	my $self = shift;
 	my %par = @_;
 	my ($dont_ask) = @par{'dont_ask'};
-
+	
+	return if not $self->project_opened;
 	return if not $dont_ask and $self->unsaved_project_open;
 
-	$self->get_context->set_object( project    => undef );
-	$self->get_context->set_object( "!project" => 1 );
-	$self->update_window_title;
+	$self->comp('project')->close;
+	$self->gtk_box->remove ($self->comp('project')->widget);
+	$self->comp( project => undef );
+	$self->set_project_opened (0);
+	$self->gtk_greetings->show;
+	$self->set_window_title;
 
 	1;
 }
@@ -697,11 +597,9 @@ sub unsaved_project_open {
 	my $self = shift;
 	my %par = @_;
 	my ($wants) = @par{'wants'};
-
-	my $project = $self->get_context->get_object("project");
-
-	return unless $project;
-	return if not $project->changed;
+	
+	return if not $self->project_opened;
+	return if not $self->comp('project')->project->changed;
 
 	$self->confirm_window (
 		message => __"Do you want to save this project first?",
@@ -717,7 +615,6 @@ sub unsaved_project_open {
 			$self->close_project ( dont_ask => 1 );
 			$self->$wants() if $wants;
 		},
-		with_cancel => 1,
 	);
 	
 	1;
@@ -734,19 +631,17 @@ sub exit_program {
 
 	$self->close_project ( dont_ask => $force );
 
-	$self->get_form_factory->close;
+	if ( $self->project_opened ) {
+		$self->comp('project')->close if $self->comp('project');
+	}
 
-	Gtk2->main_quit; 
+	Gtk->exit( 0 ); 
 }
 
 sub edit_preferences {
 	my $self = shift;
 	
-	require Video::DVDRip::GUI::Preferences;
-	
-	my $pref = Video::DVDRip::GUI::Preferences->new (
-	    form_factory => $self->get_form_factory,
-	);
+	my $pref = Video::DVDRip::GUI::Config->new;
 	$pref->open_window;
 	
 	1;
@@ -765,9 +660,7 @@ sub cluster_control {
 	      $self->config('cluster_master_server')) and
 	      $self->config('cluster_master_port') ) {
 
-		my $cluster = Video::DVDRip::GUI::Cluster::Control->new (
-			context => $self->get_context,
-		);
+		my $cluster = Video::DVDRip::GUI::Cluster::Control->new;
 		$cluster->set_exit_on_close ($exit_on_close);
 		$cluster->open_window;
 
@@ -784,9 +677,9 @@ sub cluster_control {
 sub show_transcode_commands {
 	my $self = shift;
 	
-	my $title = $self->selected_title;
-	return unless $title;
-	
+	my $title = eval { $self->comp('project')->selected_title };
+	return if not $title or $@;
+
 	my $commands = "";
 	
 	$commands .= __"Probe Command:\n".
@@ -924,7 +817,6 @@ sub show_transcode_commands {
 	}
 
 	$self->long_message_window (
-		title   => __"Commands executed by dvd::rip",
 		message => $commands
 	);
 	
@@ -936,9 +828,7 @@ sub show_dependencies {
 
 	require Video::DVDRip::GUI::Depend;
 
-	my $depend = Video::DVDRip::GUI::Depend->new (
-	    form_factory => $self->get_form_factory
-	);
+	my $depend = Video::DVDRip::GUI::Depend->new;
 	$depend->open_window;
 	
 	1;

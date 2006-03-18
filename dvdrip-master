@@ -1,0 +1,193 @@
+#!/usr/bin/perl
+
+# $Id: dvdrip-master,v 1.22 2004/04/11 23:36:19 joern Exp $
+
+#-----------------------------------------------------------------------
+# Copyright (C) 2001-2003 Jörn Reder <joern@zyn.de> All Rights Reserved
+# 
+# This program is part of Video::DVDRip, which is free software; you can
+# redistribute it and/or modify it under the same terms as Perl itself.
+#-----------------------------------------------------------------------
+
+package Video::DVDRip;
+
+use strict;
+use lib 'lib';
+use Getopt::Std;
+
+#-- l10n stuff
+use POSIX qw(setlocale);
+use Locale::Messages qw (LC_MESSAGES);
+use Locale::TextDomain ("video.dvdrip");
+setlocale(LC_MESSAGES,"");
+
+BEGIN {
+	# That's Perl! The job classes inherit from this class,
+	# which is decided at *runtime* - this way standard and
+	# cluster mode can share the same job execution system
+	# by inserting the cluster logic dynamically into the
+	# inheritence line... great stuff!
+	$Video::DVDRip::JobClass = "Video::DVDRip::Cluster::Job";
+
+	my @missing_modules;
+	foreach my $module ( qw ( Event Storable ) ) {
+		eval "use $module";
+		push @missing_modules, $module if $@;
+	}
+	if ( @missing_modules ) {
+		print "\nThe following Perl modules are needed for the cluster mode:\n\n";
+		print "    ".join(", ",@missing_modules),"\n\n";
+		print "Please read the documentation at:\n\n";
+		print "    http://www.exit1.org/dvdrip/doc/install.cipp#cluster\n";
+		print "    http://www.exit1.org/dvdrip/doc/cluster.cipp\n\n";
+		exit 1;
+	}
+
+	$Video::DVDRip::PREFERENCE_FILE = "$ENV{HOME}/.dvdriprc";
+}
+
+use Video::DVDRip;
+use Video::DVDRip::RPC::Server;
+
+my $USAGE = <<__EOU;
+Usage: dvdrip-master [-w [-W port] ] [loglevel]
+
+       loglevel  logs messages to stdout
+                 1 - basic logging, no details
+		 2 - log actual jobs
+		 3 - log all executed commands also
+
+       -w        start webserver service
+       -W port   port for webserver (default: 8888)
+
+__EOU
+
+main: {
+	# get options
+	my %opt;
+	my $opt_ok = getopts ('W:w', \%opt);
+	my $log_level = shift @ARGV || 0;
+
+	print ($USAGE), exit 1 if not $opt_ok or @ARGV;
+
+	my $start_webserver = $opt{w};
+	my $webserver_port  = $opt{W} || 8888;
+
+	# setup master RPC Server with class interface declaration
+	my $server = Video::DVDRip::RPC::Server->new (
+		name    => "dvd::rip cluster control daemon",
+		port    => 28646,
+		classes => {
+			'Video::DVDRip::Cluster::Master' => {
+				get_master		=> '_constructor',
+				hello			=> 1,
+				save            	=> 1,
+				add_project		=> 'Video::DVDRip::Cluster::Project',
+				add_node		=> 'Video::DVDRip::Cluster::Node',
+				projects		=> 'Video::DVDRip::Cluster::Project',
+				nodes			=> 'Video::DVDRip::Cluster::Node',
+				move_up_project 	=> 1,
+				move_down_project	=> 1,
+				remove_node		=> 1,
+				schedule_project	=> 1,
+				remove_project		=> 1,
+				shutdown		=> 1,
+				get_projects_lref	=> 1,
+				get_jobs_lref		=> 1,
+				get_nodes_lref		=> 1,
+			},
+
+			'Video::DVDRip::Cluster::Project' => {
+				new			=> '_constructor',
+				id			=> 1,
+				name			=> 1,
+				label			=> 1,
+				state			=> 1,
+				progress		=> 1,
+				create_job_plan		=> 1,
+				title			=> 'Video::DVDRip::Cluster::Title',
+				reset_job		=> 1,
+			},
+
+			'Video::DVDRip::Cluster::Node' => {
+				new			=> '_constructor',
+				save			=> 1,
+				name			=> 1,
+				hostname		=> 1,
+				data_base_dir		=> 1,
+				is_master		=> 1,
+				data_is_local		=> 1,
+				username		=> 1,
+				ssh_cmd			=> 1,
+				state			=> 1,
+				job_info		=> 1,
+				progress		=> 1,
+				project_name		=> 1,
+				tc_options		=> 1,
+				set_name		=> 1,
+				set_hostname		=> 1,
+				set_data_base_dir	=> 1,
+				set_is_master		=> 1,
+				set_data_is_local	=> 1,
+				set_username		=> 1,
+				set_ssh_cmd		=> 1,
+				set_tc_options		=> 1,
+				stop			=> 1,
+				start			=> 1,
+				run_tests		=> 1,
+				get_test_command	=> 1,
+				parse_test_output	=> 1,
+				test_finished		=> 1,
+				test_result		=> 1,
+				clone			=> 'Video::DVDRip::Cluster::Node',
+			},
+			'Video::DVDRip::Cluster::Title' => {
+				project			=> 'Video::DVDRip::Cluster::Project',
+				program_stream_units    => 'Video::DVDRip::Cluster::PSU',
+				save			=> 1,
+				calc_chunk_cnt		=> 1,
+				chunk_cnt_sum		=> 1,
+				with_avisplit		=> 1,
+				set_with_avisplit	=> 1,
+				with_cleanup		=> 1,
+				set_with_cleanup	=> 1,
+				with_vob_remove		=> 1,
+				set_with_vob_remove	=> 1,
+				frames_per_chunk	=> 1,
+				set_frames_per_chunk	=> 1,
+			},
+			'Video::DVDRip::Cluster::PSU' => {
+				nr			=> 1,
+				frames			=> 1,
+				selected		=> 1,
+				set_selected		=> 1,
+			},
+		},
+	);
+
+	$Video::DVDRip::DEBUG = 2 if $log_level > 3;
+
+	# set log level
+	$server->set_log_level ( $log_level );
+
+	# start master thread
+	my $master = $server->load_class (
+		class => 'Video::DVDRip::Cluster::Master'
+	);
+
+	$master->check_prerequisites;
+	$master->get_master ( logger => $server )->job_control;
+
+	if ( $start_webserver ) {
+		# start webserver
+		require Video::DVDRip::Cluster::Webserver;
+		my $webserver = Video::DVDRip::Cluster::Webserver->new (
+			port   => $webserver_port,
+			master => $master->get_master,
+		);
+	}
+
+	# start the object RPC server
+	$server->start;
+}
+

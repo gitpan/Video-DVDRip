@@ -1,4 +1,4 @@
-# $Id: Base.pm,v 1.39 2005/12/26 13:57:46 joern Exp $
+# $Id: Base.pm,v 1.34 2004/12/11 15:20:14 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -10,7 +10,6 @@
 
 package Video::DVDRip::Base;
 use Locale::TextDomain qw (video.dvdrip);
-use Video::DVDRip::FixLocaleTextDomainUTF8;
 
 use Video::DVDRip::Config;
 use Video::DVDRip::FilterList;
@@ -24,7 +23,6 @@ use Data::Dumper;
 
 # load preferences ---------------------------------------------------
 my $CONFIG_OBJECT = Video::DVDRip::Config->new;
-$Video::DVDRip::PREFERENCE_FILE ||= "$ENV{HOME}/.dvdriprc";
 $CONFIG_OBJECT->set_filename ($Video::DVDRip::PREFERENCE_FILE);
 $CONFIG_OBJECT->save if not -f $Video::DVDRip::PREFERENCE_FILE;
 $CONFIG_OBJECT->load;
@@ -36,11 +34,6 @@ my $DEPEND_OBJECT = Video::DVDRip::Depend->new;
 # pre load transcode's filter list -----------------------------------
 Video::DVDRip::FilterList->get_filter_list
 	if $DEPEND_OBJECT->version ("transcode") >= 603;
-
-sub new {
-	my $class = shift;
-	return bless {}, $class;
-}
 
 sub config {
 	my $thingy = shift;
@@ -280,9 +273,15 @@ sub log {
 
 sub clone {
 	my $self = shift;
+	my %par = @_;
+	my ($deep) = @par{'deep'};
 
-	require Storable;
-	return Storable::dclone($self);
+	if ( not $deep ) {
+		my %object = %{$self};
+		return bless \%object, ref $self;
+	} else {
+		croak "deep cloning currently not supported";
+	}
 }
 
 sub combine_command_options {
@@ -295,7 +294,7 @@ sub combine_command_options {
 	$cmd_line =~ s/\s+$//;
 	$cmd_line .= ";" if $cmd_line !~ /;$/;
 	my @parts = grep !/^$/, (
-		$cmd_line =~ m!(.*?)\s*(\(|\)|;|&&|\|\||\`which nice\`\s+-n\s+[\d-]+|dvdrip-exec\s+)\s*!g
+		$cmd_line =~ m!(.*?)\s*(\(|\)|;|&&|\|\||\`which nice\`\s+-n\s+[\d-]+|dr_exec\s+)\s*!g
 	);
 
 	# walk through and process requested command
@@ -454,7 +453,7 @@ sub search_perl_inc {
 
 	foreach my $INC ( @INC ) {
 		$file = "$INC/$rel_path";
-		last if -e $file;
+		last if -f $file;
 		$file = "";
 	}
 

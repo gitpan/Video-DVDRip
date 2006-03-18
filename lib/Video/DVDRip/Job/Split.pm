@@ -1,4 +1,4 @@
-# $Id: Split.pm,v 1.8 2005/12/26 13:57:47 joern Exp $
+# $Id: Split.pm,v 1.7.2.2 2006/03/18 11:23:01 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -10,7 +10,6 @@
 
 package Video::DVDRip::Job::Split;
 use Locale::TextDomain qw (video.dvdrip);
-use Video::DVDRip::FixLocaleTextDomainUTF8;
 
 # That's Perl! The job classes inherit from this class,
 # which is decided at *runtime* - this way standard and
@@ -109,7 +108,7 @@ sub parse_output {
 			);
 		}
 	} else {
-		if ( $line =~ /\(\d{6}-(\d+)\),\s+(.*?)\[.*?$/ ) {
+		if ( $line =~ /\(\d+-(\d+)\),\s+(.*?)\[.*?$/ ) {
 			$self->set_progress_cnt ($1);
 		}
 	}

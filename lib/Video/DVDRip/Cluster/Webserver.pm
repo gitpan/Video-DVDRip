@@ -1,4 +1,4 @@
-# $Id: Webserver.pm,v 1.5 2005/12/26 13:57:47 joern Exp $
+# $Id: Webserver.pm,v 1.3 2004/04/11 23:36:19 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -10,7 +10,6 @@
 
 package Video::DVDRip::Cluster::Webserver;
 use Locale::TextDomain qw (video.dvdrip);
-use Video::DVDRip::FixLocaleTextDomainUTF8;
 
 use base qw ( Video::DVDRip::Base );
 
@@ -93,7 +92,6 @@ sub new_http_client {
 
 package Video::DVDRip::Cluster::Webserver::Client;
 use Locale::TextDomain qw (video.dvdrip);
-use Video::DVDRip::FixLocaleTextDomainUTF8;
 
 use FileHandle;
 use constant NICE => -1;
@@ -185,11 +183,17 @@ sub read_http_request {
 	$self->set_event($e);
 	
 	my $fd = $self->get_fd;
-	my $request;
-
-	if ( !sysread($fd, $request, 4096) ) {
+	
+	if ( eof($fd) ) {
 		$self->close_connection;
 		return 1;
+	}
+
+	my $request;
+	while ( not eof($fd) ) {
+		my $line = <$fd>;
+		last if $line =~ /^\s*$/;
+		$request .= $line;
 	}
 
 	$self->set_request ( $request );
@@ -321,10 +325,10 @@ sub send_state {
 
 	#-- Projects
 
-	my $projects   = $self->webserver->master->projects_list;
+	my $projects   = $self->webserver->master->get_projects_lref;
 	my $project_id = $self->state->{project};
 
-	$project_id = $projects->[0]->[0]
+	$project_id = $projects->[0]->[1]
 		if $projects->[0] and
 		   not defined $project_id;
 
@@ -348,9 +352,9 @@ __EOF
 		my $row_class;
 		foreach my $p ( @{$projects} ) {
 			++$nr;
-			$row_class = $p->[0] == $project_id ?
+			$row_class = $p->[1] == $project_id ?
 				"row_selected" : "row";
-			my $url = $self->get_url ( project => $p->[0] );
+			my $url = $self->get_url ( project => $p->[1] );
 			print $fd <<__EOF;
 <tr>
   <td class="$row_class">$nr</td>
@@ -368,11 +372,11 @@ __EOF
 	
 	my $jobs;
 	eval {
-		$jobs = $self->webserver->master->jobs_list (
+		$jobs = $self->webserver->master->get_jobs_lref (
 			project_id => $project_id,
 		);
 	};
-print $@ if $@;
+
 	if ( $jobs ) {
 	
 		print $fd <<__EOF;
@@ -422,17 +426,21 @@ __EOF
 </tr>
 __EOF
 
-	my $nodes = $self->webserver->master->nodes_list;
+	my $nodes = $self->webserver->master->nodes;
 
 	my $nr = 0;
 	my ($name, $job_info, $progress);
 	foreach my $n ( @{$nodes} ) {
+		++$nr;
+		$name = $n->name;
+		$job_info = $n->job_info;
+		$progress = $n->progress;
 		print $fd <<__EOF;
 <tr>
-  <td class="row">$n->[1]</td>
-  <td class="row">$n->[2]</td>
-  <td class="row">$n->[3]</td>
-  <td class="row">$n->[4]</td>
+  <td class="row">$nr</td>
+  <td class="row">$name</td>
+  <td class="row">$job_info</td>
+  <td class="row">$progress</td>
 </tr>
 __EOF
 	}
@@ -446,15 +454,11 @@ sub send_html_footer {
 
 	my $fd = $self->get_fd;
 
-	my $year = (localtime(time))[5]+1900;
-
-	print $fd <<__EOF;
+	print $fd <<'__EOF';
 <p class="page_footer">
 dvd::rip cluster control daemon -
-&copy; 2003-$year Jörn Reder, All Rights Reserverd -
-__EOF
-	print $fd <<'__EOF';
-$Id: Webserver.pm,v 1.5 2005/12/26 13:57:47 joern Exp $
+&copy; 2003 Jörn Reder, All Rights Reserverd -
+$Id: Webserver.pm,v 1.3 2004/04/11 23:36:19 joern Exp $
 </p>
 </body></html>
 __EOF

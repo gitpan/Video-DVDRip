@@ -1,4 +1,4 @@
-# $Id: Preview.pm,v 1.15 2005/12/26 13:57:47 joern Exp $
+# $Id: Preview.pm,v 1.11 2005/05/06 12:20:04 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -10,7 +10,6 @@
 
 package Video::DVDRip::GUI::Preview;
 use Locale::TextDomain qw (video.dvdrip);
-use Video::DVDRip::FixLocaleTextDomainUTF8;
 
 use Carp;
 use strict;
@@ -18,7 +17,6 @@ use strict;
 @Video::DVDRip::GUI::Preview::ISA = qw ( Video::DVDRip::GUI::Base );
 
 use Video::DVDRip::TranscodeRC;
-use Gtk2::Helper;
 
 sub transcode_remote		{ shift->{transcode_remote}		}
 sub transcode_pipe		{ shift->{transcode_pipe}		}
@@ -46,13 +44,13 @@ sub new {
 	my  ($closed_cb, $selection_cb, $eof_cb) =
 	@par{'closed_cb','selection_cb','eof_cb'};
 
-	my $self = $class->SUPER::new(@_);
+	my $self = {
+		closed_cb	=> $closed_cb,
+		selection_cb	=> $selection_cb,
+		eof_cb		=> $eof_cb,
+	};
 	
-	$self->set_closed_cb($closed_cb);
-	$self->set_selection_cb($selection_cb);
-	$self->set_eof_cb($eof_cb);
-
-	return $self;
+	return bless $self, $class;
 }
 
 sub closed { not defined shift->transcode_pipe }
@@ -60,13 +58,13 @@ sub closed { not defined shift->transcode_pipe }
 sub open {
 	my $self = shift;
 
-	return if $self->set_transcode_pipe;
+	croak "Preview already open" if $self->set_transcode_pipe;
 	
 	my $socket_file = "/tmp/tc.$$.".time.(int(rand(100000))).".sock";
 	
 	# start transcode
 	
-	my $title = $self->selected_title;
+	my $title = $self->comp('project')->selected_title;
 	
 	my ($orig_start, $orig_end) = (
 		$title->tc_start_frame,
@@ -115,17 +113,17 @@ sub open {
 	my $start_time = time();
 	
 	my $timer;
-	$timer = Glib::Timeout->add ( 200, sub {
+	$timer = Gtk->timeout_add ( 200, sub {
 		if ( not -e $socket_file ) {
 			if ( time - $start_time >= 10 ) {
 				$self->stop;
-				Glib::Source->remove($timer);
+				Gtk->timeout_remove($timer);
 				croak "msg:Couldn't start transcode.";
 			}
 			return 1;
 		}
 
-		Glib::Source->remove($timer);
+		Gtk->timeout_remove($timer);
 
 		# start remote control
 		my $transcode_remote = Video::DVDRip::TranscodeRC->new (
@@ -145,9 +143,9 @@ sub open {
 
 		my $socket_fileno = $transcode_remote->socket->fileno;
 
-		my $gdk_input = Gtk2::Helper->add_watch (
+		my $gdk_input = Gtk::Gdk->input_add (
 			$socket_fileno,
-			'in', sub {
+			'read', sub {
 				my $rc = $transcode_remote->receive;
 				if ( defined $rc ) {
 					$self->process_transcode_remote_output (
@@ -173,7 +171,7 @@ sub open {
 sub apply_filter_settings {
 	my $self = shift;
 
-	my $title = $self->selected_title;
+	my $title = $self->comp('project')->selected_title;
 
 	my $config_strings =
 		$title->tc_filter_settings
@@ -217,10 +215,10 @@ sub stop {
 	if ( $self->transcode_remote and $self->transcode_remote->paused ) {
 		$self->pause;
 		$self->transcode_remote->quit;
-		Glib::Timeout->add (500, sub {
+		Gtk->timeout_add (500, sub {
 			$self->transcode_remote->disconnect;
 			$self->transcode_pipe->cancel;
-			Gtk2::Helper->remove_watch($self->gdk_input);
+			Gtk::Gdk->input_remove( $self->gdk_input );
 			$self->close;
 			return 0;
 
@@ -230,7 +228,7 @@ sub stop {
 			if $self->transcode_remote;
 		$self->transcode_pipe->cancel
 			if $self->transcode_pipe;
-		Gtk2::Helper->remove_watch($self->gdk_input);
+		Gtk::Gdk->input_remove( $self->gdk_input );
 		$self->close;
 	}
 	
@@ -258,11 +256,6 @@ sub pause {
 	return $self->transcode_remote->paused;
 }
 
-sub paused {
-	my $self = shift;
-	return $self->transcode_remote->paused;
-}
-
 sub process_transcode_remote_output {
 	my $self = shift;
 	my %par = @_;
@@ -274,7 +267,7 @@ sub process_transcode_remote_output {
 		&$closed_cb() if $closed_cb;
 		if ( $self->transcode_pipe ) {
 			$self->transcode_pipe->cancel;
-			Gtk2::Helper->remove_watch($self->gdk_input);
+			Gtk::Gdk->input_remove( $self->gdk_input );
 			$self->close;
 		}
 	}

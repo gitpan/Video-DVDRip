@@ -1,4 +1,4 @@
-# $Id: Depend.pm,v 1.14 2005/12/26 13:57:46 joern Exp $
+# $Id: Depend.pm,v 1.8.2.2 2006/03/18 11:48:07 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -10,7 +10,6 @@
 
 package Video::DVDRip::Depend;
 use Locale::TextDomain qw (video.dvdrip);
-use Video::DVDRip::FixLocaleTextDomainUTF8;
 
 @ISA = qw ( Video::DVDRip::Base );
 
@@ -20,7 +19,7 @@ use Carp;
 use strict;
 
 my @DVDRIP_BIN_FILES = qw (
-    dvdrip              dvdrip-exec
+    dvdrip              execflow
     dvdrip-master       dvdrip-multitee
     dvdrip-progress     dvdrip-tet
     dvdrip-splitpipe    dvdrip-subpng
@@ -140,7 +139,7 @@ my %TOOLS = (
     },
     rar => {
         order       => ++$ORDER,
-        command     => Video::DVDRip::Depend->config('rar_command'),
+        command     => "rar",
         comment     => __ "Needed for compressed vobsub subtitles",
         optional    => 1,
         get_version => sub {

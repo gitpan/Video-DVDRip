@@ -1,4 +1,4 @@
-# $Id: BurnTab.pm,v 1.16 2005/12/26 13:57:47 joern Exp $
+# $Id: BurnTab.pm,v 1.15 2004/04/11 23:36:20 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -10,7 +10,6 @@
 
 package Video::DVDRip::GUI::Project;
 use Locale::TextDomain qw (video.dvdrip);
-use Video::DVDRip::FixLocaleTextDomainUTF8;
 
 use Carp;
 use strict;

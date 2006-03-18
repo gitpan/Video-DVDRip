@@ -1,4 +1,4 @@
-# $Id: Title.pm,v 1.49 2005/12/26 13:57:47 joern Exp $
+# $Id: Title.pm,v 1.45.2.1 2005/08/14 21:22:29 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -10,7 +10,6 @@
 
 package Video::DVDRip::Cluster::Title;
 use Locale::TextDomain qw (video.dvdrip);
-use Video::DVDRip::FixLocaleTextDomainUTF8;
 
 use base Video::DVDRip::Title;
 
@@ -33,11 +32,6 @@ sub set_with_vob_remove		{ shift->{with_vob_remove} 	= $_[1] }
 
 sub frames_per_chunk		{ shift->{frames_per_chunk}		}
 sub set_frames_per_chunk	{ shift->{frames_per_chunk} 	= $_[1] }
-
-sub info {
-	my $self = shift;
-	return $self->project->name." (#".$self->nr.")";
-}
 
 sub create_vob_dir {
 	my $self = shift; $self->trace_in;
@@ -66,7 +60,7 @@ sub create_avi_dir {
 sub multipass_log_dir {				# directory for multipass logs
 	my $self = shift; $self->trace_in;
 
-	my $job = $self->project->assigned_job or die "No job assigned";
+	my $job = $self->project->assigned_job or croak "No job assigned";
 	
 	return sprintf (
 		"%s/%s/cluster/%03d-%02d-%05d",
@@ -81,7 +75,7 @@ sub multipass_log_dir {				# directory for multipass logs
 sub avi_chunks_dir {				# directory for avi chunks
 	my $self = shift; $self->trace_in;
 
-	my $job = $self->project->assigned_job or die "No job assigned";
+	my $job = $self->project->assigned_job or croak "No job assigned";
 	
 	return sprintf (
 		"%s/%03d/chunks-psu-%02d",
@@ -94,7 +88,7 @@ sub avi_chunks_dir {				# directory for avi chunks
 sub avi_file {					# transcode output file
 	my $self = shift; $self->trace_in;
 
-	my $job = $self->project->assigned_job or die "No job assigned";
+	my $job = $self->project->assigned_job or croak "No job assigned";
 	
 	return sprintf (
 		"%s/%s-%03d-%05d.avi",
@@ -108,7 +102,7 @@ sub avi_file {					# transcode output file
 sub target_avi_audio_file {
 	my $self = shift; $self->trace_in;
 
-	my $job = $self->project->assigned_job or die "No job assigned";
+	my $job = $self->project->assigned_job or croak "No job assigned";
 	
 	my $ext = $self->is_ogg ? $self->config('ogg_file_ext') : 'avi';
 
@@ -138,7 +132,7 @@ sub audio_video_psu_dir {
 sub audio_video_psu_file {
 	my $self = shift; $self->trace_in;
 
-	my $job = $self->project->assigned_job or die "No job assigned";
+	my $job = $self->project->assigned_job or croak "No job assigned";
 	
 	my $ext = $self->is_ogg ? $self->config('ogg_file_ext') : 'avi';
 
@@ -173,7 +167,7 @@ sub target_avi_file {				# final avi, merged PSUs + audio
 sub get_transcode_command {
 	my $self = shift; $self->trace_in;
 
-	my $job       = $self->project->assigned_job or die "No job assigned";
+	my $job       = $self->project->assigned_job or croak "No job assigned";
 
 	my $psu       = $job->psu;
 	my $chunk     = $job->chunk;
@@ -229,7 +223,7 @@ sub get_transcode_audio_command {
 	$command =~ s/\s+&& echo DVDRIP_SUCCESS//;
 
 	# add PSU selection and -W cluster parameter
-	my $job = $self->project->assigned_job or die "No job assigned";
+	my $job = $self->project->assigned_job or croak "No job assigned";
 
 	$command .=
 		" -S ".$job->psu.
@@ -246,7 +240,7 @@ sub get_merge_audio_command {
 	my %par = @_;
 	my ($vob_nr, $target_nr) = @par{'vob_nr','target_nr'};
 
-	my $job = $self->project->assigned_job or die "No job assigned";
+	my $job = $self->project->assigned_job or croak "No job assigned";
 
 	my $avi_file      = $self->audio_video_psu_file;
 	my $audio_file    = $self->target_avi_audio_file;
@@ -273,7 +267,7 @@ sub get_merge_audio_command {
 			   $self->audio_video_psu_file ne $target_file;
 
 		$command .=
-			"dvdrip-exec ogmmerge -o $avi_file.merged ".
+			"dr_exec ogmmerge -o $avi_file.merged ".
 			" $avi_file".
 			" $audio_file &&".
 			" mv $avi_file.merged $target_file &&".
@@ -282,7 +276,7 @@ sub get_merge_audio_command {
 		
 	} else {
 		$command .=
-			"dvdrip-exec avimerge".
+			"dr_exec avimerge".
 			" -p $audio_file".
 			" -a $target_nr".
 			" -o $avi_file.merged".
@@ -298,7 +292,7 @@ sub get_merge_audio_command {
 sub get_merge_video_audio_command {
 	my $self = shift; $self->trace_in;
 	
-	my $job = $self->project->assigned_job or die "No job assigned";
+	my $job = $self->project->assigned_job or croak "No job assigned";
 
 	my $avi_chunks_dir       = $self->avi_chunks_dir;
 	my $audio_video_psu_file = $self->audio_video_psu_file;
@@ -319,7 +313,7 @@ sub get_merge_video_audio_command {
 
 	my $command =
 		"mkdir -m 0775 -p '$audio_video_psu_dir' && ".
-		"${nice}dvdrip-exec avimerge -i $avi_chunks_dir/*".
+		"${nice}dr_exec avimerge -i $avi_chunks_dir/*".
 		" -o $audio_video_psu_file ";
 	
 	$command .= " -p $audio_psu_file " if not $self->is_ogg;
@@ -351,7 +345,7 @@ sub get_merge_psu_command {
 
 	my $command =
 		"mkdir -m 0775 -p '$target_avi_dir' && ".
-		"${nice}dvdrip-exec ";
+		"${nice}dr_exec ";
 
 	if ( $self->is_ogg ) {
 		$command .="ogmcat -v -v ";	# -v -v to prevent timeouts

@@ -1,4 +1,4 @@
-# $Id: GrabSubtitleImages.pm,v 1.7 2005/12/26 13:57:47 joern Exp $
+# $Id: GrabSubtitleImages.pm,v 1.4 2004/04/11 23:36:20 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -10,12 +10,14 @@
 
 package Video::DVDRip::Job::GrabSubtitleImages;
 use Locale::TextDomain qw (video.dvdrip);
-use Video::DVDRip::FixLocaleTextDomainUTF8;
 
 use base Video::DVDRip::Job;
 
 use Carp;
 use strict;
+
+sub show_image_cb		{ shift->{show_image_cb}		}
+sub set_show_image_cb		{ shift->{show_image_cb}	= $_[1]	}
 
 sub type {
 	return "grab subtitle images";
@@ -56,8 +58,10 @@ sub parse_output {
 	my $self = shift;
 	my ($buffer) = @_;
 
-	if ( $buffer =~ /pic(\d+)/ ) {
-		$self->set_progress_cnt ($1*10);
+	if ( $buffer =~ /Generating\s+image:\s+(.*pic(\d+)\.pgm)/ ) {
+		$self->set_progress_cnt ($2*10);
+		my $show_image_cb = $self->show_image_cb;
+		&$show_image_cb ( filename => $1 ) if $show_image_cb;
 	}
 
 	$self->set_operation_successful (1)

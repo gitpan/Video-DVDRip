@@ -1,4 +1,4 @@
-# $Id: TranscodeRC.pm,v 1.11 2005/12/26 13:57:47 joern Exp $
+# $Id: TranscodeRC.pm,v 1.9 2004/04/11 23:36:19 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -10,7 +10,6 @@
 
 package Video::DVDRip::TranscodeRC;
 use Locale::TextDomain qw (video.dvdrip);
-use Video::DVDRip::FixLocaleTextDomainUTF8;
 
 use Carp;
 use strict;
@@ -158,7 +157,7 @@ sub receive {
 	}
 
 	if ( not $self->sent and @{$self->command_queue} != 0 ) {
-		Glib::Timeout->add (200, sub {
+		Gtk->timeout_add (200, sub {
 			$self->send ( line => shift @{$self->command_queue} );
 			return 0;
 		});

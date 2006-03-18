@@ -8,11 +8,8 @@
 
 package Video::DVDRip;
 use Locale::TextDomain qw (video.dvdrip);
-use Video::DVDRip::FixLocaleTextDomainUTF8;
 
-BEGIN {
-    $VERSION = "0.97.6";
-}
+$VERSION = "0.52.7";
 
 use base Video::DVDRip::Base;
 
@@ -26,7 +23,7 @@ require 5.006;
 	'vcd'       => "MPEG",
 );
 
-@Video::DVDRip::deinterlace_filters = (
+%Video::DVDRip::deinterlace_filters = (
 	0          => __"No deinterlacing",
 	1          => __"Interpolate scanlines (fast)",
 	2          => __"Handled by encoder (may segfault)",
@@ -49,6 +46,9 @@ require 5.006;
 	'a52drc'    => __"Range compression (liba52 filter)",
 	'normalize' => __"Normalizing (mplayer filter)",
 );
+
+$Video::DVDRIP::scratch_width   = 1024;
+$Video::DVDRIP::scratch_height  = 768;
 
 1;
 

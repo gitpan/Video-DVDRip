@@ -1,4 +1,4 @@
-# $Id: BitrateCalc.pm,v 1.17 2005/12/26 13:57:46 joern Exp $
+# $Id: BitrateCalc.pm,v 1.14.2.1 2006/03/18 11:07:26 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -10,7 +10,6 @@
 
 package Video::DVDRip::BitrateCalc;
 use Locale::TextDomain qw (video.dvdrip);
-use Video::DVDRip::FixLocaleTextDomainUTF8;
 
 use base Video::DVDRip::Base;
 use strict;
@@ -23,7 +22,7 @@ my $OGG_SIZE_OVERHEAD   = 0.25 / 100;
 my $VCD_VIDEO_RATE	= 1152;
 my $MAX_SVCD_SUM_RATE	= 2748;
 my $MAX_SVCD_VIDEO_RATE	= 2600;
-my $MAX_VIDEO_RATE	= 9000;
+my $MAX_VIDEO_RATE	= 6000;
 
 my %VORBIS_NOMINAL_BITRATES = (
 	0  =>  60,
@@ -104,6 +103,14 @@ sub new {
 	@par{'audio_size','audio_bitrate','target_size','disc_size'};
 	my  ($vobsub_size) =
 	@par{'vobsub_size'};
+
+	if ( $title->tc_video_bitrate_manual ) {
+		if ( $title->tc_video_bitrate_last_edit eq 'bpp' ) {
+			$video_bpp = $title->tc_video_bpp;
+		} else {
+			$video_bitrate = $title->tc_video_bitrate;
+		}
+	}
 
 	my $self = {
 		title			=> $title,
@@ -247,9 +254,7 @@ sub calc_audio_size_and_bitrate {
 			unit     => "MB",
 		});
 	} else {
-		my $nr = -1;
 		foreach my $audio ( @{$title->audio_tracks} ) {
-			++$nr;
 			next if $audio->tc_target_track == -1;
 
 			my $bitrate = $audio->tc_bitrate;
@@ -258,6 +263,7 @@ sub calc_audio_size_and_bitrate {
 			     	# derive a bitrate from vorbis quality setting
 			     	$bitrate = $VORBIS_NOMINAL_BITRATES{int($audio->tc_vorbis_quality+0.5)};
 			}
+
 			my $track_size = $runtime * $bitrate * 1000 / 8 / 1024 / 1024;
 			my $audio_overhead;
 			$audio_overhead = $AVI_AUDIO_OVERHEAD * $frames / 1024 / 1024
@@ -284,7 +290,7 @@ sub calc_audio_size_and_bitrate {
 
 			$self->add_to_sheet ({
 				label    => __x("Audio track #{nr}",
-						nr => $nr).$comment,
+						nr => $audio->tc_target_track).$comment,
 				operator => $operator,
 				value    => $track_size,
 				unit     => "MB",
@@ -413,7 +419,7 @@ sub calc_svcd_overhead {
 	my $self = shift;
 	
 	my $title       = $self->title;
-	my $target_size = $self->target_size || 1;
+	my $target_size = $self->target_size || die "no target_size";
 	my $container   = $title->tc_container;
 	
 	if ( $container eq 'vcd' and $title->tc_disc_cnt * $title->tc_disc_size == $title->tc_target_size ) {
@@ -508,22 +514,55 @@ sub calc_video_size_and_bitrate {
 	# resulting video bitrate
 	my $video_bitrate = int($video_size/$runtime/1000*1024*1024*8);
 
+	my $comment = "(rounded)";
+	if ( $video_bitrate > $self->max_video_rate ) {
+		$video_bitrate = $self->max_video_rate;
+		$comment = " ".__x("(too high, set to {max_video_rate})",
+				   max_video_rate => $self->max_video_rate);
+	}
+	
+	if ( $title->tc_video_codec =~ /^(X?SVCD|CVD|XVCD)$/ and
+	     $video_bitrate + $audio_bitrate > $self->max_svcd_sum_rate ) {
+		$video_bitrate = $self->max_svcd_sum_rate - $audio_bitrate;
+		$comment = " ".__"(too high, limited)";
+	}
+
+	if ( $title->tc_video_codec =~ /^(X?SVCD|CVD|XVCD)$/ and
+	     $video_bitrate > $self->max_svcd_video_rate ) {
+		$video_bitrate = $self->max_svcd_video_rate;
+		$comment = " ".__"(too high, limited)";
+	}
+
+	if ( $title->tc_video_codec =~ /^X?VCD$/ and
+	     not $title->tc_video_bitrate_manual ) {
+		$video_bitrate = $self->vcd_video_rate;
+		$comment = " ".__"(VCD has fixed rate)";
+	}
+
+	if ( $title->tc_video_bitrate_manual ) {
+		if ( $title->tc_video_bitrate_last_edit eq 'bpp' ) {
+			my $pps = $title->frame_rate * $width * $height;
+			my $bpp = $title->tc_video_bpp;
+			$video_bitrate = int($bpp * $pps / 1000);
+			$comment = " ".__x("(from bpp {bpp})", bpp => $bpp);
+		} else {
+			$video_bitrate = $title->tc_video_bitrate;
+			$comment = " ".__"(manual setting)";
+		}
+	}
+
 	$self->add_to_sheet ({
-		label    => __("Resulting video bitrate, rounded"),
+		label    => __("Resulting video bitrate").$comment,
 		operator => "~",
 		value    => $video_bitrate,
 		unit     => "kbit/s",
 	});
 
-	# probably too high for selected video codec
-	$video_bitrate = $self->calc_video_bitrate_limit (
-		video_bitrate => $video_bitrate,
-	);
-
 	# calculate bpp
 	my $bpp = 0;
-	if ( $title->tc_video_bitrate_mode eq 'bpp' ) {
-		$bpp = sprintf("%.3f", $title->tc_video_bpp_manual);
+	if ( $title->tc_video_bitrate_manual && 
+	     $title->tc_video_bitrate_last_edit eq 'bpp' ) {
+		$bpp = $title->tc_video_bpp;
 	} else {
 		my $pps = $title->frame_rate * $width * $height;
 		$bpp = $video_bitrate * 1000 / $pps if $pps != 0;
@@ -548,56 +587,17 @@ sub calc_video_size_and_bitrate {
 		unit     => "MB",
 	});
 
+	# calculate vcd multiplex bitrate reserve
+	my $vcd_reserve_bitrate =
+		$audio_bitrate +
+		int(($audio_bitrate + $video_bitrate)*0.02);
+
+
 	$self->set_video_bitrate($video_bitrate);
 	$self->set_video_bpp($bpp);
 	$self->set_video_size($video_size);
-
+	$self->set_vcd_reserve_bitrate($vcd_reserve_bitrate);
 	1;
-}
-
-sub calc_video_bitrate_limit {
-	my $self = shift;
-	my %par = @_;
-	my ($video_bitrate) = @par{'video_bitrate'};
-
-	my $title   = $self->title;
-	my $audio_bitrate = $self->audio_bitrate;
-
-	my $comment;
-	if ( $video_bitrate > $self->max_video_rate ) {
-		$video_bitrate = $self->max_video_rate;
-		$comment = __x("Bitrate too high, set to {max_video_rate}",
-				   max_video_rate => $self->max_video_rate);
-	}
-	
-	if ( $title->tc_video_codec =~ /^(SVCD|CVD|VCD)$/ and
-	     $video_bitrate + $audio_bitrate > $self->max_svcd_sum_rate ) {
-		$video_bitrate = $self->max_svcd_sum_rate - $audio_bitrate;
-		$comment = __"Bitrate too high, limited";
-	}
-
-	if ( $title->tc_video_codec =~ /^(SVCD|CVD|VCD)$/ and
-	     $video_bitrate > $self->max_svcd_video_rate ) {
-		$video_bitrate = $self->max_svcd_video_rate;
-		$comment = __"Bitrate too high, limited";
-	}
-
-	if ( $title->tc_video_codec =~ /^VCD$/ and
-	     $title->tc_video_bitrate_mode ne 'manual' ) {
-		$video_bitrate = $self->vcd_video_rate;
-		$comment = __"VCD has fixed rate";
-	}
-
-	if ( $comment ) {
-		$self->add_to_sheet ({
-			label    => $comment,
-			operator => "=",
-			value    => $video_bitrate,
-			unit     => "kbit/s",
-		});
-	}
-
-	return $video_bitrate;
 }
 
 sub calc_video_size_from_bitrate {
@@ -605,17 +605,15 @@ sub calc_video_size_from_bitrate {
 	
 	my $title = $self->title;
 	
-	my $video_bitrate    = $title->tc_video_bitrate_manual;
-	my $video_bpp        = $title->tc_video_bpp_manual;
+	my $video_bitrate    = $title->tc_video_bitrate;
+	my $video_bpp        = $title->tc_video_bpp;
 	my ($width, $height) = $title->get_effective_ratio ( type => "clip2" );
 
 	# pixel per second
 	my $pps = $title->frame_rate * $width * $height;
 	
-	if ( $title->tc_video_bitrate_mode eq 'bpp' ) {
+	if ( $title->tc_video_bitrate_last_edit eq 'bpp' ) {
 		$video_bitrate = int($video_bpp * $pps / 1000);
-		$video_bitrate = 100 if $video_bitrate < 100;
-		$video_bpp = sprintf("%.3f", $video_bpp);
 		$self->add_to_sheet ({
 			label    => __"Manual BPP setting",
 			operator => "=",
@@ -628,9 +626,6 @@ sub calc_video_size_from_bitrate {
 			value    => $video_bitrate,
 			unit     => "kbit/s",
 		});
-		$video_bitrate = $self->calc_video_bitrate_limit (
-			video_bitrate => $video_bitrate,
-		);
 	} else {
 		$video_bpp = $video_bitrate * 1000 / $pps if $pps != 0;
 		$video_bpp = sprintf("%.3f", $video_bpp);
@@ -640,11 +635,8 @@ sub calc_video_size_from_bitrate {
 			value    => $video_bitrate,
 			unit     => "kbit/s",
 		});
-		$video_bitrate = $self->calc_video_bitrate_limit (
-			video_bitrate => $video_bitrate,
-		);
 		$self->add_to_sheet ({
-			label    => __"Resulting BPP",
+			label    => __"Resulting Video Bitrate",
 			operator => "~",
 			value    => $video_bpp,
 			unit     => "bpp",
@@ -700,10 +692,10 @@ sub calculate {
 
 	my $title = $self->title;
 
-	if ( $title->tc_video_bitrate_mode eq 'size' ) {
-		return $self->calculate_video_bitrate;
-	} else {
+	if ( $title->tc_video_bitrate_manual ) {
 		return $self->calculate_with_manual_bitrate
+	} else {
+		return $self->calculate_video_bitrate;
 	}
 }
 

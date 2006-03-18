@@ -1,4 +1,4 @@
-# $Id: InfoFile.pm,v 1.12 2005/12/26 13:57:46 joern Exp $
+# $Id: InfoFile.pm,v 1.10 2004/04/11 23:36:19 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -10,7 +10,6 @@
 
 package Video::DVDRip::InfoFile;
 use Locale::TextDomain qw (video.dvdrip);
-use Video::DVDRip::FixLocaleTextDomainUTF8;
 
 use base Video::DVDRip::Base;
 
@@ -164,6 +163,7 @@ sub write {
 		$self->add_head ( name => "Audio ".($audio->tc_target_track+1) );
 
 		my $codec = $audio->tc_audio_codec;
+		my $probe = $title->audio_tracks->[$audio->tc_nr];
 
 		$self->add_field (
 			name  => "DVD audio track id",
@@ -171,7 +171,7 @@ sub write {
 		);
 		$self->add_field (
 			name  => "Language",
-			value => $audio->lang,
+			value => $probe->lang,
 		);
 		$self->add_field (
 			name  => "Audio codec",
@@ -183,11 +183,11 @@ sub write {
 		) if $codec eq "mp3";
 		$self->add_field (
 			name  => "Channels",
-			value => $codec eq "ac3" ? $audio->channels : 2,
+			value => $codec eq "ac3" ? $probe->channels : 2,
 		);
 		$self->add_field (
 			name  => "Sample rate",
-			value => $audio->sample_rate,
+			value => $probe->sample_rate,
 		);
 		my $bitrate_method = "tc_${codec}_bitrate";
 		$self->add_field (
