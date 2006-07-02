@@ -64,6 +64,8 @@ install: $(MO_FILES)
 		cp -f $$cat $$dest && chmod 644 $$dest || exit 1; \
 	done
 	touch .mo.installed
+	cd ..; \
+	tools/gensplash
 
 update-mo: $(MO_FILES)
 

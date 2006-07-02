@@ -1,4 +1,4 @@
-# $Id: PSU.pm,v 1.4 2004/04/11 23:36:19 joern Exp $
+# $Id: PSU.pm,v 1.7 2006/05/15 20:27:16 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -16,13 +16,12 @@ use base Video::DVDRip::PSU;
 use Carp;
 use strict;
 
-sub selected			{ shift->{selected}			}
-sub set_selected		{ shift->{selected}		= $_[1] }
+sub selected                    { shift->{selected}                     }
+sub chunk_cnt                   { shift->{chunk_cnt}                    }
+sub state                       { shift->{state}                        }
 
-sub chunk_cnt			{ shift->{chunk_cnt}			}
-sub set_chunk_cnt		{ shift->{chunk_cnt}		= $_[1] }
-
-sub state			{ shift->{state}			}
-sub set_state			{ shift->{state}		= $_[1] }
+sub set_selected                { shift->{selected}             = $_[1] }
+sub set_chunk_cnt               { shift->{chunk_cnt}            = $_[1] }
+sub set_state                   { shift->{state}                = $_[1] }
 
 1;

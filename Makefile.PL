@@ -1,4 +1,4 @@
-# $Id: Makefile.PL,v 1.22 2004/10/10 13:47:41 joern Exp $
+# $Id: Makefile.PL,v 1.33 2006/07/02 14:53:22 joern Exp $
 
 use strict;
 
@@ -9,22 +9,39 @@ use FileHandle;
 $| = 1;
 
 WriteMakefile(
-    'NAME'	=> 'Video::DVDRip',
+    'NAME'         => 'Video::DVDRip',
     'VERSION_FROM' => 'lib/Video/DVDRip.pm',
-    'EXE_FILES' => [ 'dvdrip', 'dvdrip-master', 'dr_exec',
-    		     'dr_splitpipe', 'dr_progress' ],
-    'PREREQ_PM' => { 'Gtk' => 0.7008, 'Gtk::Gdk::Pixbuf' => 0, 'Locale::TextDomain' => 0 },
-    'clean' => { FILES => 'dr_splitpipe src/dr_splitpipe dr_progress src/dr_progress l10n/.mo.installed' },
+    'EXE_FILES'    => [
+        'bin/dvdrip',          'bin/dvdrip-master',
+        'bin/dvdrip-exec',     'bin/dvdrip-multitee',
+        'bin/dvdrip-replex',   'bin/dvdrip-subpng',
+        'bin/dvdrip-splitpipe',
+        'bin/dvdrip-progress', 'bin/dvdrip-splash',
+        'bin/dvdrip-thumb'
+    ],
+    'PREREQ_PM' => {
+        'Gtk2'                  => 1.081,
+        'Gtk2::Ex::FormFactory' => 0.65,
+        'Event::ExecFlow'       => 0.62,
+        'Event::RPC'            => 0.89,
+        'AnyEvent'              => 1.02,
+        'Locale::TextDomain'    => 1.16,
+    },
+    'clean' => {
+              FILES => 'bin/dvdrip-splitpipe src/dvdrip-splitpipe '
+            . 'bin/dvdrip-progress src/dvdrip-progress '
+            . 'l10n/.mo.installed'
+    },
     'dist' => {
-         COMPRESS => "gzip",
-         SUFFIX   => "gz",
-	 PREOP    => 'echo "DONT USE THIS - USE tools/mkdist.pl INSTEAD"; exit 1',
+        COMPRESS => "gzip",
+        SUFFIX   => "gz",
+        PREOP => 'echo "DONT USE THIS - USE tools/mkdist.pl INSTEAD"; exit 1',
     },
 );
 
 sub MY::postamble {
-	'
-dr_splitpipe dr_progress: src/Makefile
+    '
+bin/dvdrip-splitpipe bin/dvdrip-progress: src/Makefile
 	cd src && make
 ';
 }

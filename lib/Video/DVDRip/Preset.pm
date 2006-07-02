@@ -1,9 +1,9 @@
-# $Id: Preset.pm,v 1.7 2004/04/11 23:36:19 joern Exp $
+# $Id: Preset.pm,v 1.10 2006/05/15 20:27:16 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
 # All Rights Reserved. See file COPYRIGHT for details.
-# 
+#
 # This module is part of Video::DVDRip, which is free software; you can
 # redistribute it and/or modify it under the same terms as Perl itself.
 #-----------------------------------------------------------------------
@@ -50,44 +50,53 @@ sub set_tc_clip2_right		{ shift->{tc_clip2_right}	= $_[1]	}
 sub set_tc_fast_resize		{ shift->{tc_fast_resize}    	= $_[1]	}
 
 sub new {
-	my $type = shift;
-	my %par = @_;
-	my  ($name, $title, $tc_zoom_width, $tc_zoom_height, $tc_fast_resize) =
-	@par{'name','title','tc_zoom_width','tc_zoom_height','tc_fast_resize'};
-	my  ($tc_clip1_top, $tc_clip1_bottom, $tc_clip1_left, $tc_clip1_right) =
-	@par{'tc_clip1_top','tc_clip1_bottom','tc_clip1_left','tc_clip1_right'};
-	my  ($tc_clip2_top, $tc_clip2_bottom, $tc_clip2_left, $tc_clip2_right) =
-	@par{'tc_clip2_top','tc_clip2_bottom','tc_clip2_left','tc_clip2_right'};
-	my  ($auto, $frame_size) =
-	@par {'auto','frame_size'};
+    my $type = shift;
+    my %par  = @_;
+    my ( $name, $title, $tc_zoom_width, $tc_zoom_height, $tc_fast_resize )
+        = @par{
+        'name',          'title',
+        'tc_zoom_width', 'tc_zoom_height',
+        'tc_fast_resize'
+        };
+    my ( $tc_clip1_top, $tc_clip1_bottom, $tc_clip1_left, $tc_clip1_right )
+        = @par{
+        'tc_clip1_top',  'tc_clip1_bottom',
+        'tc_clip1_left', 'tc_clip1_right'
+        };
+    my ( $tc_clip2_top, $tc_clip2_bottom, $tc_clip2_left, $tc_clip2_right )
+        = @par{
+        'tc_clip2_top',  'tc_clip2_bottom',
+        'tc_clip2_left', 'tc_clip2_right'
+        };
+    my ( $auto, $frame_size ) = @par{ 'auto', 'frame_size' };
 
-	my $self = {
-		name		=> $name,
-		title		=> $title,
-		auto		=> $auto,
-		frame_size	=> $frame_size,
-		tc_clip1_top	=> $tc_clip1_top,
-		tc_clip1_bottom	=> $tc_clip1_bottom,
-		tc_clip1_left	=> $tc_clip1_left,
-		tc_clip1_right	=> $tc_clip1_right,
-		tc_zoom_width	=> $tc_zoom_width,
-		tc_zoom_height	=> $tc_zoom_height,
-		tc_clip2_top	=> $tc_clip2_top,
-		tc_clip2_bottom	=> $tc_clip2_bottom,
-		tc_clip2_left	=> $tc_clip2_left,
-		tc_clip2_right	=> $tc_clip2_right,
-		tc_fast_resize	=> $tc_fast_resize,
-	};
-	
-	return bless $self, $type;
+    my $self = {
+        name            => $name,
+        title           => $title,
+        auto            => $auto,
+        frame_size      => $frame_size,
+        tc_clip1_top    => $tc_clip1_top,
+        tc_clip1_bottom => $tc_clip1_bottom,
+        tc_clip1_left   => $tc_clip1_left,
+        tc_clip1_right  => $tc_clip1_right,
+        tc_zoom_width   => $tc_zoom_width,
+        tc_zoom_height  => $tc_zoom_height,
+        tc_clip2_top    => $tc_clip2_top,
+        tc_clip2_bottom => $tc_clip2_bottom,
+        tc_clip2_left   => $tc_clip2_left,
+        tc_clip2_right  => $tc_clip2_right,
+        tc_fast_resize  => $tc_fast_resize,
+    };
+
+    return bless $self, $type;
 }
 
 sub attributes {
-	my $self = shift;
-	
-	my @attr = grep /^tc/, keys %{$self};
-	
-	return \@attr;
+    my $self = shift;
+
+    my @attr = grep /^tc/, keys %{$self};
+
+    return \@attr;
 }
 
 1;

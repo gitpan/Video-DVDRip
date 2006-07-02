@@ -1,4 +1,4 @@
-# $Id: Depend.pm,v 1.8.2.2 2006/03/18 11:48:07 joern Exp $
+# $Id: Depend.pm,v 1.20 2006/07/02 15:07:06 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -21,8 +21,8 @@ use strict;
 my @DVDRIP_BIN_FILES = qw (
     dvdrip              execflow
     dvdrip-master       dvdrip-multitee
-    dvdrip-progress     dvdrip-tet
-    dvdrip-splitpipe    dvdrip-subpng
+    dvdrip-progress     dvdrip-splitpipe
+    dvdrip-subpng
 );
 
 my $ORDER = 0;
@@ -69,7 +69,6 @@ my %TOOLS = (
         optional    => 0,
         get_version => sub {
             qx[transcode -v 2>&1] =~ /v(\d+\.\d+\.\d+(\.\d+)?)/i;
-            wait;    # saw zombies on a Slackware system without it.
             return $1;
         },
         convert       => 'default',
@@ -88,7 +87,6 @@ my %TOOLS = (
         optional    => 0,
         get_version => sub {
             qx[convert -version 2>&1] =~ /ImageMagick\s+(\d+\.\d+(\.\d+)?)/i;
-            wait;    # saw zombies on a Slackware system without it.
             return $1;
         },
         convert   => 'default',
@@ -102,7 +100,6 @@ my %TOOLS = (
         optional    => 1,
         get_version => sub {
             qx[xvid4conf -v 2>&1] =~ /(\d+\.\d+(\.\d+)?)/i;
-            wait;    # saw zombies on a Slackware system without it.
             return $1;
         },
         convert   => 'default',
@@ -116,7 +113,6 @@ my %TOOLS = (
         optional    => 1,
         get_version => sub {
             qx[subtitle2pgm -h  2>&1] =~ /version\s+(\d+\.\d+(\.\d+)?)/i;
-            wait;    # saw zombies on a Slackware system without it.
             return $1;
         },
         convert   => 'default',
@@ -130,7 +126,6 @@ my %TOOLS = (
         optional    => 1,
         get_version => sub {
             qx[lsdvd -V  2>&1] =~ /lsdvd\s+(\d+\.\d+(\.\d+)?)/i;
-            wait;    # saw zombies on a Slackware system without it.
             return $1;
         },
         convert   => 'default',
@@ -139,14 +134,13 @@ my %TOOLS = (
     },
     rar => {
         order       => ++$ORDER,
-        command     => "rar",
+        command     => Video::DVDRip::Depend->config('rar_command'),
         comment     => __ "Needed for compressed vobsub subtitles",
         optional    => 1,
         get_version => sub {
             my $self = shift;
             my $rar  = $self->config('rar_command');
             qx[$rar '-?' 2>&1] =~ /rar\s+(\d+\.\d+(\.\d+)?)/i;
-            wait;    # saw zombies on a Slackware system without it.
             return $1;
         },
         convert   => 'default',
@@ -161,7 +155,6 @@ my %TOOLS = (
         optional    => 1,
         get_version => sub {
             my $out = qx[mplayer --help 2>&1];
-            wait;    # saw zombies on a Slackware system without it.
             if ( $out =~ /CVS/i ) {
                 return "cvs";
             }
@@ -181,7 +174,6 @@ my %TOOLS = (
         optional    => 1,
         get_version => sub {
             qx[ogmmerge -V 2>&1] =~ /v(\d+\.\d+(\.\d+)?)/i;
-            wait;    # saw zombies on a Slackware system without it.
             return $1;
         },
         convert   => 'default',
@@ -195,7 +187,6 @@ my %TOOLS = (
         optional    => 1,
         get_version => sub {
             qx[dvdxchap -V 2>&1] =~ /v(\d+\.\d+(\.\d+)?)/i;
-            wait;    # saw zombies on a Slackware system without it.
             return $1;
         },
         convert   => 'default',
@@ -209,83 +200,11 @@ my %TOOLS = (
         optional    => 1,
         get_version => sub {
             qx[mplex --help 2>&1] =~ /version\s+(\d+\.\d+(\.\d+)?)/i;
-            wait;    # saw zombies on a Slackware system without it.
             return $1;
         },
         convert   => 'default',
         min       => "1.6.0",
         suggested => "1.6.2",
-    },
-    cdrdao => {
-        order       => ++$ORDER,
-        command     => "cdrdao",
-        comment     => __ "Needed for (S)VCD burning",
-        optional    => 1,
-        get_version => sub {
-            qx[cdrdao show-toc -h 2>&1]
-                =~ /version\s+(\d+\.\d+\.\d+(\.\d+)?)/i;
-            wait;    # saw zombies on a Slackware system without it.
-            return $1;
-        },
-        convert   => 'default',
-        min       => "1.1.7",
-        suggested => "1.1.9",
-    },
-    vcdimager => {
-        order       => ++$ORDER,
-        command     => "vcdimager",
-        comment     => __ "Needed for (S)VCD burning",
-        optional    => 1,
-        get_version => sub {
-            qx[vcdimager -V 2>&1] =~ /vcdimager.*?\s+(\d+\.\d+(\.\d+)?)/i;
-            wait;    # saw zombies on a Slackware system without it.
-            return $1;
-        },
-        convert   => 'default',
-        min       => "0.7.12",
-        suggested => "0.7.21",
-    },
-    mkisofs => {
-        order       => ++$ORDER,
-        command     => "mkisofs",
-        comment     => __ "Needed for AVI/OGG burning",
-        optional    => 1,
-        get_version => sub {
-            qx[mkisofs -version 2>&1] =~ /mkisofs\s+(\d+\.\d+(\.\d+)?)/i;
-            wait;    # saw zombies on a Slackware system without it.
-            return $1;
-        },
-        convert   => 'default',
-        min       => "1.15",
-        suggested => "2.0",
-    },
-    cdrecord => {
-        order       => ++$ORDER,
-        command     => "cdrecord",
-        comment     => __ "Needed for AVI/OGG burning on CD",
-        optional    => 1,
-        get_version => sub {
-            qx[cdrecord -version 2>&1] =~ /(\d+\.\d+(\.\d+)?)/i;
-            wait;    # saw zombies on a Slackware system without it.
-            return $1;
-        },
-        convert   => 'default',
-        min       => "0.7.12",
-        suggested => "2.6.11",
-    },
-    dvdrecord => {
-        order       => ++$ORDER,
-        command     => "dvdrecord",
-        comment     => __ "Needed for AVI/OGG burning on DVD",
-        optional    => 1,
-        get_version => sub {
-            qx[dvdrecord -version 2>&1] =~ /(\d+\.\d+(\.\d+)?)/i;
-            wait;    # saw zombies on a Slackware system without it.
-            return $1;
-        },
-        convert   => 'default',
-        min       => "0.2.0",
-        suggested => "0.2.1",
     },
     xine => {
         order       => ++$ORDER,
@@ -294,7 +213,6 @@ my %TOOLS = (
         optional    => 1,
         get_version => sub {
             qx[xine -version 2>&1] =~ /v(\d+\.\d+(\.\d+)?)/i;
-            wait;    # saw zombies on a Slackware system without it.
             return $1;
         },
         convert   => 'default',
@@ -308,12 +226,24 @@ my %TOOLS = (
         optional    => 1,
         get_version => sub {
             qx[/usr/sbin/fping -v 2>&1] =~ /Version\s+(\d+\.\d+(\.\d+)?)/i;
-            wait;    # saw zombies on a Slackware system without it.
             return $1;
         },
         convert   => 'default',
         min       => "2.2",
         suggested => "2.4",
+    },
+    hal => {
+        order       => ++$ORDER,
+        command     => "/usr/bin/lshal",
+        comment     => __"Used for DVD device scanning",
+        optional    => 1,
+        get_version => sub {
+            qx[/usr/bin/lshal -v 2>&1] =~ /version\s+(\d+\.\d+(\.\d+)?)/i;
+            return $1;
+        },
+        convert   => 'default',
+        min       => "0.5",
+        suggested => "0.5.7",
     },
 );
 

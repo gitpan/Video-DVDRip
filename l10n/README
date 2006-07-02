@@ -1,4 +1,4 @@
-$Id: README,v 1.3 2004/04/25 16:34:45 joern Exp $
+$Id: README,v 1.6 2006/06/18 12:42:31 joern Exp $
 
 Notes for translators
 =====================
@@ -12,6 +12,7 @@ case of software updates.
 
 * Package       gettext              >= 0.13
 * Perl Module   Locale::TextDomain   >= 1.10
+* Program       inkscape             (for splash screen)
 
 Locale::TextDomain is packaged as libintl-perl in Debian
 (and probably also in other Linux distributions).
@@ -59,11 +60,33 @@ or added. So you need to keep your translation up-to-date.
   catalogs and you're done.
 
 
+4. Splash screen
+----------------
+
+dvd::rip has a splash screen showing at startup. It's a .png file
+generated from an Inkscape .svg drawing. To add a splash screen
+for your language, just copy the english version, launch inkscape
+and translate the text parts. "make install" converts the .svg
+file to .png and installs it into the right place:
+
+  % cp splash.en.svg splash.fr.svg
+  % inkscape splash.fr.po
+  % make install
+
+The dvd::rip version number is replaced during the installation
+process, so keep the "DVDRIP-VERSION" placeholder unchanged.
+
+
 Credits
 -------
-The whole l10n framework is based on Guido Flohr's Perl module
-Locale::TextDomain. When I began adding l10n support to dvd::rip
-I was wondering about all this gettext stuff, which wasn't really
-Perlish and I thought about implementing my own small framework.
-But luckily enough I found this module well timed and I was surprised
-how easy l10n can be ;)
+
+* The whole l10n framework is based on Guido Flohr's Perl module
+  Locale::TextDomain. When I began adding l10n support to dvd::rip
+  I was wondering about all this gettext stuff, which wasn't really
+  Perlish and I thought about implementing my own small framework.
+  But luckily enough I found this module well timed and I was surprised
+  how easy l10n can be ;)
+
+* The current layout of the splash screen is a contribution of
+  Christophe Combelles. He replaced the swanky "A full featured
+  DVD ripper" by this nice ->CD drawing ;)

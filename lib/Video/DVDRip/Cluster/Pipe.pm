@@ -1,9 +1,9 @@
-# $Id: Pipe.pm,v 1.13 2005/05/16 08:04:24 joern Exp $
+# $Id: Pipe.pm,v 1.19 2006/05/15 20:27:16 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
 # All Rights Reserved. See file COPYRIGHT for details.
-# 
+#
 # This program is part of Video::DVDRip, which is free software; you can
 # redistribute it and/or modify it under the same terms as Perl itself.
 #-----------------------------------------------------------------------
@@ -23,230 +23,231 @@ use strict;
 
 my $LIFO_SIZE = 40;
 
-sub command			{ shift->{command}			}
-sub timeout			{ shift->{timeout}			}
-sub cb_finished			{ shift->{cb_finished}			}
-sub cb_line_read		{ shift->{cb_line_read}			}
+sub command      { shift->{command} }
+sub timeout      { shift->{timeout} }
+sub cb_finished  { shift->{cb_finished} }
+sub cb_line_read { shift->{cb_line_read} }
 
-sub no_log			{ shift->{no_log}			}
-sub set_no_log			{ shift->{no_log}		= $_[1]	}
+sub no_log     { shift->{no_log} }
+sub set_no_log { shift->{no_log} = $_[1] }
 
-sub lifo			{ shift->{lifo}				}
-sub lifo_idx			{ shift->{lifo_idx}			}
+sub lifo     { shift->{lifo} }
+sub lifo_idx { shift->{lifo_idx} }
 
-sub fh				{ shift->{fh}				}
-sub pid				{ shift->{pid}				}
-sub line_buffer			{ shift->{line_buffer}			}
-sub event_waiter		{ shift->{event_waiter}			}
+sub fh           { shift->{fh} }
+sub pid          { shift->{pid} }
+sub line_buffer  { shift->{line_buffer} }
+sub event_waiter { shift->{event_waiter} }
+sub closed       { shift->{closed} }
 
-sub set_fh			{ shift->{fh}			= $_[1]	}
-sub set_pid			{ shift->{pid}			= $_[1]	}
-sub set_event_waiter		{ shift->{event_waiter}		= $_[1]	}
-sub set_line_buffer		{ shift->{line_buffer}		= $_[1]	}
+sub set_fh           { shift->{fh}           = $_[1] }
+sub set_pid          { shift->{pid}          = $_[1] }
+sub set_event_waiter { shift->{event_waiter} = $_[1] }
+sub set_line_buffer  { shift->{line_buffer}  = $_[1] }
+sub set_closed       { shift->{closed}       = $_[1] }
 
 sub new {
-	my $class = shift;
-	my %par = @_;
-	my  ($command, $cb_line_read, $cb_finished, $timeout, $no_log) =
-	@par{'command','cb_line_read','cb_finished','timeout','no_log'};
+    my $class = shift;
+    my %par   = @_;
+    my ( $command, $cb_line_read, $cb_finished, $timeout, $no_log )
+        = @par{ 'command', 'cb_line_read', 'cb_finished', 'timeout',
+        'no_log' };
 
-	$timeout ||= 30;
+    $timeout ||= 30;
 
-	my $self = {
-		timeout		=> $timeout,
-		command		=> $command,
-		cb_line_read	=> $cb_line_read,
-		cb_finished	=> $cb_finished,
-		no_log		=> $no_log,
-		event_waiter	=> undef,
-		output_lifo	=> [ ( undef ) x $LIFO_SIZE ],
-		lifo_idx	=> -1,
-	};
+    my $self = {
+        timeout      => $timeout,
+        command      => $command,
+        cb_line_read => $cb_line_read,
+        cb_finished  => $cb_finished,
+        no_log       => $no_log,
+        event_waiter => undef,
+        output_lifo => [ (undef) x $LIFO_SIZE ],
+        lifo_idx => -1,
+    };
 
-	return bless $self, $class;
+    return bless $self, $class;
 }
 
 sub open {
-	my $self = shift;
+    my $self = shift;
 
-	my $timeout = $self->timeout;
-	my $command = $self->command;
+    my $timeout = $self->timeout;
+    my $command = $self->command;
 
-	my $fh  = FileHandle->new;
-	my $pid;
-	
-	# we use fork & exec, because we want to have
-	# STDERR on STDOUT in the child.
-	$pid = open($fh, "-|");
-	croak "can't fork child process" if not defined $pid;
-		
-	if ( not $pid ) {
-		# we are the child. Copy STDERR to STDOUT
-		close STDERR;
-		open (STDERR, ">&STDOUT")
-			or croak "can't dup STDOUT to STDERR";
-		my $command = $self->command;
-		$command = "dr_exec $command" if $command !~ /dr_exec/;
-		exec ($command)
-			or croak "can't exec program: $!";
-	}
+    my $fh = FileHandle->new;
+    my $pid;
 
-	# we are the parent and go further, holding the
-	# pid of our child in $pid
+    # we use fork & exec, because we want to have
+    # STDERR on STDOUT in the child.
+    $pid = open( $fh, "-|" );
+    croak "can't fork child process" if not defined $pid;
 
-	$self->set_fh($fh);
-	$self->set_pid($pid);
+    if ( not $pid ) {
 
-	my %timeout_options;
-	%timeout_options = (
-		timeout 	=> $timeout,
-		timeout_cb	=> sub { $self->timeout_expired },
-	) if $timeout;
+        # we are the child. Copy STDERR to STDOUT
+        close STDERR;
+        open( STDERR, ">&STDOUT" )
+            or croak "can't dup STDOUT to STDERR";
+        my $command = $self->command;
+        $command = "execflow $command" if $command !~ /execflow/;
+        exec($command)
+            or croak "can't exec program: $!";
+    }
 
-	$self->set_event_waiter (
-	    Event->io (
-		fd      	=> $fh,
-		poll    	=> 'r',
-		desc 		=> "command execution",
-		nice    	=> NICE,
-		cb   		=> sub { $self->input ( $_[1] ) },
-		%timeout_options,
-	    )
-	);
+    # we are the parent and go further, holding the
+    # pid of our child in $pid
 
-	$self->log (3,
-		__x("execute command: {command} (timeout={timeout})",
-		    command =>$command, timeout => $timeout)
-	) unless $self->no_log;
+    $self->set_fh($fh);
+    $self->set_pid($pid);
 
-	return $self;
+    my %timeout_options;
+    %timeout_options = (
+        timeout => $timeout,
+        timeout_cb => sub { $self->timeout_expired },
+        )
+        if $timeout;
+
+    $self->set_event_waiter(
+        Event->io(
+            fd   => $fh,
+            poll => 'r',
+            desc => "command execution",
+            nice => NICE,
+            cb   => sub { $self->input( $_[1] ) },
+            %timeout_options,
+        )
+    );
+
+    $self->log(
+        3,
+        __x("execute command: {command} (timeout={timeout})",
+            command => $command,
+            timeout => $timeout
+        )
+        )
+        unless $self->no_log;
+
+    return $self;
 }
 
 sub add_lifo_line {
-	my $self = shift;
+    my $self = shift;
 
-	$self->{lifo}->[
-		$self->{lifo_idx} = ($self->{lifo_idx} + 1) % $LIFO_SIZE
-	] = $_[0];
+    $self->{lifo}
+        ->[ $self->{lifo_idx} = ( $self->{lifo_idx} + 1 ) % $LIFO_SIZE ]
+        = $_[0];
 
-	1;
+    1;
 }
 
 sub output_tail {
-	my $self = shift;
-	
-	my $tail = '';
-	my $lifo_idx = $self->{lifo_idx};
-	my $i = $lifo_idx;
+    my $self = shift;
 
-	while () {
-		last if not defined $self->{lifo}->[$i];
-		$tail .= $self->{lifo}->[$i++];
-		$i = $i % $LIFO_SIZE;
-		last if $i == $lifo_idx;
-	}
-	
-	return $tail;
+    my $tail     = '';
+    my $lifo_idx = $self->{lifo_idx};
+    my $i        = $lifo_idx;
+
+    while () {
+        last if not defined $self->{lifo}->[$i];
+        $tail .= $self->{lifo}->[ $i++ ];
+        $i = $i % $LIFO_SIZE;
+        last if $i == $lifo_idx;
+    }
+
+    return $tail;
 }
 
 sub timeout_expired {
-	my $self = shift;
+    my $self = shift;
 
-	$self->log (__"Command cancelled due to timeout")
-		unless $self->no_log;
+    $self->log( __ "Command cancelled due to timeout" )
+        unless $self->no_log;
 
-	kill 15, $self->pid;
-	$self->cancel;
+    kill 15, $self->pid;
+    $self->cancel;
 
-	1;
+    1;
 }
 
 sub input {
-	my $self = shift;
-	my ($abort) = @_;
+    my $self = shift;
+    my ($abort) = @_;
 
-	my $fh = $self->fh;
+    my $fh = $self->fh;
+    my $line_buffer;
 
-	# eof or abort?
-	if ( $abort or eof ($fh) ) {
-		$self->close;
-		my $cb_finished = $self->cb_finished;
-		&$cb_finished ();
-		return;
-	}
+    # eof or abort?
+    if ( $abort or !sysread( $fh, $line_buffer, 4096 ) ) {
+        $self->close;
+        return;
+    }
 
-	# read next line
-	my ($rc, $last_was_eol, $got_empty_line);
-	my $line_buffer = $self->line_buffer;
+    # read next line
+    my ( $rc, $got_empty_line );
 
-	while ( not eof($fh) and defined ($rc = getc($fh)) ) {
-		last if $last_was_eol and $rc ne "\n" and $rc ne "\r";
-		if ( $rc ne "\n" and $rc ne "\r" ) {
-			$line_buffer .= $rc;
-		} elsif ( $last_was_eol ) {
-			$got_empty_line = 1;
-			$rc = '';
-			last;
-		} else {
-			$last_was_eol = 1;
-		}
-		last if $line_buffer =~ /password: $/;
-	}
+    # get job's PID
+    my ($pid) = ( $line_buffer =~ /DVDRIP_JOB_PID=(\d+)/ );
+    if ( defined $pid ) {
+        $self->set_pid($pid);
+        $self->log( __x( "Job has PID {pid}", pid => $pid ) )
+            unless $self->no_log;
+        $line_buffer =~ s/DVDRIP_JOB_PID=(\d+)//;
+        $rc          =~ s/DVDRIP_JOB_PID=(\d+)//;
+    }
 
-	# get job's PID
-	my ($pid) = ( $line_buffer =~ /DVDRIP_JOB_PID=(\d+)/ );
-	if ( defined $pid ) {
-		$self->set_pid ( $pid );
-		$self->log (__x("Job has PID {pid}", pid => $pid))
-			unless $self->no_log;
-		$line_buffer =~ s/DVDRIP_JOB_PID=(\d+)//;
-		$rc =~ s/DVDRIP_JOB_PID=(\d+)//;
-	}
+    # append line to lifo
+    $self->add_lifo_line($line_buffer);
 
-	# append line to lifo
-	$self->add_lifo_line ( $line_buffer."\n" );
+    # call the line_read callback, if we have one
+    my $cb_line_read = $self->cb_line_read;
+    &$cb_line_read($line_buffer) if $cb_line_read;
 
-	# call the line_read callback, if we have one
-	my $cb_line_read = $self->cb_line_read;
-	&$cb_line_read($line_buffer) if $cb_line_read;
-	&$cb_line_read('')           if $got_empty_line and $cb_line_read;
-
-	$self->set_line_buffer ($rc);
-
-	1;
+    1;
 }
 
 sub close {
-	my $self = shift;
-	
-	my $fh = $self->fh;
-	
-	$self->event_waiter->cancel if $self->event_waiter;
-	$self->set_event_waiter (undef);
+    my $self = shift;
 
-	close $fh;
-	waitpid $self->pid, 0;
+    return if $self->closed;
 
-	$self->log (5, "command finished: ".$self->command)
-		unless $self->no_log;
-	
-	1;
+    my $fh = $self->fh;
+
+    $self->event_waiter->cancel if $self->event_waiter;
+    $self->set_event_waiter(undef);
+
+    close $fh;
+    waitpid $self->pid, 0;
+
+    $self->set_closed(1);
+
+    my $cb_finished = $self->cb_finished;
+    &$cb_finished() if $cb_finished;
+
+    $self->log( 5, "command finished: " . $self->command )
+        unless $self->no_log;
+
+    1;
 }
 
 sub cancel {
-	my $self = shift;
+    my $self = shift;
 
-	my $pid = $self->pid;
+    my $pid = $self->pid;
 
-	if ( $pid ) {
-		$self->log (__x("Aborting command. Sending signal 1 to PID {pid}...", pid => $pid))
-			unless $self->no_log;
-		kill 1, $pid;
-	}
+    if ($pid) {
+        $self->log(
+            __x("Aborting command. Sending signal 1 to PID {pid}...",
+                pid => $pid
+            )
+            )
+            unless $self->no_log;
+        kill 1, $pid;
+    }
 
-	$self->close;
+    $self->close;
 
-	1;
+    1;
 }
 
 1;

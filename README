@@ -160,11 +160,15 @@ deb ftp://ftp.nerim.net/debian-marillat sid main
    You can download dvd::rip sources from this server or all stable
    releases from any CPAN mirror.
 
-   Local download of the latest stable release: (currently no unstable
-   release available)
+   Local download of the latest stable release:
 
-     Video-DVDRip-0.52.7.tar.gz
-     Video-DVDRip-0.52.7.tar.gz.asc (GnuPG signature, get key)
+     Video-DVDRip-0.97.12.tar.gz
+     Video-DVDRip-0.97.12.tar.gz.asc (GnuPG signature, get key)
+
+   Local download of the latest unstable release:
+
+     Video-DVDRip-0.97.12.tar.gz
+     Video-DVDRip-0.97.12.tar.gz.asc (GnuPG signature, get key)
 
    CPAN download directory: (list of mirrors)
 
@@ -258,13 +262,9 @@ cd dvdrip; cvs -z3 update
    ogmtools Needed for OGG/Vorbis No 1.5 1.0.0 -
    dvdxchap For chapter progress bar (ogmtools) No 1.5 1.0.0 -
    mjpegtools Needed for (S)VCD encoding No 1.6.2 1.6.0 -
-   cdrdao Needed for (S)VCD burning No 1.1.9 1.1.7 -
-   vcdimager Needed for (S)VCD burning No 0.7.21 0.7.12 -
-   mkisofs Needed for AVI/OGG burning No 2.0 1.15 -
-   cdrecord Needed for AVI/OGG burning on CD No 2.6.11 0.7.12 -
-   dvdrecord Needed for AVI/OGG burning on DVD No 0.2.1 0.2.0 -
    xine Can be used to view DVD's/files No 0.9.15 0.9.13 -
    fping Only for cluster mode master No 2.4 2.2 -
+   hal Used for DVD device scanning No 0.5.7 0.5 -
 
    The following chapters describe the needed tools in detail, including
    information on how to get them. Additionally to the table above all
@@ -506,7 +506,7 @@ chmod u+s /usr/sbin/fping
    generate the Makefile and execute make:
 
 # as a normal user
-tar xfz Video-DVDRip-0.52.7.tar.gz
+tar xfz Video-DVDRip-0.97.12.tar.gz
 cd Video-DVDRip-x.xx
 perl Makefile.PL
 make
@@ -560,7 +560,7 @@ make install
    otherwise some dvd::rip helper binaries may be taken from another
    place.
 
-tar xvfz Video-DVDRip-0.52.7.tar.gz
+tar xvfz Video-DVDRip-0.97.12.tar.gz
 cd Video-DVDRip-x.xx
 perl Makefile.PL && make
 export PATH=.:$PATH
@@ -790,27 +790,33 @@ URL References
   15. http://wwwkeys.de.pgp.net:11371/pks/lookup?op=get&search=0x285CF473
 
 VI. CHANGES
-   $Id: Changes,v 1.162.2.5 2006/03/18 11:42:09 joern Exp $
+   $Id: Changes.unstable,v 1.76 2006/07/02 13:50:26 joern Exp $
 
    Revision history and release notes for dvd::rip.
 
-   0.52.7 [stable branch] Sat Mar 18 2006, joern
-	Bugfixes:
-        - Added a workaround for strange transcode bug with VOB
-          directory input
-        - Backported NPTL-Workaround-Tool-Version-Caching bugfix
-          into stable branch.
-        - NPTL Workaround now disabled by default, because it's
-          in general not necessary anymore with newer transcode
-          releases and makes problems on some platforms.
-        - VCD bitrate calculation wasn't accurate, multiplex
-          reserve wasn't considered.
-        - Adjusted transcode frame count regex to cover new output
-          format of transcode 1.1.x as well.
-	- Applied a patch from Ulrich Spoerlein <q AT galgenberg.net>
-	  removing the -ping option from the ImageMagick "identify"
-	  calls, since recent ImageMagick versions don't have this
-	  option anymore.
-	- Applied minor patches from Ulrich Spoerlein to improve
-	  FreeBSD compatability.
+   0.97.12 [unstable branch] Sat Jul 2 2006, joern
+    Notes:
+    - New (optional) dependency: dvd::rip now uses HAL for DVD
+      device scanning.
+    - Gtk2::Ex::FormFactory 0.65 is required, which fixes a
+      serious 0.64 bug.
+
+    Features:
+    - Dropped 'DVD image' ripping mode, but added a more generic
+      approach of DVD input selection as a replacement. This
+      way you can 'rip' from a DVD image e.g. to fulfill cluster
+      mode requirements without hacking the DVD device preference
+      anymore. Suggested by Stefan Ollermann <Stefan.Ollermann AT gmx.de>.
+    - Added DVD device scanning using HAL. This is optional, you
+      can always select the DVD device file directly.
+    - French splash screen and generally updated splash screen
+      design by Christophe Combelles.
+    - Updated italian translation by Fabio Russo.
+    - Message finetuning, added more tooltips, updated German
+      translation.
+
+    Bugfixes:
+    - Removed all preference settings and dependencies for
+      CD burning, since this module doesn't exist anymore.
+    - Fixed minor free diskspace calculation bugs.
 

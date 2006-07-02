@@ -1,17 +1,18 @@
-# $Id: Progress.pm,v 1.28 2004/04/11 23:36:20 joern Exp $
+# $Id: Progress.pm,v 1.37 2006/07/02 08:32:28 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
 # All Rights Reserved. See file COPYRIGHT for details.
-# 
+#
 # This module is part of Video::DVDRip, which is free software; you can
 # redistribute it and/or modify it under the same terms as Perl itself.
 #-----------------------------------------------------------------------
 
 package Video::DVDRip::GUI::Progress;
-use Locale::TextDomain qw (video.dvdrip);
 
-use base Video::DVDRip::GUI::Component;
+use base qw( Video::DVDRip::GUI::Base );
+
+use Locale::TextDomain qw (video.dvdrip);
 
 use strict;
 use Carp;
@@ -20,126 +21,270 @@ use Cwd;
 
 use POSIX qw(:errno_h);
 
-sub gtk_progress		{ shift->{gtk_progress}			}
-sub gtk_cancel_button		{ shift->{gtk_cancel_button}		}
-sub cb_cancel			{ shift->{cb_cancel}			}
-sub is_active			{ shift->{is_active}			}
+sub cb_cancel                   { shift->{cb_cancel}                    }
+sub is_active                   { shift->{is_active}                    }
+sub progress_state              { shift->{progress_state}               }
+sub gtk_progress                { shift->{gtk_progress}                 }
+sub max_value                   { shift->{max_value}                    }
+sub details_ff                  { shift->{details_ff}                   }
+sub paused                      { shift->{paused}                       }
+sub show_details                { shift->{show_details}                 }
 
-sub set_gtk_cancel_button	{ shift->{gtk_cancel_button}	= $_[1] }
-sub set_gtk_progress		{ shift->{gtk_progress}		= $_[1] }
-sub set_cb_cancel		{ shift->{cb_cancel}		= $_[1]	}
-sub set_is_active		{ shift->{is_active}		= $_[1]	}
+sub set_cb_cancel               { shift->{cb_cancel}            = $_[1] }
+sub set_is_active               { shift->{is_active}            = $_[1] }
+sub set_progress_state          { shift->{progress_state}       = $_[1] }
+sub set_gtk_progress            { shift->{gtk_progress}         = $_[1] }
+sub set_max_value               { shift->{max_value}            = $_[1] }
+sub set_details_ff              { shift->{details_ff}           = $_[1] }
+sub set_paused                  { shift->{paused}               = $_[1] }
+sub set_show_details            { shift->{show_details}         = $_[1] }
 
-sub build {
-	my $self = shift; $self->trace_in;
+sub build_factory {
+    my $self = shift;
 
-	my $hbox = Gtk::HBox->new;
-	$hbox->show;
+    $self->get_context->set_object( "progress" => $self );
 
-	my $progress = Gtk::ProgressBar->new;
-	$progress->show;
-	$progress->set_value(0);
-	$progress->set_format_string ("");
-	$progress->set_show_text (1);
-	$hbox->pack_start($progress, 1, 1, 0);
+    my $progress = Gtk2::Ex::FormFactory::Form->new(
+        title   => __ "Status",
+        object  => "project",
+        content => [
+            Gtk2::Ex::FormFactory::HBox->new(
+                active_cond    => sub { $self->is_active },
+                active_depends => "progress.is_active",
+                content        => [
+                    Gtk2::Ex::FormFactory::ProgressBar->new(
+                        name   => "progress",
+                        attr   => "progress.progress_state",
+                        expand => 1,
+                    ),
+                    Gtk2::Ex::FormFactory::ToggleButton->new(
+                        attr       => "progress.show_details",
+                        tip        => __ "Show job plan and progress details",
+                        active     => 0,
+                        true_label => "",
+                        false_label        => "",
+                        stock              => "gtk-zoom-in",
+                        changed_hook_after => sub {
+                            $self->toggle_details_window;
+                            1;
+                        },
+                    ),
+                    Gtk2::Ex::FormFactory::ToggleButton->new(
+                        attr         => "progress.paused",
+                        name         => "progress_pause",
+                        stock        => "gtk-media-pause",
+                        tip          => __ "Pause and resume processing",
+                        label        => "",
+                        false_label  => "",
+                        true_label   => "",
+                        changed_hook => sub {
+                            my $job = $self->get_context->get_object_attr(
+                                "exec_flow_gui.job");
+                            $job->pause;
+                            1;
+                        },
+                    ),
+                    Gtk2::Ex::FormFactory::Button->new(
+                        name         => "progress_cancel",
+                        stock        => "gtk-cancel",
+                        tip          => __ "Cancel processing",
+                        label        => "",
+                        clicked_hook => sub {
+                            my $cb_cancel = $self->cb_cancel;
+                            &$cb_cancel() if $cb_cancel;
+                            1;
+                        },
+                    ),
+                ],
+            ),
+        ],
+    );
 
-	my $button = Gtk::Button->new_with_label (__"Cancel");
-	$button->signal_connect ("clicked", sub { $self->cancel } );
-
-	$hbox->pack_start($button, 0, 1, 0);
-
-	$self->set_widget ($hbox);
-	$self->set_gtk_progress ($progress);
-	$self->set_gtk_cancel_button ($button);
-	$self->set_comp ( progress => $self );
-
-	$self->set_is_active (0);
-	$self->set_idle_label;
-
-	return $hbox;
+    return $progress;
 }
 
 sub open {
-	my $self = shift; $self->trace_in;
-	my %par = @_;
-	my  ($max_value, $label, $cb_cancel) =
-	@par{'max_value','label','cb_cancel'};
+    my $self = shift;
+    my %par = @_;
+    my ( $max_value, $label, $cb_cancel )
+        = @par{ 'max_value', 'label', 'cb_cancel' };
 
-	$self->set_is_active ( 1 );
-	
-	my $adj = Gtk::Adjustment->new ( 0, 0, $max_value, 0, 0, 0); 
+    $self->set_gtk_progress(
+        $self->get_form_factory->get_widget("progress")->get_gtk_widget,
+    );
 
-	my $progress = $self->gtk_progress;
-	$progress->set_adjustment($adj);
-	$progress->set_format_string ($label);
-	$progress->set_show_text (1);
-	$progress->set_value(1);
+    $self->set_is_active(1);
+    $self->set_max_value($max_value);
+    $self->set_cb_cancel($cb_cancel);
+    $self->set_paused(0);
 
-	$self->set_cb_cancel ( $cb_cancel );
+    $self->get_context->update_object_attr_widgets("progress.is_active");
+    $self->get_context->update_object_attr_widgets("progress.paused");
 
-	$self->gtk_cancel_button->show if $cb_cancel;
-	$self->gtk_cancel_button->hide if not $cb_cancel;
+    $self->details_ff->update if $self->details_ff;
 
-	1;
+    1;
 }
 
 sub update {
-	my $self = shift;
-	my %par = @_;
-	my ($value, $label) = @par{'value','label'};
+    my $self = shift;
+    my %par  = @_;
+    my ( $value, $label ) = @par{ 'value', 'label' };
 
-	$label =~ s/%/%%/g;
+    $value = 0 if $value < 0;
+    $value = 1 if $value > 1;
 
-	$self->gtk_progress->set_format_string ($label);
-	$self->gtk_progress->set_value($value) if $value > 0;
+    $self->gtk_progress->set_text($label);
+    $self->gtk_progress->set_fraction($value);
 
-	1;
+    1;
 }
 
 sub close {
-	my $self = shift; $self->trace_in;
+    my $self = shift;
 
-	$self->gtk_progress->set_value ( 0 );
-	$self->gtk_cancel_button->hide;
+    $self->gtk_progress->set_fraction(0);
 
-	$self->set_is_active( 0 );
-	$self->set_idle_label;
+    $self->set_is_active(0);
+    $self->set_idle_label;
 
-	1;
+    $self->get_context->update_object_attr_widgets("progress.is_active");
+
+    if ( $self->details_ff ) {
+        $self->details_ff->get_widget("progress_detail_buttons")->update_all;
+    }
+
+    1;
 }
 
 sub cancel {
-	my $self = shift; $self->trace_in;
+    my $self = shift;
 
-	my $cb_cancel = $self->cb_cancel;
+    my $cb_cancel = $self->cb_cancel;
 
-	&$cb_cancel() if $cb_cancel;
-	
-	$self->close;
+    &$cb_cancel() if $cb_cancel;
 
-	1;
+    $self->close;
+
+    1;
 }
 
 sub set_idle_label {
-	my $self = shift; $self->trace_in;
-	
-	my $project;
-	my $project_comp = eval {$self->comp('project')};
-	$project = $project_comp->project if $project_comp;
+    my $self = shift;
 
-	my $label;
-	if ( $project ) {
-		my $free = $project->get_free_diskspace;
-		$label = __x("Free diskspace: {free} MB", free => $free);
-	} else {
-		$label = "";
-	}
+    my $project = eval { $self->project };
 
-	$self->gtk_progress->set_format_string ($label);
+    my $label;
+    if ($project) {
+        my $free = $project->get_free_diskspace;
+        $label = __x( "Free diskspace: {free} MB", free => $free );
+    }
+    else {
+        $label = "";
+    }
 
-	$project_comp->init_storage_values if $project_comp;
+    $self->gtk_progress->set_text($label);
 
-	1;
+    1;
+}
+
+sub toggle_details_window {
+    my $self = shift;
+
+    $self->build_details_ff if $self->show_details && !$self->details_ff;
+
+    1;
+}
+
+sub build_details_ff {
+    my $self = shift;
+
+    my $gtk_window = $self->get_form_factory->get_form_factory_gtk_window;
+
+    my $ff = Gtk2::Ex::FormFactory->new(
+        context => $self->get_context,
+        content => [
+            Gtk2::Ex::FormFactory::Window->new(
+                title          => __"dvd::rip - Job plan and progress details",
+                inactive       => "invisible",
+                active_cond    => sub { $self->show_details },
+                active_depends => "progress.show_details",
+                content        => [
+                    Gtk2::Ex::FormFactory::ExecFlow->new(
+                        name       => "exec_flow",
+                        attr       => "exec_flow_gui.job",
+                        scrollbars => [ 'automatic', 'automatic' ],
+                        width      => 640,
+                        height     => 300,
+                        expand     => 1,
+                        # add_columns => [ "diskspace_consumed", "diskspace_freed" ],
+                    ),
+                    Gtk2::Ex::FormFactory::HBox->new(
+                        name       => "progress_detail_buttons",
+                        properties => { homogeneous => 1 },
+                        content    => [
+                            Gtk2::Ex::FormFactory::Label->new(
+                                label  => " ",
+                                expand => 1,
+                            ),
+                            Gtk2::Ex::FormFactory::Button->new(
+                                stock        => "gtk-zoom-out",
+                                label        => __ "Hide window",
+                                tip          => __ "Hide details window",
+                                clicked_hook => sub {
+                                    $self->get_context->set_object_attr(
+                                        "progress.show_details", 0 );
+                                },
+                            ),
+                            Gtk2::Ex::FormFactory::ToggleButton->new(
+                                attr        => "progress.paused",
+                                name        => "details_progress_pause",
+                                stock       => "gtk-media-pause",
+                                false_label => __ "Pause jobs",
+                                true_label  => __ "Resume",
+                                tip => __ "Pause and resume processing",
+                                changed_hook => sub {
+                                    my $job
+                                        = $self->get_context->get_object_attr(
+                                        "exec_flow_gui.job");
+                                    $job->pause;
+                                    1;
+                                },
+                                active_cond => sub { $self->is_active },
+                                active_depends => "progress.is_active",
+                            ),
+                            Gtk2::Ex::FormFactory::Button->new(
+                                name         => "details_progress_cancel",
+                                stock        => "gtk-cancel",
+                                label        => __ "Cancel jobs",
+                                tip          => __ "Cancel all running jobs",
+                                clicked_hook => sub {
+                                    my $cb_cancel = $self->cb_cancel;
+                                    &$cb_cancel() if $cb_cancel;
+                                    1;
+                                },
+                                active_cond => sub { $self->is_active },
+                                active_depends => "progress.is_active",
+                            ),
+                        ],
+                    ),
+                ],
+                closed_hook => sub {
+                    $self->get_context->set_object_attr(
+                        "progress.show_details", 0 );
+                    $self->set_details_ff(undef);
+                },
+            ),
+        ],
+    );
+
+    $ff->build;
+    $ff->update;
+    $ff->show;
+
+    $self->set_details_ff($ff);
+
+    1;
 }
 
 1;

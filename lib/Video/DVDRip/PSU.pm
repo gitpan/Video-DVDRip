@@ -1,9 +1,9 @@
-# $Id: PSU.pm,v 1.4 2004/04/11 23:36:19 joern Exp $
+# $Id: PSU.pm,v 1.7 2006/05/15 20:27:16 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
 # All Rights Reserved. See file COPYRIGHT for details.
-# 
+#
 # This program is part of Video::DVDRip, which is free software; you can
 # redistribute it and/or modify it under the same terms as Perl itself.
 #-----------------------------------------------------------------------
@@ -23,17 +23,16 @@ sub set_nr			{ shift->{nr}			= $_[1] }
 sub set_frames			{ shift->{frames}		= $_[1]	}
 
 sub new {
-	my $class = shift;
-	my %par = @_;
-	my  ($nr, $frames) =
-	@par{'nr','frames'};
+    my $class = shift;
+    my %par   = @_;
+    my ( $nr, $frames ) = @par{ 'nr', 'frames' };
 
-	my $self = bless {
-		nr	 => $nr,
-		frames	 => $frames,
-	}, $class;
-	
-	return $self;
+    my $self = bless {
+        nr     => $nr,
+        frames => $frames,
+    }, $class;
+
+    return $self;
 }
 
 1;
