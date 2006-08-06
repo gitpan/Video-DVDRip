@@ -1,6 +1,32 @@
-$Id: Changes.unstable,v 1.76 2006/07/02 13:50:26 joern Exp $
+$Id: Changes.unstable,v 1.77 2006/08/05 23:04:46 joern Exp $
 
 Revision history and release notes for dvd::rip.
+
+0.97.13 [unstable branch] Sat Aug 5 2006, joern
+    Features:
+    - Updated French translation from Christophe Combelles.
+    - Updaged German translation.
+    - Initial preferences setup:
+      - Show additional message with some notes on intial setup
+      - Select first DVD device by default (if HAL is present)
+      - Default language setting is derived from user's locale
+      - Default dvd::rip data directores is set to $HOME/dvdrip-data
+      - Added a "Create directory" button besides the corresponding entries
+      - Rearanged pages, so most important settings are on the first page.
+
+    Bugfixes:
+    - dvd::rip missed creating the tmp/backup.rip file. Thanks
+      for the report to Ben Lancaster <lists AT benlancaster.co.uk>
+    - Chapter transcoding didn't work. Thanks for reporting this one
+      to Daniel <komet AT stolzesherz.de> and Robert Tell
+      <robert.tell AT gmx.net>
+    - Fix thumbnail generation with older ImageMagick. Thanks for
+      the patch to Kevin Pulo <kev AT pulo.com.au>.
+    - Grey out subtitle language selection box on the "Rip" page
+      for titles without subtitles.
+    - Test results in the Preferences dialog was not colored
+      correctly in non-englisch environments.
+    
 
 0.97.12 [unstable branch] Sat Jul 2 2006, joern
     Notes:

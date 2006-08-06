@@ -1,4 +1,4 @@
-# $Id: Title.pm,v 1.177 2006/07/02 13:08:23 joern Exp $
+# $Id: Title.pm,v 1.178 2006/08/05 21:55:16 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -1731,6 +1731,11 @@ sub get_subtitle_languages {
     }
 
     return \%lang_list;
+}
+
+sub has_subtitles {
+    my $self = shift;
+    return scalar( keys %{ $self->subtitles } ); 
 }
 
 sub get_subtitle_rip_commands_spuunmux {

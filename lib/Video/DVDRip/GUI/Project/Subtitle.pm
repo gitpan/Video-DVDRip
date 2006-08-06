@@ -1,4 +1,4 @@
-# $Id: Subtitle.pm,v 1.11 2006/06/17 12:54:08 joern Exp $
+# $Id: Subtitle.pm,v 1.12 2006/08/05 21:39:35 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -59,9 +59,7 @@ sub build_factory {
                 with_markup => 1,
                 inactive    => "invisible",
                 active_cond => sub {
-                    !( $self->selected_title
-                        && scalar(
-                            keys %{ $self->selected_title->subtitles } ) );
+                    !( $self->selected_title && $self->selected_title->has_subtitles )
                 },
                 active_depends => "title",
             ),

@@ -1,4 +1,4 @@
-# $Id: Base.pm,v 1.43 2006/05/15 20:27:16 joern Exp $
+# $Id: Base.pm,v 1.45 2006/08/05 22:49:10 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -35,6 +35,10 @@ my $DEPEND_OBJECT = Video::DVDRip::Depend->new;
 # pre load transcode's filter list -----------------------------------
 Video::DVDRip::FilterList->get_filter_list
     if $DEPEND_OBJECT->version("transcode") >= 603;
+
+# init some config settings ------------------------------------------
+# (this depends on a loaded Config and Depend, that's why we call it here)
+$CONFIG_OBJECT->init_settings;
 
 sub new {
     my $class = shift;

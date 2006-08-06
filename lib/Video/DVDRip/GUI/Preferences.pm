@@ -1,4 +1,4 @@
-# $Id: Preferences.pm,v 1.9 2006/07/02 13:49:16 joern Exp $
+# $Id: Preferences.pm,v 1.10 2006/08/05 22:57:58 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -110,7 +110,8 @@ sub build_config_notebook {
     my @notebook_pages;
 
     my $config_object = $self->config_object;
-
+    my $context       = $self->get_context;
+    
     my ( $label, $order );
     my $page_no = 0;
     my %page2params;
@@ -160,7 +161,30 @@ sub build_config_notebook {
                 $ff_class = "Gtk2::Ex::FormFactory::Entry";
             }
             elsif ( $item_def->{type} eq 'dir' ) {
-                $ff_class = "Gtk2::Ex::FormFactory::Entry";
+                my $attr = $ff_params{attr};
+                push @items, Gtk2::Ex::FormFactory::HBox->new (
+                    label   => delete $ff_params{label},
+                    content => [
+                        Gtk2::Ex::FormFactory::Entry->new(%ff_params, expand => 1),
+                        Gtk2::Ex::FormFactory::Button->new (
+                            stock          => "gtk-add",
+                            label          => "",
+                            tip            => __"Create directory",
+                            active_cond    => sub { ! -d $context->get_object_attr($attr) },
+                            active_depends => $attr,
+                            clicked_hook   => sub {
+                                my $dir = $context->get_object_attr($attr);
+                                mkdir $dir, 0755 or croak "msg:".__x(
+                                    "Can't create directory:\n\n{dir}",
+                                    dir => $dir );
+                                $context->update_object_widgets("config");
+                                1;
+                            },
+                        ),
+                    ],
+                );
+                $ff_class = "";
+                
             }
             elsif ( $item_def->{type} eq 'switch' ) {
                 $ff_class = "Gtk2::Ex::FormFactory::YesNo";
@@ -203,7 +227,8 @@ sub build_config_notebook {
                 );
             }
             else {
-                push @items, $ff_class->new(%ff_params);
+                push @items, $ff_class->new(%ff_params)
+                    if $ff_class;
             }
         }
 
@@ -342,18 +367,19 @@ sub check_params {
         foreach my $option ( @{$options} ) {
             $buffer->insert( $iter,
                 $config_object->config->{$option}->{label} . ": " );
-            my $result;
+            my ($result_text, $result_value);
             $method = "test_$option";
             if ( $config_object->can($method) ) {
-                $result = $config_object->$method($option);
+                ($result_text, $result_value) = $config_object->$method($option);
             }
             else {
-                $result = __ "not tested : Ok";
+                $result_text = __ "not tested : Ok";
+                $result_value = 1;
             }
             $buffer->insert_with_tags_by_name(
                 $iter,
-                $result . "\n",
-                $result =~ /NOT/ ? "bad_value" : "good_value"
+                $result_text . "\n",
+                $result_value ? "good_value" : "bad_value"
             );
         }
         $buffer->insert( $iter, ( "-" x 120 ) . "\n" )

@@ -38,7 +38,8 @@ sub cut {
     
     my $identify = qx[ identify $in_file 2>&1 ];
     my ($width, $height);
-    ($width, $height) = ( $identify =~ /\s+(\d+)x(\d+)\s+/ );
+
+    ($width, $height) = ( $identify =~ /\s+(\d+)x(\d+)([+-]\d+[+-]\d+)?\s+/ );
 
     die "Identify error: $identify" unless defined $width &&
                                            defined $height;

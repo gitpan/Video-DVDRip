@@ -6,7 +6,6 @@
 ../bin/dvdrip-splash
 ../bin/dvdrip-subpng
 ../bin/dvdrip-thumb
-../bin/dvdrip-tet
 ../lib/Video/DVDRip/CPAN/Scanf.pm
 ../lib/Video/DVDRip/InfoFile.pm
 ../lib/Video/DVDRip/FilterSettings.pm

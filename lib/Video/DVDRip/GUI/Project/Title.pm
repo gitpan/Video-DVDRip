@@ -1,4 +1,4 @@
-# $Id: Title.pm,v 1.16 2006/07/02 13:07:38 joern Exp $
+# $Id: Title.pm,v 1.17 2006/08/05 21:40:02 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -110,7 +110,7 @@ sub build_factory {
                                 attr        => "content.titles",
                                 attr_select => "content.selected_titles",
                                 attr_select_column => 0,
-                                tip => "Select title for further operation",
+                                tip => __"Select title for further operation",
                                 expand     => 1,
                                 scrollbars => [ "never", "automatic" ],
                                 columns    => [

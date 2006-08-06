@@ -1,4 +1,4 @@
-# $Id: Context.pm,v 1.14 2006/07/02 13:05:10 joern Exp $
+# $Id: Context.pm,v 1.15 2006/08/05 21:38:31 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -538,6 +538,7 @@ sub create {
             #-- Subtitle languages list is active only for the 'lang'
             #-- subtitle mode.
             subtitle_languages => sub {
+                $_[0]->has_subtitles &&
                 $_[0]->tc_rip_subtitle_mode eq 'lang';
             },
 

@@ -1,4 +1,4 @@
-# $Id: Main.pm,v 1.86 2006/07/02 13:05:32 joern Exp $
+# $Id: Main.pm,v 1.87 2006/08/05 22:57:09 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -149,7 +149,7 @@ sub start {
 
                 # Execute a function, if requested
                 if ( $function eq 'preferences' ) {
-                    $self->edit_preferences;
+                    $self->edit_preferences(1);
                 }
                 elsif ($function) {
                     my $title = $self->selected_title;
@@ -746,12 +746,24 @@ sub exit_program {
 
 sub edit_preferences {
     my $self = shift;
+    my ($init) = @_;
 
     require Video::DVDRip::GUI::Preferences;
 
     my $pref = Video::DVDRip::GUI::Preferences->new(
         form_factory => $self->get_form_factory, );
+
     $pref->open_window;
+
+    $self->message_window (
+        modal   => 1,
+        message =>
+            __"This is the first time you start dvd::rip. The Preferences ".
+              "dialog was opened automatically for you. Please review the settings, ".
+              "in particular the default DVD device and your data base directory. ".
+              "Point it to a directory with sufficient diskspace of at least ".
+              "10 GB for full DVD copies.",
+    ) if $init;
 
     1;
 }

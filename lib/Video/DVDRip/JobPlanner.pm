@@ -1,4 +1,4 @@
-# $Id: JobPlanner.pm,v 1.10 2006/07/02 08:33:23 joern Exp $
+# $Id: JobPlanner.pm,v 1.11 2006/08/05 21:40:30 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -936,7 +936,10 @@ sub build_transcode_video_pass_job {
         $info .= ", ".__"single pass";
     }
     
+    my $chapter = $title->actual_chapter;
+
     my $command = sub {
+        $title->set_actual_chapter($chapter);
         $subtitle_test ?
             $title->get_subtitle_test_transcode_command :
             $title->get_transcode_command (

@@ -1,4 +1,4 @@
-# $Id: Base.pm,v 1.34 2006/06/17 12:49:56 joern Exp $
+# $Id: Base.pm,v 1.35 2006/08/05 22:56:47 joern Exp $
 
 #-----------------------------------------------------------------------
 # Copyright (C) 2001-2003 Jörn Reder <joern AT zyn.de>.
@@ -131,12 +131,13 @@ sub show_file_dialog {
 sub message_window {
     my $self = shift;
     my %par = @_;
-    my ($message, $ff) = @par{'message','ff'};
+    my ($message, $ff, $modal) = @par{'message','ff','modal'};
 
     my $dialog = Gtk2::MessageDialog->new_with_markup( undef,
         ["destroy-with-parent"], "info", "none", $message );
 
     $dialog->set_position("center-on-parent");
+    $dialog->set_modal($modal);
     $dialog->add_buttons( "gtk-ok", "ok" );
 
     $dialog->signal_connect(
